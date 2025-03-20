@@ -1,20 +1,21 @@
-import { useQuery } from "@tanstack/react-query"
-import { useItems } from "../../hooks/useItems"
-import { Box, Button, Flex, Table, Text, TextInput } from "@mantine/core"
-import { modals } from "@mantine/modals"
-import { ItemModal } from "./ItemModal"
 import { useEffect, useState } from "react"
-import { IconSearch } from "@tabler/icons-react"
+import { useProducts } from "../../hooks/useProducts"
 import { useDebouncedValue } from "@mantine/hooks"
+import { useQuery } from "@tanstack/react-query"
+import { Box, Button, Flex, Table, Text, TextInput } from "@mantine/core"
+import { IconSearch } from "@tabler/icons-react"
+import { modals } from "@mantine/modals"
+import { ProductItems } from "./ProductItems"
+import { ProductModal } from "./ProductModal"
 
-export const Items = () => {
-  const { searchItems } = useItems()
+export const Products = () => {
+  const { searchProducts } = useProducts()
   const [searchText, setSearchText] = useState<string>("")
   const [debouncedSearchText] = useDebouncedValue(searchText, 300)
 
-  const { data: itemsData, refetch } = useQuery({
-    queryKey: ["searchItems", debouncedSearchText],
-    queryFn: () => searchItems(debouncedSearchText)
+  const { data: productsData, refetch } = useQuery({
+    queryKey: ["searchProducts", debouncedSearchText],
+    queryFn: () => searchProducts(debouncedSearchText)
   })
 
   useEffect(() => {
@@ -23,7 +24,7 @@ export const Items = () => {
 
   return (
     <Box mt={32}>
-      <Text className="!text-lg !font-bold">Các mặt hàng đang có</Text>
+      <Text className="!text-lg !font-bold">Các sản phẩm đang có</Text>
       <Flex justify="flex-end" gap={16}>
         <TextInput
           value={searchText}
@@ -34,34 +35,39 @@ export const Items = () => {
           onClick={() =>
             modals.open({
               title: <Text className="!font-bold">Thêm sản phẩm mới</Text>,
-              children: <ItemModal />
+              children: <ProductModal />,
+              size: "lg"
             })
           }
         >
-          Thêm mặt hàng
+          Thêm sản phẩm
         </Button>
       </Flex>
+
       <Table className="rounded-lg border border-gray-300" mt={40}>
         <Table.Thead>
           <Table.Tr>
-            <Table.Th>Tên mặt hàng</Table.Th>
-            <Table.Th>Số lượng/thùng</Table.Th>
+            <Table.Th>Tên sản phẩm</Table.Th>
+            <Table.Th>Các mặt hàng</Table.Th>
             <Table.Th>Hành động</Table.Th>
           </Table.Tr>
         </Table.Thead>
 
         <Table.Tbody>
-          {itemsData?.data.map((item) => (
-            <Table.Tr key={item._id}>
-              <Table.Td>{item.name}</Table.Td>
-              <Table.Td>{item.quantityPerBox}</Table.Td>
+          {productsData?.data.map((product) => (
+            <Table.Tr key={product._id}>
+              <Table.Td>{product.name}</Table.Td>
+              <Table.Td>
+                <ProductItems items={product.items} />
+              </Table.Td>
               <Table.Td>
                 <Button
                   variant="light"
                   onClick={() =>
                     modals.open({
                       title: <Text className="!font-bold">Sửa mặt hàng</Text>,
-                      children: <ItemModal item={item} />
+                      children: <ProductModal product={product} />,
+                      size: "lg"
                     })
                   }
                 >

@@ -26,8 +26,8 @@ export const useItems = () => {
   }
 
   const getItem = async (id: string) => {
-    return callApi<never, ItemResponse[]>({
-      path: `/v1/items?id=${id}`,
+    return callApi<never, ItemResponse>({
+      path: `/v1/items/item?id=${id}`,
       method: "GET"
     })
   }

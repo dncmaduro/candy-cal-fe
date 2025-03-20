@@ -18,8 +18,6 @@ export const ItemModal = ({ item }: Props) => {
     }
   })
 
-  console.log(item)
-
   const { createItem, updateItem } = useItems()
 
   const { mutate: create } = useMutation({
@@ -28,7 +26,7 @@ export const ItemModal = ({ item }: Props) => {
     onSuccess: () => {
       modals.closeAll()
       CToast.success({
-        title: "Tạo sản phẩm thành công"
+        title: "Tạo mặt hàng thành công"
       })
     },
     onError: () => {
@@ -71,7 +69,7 @@ export const ItemModal = ({ item }: Props) => {
         <Controller
           name="name"
           control={control}
-          render={({ field }) => <TextInput label="Tên sản phẩm" {...field} />}
+          render={({ field }) => <TextInput label="Tên mặt hàng" {...field} />}
         />
         <Controller
           name="quantityPerBox"

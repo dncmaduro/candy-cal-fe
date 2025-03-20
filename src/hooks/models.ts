@@ -8,3 +8,20 @@ export interface ItemResponse {
   name: string
   quantityPerBox: number
 }
+
+export interface CreateProductRequest {
+  name: string
+  items: {
+    _id: string
+    quantity: number
+  }[]
+}
+
+export interface ProductResponse {
+  _id: string
+  name: string
+  items: {
+    _id: string
+    quantity: number
+  }[]
+}
