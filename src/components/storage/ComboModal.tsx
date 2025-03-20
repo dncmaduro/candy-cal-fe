@@ -1,61 +1,59 @@
 import { Controller, useFieldArray, useForm } from "react-hook-form"
-import { CreateProductRequest, ProductResponse } from "../../hooks/models"
+import { ComboResponse, CreateComboRequest } from "../../hooks/models"
+import { useCombos } from "../../hooks/useCombos"
 import { useProducts } from "../../hooks/useProducts"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { modals } from "@mantine/modals"
 import { CToast } from "../common/CToast"
 import {
-  Button,
-  Stack,
-  TextInput,
-  Select,
-  NumberInput,
   ActionIcon,
-  Group
+  Button,
+  Group,
+  NumberInput,
+  Select,
+  Stack,
+  TextInput
 } from "@mantine/core"
 import { IconPlus, IconTrash } from "@tabler/icons-react"
-import { useItems } from "../../hooks/useItems"
 
 interface Props {
-  product?: ProductResponse
+  combo?: ComboResponse
 }
 
-export const ProductModal = ({ product }: Props) => {
-  const { handleSubmit, control } = useForm<CreateProductRequest>({
-    defaultValues: product ?? {
+export const ComboModal = ({ combo }: Props) => {
+  const { handleSubmit, control } = useForm<CreateComboRequest>({
+    defaultValues: combo ?? {
       name: "",
-      items: [] // Initialize items as an empty array
+      products: [] // Initialize items as an empty array
     }
   })
 
   const { fields, append, remove } = useFieldArray({
     control,
-    name: "items" // Manage the "items" array
+    name: "products" // Manage the "items" array
   })
 
-  const { createProduct, updateProduct } = useProducts()
-  const { getAllItems } = useItems()
+  const { createCombo, updateCombo } = useCombos()
+  const { getAllProducts } = useProducts()
 
-  const { data: itemsData } = useQuery({
-    queryKey: ["getAllItems"],
-    queryFn: getAllItems,
+  const { data: productsData } = useQuery({
+    queryKey: ["getAllProducts"],
+    queryFn: getAllProducts,
     select: (data) => {
-      return data.data.map((item) => ({
-        value: item._id,
-        label: item.name
+      return data.data.map((product) => ({
+        value: product._id,
+        label: product.name
       }))
     }
   })
 
-  console.log(itemsData)
-
   const { mutate: create } = useMutation({
-    mutationKey: ["createProduct"],
-    mutationFn: createProduct,
+    mutationKey: ["createCombo"],
+    mutationFn: createCombo,
     onSuccess: () => {
       modals.closeAll()
       CToast.success({
-        title: "Tạo sản phẩm thành công"
+        title: "Tạo combo thành công"
       })
     },
     onError: () => {
@@ -66,12 +64,12 @@ export const ProductModal = ({ product }: Props) => {
   })
 
   const { mutate: update } = useMutation({
-    mutationKey: ["updateProduct"],
-    mutationFn: updateProduct,
+    mutationKey: ["updateCombo"],
+    mutationFn: updateCombo,
     onSuccess: () => {
       modals.closeAll()
       CToast.success({
-        title: "Cập nhật sản phẩm thành công"
+        title: "Cập nhật combo thành công"
       })
     },
     onError: () => {
@@ -81,10 +79,10 @@ export const ProductModal = ({ product }: Props) => {
     }
   })
 
-  const submit = (values: CreateProductRequest) => {
-    if (product?._id) {
+  const submit = (values: CreateComboRequest) => {
+    if (combo?._id) {
       update({
-        _id: product?._id,
+        _id: combo?._id,
         ...values
       })
     } else {
@@ -98,7 +96,7 @@ export const ProductModal = ({ product }: Props) => {
         <Controller
           name="name"
           control={control}
-          render={({ field }) => <TextInput label="Tên sản phẩm" {...field} />}
+          render={({ field }) => <TextInput label="Tên combo" {...field} />}
         />
 
         {/* Items Section */}
@@ -106,13 +104,13 @@ export const ProductModal = ({ product }: Props) => {
           {fields.map((field, index) => (
             <Group key={field.id} align="flex-end" gap={16}>
               <Controller
-                name={`items.${index}._id`}
+                name={`products.${index}._id`}
                 control={control}
                 render={({ field }) => (
                   <Select
                     label={!index && "Chọn mặt hàng"}
                     placeholder="Chọn mặt hàng"
-                    data={itemsData}
+                    data={productsData}
                     className="flex-1"
                     searchable
                     {...field}
@@ -121,7 +119,7 @@ export const ProductModal = ({ product }: Props) => {
                 )}
               />
               <Controller
-                name={`items.${index}.quantity`}
+                name={`products.${index}.quantity`}
                 control={control}
                 render={({ field }) => (
                   <NumberInput

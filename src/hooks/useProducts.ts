@@ -32,5 +32,18 @@ export const useProducts = () => {
     })
   }
 
-  return { createProduct, updateProduct, searchProducts, getProduct }
+  const getAllProducts = async () => {
+    return callApi<never, ProductResponse[]>({
+      path: `/v1/products`,
+      method: "GET"
+    })
+  }
+
+  return {
+    createProduct,
+    updateProduct,
+    searchProducts,
+    getProduct,
+    getAllProducts
+  }
 }

@@ -3,6 +3,7 @@ import { AppLayout } from "../../components/layouts/AppLayout"
 import { Tabs } from "@mantine/core"
 import { Items } from "../../components/storage/Items"
 import { Products } from "../../components/storage/Products"
+import { Combos } from "../../components/storage/Combos"
 
 export const Route = createFileRoute("/storage/")({
   component: RouteComponent
@@ -41,6 +42,10 @@ function RouteComponent() {
 
         <Tabs.Panel value="products">
           <Products />
+        </Tabs.Panel>
+
+        <Tabs.Panel value="combos">
+          <Combos />
         </Tabs.Panel>
       </Tabs>
     </AppLayout>

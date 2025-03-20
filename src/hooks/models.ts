@@ -25,3 +25,20 @@ export interface ProductResponse {
     quantity: number
   }[]
 }
+
+export interface CreateComboRequest {
+  name: string
+  products: {
+    _id: string
+    quantity: number
+  }[]
+}
+
+export interface ComboResponse {
+  _id: string
+  name: string
+  products: {
+    _id: string
+    quantity: number
+  }[]
+}
