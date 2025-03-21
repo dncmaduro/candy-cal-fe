@@ -13,6 +13,7 @@
 import { Route as rootRoute } from './routes/__root'
 import { Route as IndexImport } from './routes/index'
 import { Route as StorageIndexImport } from './routes/storage/index'
+import { Route as CalIndexImport } from './routes/cal/index'
 
 // Create/Update Routes
 
@@ -28,6 +29,12 @@ const StorageIndexRoute = StorageIndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const CalIndexRoute = CalIndexImport.update({
+  id: '/cal/',
+  path: '/cal/',
+  getParentRoute: () => rootRoute,
+} as any)
+
 // Populate the FileRoutesByPath interface
 
 declare module '@tanstack/react-router' {
@@ -37,6 +44,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/cal/': {
+      id: '/cal/'
+      path: '/cal'
+      fullPath: '/cal'
+      preLoaderRoute: typeof CalIndexImport
       parentRoute: typeof rootRoute
     }
     '/storage/': {
@@ -53,36 +67,41 @@ declare module '@tanstack/react-router' {
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/cal': typeof CalIndexRoute
   '/storage': typeof StorageIndexRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/cal': typeof CalIndexRoute
   '/storage': typeof StorageIndexRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
+  '/cal/': typeof CalIndexRoute
   '/storage/': typeof StorageIndexRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/storage'
+  fullPaths: '/' | '/cal' | '/storage'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/storage'
-  id: '__root__' | '/' | '/storage/'
+  to: '/' | '/cal' | '/storage'
+  id: '__root__' | '/' | '/cal/' | '/storage/'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CalIndexRoute: typeof CalIndexRoute
   StorageIndexRoute: typeof StorageIndexRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CalIndexRoute: CalIndexRoute,
   StorageIndexRoute: StorageIndexRoute,
 }
 
@@ -97,11 +116,15 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
+        "/cal/",
         "/storage/"
       ]
     },
     "/": {
       "filePath": "index.tsx"
+    },
+    "/cal/": {
+      "filePath": "cal/index.tsx"
     },
     "/storage/": {
       "filePath": "storage/index.tsx"

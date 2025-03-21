@@ -42,3 +42,16 @@ export interface ComboResponse {
     quantity: number
   }[]
 }
+
+export interface CalCombosRequest {
+  products: {
+    _id: string
+    quantity: number
+  }[]
+  quantity: number
+}
+
+export interface CalCombosResponse {
+  _id: string
+  quantity: number
+}
