@@ -54,26 +54,25 @@ export const Items = () => {
         </Table.Thead>
 
         <Table.Tbody>
-          {itemsData &&
-            itemsData.map((item) => (
-              <Table.Tr key={item._id}>
-                <Table.Td>{item.name}</Table.Td>
-                <Table.Td>{item.quantityPerBox}</Table.Td>
-                <Table.Td>
-                  <Button
-                    variant="light"
-                    onClick={() =>
-                      modals.open({
-                        title: <Text className="!font-bold">Sửa mặt hàng</Text>,
-                        children: <ItemModal item={item} />
-                      })
-                    }
-                  >
-                    Chỉnh sửa
-                  </Button>
-                </Table.Td>
-              </Table.Tr>
-            ))}
+          {(itemsData || []).map((item) => (
+            <Table.Tr key={item._id}>
+              <Table.Td>{item.name}</Table.Td>
+              <Table.Td>{item.quantityPerBox}</Table.Td>
+              <Table.Td>
+                <Button
+                  variant="light"
+                  onClick={() =>
+                    modals.open({
+                      title: <Text className="!font-bold">Sửa mặt hàng</Text>,
+                      children: <ItemModal item={item} />
+                    })
+                  }
+                >
+                  Chỉnh sửa
+                </Button>
+              </Table.Td>
+            </Table.Tr>
+          ))}
         </Table.Tbody>
       </Table>
     </Box>

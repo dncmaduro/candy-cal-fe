@@ -57,29 +57,28 @@ export const Combos = () => {
         </Table.Thead>
 
         <Table.Tbody>
-          {combosData &&
-            combosData.map((combo) => (
-              <Table.Tr key={combo._id}>
-                <Table.Td>{combo.name}</Table.Td>
-                <Table.Td>
-                  <ComboProducts products={combo.products} />
-                </Table.Td>
-                <Table.Td>
-                  <Button
-                    variant="light"
-                    onClick={() =>
-                      modals.open({
-                        title: <Text className="!font-bold">Sửa mặt hàng</Text>,
-                        children: <ComboModal combo={combo} />,
-                        size: "lg"
-                      })
-                    }
-                  >
-                    Chỉnh sửa
-                  </Button>
-                </Table.Td>
-              </Table.Tr>
-            ))}
+          {(combosData || []).map((combo) => (
+            <Table.Tr key={combo._id}>
+              <Table.Td>{combo.name}</Table.Td>
+              <Table.Td>
+                <ComboProducts products={combo.products} />
+              </Table.Td>
+              <Table.Td>
+                <Button
+                  variant="light"
+                  onClick={() =>
+                    modals.open({
+                      title: <Text className="!font-bold">Sửa mặt hàng</Text>,
+                      children: <ComboModal combo={combo} />,
+                      size: "lg"
+                    })
+                  }
+                >
+                  Chỉnh sửa
+                </Button>
+              </Table.Td>
+            </Table.Tr>
+          ))}
         </Table.Tbody>
       </Table>
     </Box>
