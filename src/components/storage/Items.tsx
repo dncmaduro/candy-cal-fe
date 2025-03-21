@@ -14,7 +14,10 @@ export const Items = () => {
 
   const { data: itemsData, refetch } = useQuery({
     queryKey: ["searchItems", debouncedSearchText],
-    queryFn: () => searchItems(debouncedSearchText)
+    queryFn: () => searchItems(debouncedSearchText),
+    select: (data) => {
+      return data.data
+    }
   })
 
   useEffect(() => {
@@ -51,25 +54,26 @@ export const Items = () => {
         </Table.Thead>
 
         <Table.Tbody>
-          {itemsData?.data.map((item) => (
-            <Table.Tr key={item._id}>
-              <Table.Td>{item.name}</Table.Td>
-              <Table.Td>{item.quantityPerBox}</Table.Td>
-              <Table.Td>
-                <Button
-                  variant="light"
-                  onClick={() =>
-                    modals.open({
-                      title: <Text className="!font-bold">Sửa mặt hàng</Text>,
-                      children: <ItemModal item={item} />
-                    })
-                  }
-                >
-                  Chỉnh sửa
-                </Button>
-              </Table.Td>
-            </Table.Tr>
-          ))}
+          {itemsData &&
+            itemsData.map((item) => (
+              <Table.Tr key={item._id}>
+                <Table.Td>{item.name}</Table.Td>
+                <Table.Td>{item.quantityPerBox}</Table.Td>
+                <Table.Td>
+                  <Button
+                    variant="light"
+                    onClick={() =>
+                      modals.open({
+                        title: <Text className="!font-bold">Sửa mặt hàng</Text>,
+                        children: <ItemModal item={item} />
+                      })
+                    }
+                  >
+                    Chỉnh sửa
+                  </Button>
+                </Table.Td>
+              </Table.Tr>
+            ))}
         </Table.Tbody>
       </Table>
     </Box>
