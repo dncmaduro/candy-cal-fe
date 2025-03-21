@@ -8,9 +8,10 @@ import { CToast } from "../common/CToast"
 
 interface Props {
   item?: ItemResponse
+  refetch: () => void
 }
 
-export const ItemModal = ({ item }: Props) => {
+export const ItemModal = ({ item, refetch }: Props) => {
   const { handleSubmit, control } = useForm<CreateItemRequest>({
     defaultValues: item ?? {
       name: "",
@@ -28,6 +29,7 @@ export const ItemModal = ({ item }: Props) => {
       CToast.success({
         title: "Tạo mặt hàng thành công"
       })
+      refetch()
     },
     onError: () => {
       CToast.error({
@@ -44,6 +46,7 @@ export const ItemModal = ({ item }: Props) => {
       CToast.success({
         title: "Cập nhật sản phẩm thành công"
       })
+      refetch()
     },
     onError: () => {
       CToast.error({

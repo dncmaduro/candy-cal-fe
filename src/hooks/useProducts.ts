@@ -1,5 +1,10 @@
 import { callApi } from "./axios"
-import { CreateProductRequest, ProductResponse } from "./models"
+import {
+  CalItemsRequest,
+  CalItemsResponse,
+  CreateProductRequest,
+  ProductResponse
+} from "./models"
 
 export const useProducts = () => {
   const createProduct = async (item: CreateProductRequest) => {
@@ -39,11 +44,20 @@ export const useProducts = () => {
     })
   }
 
+  const calProducts = async (req: CalItemsRequest) => {
+    return callApi<CalItemsRequest, CalItemsResponse[]>({
+      path: `/v1/products/cal`,
+      data: req,
+      method: "POST"
+    })
+  }
+
   return {
     createProduct,
     updateProduct,
     searchProducts,
     getProduct,
-    getAllProducts
+    getAllProducts,
+    calProducts
   }
 }

@@ -51,7 +51,14 @@ export interface CalCombosRequest {
   quantity: number
 }
 
-export interface CalCombosResponse {
+export interface CalItemsResponse {
   _id: string
   quantity: number
+}
+
+export interface CalItemsRequest {
+  products: {
+    _id: string
+    quantity: number
+  }[]
 }

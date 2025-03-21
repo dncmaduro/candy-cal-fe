@@ -18,9 +18,10 @@ import { useItems } from "../../hooks/useItems"
 
 interface Props {
   product?: ProductResponse
+  refetch: () => void
 }
 
-export const ProductModal = ({ product }: Props) => {
+export const ProductModal = ({ product, refetch }: Props) => {
   const { handleSubmit, control } = useForm<CreateProductRequest>({
     defaultValues: product ?? {
       name: "",
@@ -57,6 +58,7 @@ export const ProductModal = ({ product }: Props) => {
       CToast.success({
         title: "Tạo sản phẩm thành công"
       })
+      refetch()
     },
     onError: () => {
       CToast.error({
@@ -73,6 +75,7 @@ export const ProductModal = ({ product }: Props) => {
       CToast.success({
         title: "Cập nhật sản phẩm thành công"
       })
+      refetch()
     },
     onError: () => {
       CToast.error({

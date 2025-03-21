@@ -1,6 +1,14 @@
 import { useQuery } from "@tanstack/react-query"
 import { useItems } from "../../hooks/useItems"
-import { Box, Button, Flex, Table, Text, TextInput } from "@mantine/core"
+import {
+  Box,
+  Button,
+  Flex,
+  Loader,
+  Table,
+  Text,
+  TextInput
+} from "@mantine/core"
 import { modals } from "@mantine/modals"
 import { ItemModal } from "./ItemModal"
 import { useEffect, useState } from "react"
@@ -12,7 +20,11 @@ export const Items = () => {
   const [searchText, setSearchText] = useState<string>("")
   const [debouncedSearchText] = useDebouncedValue(searchText, 300)
 
-  const { data: itemsData, refetch } = useQuery({
+  const {
+    data: itemsData,
+    refetch,
+    isLoading
+  } = useQuery({
     queryKey: ["searchItems", debouncedSearchText],
     queryFn: () => searchItems(debouncedSearchText),
     select: (data) => {
@@ -37,7 +49,7 @@ export const Items = () => {
           onClick={() =>
             modals.open({
               title: <Text className="!font-bold">Thêm sản phẩm mới</Text>,
-              children: <ItemModal />
+              children: <ItemModal refetch={refetch} />
             })
           }
         >
@@ -54,25 +66,29 @@ export const Items = () => {
         </Table.Thead>
 
         <Table.Tbody>
-          {(itemsData || []).map((item) => (
-            <Table.Tr key={item._id}>
-              <Table.Td>{item.name}</Table.Td>
-              <Table.Td>{item.quantityPerBox}</Table.Td>
-              <Table.Td>
-                <Button
-                  variant="light"
-                  onClick={() =>
-                    modals.open({
-                      title: <Text className="!font-bold">Sửa mặt hàng</Text>,
-                      children: <ItemModal item={item} />
-                    })
-                  }
-                >
-                  Chỉnh sửa
-                </Button>
-              </Table.Td>
-            </Table.Tr>
-          ))}
+          {isLoading ? (
+            <Loader />
+          ) : (
+            (itemsData || []).map((item) => (
+              <Table.Tr key={item._id}>
+                <Table.Td>{item.name}</Table.Td>
+                <Table.Td>{item.quantityPerBox}</Table.Td>
+                <Table.Td>
+                  <Button
+                    variant="light"
+                    onClick={() =>
+                      modals.open({
+                        title: <Text className="!font-bold">Sửa mặt hàng</Text>,
+                        children: <ItemModal item={item} refetch={refetch} />
+                      })
+                    }
+                  >
+                    Chỉnh sửa
+                  </Button>
+                </Table.Td>
+              </Table.Tr>
+            ))
+          )}
         </Table.Tbody>
       </Table>
     </Box>

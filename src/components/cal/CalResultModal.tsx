@@ -12,7 +12,7 @@ interface Props {
 
 export const CalResultModal = ({ items }: Props) => {
   const { getAllItems } = useItems()
-
+  console.log(items)
   const { data: allItems } = useQuery({
     queryKey: ["getAllItems"],
     queryFn: getAllItems,

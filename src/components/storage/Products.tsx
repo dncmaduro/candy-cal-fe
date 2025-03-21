@@ -38,7 +38,7 @@ export const Products = () => {
           onClick={() =>
             modals.open({
               title: <Text className="!font-bold">Thêm sản phẩm mới</Text>,
-              children: <ProductModal />,
+              children: <ProductModal refetch={refetch} />,
               size: "lg"
             })
           }
@@ -69,7 +69,9 @@ export const Products = () => {
                   onClick={() =>
                     modals.open({
                       title: <Text className="!font-bold">Sửa mặt hàng</Text>,
-                      children: <ProductModal product={product} />,
+                      children: (
+                        <ProductModal product={product} refetch={refetch} />
+                      ),
                       size: "lg"
                     })
                   }
