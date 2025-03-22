@@ -1,14 +1,27 @@
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { AppLayout } from "../../components/layouts/AppLayout"
 import { Tabs } from "@mantine/core"
 import { Items } from "../../components/storage/Items"
 import { Products } from "../../components/storage/Products"
+import { useEffect } from "react"
+
+type StorageTab = {
+  tab: string
+}
 
 export const Route = createFileRoute("/storage/")({
-  component: RouteComponent
+  component: RouteComponent,
+  validateSearch: (search: Record<string, unknown>): StorageTab => {
+    return {
+      tab: String(search.tag ?? "items")
+    }
+  }
 })
 
 function RouteComponent() {
+  const { tab } = Route.useSearch()
+  const navigate = useNavigate()
+
   const tabOptions = [
     {
       label: "Mặt hàng",
@@ -20,9 +33,25 @@ function RouteComponent() {
     }
   ]
 
+  const handleChange = (value: string | null) => {
+    navigate({ to: `/storage?tab=${value ?? "items"}` })
+  }
+
+  useEffect(() => {
+    if (!tab) {
+      console.log("a")
+      navigate({ to: `/storage`, search: { tab: "items" } })
+    }
+  }, [])
+
   return (
     <AppLayout>
-      <Tabs orientation="horizontal" defaultValue={"items"} mt={16}>
+      <Tabs
+        orientation="horizontal"
+        defaultValue={tab}
+        mt={16}
+        onChange={(value) => handleChange(value)}
+      >
         <Tabs.List>
           {tabOptions.map((tab) => (
             <Tabs.Tab value={tab.value} key={tab.value}>
