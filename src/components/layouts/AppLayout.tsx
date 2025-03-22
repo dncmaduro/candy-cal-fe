@@ -1,4 +1,4 @@
-import { AppShell, Box, Group } from "@mantine/core"
+import { AppShell, Badge, Box, Group } from "@mantine/core"
 import { Link } from "@tanstack/react-router"
 import { ReactNode } from "react"
 
@@ -13,6 +13,9 @@ export const AppLayout = ({ children }: Props) => {
         <Group gap={16} px={32} h={"100%"} align="center">
           <Link to="/storage">Kho chứa</Link>
           <Link to="/cal">Tính toán</Link>
+          <Badge ml={16} variant="light">
+            version 0.0
+          </Badge>
         </Group>
       </AppShell.Header>
 
