@@ -101,7 +101,21 @@ function RouteComponent() {
                     render={({ field }) => (
                       <NumberInput
                         label={!index && "Số lượng"}
-                        placeholder="Nhập số lượng"
+                        placeholder="Nhập số lượng combo"
+                        min={1}
+                        className="flex-1"
+                        {...field}
+                        size="xs"
+                      />
+                    )}
+                  />
+                  <Controller
+                    name={`products.${index}.customers`}
+                    control={control}
+                    render={({ field }) => (
+                      <NumberInput
+                        label={!index && "Số lượng"}
+                        placeholder="Nhập số lượng đơn"
                         min={1}
                         className="flex-1"
                         {...field}
@@ -121,7 +135,9 @@ function RouteComponent() {
               <ActionIcon
                 color="blue"
                 variant="outline"
-                onClick={() => appendProduct({ _id: "", quantity: 1 })}
+                onClick={() =>
+                  appendProduct({ _id: "", quantity: 1, customers: 1 })
+                }
               >
                 <IconPlus size={16} />
               </ActionIcon>

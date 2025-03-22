@@ -60,5 +60,6 @@ export interface CalItemsRequest {
   products: {
     _id: string
     quantity: number
+    customers: number
   }[]
 }
