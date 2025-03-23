@@ -85,8 +85,8 @@ function RouteComponent() {
                     control={control}
                     render={({ field }) => (
                       <Select
-                        label={!index && "Chọn sản phẩm"}
-                        placeholder="Chọn sản phẩm"
+                        label={!index && "Chọn combo"}
+                        placeholder="Chọn combo"
                         data={productsData}
                         className="flex-1"
                         searchable
@@ -100,7 +100,7 @@ function RouteComponent() {
                     control={control}
                     render={({ field }) => (
                       <NumberInput
-                        label={!index && "Số lượng"}
+                        label={!index && "Số lượng combo"}
                         placeholder="Nhập số lượng combo"
                         min={1}
                         className="flex-1"
@@ -114,7 +114,7 @@ function RouteComponent() {
                     control={control}
                     render={({ field }) => (
                       <NumberInput
-                        label={!index && "Số lượng"}
+                        label={!index && "Số lượng đơn mua"}
                         placeholder="Nhập số lượng đơn"
                         min={1}
                         className="flex-1"

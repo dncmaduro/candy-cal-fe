@@ -2,7 +2,15 @@ import { useEffect, useState } from "react"
 import { useProducts } from "../../hooks/useProducts"
 import { useDebouncedValue } from "@mantine/hooks"
 import { useQuery } from "@tanstack/react-query"
-import { Box, Button, Flex, Table, Text, TextInput } from "@mantine/core"
+import {
+  Box,
+  Button,
+  Flex,
+  Loader,
+  Table,
+  Text,
+  TextInput
+} from "@mantine/core"
 import { IconSearch } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
 import { ProductItems } from "./ProductItems"
@@ -13,7 +21,11 @@ export const Products = () => {
   const [searchText, setSearchText] = useState<string>("")
   const [debouncedSearchText] = useDebouncedValue(searchText, 300)
 
-  const { data: productsData, refetch } = useQuery({
+  const {
+    data: productsData,
+    refetch,
+    isLoading
+  } = useQuery({
     queryKey: ["searchProducts", debouncedSearchText],
     queryFn: () => searchProducts(debouncedSearchText),
     select: (data) => {
@@ -57,30 +69,35 @@ export const Products = () => {
         </Table.Thead>
 
         <Table.Tbody>
-          {(productsData || []).map((product) => (
-            <Table.Tr key={product._id}>
-              <Table.Td>{product.name}</Table.Td>
-              <Table.Td>
-                <ProductItems items={product.items} />
-              </Table.Td>
-              <Table.Td>
-                <Button
-                  variant="light"
-                  onClick={() =>
-                    modals.open({
-                      title: <Text className="!font-bold">Sửa mặt hàng</Text>,
-                      children: (
-                        <ProductModal product={product} refetch={refetch} />
-                      ),
-                      size: "lg"
-                    })
-                  }
-                >
-                  Chỉnh sửa
-                </Button>
-              </Table.Td>
-            </Table.Tr>
-          ))}
+          {isLoading ? (
+            <Loader p={16} mx="auto" />
+          ) : (
+            productsData &&
+            productsData.map((product) => (
+              <Table.Tr key={product._id}>
+                <Table.Td>{product.name}</Table.Td>
+                <Table.Td>
+                  <ProductItems items={product.items} />
+                </Table.Td>
+                <Table.Td>
+                  <Button
+                    variant="light"
+                    onClick={() =>
+                      modals.open({
+                        title: <Text className="!font-bold">Sửa mặt hàng</Text>,
+                        children: (
+                          <ProductModal product={product} refetch={refetch} />
+                        ),
+                        size: "lg"
+                      })
+                    }
+                  >
+                    Chỉnh sửa
+                  </Button>
+                </Table.Td>
+              </Table.Tr>
+            ))
+          )}
         </Table.Tbody>
       </Table>
     </Box>

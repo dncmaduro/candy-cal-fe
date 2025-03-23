@@ -28,7 +28,7 @@ export const AppLayout = ({ children }: Props) => {
           <NavButton to="/storage" label="Kho chứa" />
           <NavButton to="/cal" label="Tính toán" />
           <Badge ml={16} variant="outline" color="red">
-            version 0.1
+            version 0.1.1
           </Badge>
         </Group>
       </AppShell.Header>

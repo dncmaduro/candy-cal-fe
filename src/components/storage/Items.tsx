@@ -67,9 +67,10 @@ export const Items = () => {
 
         <Table.Tbody>
           {isLoading ? (
-            <Loader />
+            <Loader p={16} mx={"auto"} />
           ) : (
-            (itemsData || []).map((item) => (
+            itemsData &&
+            itemsData.map((item) => (
               <Table.Tr key={item._id}>
                 <Table.Td>{item.name}</Table.Td>
                 <Table.Td>{item.quantityPerBox}</Table.Td>
