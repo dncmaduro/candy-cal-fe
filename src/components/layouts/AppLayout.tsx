@@ -27,8 +27,9 @@ export const AppLayout = ({ children }: Props) => {
         <Group gap={32} px={32} h={"100%"} align="center">
           <NavButton to="/storage" label="Kho chứa" />
           <NavButton to="/cal" label="Tính toán" />
+          <NavButton to="/calfile" label="Nhập file XLSX để tính" />
           <Badge ml={16} variant="outline" color="red">
-            version 0.1.1
+            version 0.2
           </Badge>
         </Group>
       </AppShell.Header>
