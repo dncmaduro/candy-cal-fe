@@ -52,12 +52,27 @@ export const useProducts = () => {
     })
   }
 
+  const calFile = async (file: File) => {
+    const formData = new FormData()
+    formData.append("file", file)
+
+    return callApi<FormData, CalItemsResponse[]>({
+      path: `/v1/products/cal-xlsx`,
+      data: formData,
+      method: "POST",
+      headers: {
+        "Content-Type": "multipart/form-data"
+      }
+    })
+  }
+
   return {
     createProduct,
     updateProduct,
     searchProducts,
     getProduct,
     getAllProducts,
-    calProducts
+    calProducts,
+    calFile
   }
 }

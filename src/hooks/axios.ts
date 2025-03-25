@@ -6,6 +6,7 @@ type AxiosCallApi<D> = {
   token?: string
   customUrl?: string
   method: AxiosRequestConfig["method"]
+  headers?: Record<string, string>
 }
 
 export async function callApi<D = unknown, T = unknown>({
@@ -13,20 +14,22 @@ export async function callApi<D = unknown, T = unknown>({
   data,
   token,
   customUrl,
-  method
+  method,
+  headers
 }: AxiosCallApi<D>): Promise<AxiosResponse<T>> {
-  const headers: Record<string, string> = {
+  const convertedHeaders: Record<string, string> = {
     "Content-Type": "application/json",
-    Accept: "application/json"
+    Accept: "application/json",
+    ...headers
   }
 
   if (token) {
-    headers["Authorization"] = `Bearer ${token}`
+    convertedHeaders["Authorization"] = `Bearer ${token}`
   }
 
   const response = await axios<T>({
     url: (customUrl ?? import.meta.env.VITE_BACKEND_URL) + path,
-    headers,
+    headers: convertedHeaders,
     data,
     method
   })

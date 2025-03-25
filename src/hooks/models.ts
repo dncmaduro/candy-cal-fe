@@ -63,3 +63,7 @@ export interface CalItemsRequest {
     customers: number
   }[]
 }
+
+export interface CalFileRequest {
+  file: Express.Multer.File
+}
