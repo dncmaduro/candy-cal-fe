@@ -56,7 +56,7 @@ export const useProducts = () => {
     const formData = new FormData()
     formData.append("file", file)
 
-    return callApi<FormData, CalItemsResponse[]>({
+    return callApi<FormData, CalItemsResponse>({
       path: `/v1/products/cal-xlsx`,
       data: formData,
       method: "POST",
