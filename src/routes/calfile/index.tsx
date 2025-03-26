@@ -21,7 +21,12 @@ function RouteComponent() {
     onSuccess: (response) => {
       modals.open({
         title: "Tổng sản phẩm",
-        children: <CalResultModal items={response.data} />
+        children: (
+          <CalResultModal
+            items={response.data.items}
+            orders={response.data.orders}
+          />
+        )
       })
     }
   })

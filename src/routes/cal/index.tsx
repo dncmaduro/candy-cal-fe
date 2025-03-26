@@ -15,7 +15,6 @@ import { useMutation, useQuery } from "@tanstack/react-query"
 import { Controller, useFieldArray, useForm } from "react-hook-form"
 import { IconPlus, IconTrash } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
-import { CalResultModal } from "../../components/cal/CalResultModal"
 import { CalItemsRequest } from "../../hooks/models"
 
 export const Route = createFileRoute("/cal/")({
@@ -39,10 +38,10 @@ function RouteComponent() {
   const { mutate: calc } = useMutation({
     mutationKey: ["calProducts"],
     mutationFn: calProducts,
-    onSuccess: (response) => {
+    onSuccess: () => {
       modals.open({
         title: "Tổng sản phẩm",
-        children: <CalResultModal items={response.data} />
+        children: <></>
       })
     }
   })
