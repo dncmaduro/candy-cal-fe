@@ -29,7 +29,7 @@ export const AppLayout = ({ children }: Props) => {
           <NavButton to="/cal" label="Tính toán" />
           <NavButton to="/calfile" label="Nhập file XLSX để tính" />
           <Badge ml={16} variant="outline" color="red">
-            version 0.3
+            version 0.4
           </Badge>
         </Group>
       </AppShell.Header>

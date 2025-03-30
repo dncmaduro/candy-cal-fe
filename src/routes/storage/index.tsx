@@ -4,6 +4,7 @@ import { Tabs } from "@mantine/core"
 import { Items } from "../../components/storage/Items"
 import { Products } from "../../components/storage/Products"
 import { useEffect } from "react"
+import { Helmet } from "react-helmet-async"
 
 type StorageTab = {
   tab: string
@@ -45,29 +46,34 @@ function RouteComponent() {
   }, [])
 
   return (
-    <AppLayout>
-      <Tabs
-        orientation="horizontal"
-        defaultValue={tab}
-        mt={16}
-        onChange={(value) => handleChange(value)}
-      >
-        <Tabs.List>
-          {tabOptions.map((tab) => (
-            <Tabs.Tab value={tab.value} key={tab.value}>
-              {tab.label}
-            </Tabs.Tab>
-          ))}
-        </Tabs.List>
+    <>
+      <Helmet>
+        <title>MyCandy x Chíp</title>
+      </Helmet>
+      <AppLayout>
+        <Tabs
+          orientation="horizontal"
+          defaultValue={tab}
+          mt={16}
+          onChange={(value) => handleChange(value)}
+        >
+          <Tabs.List>
+            {tabOptions.map((tab) => (
+              <Tabs.Tab value={tab.value} key={tab.value}>
+                {tab.label}
+              </Tabs.Tab>
+            ))}
+          </Tabs.List>
 
-        <Tabs.Panel value="items">
-          <Items />
-        </Tabs.Panel>
+          <Tabs.Panel value="items">
+            <Items />
+          </Tabs.Panel>
 
-        <Tabs.Panel value="products">
-          <Products />
-        </Tabs.Panel>
-      </Tabs>
-    </AppLayout>
+          <Tabs.Panel value="products">
+            <Products />
+          </Tabs.Panel>
+        </Tabs>
+      </AppLayout>
+    </>
   )
 }

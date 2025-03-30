@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query"
 import { useItems } from "../../hooks/useItems"
-import { Stack, Table, Tabs, Text } from "@mantine/core"
-import { ItemResponse, ProductResponse } from "../../hooks/models"
-import { useProducts } from "../../hooks/useProducts"
+import { Table, Tabs } from "@mantine/core"
+import { ItemResponse } from "../../hooks/models"
+import { CalOrders } from "./CalOrders"
 
 interface Props {
   items: {
@@ -20,7 +20,6 @@ interface Props {
 
 export const CalResultModal = ({ items, orders }: Props) => {
   const { getAllItems } = useItems()
-  const { getAllProducts } = useProducts()
 
   const { data: allItems } = useQuery({
     queryKey: ["getAllItems"],
@@ -33,20 +32,9 @@ export const CalResultModal = ({ items, orders }: Props) => {
     }
   })
 
-  const { data: allProducts } = useQuery({
-    queryKey: ["getAllProducts"],
-    queryFn: getAllProducts,
-    select: (data) => {
-      return data.data.reduce(
-        (acc, product) => ({ ...acc, [product._id]: product }),
-        {} as Record<string, ProductResponse>
-      )
-    }
-  })
-
   return (
     <Tabs>
-      <Tabs.List defaultValue={"items"}>
+      <Tabs.List defaultValue="items">
         <Tabs.Tab value="items">Mặt hàng</Tabs.Tab>
         <Tabs.Tab value="orders">Đóng đơn</Tabs.Tab>
       </Tabs.List>
@@ -72,31 +60,7 @@ export const CalResultModal = ({ items, orders }: Props) => {
       </Tabs.Panel>
 
       <Tabs.Panel value="orders">
-        <Table>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Các mã Sản phẩm</Table.Th>
-              <Table.Th>Số đơn</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {allProducts &&
-              orders.map((order, index) => (
-                <Table.Tr key={index}>
-                  <Table.Td>
-                    <Stack>
-                      {order.products.map((product) => (
-                        <Text>
-                          {product.name} - {product.quantity}
-                        </Text>
-                      ))}
-                    </Stack>
-                  </Table.Td>
-                  <Table.Td>{order.quantity}</Table.Td>
-                </Table.Tr>
-              ))}
-          </Table.Tbody>
-        </Table>
+        <CalOrders orders={orders} allCalItems={items} />
       </Tabs.Panel>
     </Tabs>
   )
