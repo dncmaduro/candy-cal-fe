@@ -7,6 +7,7 @@ import { Button, Flex, Text } from "@mantine/core"
 import { useFileDialog } from "@mantine/hooks"
 import { useState } from "react"
 import { AppLayout } from "../../components/layouts/AppLayout"
+import { Helmet } from "react-helmet-async"
 
 export const Route = createFileRoute("/calfile/")({
   component: RouteComponent
@@ -26,7 +27,9 @@ function RouteComponent() {
             items={response.data.items}
             orders={response.data.orders}
           />
-        )
+        ),
+        size: "xl",
+        w: 1400
       })
     }
   })
@@ -40,24 +43,29 @@ function RouteComponent() {
   })
 
   return (
-    <AppLayout>
-      <Flex gap={32} align="center" direction={"column"} mx={"auto"} mt={32}>
-        <Button onClick={fileDialog.open} color="green" w={"fit-content"}>
-          Chọn file .xlsx để tính toán
-        </Button>
-        <Text>{file?.name}</Text>
-        <Button
-          loading={isPending}
-          disabled={!file}
-          onClick={() => {
-            if (file) {
-              calc(file)
-            }
-          }}
-        >
-          Bắt đầu tính
-        </Button>
-      </Flex>
-    </AppLayout>
+    <>
+      <Helmet>
+        <title>MyCandy x Chíp</title>
+      </Helmet>
+      <AppLayout>
+        <Flex gap={32} align="center" direction={"column"} mx={"auto"} mt={32}>
+          <Button onClick={fileDialog.open} color="green" w={"fit-content"}>
+            Chọn file .xlsx để tính toán
+          </Button>
+          <Text>{file?.name}</Text>
+          <Button
+            loading={isPending}
+            disabled={!file}
+            onClick={() => {
+              if (file) {
+                calc(file)
+              }
+            }}
+          >
+            Bắt đầu tính
+          </Button>
+        </Flex>
+      </AppLayout>
+    </>
   )
 }

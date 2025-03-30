@@ -1,5 +1,6 @@
 import { AppShell, Box, Button } from "@mantine/core"
 import { createFileRoute, Link } from "@tanstack/react-router"
+import { Helmet } from "react-helmet-async"
 
 export const Route = createFileRoute("/")({
   component: RouteComponent
@@ -7,16 +8,21 @@ export const Route = createFileRoute("/")({
 
 function RouteComponent() {
   return (
-    <AppShell>
-      <AppShell.Main h={"100vh"} w={"100vw"}>
-        <Box h="100%" className="relative flex items-center justify-center">
-          <Box mx="auto" my="auto">
-            <Button component={Link} to="/storage">
-              Go to storage
-            </Button>
+    <>
+      <Helmet>
+        <title>MyCandy x Chíp</title>
+      </Helmet>
+      <AppShell>
+        <AppShell.Main h={"100vh"} w={"100vw"}>
+          <Box h="100%" className="relative flex items-center justify-center">
+            <Box mx="auto" my="auto">
+              <Button component={Link} to="/storage">
+                Go to storage
+              </Button>
+            </Box>
           </Box>
-        </Box>
-      </AppShell.Main>
-    </AppShell>
+        </AppShell.Main>
+      </AppShell>
+    </>
   )
 }
