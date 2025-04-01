@@ -3,7 +3,7 @@ import { useProducts } from "../../hooks/useProducts"
 import { useMutation } from "@tanstack/react-query"
 import { modals } from "@mantine/modals"
 import { CalResultModal } from "../../components/cal/CalResultModal"
-import { Button, Flex, Text } from "@mantine/core"
+import { Button, Flex, Group, Text } from "@mantine/core"
 import { useFileDialog } from "@mantine/hooks"
 import { useState } from "react"
 import { AppLayout } from "../../components/layouts/AppLayout"
@@ -15,13 +15,35 @@ export const Route = createFileRoute("/calfile/")({
 
 function RouteComponent() {
   const { calFile } = useProducts()
+  const [items, setItems] = useState<
+    {
+      _id: string
+      quantity: number
+    }[]
+  >([])
+
+  const [orders, setOrders] = useState<
+    {
+      products: {
+        name: string
+        quantity: number
+      }[]
+      quantity: number
+    }[]
+  >([])
+
+  const [file, setFile] = useState<File | null>(null)
+  const [latestFileName, setLatestFileName] = useState<string | undefined>()
 
   const { mutate: calc, isPending } = useMutation({
     mutationKey: ["calFile"],
     mutationFn: calFile,
     onSuccess: (response) => {
+      setItems(response.data.items)
+      setOrders(response.data.orders)
+      setLatestFileName(file?.name)
       modals.open({
-        title: "Tổng sản phẩm",
+        title: `Tổng sản phẩm trong File ${file?.name}`,
         children: (
           <CalResultModal
             items={response.data.items}
@@ -33,8 +55,6 @@ function RouteComponent() {
       })
     }
   })
-
-  const [file, setFile] = useState<File | null>(null)
 
   const fileDialog = useFileDialog({
     accept: ".xlsx",
@@ -53,17 +73,34 @@ function RouteComponent() {
             Chọn file .xlsx để tính toán
           </Button>
           <Text>{file?.name}</Text>
-          <Button
-            loading={isPending}
-            disabled={!file}
-            onClick={() => {
-              if (file) {
-                calc(file)
+          <Group>
+            <Button
+              loading={isPending}
+              disabled={!file}
+              onClick={() => {
+                if (file) {
+                  calc(file)
+                }
+              }}
+            >
+              Bắt đầu tính
+            </Button>
+            <Button
+              disabled={!latestFileName}
+              variant="outline"
+              color="yellow"
+              onClick={() =>
+                modals.open({
+                  title: `Tổng sản phẩm trong File ${latestFileName}`,
+                  children: <CalResultModal items={items} orders={orders} />,
+                  size: "xl",
+                  w: 1400
+                })
               }
-            }}
-          >
-            Bắt đầu tính
-          </Button>
+            >
+              Xem lại kết quả của file trước đó
+            </Button>
+          </Group>
         </Flex>
       </AppLayout>
     </>
