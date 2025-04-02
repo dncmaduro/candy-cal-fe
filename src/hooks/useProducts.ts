@@ -1,3 +1,4 @@
+import { useUserStore } from "../store/userStore"
 import { callApi } from "./axios"
 import {
   CalItemsRequest,
@@ -7,11 +8,14 @@ import {
 } from "./models"
 
 export const useProducts = () => {
+  const { accessToken } = useUserStore()
+
   const createProduct = async (item: CreateProductRequest) => {
     return callApi<CreateProductRequest, ProductResponse[]>({
       path: `/v1/products`,
       method: "POST",
-      data: item
+      data: item,
+      token: accessToken
     })
   }
 
@@ -19,28 +23,32 @@ export const useProducts = () => {
     return callApi<ProductResponse, ProductResponse>({
       path: `/v1/products`,
       method: "PUT",
-      data: item
+      data: item,
+      token: accessToken
     })
   }
 
   const getProduct = async (id: string) => {
     return callApi<never, ProductResponse>({
       path: `/v1/products/product?id=${id}`,
-      method: "GET"
+      method: "GET",
+      token: accessToken
     })
   }
 
   const searchProducts = async (searchText: string) => {
     return callApi<never, ProductResponse[]>({
       path: `/v1/products/search?searchText=${searchText}`,
-      method: "GET"
+      method: "GET",
+      token: accessToken
     })
   }
 
   const getAllProducts = async () => {
     return callApi<never, ProductResponse[]>({
       path: `/v1/products`,
-      method: "GET"
+      method: "GET",
+      token: accessToken
     })
   }
 
@@ -48,7 +56,8 @@ export const useProducts = () => {
     return callApi<CalItemsRequest, CalItemsResponse[]>({
       path: `/v1/products/cal`,
       data: req,
-      method: "POST"
+      method: "POST",
+      token: accessToken
     })
   }
 
@@ -62,7 +71,8 @@ export const useProducts = () => {
       method: "POST",
       headers: {
         "Content-Type": "multipart/form-data"
-      }
+      },
+      token: accessToken
     })
   }
 

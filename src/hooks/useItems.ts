@@ -1,12 +1,17 @@
 import { CreateItemRequest, ItemResponse } from "./models"
 import { callApi } from "./axios"
+import { useUserStore } from "../store/userStore"
 
 export const useItems = () => {
+  const { accessToken } = useUserStore()
+
   const createItem = async (item: CreateItemRequest) => {
+    console.log(accessToken)
     return callApi<CreateItemRequest, ItemResponse>({
       path: `/v1/items`,
       method: "POST",
-      data: item
+      data: item,
+      token: accessToken
     })
   }
 
@@ -14,28 +19,32 @@ export const useItems = () => {
     return callApi<ItemResponse, ItemResponse>({
       path: `/v1/items`,
       method: "PUT",
-      data: item
+      data: item,
+      token: accessToken
     })
   }
 
   const getAllItems = async () => {
     return callApi<never, ItemResponse[]>({
       path: `/v1/items`,
-      method: "GET"
+      method: "GET",
+      token: accessToken
     })
   }
 
   const getItem = async (id: string) => {
     return callApi<never, ItemResponse>({
       path: `/v1/items/item?id=${id}`,
-      method: "GET"
+      method: "GET",
+      token: accessToken
     })
   }
 
   const searchItems = async (searchText: string) => {
     return callApi<never, ItemResponse[]>({
       path: `/v1/items/search?searchText=${searchText}`,
-      method: "GET"
+      method: "GET",
+      token: accessToken
     })
   }
 
