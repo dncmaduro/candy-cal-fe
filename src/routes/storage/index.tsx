@@ -40,7 +40,6 @@ function RouteComponent() {
 
   useEffect(() => {
     if (!tab) {
-      console.log("a")
       navigate({ to: `/storage`, search: { tab: "items" } })
     }
   }, [])

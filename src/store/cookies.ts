@@ -10,5 +10,5 @@ export const getFromCookies = (key: string) => {
       return decodeURIComponent(cookieValue)
     }
   }
-  return null
+  return ""
 }
