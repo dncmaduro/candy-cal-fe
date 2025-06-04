@@ -1,11 +1,20 @@
 import { useQuery } from "@tanstack/react-query"
 import { useProducts } from "../../hooks/useProducts"
 import { ItemResponse, ProductResponse } from "../../hooks/models"
-import { Checkbox, Divider, Flex, Stack, Table, Text } from "@mantine/core"
+import {
+  Checkbox,
+  Divider,
+  Flex,
+  ScrollArea,
+  Stack,
+  Table,
+  Text
+} from "@mantine/core"
 import { useEffect, useMemo, useState } from "react"
 import { useItems } from "../../hooks/useItems"
 
 interface Props {
+  name?: string
   orders: {
     products: {
       name: string
@@ -111,39 +120,41 @@ export const CalOrders = ({ orders, allCalItems }: Props) => {
 
   return (
     <Flex gap={16}>
-      <Table withTableBorder w={"60%"}>
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th>Các mã Sản phẩm</Table.Th>
-            <Table.Th>Số đơn</Table.Th>
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          {allProducts &&
-            orders.map((order, index) => (
-              <Table.Tr
-                key={index}
-                onClick={() => toggleOrders(index)}
-                style={{
-                  cursor: "pointer",
-                  backgroundColor: chosenOrders[index] ? "#dbeafe" : "white"
-                }}
-                className="!border-gray-300"
-              >
-                <Table.Td>
-                  <Stack>
-                    {order.products.map((product) => (
-                      <Text key={product.name}>
-                        {product.name} - {product.quantity}
-                      </Text>
-                    ))}
-                  </Stack>
-                </Table.Td>
-                <Table.Td>{order.quantity}</Table.Td>
-              </Table.Tr>
-            ))}
-        </Table.Tbody>
-      </Table>
+      <ScrollArea.Autosize mah={600} w={"60%"}>
+        <Table withTableBorder>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Các mã Sản phẩm</Table.Th>
+              <Table.Th>Số đơn</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {allProducts &&
+              orders.map((order, index) => (
+                <Table.Tr
+                  key={index}
+                  onClick={() => toggleOrders(index)}
+                  style={{
+                    cursor: "pointer",
+                    backgroundColor: chosenOrders[index] ? "#dbeafe" : "white"
+                  }}
+                  className="!border-gray-300"
+                >
+                  <Table.Td>
+                    <Stack>
+                      {order.products.map((product) => (
+                        <Text key={product.name}>
+                          {product.name} - {product.quantity}
+                        </Text>
+                      ))}
+                    </Stack>
+                  </Table.Td>
+                  <Table.Td>{order.quantity}</Table.Td>
+                </Table.Tr>
+              ))}
+          </Table.Tbody>
+        </Table>
+      </ScrollArea.Autosize>
       {chosenOrders.some((e) => e) && (
         <>
           <Divider orientation="vertical" />

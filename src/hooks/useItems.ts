@@ -6,7 +6,6 @@ export const useItems = () => {
   const { accessToken } = useUserStore()
 
   const createItem = async (item: CreateItemRequest) => {
-    console.log(accessToken)
     return callApi<CreateItemRequest, ItemResponse>({
       path: `/v1/items`,
       method: "POST",

@@ -57,7 +57,7 @@ function RouteComponent() {
   })
 
   const fileDialog = useFileDialog({
-    accept: ".xlsx",
+    accept: ".xlsx, .xls",
     multiple: false,
     onChange: (files) => setFile(files ? files[0] : null)
   })
@@ -92,7 +92,13 @@ function RouteComponent() {
               onClick={() =>
                 modals.open({
                   title: `Tổng sản phẩm trong File ${latestFileName}`,
-                  children: <CalResultModal items={items} orders={orders} />,
+                  children: (
+                    <CalResultModal
+                      items={items}
+                      orders={orders}
+                      name={latestFileName}
+                    />
+                  ),
                   size: "xl",
                   w: 1400
                 })
