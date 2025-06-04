@@ -103,3 +103,44 @@ export interface CheckTokenRequest {
 export interface CheckTokenResponse {
   valid: boolean
 }
+
+export interface CreateLogRequest {
+  date: Date
+  items: {
+    _id: string
+    quantity: number
+  }[]
+  orders: {
+    products: {
+      name: string
+      quantity: number
+    }[]
+    quantity: number
+  }[]
+}
+
+export interface GetLogsRequest {
+  page: number
+  limit: number
+}
+
+export interface Log {
+  date: string
+  items: {
+    _id: string
+    quantity: number
+  }[]
+  orders: {
+    products: {
+      name: string
+      quantity: number
+    }[]
+    quantity: number
+  }[]
+  updatedAt: string
+}
+
+export interface GetLogsResponse {
+  data: Log[]
+  total: number
+}
