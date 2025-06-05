@@ -6,10 +6,9 @@ import { CalOrders } from "./CalOrders"
 import { useLogs } from "../../hooks/useLogs"
 import { CToast } from "../common/CToast"
 import { DatePickerInput } from "@mantine/dates"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 interface Props {
-  name?: string
   items: {
     _id: string
     quantity: number
@@ -21,12 +20,15 @@ interface Props {
     }[]
     quantity: number
   }[]
+  readOnly?: boolean
 }
 
-export const CalResultModal = ({ items, orders, name }: Props) => {
+export const CalResultModal = ({ items, orders, readOnly }: Props) => {
   const { getAllItems } = useItems()
   const { createLog } = useLogs()
-  const [date, setDate] = useState<Date | null>(new Date())
+  const [date, setDate] = useState<Date | null>(
+    new Date(new Date().setHours(0, 0, 0, 0))
+  )
 
   const { data: allItems } = useQuery({
     queryKey: ["getAllItems"],
@@ -52,6 +54,10 @@ export const CalResultModal = ({ items, orders, name }: Props) => {
       })
     }
   })
+
+  useEffect(() => {
+    console.log(date)
+  }, [date])
 
   return (
     <Box>
@@ -82,35 +88,40 @@ export const CalResultModal = ({ items, orders, name }: Props) => {
         </Tabs.Panel>
 
         <Tabs.Panel value="orders">
-          <CalOrders orders={orders} allCalItems={items} name={name} />
+          <CalOrders orders={orders} allCalItems={items} />
         </Tabs.Panel>
       </Tabs>
 
-      <Divider mt={16} mb={32} />
+      {!readOnly && (
+        <>
+          <Divider mt={16} mb={32} />
 
-      <DatePickerInput
-        label="Ngày vận đơn"
-        value={date}
-        onChange={setDate}
-        maxDate={new Date()}
-      />
+          <DatePickerInput
+            label="Ngày vận đơn"
+            value={date}
+            onChange={setDate}
+            maxDate={new Date()}
+            valueFormat="DD/MM/YYYY"
+          />
 
-      <Group mt={16} justify="flex-end">
-        <Button
-          loading={isSaving}
-          onClick={() => {
-            if (date) {
-              saveHistory({
-                date,
-                items,
-                orders
-              })
-            }
-          }}
-        >
-          Lưu lịch sử
-        </Button>
-      </Group>
+          <Group mt={16} justify="flex-end">
+            <Button
+              loading={isSaving}
+              onClick={() => {
+                if (date) {
+                  saveHistory({
+                    date,
+                    items,
+                    orders
+                  })
+                }
+              }}
+            >
+              Lưu lịch sử
+            </Button>
+          </Group>
+        </>
+      )}
     </Box>
   )
 }

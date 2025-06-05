@@ -144,3 +144,24 @@ export interface GetLogsResponse {
   data: Log[]
   total: number
 }
+
+export interface GetLogsRangeRequest {
+  startDate: string
+  endDate: string
+}
+
+export interface GetLogsRangeResponse {
+  startDate: string
+  endDate: string
+  items: {
+    _id: string
+    quantity: number
+  }[]
+  orders: {
+    products: {
+      name: string
+      quantity: number
+    }[]
+    quantity: number
+  }[]
+}

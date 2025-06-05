@@ -1,6 +1,12 @@
 import { useUserStore } from "../store/userStore"
 import { callApi } from "./axios"
-import { CreateLogRequest, GetLogsRequest, GetLogsResponse } from "./models"
+import {
+  CreateLogRequest,
+  GetLogsRangeRequest,
+  GetLogsRangeResponse,
+  GetLogsRequest,
+  GetLogsResponse
+} from "./models"
 
 export const useLogs = () => {
   const { accessToken } = useUserStore()
@@ -22,5 +28,13 @@ export const useLogs = () => {
     })
   }
 
-  return { createLog, getLogs }
+  const getLogsRange = async (req: GetLogsRangeRequest) => {
+    return callApi<never, GetLogsRangeResponse>({
+      path: `/v1/logs/range?startDate=${req.startDate}&endDate=${req.endDate}`,
+      method: "GET",
+      token: accessToken
+    })
+  }
+
+  return { createLog, getLogs, getLogsRange }
 }

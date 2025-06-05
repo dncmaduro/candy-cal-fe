@@ -86,7 +86,7 @@ export const AppLayout = ({ children }: Props) => {
             <NavButton to="/calfile" label="Nhập file XLSX để tính" />
             <NavButton to="/logs" label="Lịch sử" />
             <Badge ml={16} variant="outline" color="red">
-              version 1.1.0
+              version 1.1.1
             </Badge>
           </Group>
           <UserMenu />

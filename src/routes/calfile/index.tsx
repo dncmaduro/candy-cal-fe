@@ -92,13 +92,7 @@ function RouteComponent() {
               onClick={() =>
                 modals.open({
                   title: `Tổng sản phẩm trong File ${latestFileName}`,
-                  children: (
-                    <CalResultModal
-                      items={items}
-                      orders={orders}
-                      name={latestFileName}
-                    />
-                  ),
+                  children: <CalResultModal items={items} orders={orders} />,
                   size: "xl",
                   w: 1400
                 })
