@@ -14,7 +14,6 @@ import { useEffect, useMemo, useState } from "react"
 import { useItems } from "../../hooks/useItems"
 
 interface Props {
-  name?: string
   orders: {
     products: {
       name: string

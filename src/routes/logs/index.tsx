@@ -4,24 +4,34 @@ import {
   Box,
   Button,
   Flex,
+  Group,
   Loader,
   Pagination,
   Table,
   Text
 } from "@mantine/core"
 import { useLogs } from "../../hooks/useLogs"
-import { useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery } from "@tanstack/react-query"
 import { useEffect, useState } from "react"
 import { format } from "date-fns"
+import { modals } from "@mantine/modals"
+import { CalResultModal } from "../../components/cal/CalResultModal"
+import { DatePickerInput } from "@mantine/dates"
 
 export const Route = createFileRoute("/logs/")({
   component: RouteComponent
 })
 
 function RouteComponent() {
-  const DATA_PER_PAGE = 2
+  const DATA_PER_PAGE = 10
 
-  const { getLogs } = useLogs()
+  const [startDate, setStartDate] = useState<Date | null>(
+    new Date(new Date().setHours(0, 0, 0, 0))
+  )
+  const [endDate, setEndDate] = useState<Date | null>(
+    new Date(new Date().setHours(0, 0, 0, 0))
+  )
+  const { getLogs, getLogsRange } = useLogs()
   const [page, setPage] = useState<number>(1)
   const [totalPages, setTotalPages] = useState<number>(1)
 
@@ -30,6 +40,32 @@ function RouteComponent() {
     queryFn: () => getLogs({ page, limit: DATA_PER_PAGE }),
     select: (data) => {
       return data.data
+    }
+  })
+
+  const { mutate: viewLogsRange } = useMutation({
+    mutationFn: ({
+      startDate,
+      endDate
+    }: {
+      startDate: string
+      endDate: string
+    }) => getLogsRange({ startDate, endDate }),
+    onSuccess: (response) => {
+      console.log("bb")
+      console.log(response.data.items, response.data.orders)
+      modals.open({
+        title: `Vận đơn từ ngày ${format(response.data.startDate, "dd/MM/yyyy")} đến ${format(response.data.endDate, "dd/MM/yyyy")}`,
+        children: (
+          <CalResultModal
+            readOnly
+            items={response.data.items}
+            orders={response.data.orders}
+          />
+        ),
+        size: "xl",
+        w: 1400
+      })
     }
   })
 
@@ -43,6 +79,32 @@ function RouteComponent() {
     <AppLayout>
       <Box mt={32}>
         <Text className="!text-lg !font-bold">Lịch sử vận đơn</Text>
+        <Group>
+          Xem vận đơn trong khoảng thời gian:
+          <DatePickerInput
+            value={startDate}
+            onChange={setStartDate}
+            valueFormat="DD/MM/YYYY"
+          />
+          -
+          <DatePickerInput
+            value={endDate}
+            onChange={setEndDate}
+            valueFormat="DD/MM/YYYY"
+          />
+          <Button
+            onClick={() => {
+              if (startDate && endDate) {
+                viewLogsRange({
+                  startDate: startDate?.toLocaleDateString(),
+                  endDate: endDate?.toLocaleDateString()
+                })
+              }
+            }}
+          >
+            Xem
+          </Button>
+        </Group>
         <Table
           className="rounded-lg border border-gray-300"
           mt={40}
@@ -77,7 +139,17 @@ function RouteComponent() {
                     {log.orders.reduce((acc, o) => acc + o.quantity, 0)}
                   </Table.Td>
                   <Table.Td>
-                    <Button variant="light">Xem chi tiết</Button>
+                    <Button
+                      variant="light"
+                      onClick={() => {
+                        viewLogsRange({
+                          startDate: log.date,
+                          endDate: log.date
+                        })
+                      }}
+                    >
+                      Xem chi tiết
+                    </Button>
                   </Table.Td>
                 </Table.Tr>
               ))
