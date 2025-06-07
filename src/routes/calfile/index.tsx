@@ -3,11 +3,22 @@ import { useProducts } from "../../hooks/useProducts"
 import { useMutation } from "@tanstack/react-query"
 import { modals } from "@mantine/modals"
 import { CalResultModal } from "../../components/cal/CalResultModal"
-import { Button, Flex, Group, Text } from "@mantine/core"
+import {
+  Box,
+  Button,
+  Container,
+  Divider,
+  Group,
+  Stack,
+  Text,
+  Title,
+  rem
+} from "@mantine/core"
 import { useFileDialog } from "@mantine/hooks"
 import { useState } from "react"
 import { AppLayout } from "../../components/layouts/AppLayout"
 import { Helmet } from "react-helmet-async"
+import { IconUpload, IconCalculator, IconHistory } from "@tabler/icons-react"
 
 export const Route = createFileRoute("/calfile/")({
   component: RouteComponent
@@ -15,23 +26,10 @@ export const Route = createFileRoute("/calfile/")({
 
 function RouteComponent() {
   const { calFile } = useProducts()
-  const [items, setItems] = useState<
-    {
-      _id: string
-      quantity: number
-    }[]
-  >([])
-
+  const [items, setItems] = useState<{ _id: string; quantity: number }[]>([])
   const [orders, setOrders] = useState<
-    {
-      products: {
-        name: string
-        quantity: number
-      }[]
-      quantity: number
-    }[]
+    { products: { name: string; quantity: number }[]; quantity: number }[]
   >([])
-
   const [file, setFile] = useState<File | null>(null)
   const [latestFileName, setLatestFileName] = useState<string | undefined>()
 
@@ -68,40 +66,84 @@ function RouteComponent() {
         <title>MyCandy x Chíp</title>
       </Helmet>
       <AppLayout>
-        <Flex gap={32} align="center" direction={"column"} mx={"auto"} mt={32}>
-          <Button onClick={fileDialog.open} color="green" w={"fit-content"}>
-            Chọn file .xlsx để tính toán
-          </Button>
-          <Text>{file?.name}</Text>
-          <Group>
+        <Container size="sm" pt={48} pb={56}>
+          <Stack gap={36} align="center">
+            <Title order={2} fz={{ base: 22, md: 26 }}>
+              Tính toán từ file Excel
+            </Title>
+
             <Button
-              loading={isPending}
-              disabled={!file}
-              onClick={() => {
-                if (file) {
-                  calc(file)
+              onClick={fileDialog.open}
+              color="green"
+              leftSection={<IconUpload size={18} />}
+              size="md"
+              radius="xl"
+              px={22}
+              fw={600}
+              style={{ letterSpacing: 0.1 }}
+            >
+              Chọn file .xlsx để tính toán
+            </Button>
+
+            {file && (
+              <Box
+                px={22}
+                py={14}
+                mt={-8}
+                mb={-8}
+                style={{
+                  background: "#f4f6fb",
+                  borderRadius: rem(14),
+                  border: "1px solid #e5e7ef",
+                  display: "inline-block"
+                }}
+              >
+                <Text size="sm" c="dimmed">
+                  Đã chọn: <b>{file.name}</b>
+                </Text>
+              </Box>
+            )}
+
+            <Divider w={120} />
+
+            <Group gap={14}>
+              <Button
+                loading={isPending}
+                disabled={!file}
+                onClick={() => file && calc(file)}
+                leftSection={<IconCalculator size={18} />}
+                color="indigo"
+                fw={600}
+                size="md"
+                radius="xl"
+                px={20}
+              >
+                Bắt đầu tính
+              </Button>
+
+              <Button
+                disabled={!latestFileName}
+                variant="light"
+                color="yellow"
+                leftSection={<IconHistory size={18} />}
+                size="md"
+                radius="xl"
+                px={20}
+                fw={600}
+                onClick={() =>
+                  modals.open({
+                    title: `Tổng sản phẩm trong File ${latestFileName}`,
+                    children: <CalResultModal items={items} orders={orders} />,
+                    size: "xl",
+                    w: 1400
+                  })
                 }
-              }}
-            >
-              Bắt đầu tính
-            </Button>
-            <Button
-              disabled={!latestFileName}
-              variant="outline"
-              color="yellow"
-              onClick={() =>
-                modals.open({
-                  title: `Tổng sản phẩm trong File ${latestFileName}`,
-                  children: <CalResultModal items={items} orders={orders} />,
-                  size: "xl",
-                  w: 1400
-                })
-              }
-            >
-              Xem lại kết quả của file trước đó
-            </Button>
-          </Group>
-        </Flex>
+              >
+                Xem lại kết quả
+              </Button>
+            </Group>
+          </Stack>
+        </Container>
       </AppLayout>
     </>
   )

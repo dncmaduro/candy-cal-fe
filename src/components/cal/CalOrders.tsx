@@ -2,16 +2,21 @@ import { useQuery } from "@tanstack/react-query"
 import { useProducts } from "../../hooks/useProducts"
 import { ItemResponse, ProductResponse } from "../../hooks/models"
 import {
+  Box,
   Checkbox,
   Divider,
   Flex,
   ScrollArea,
   Stack,
   Table,
-  Text
+  Text,
+  Title,
+  rem,
+  Tooltip
 } from "@mantine/core"
 import { useEffect, useMemo, useState } from "react"
 import { useItems } from "../../hooks/useItems"
+import { IconCalculator } from "@tabler/icons-react"
 
 interface Props {
   orders: {
@@ -93,7 +98,6 @@ export const CalOrders = ({ orders, allCalItems }: Props) => {
             })
           })
         }
-
         return acc
       },
       {} as Record<string, number>
@@ -105,12 +109,10 @@ export const CalOrders = ({ orders, allCalItems }: Props) => {
           if (restQuantity > 0) {
             return { ...acc, [item._id]: restQuantity }
           }
-
           return acc
         },
         {} as Record<string, number>
       )
-
       setChosenItems(cal)
     } else {
       setChosenItems(items)
@@ -118,59 +120,131 @@ export const CalOrders = ({ orders, allCalItems }: Props) => {
   }, [chosenOrders, calRest])
 
   return (
-    <Flex gap={16}>
-      <ScrollArea.Autosize mah={600} w={"60%"}>
-        <Table withTableBorder>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Các mã Sản phẩm</Table.Th>
-              <Table.Th>Số đơn</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {allProducts &&
-              orders.map((order, index) => (
-                <Table.Tr
-                  key={index}
-                  onClick={() => toggleOrders(index)}
-                  style={{
-                    cursor: "pointer",
-                    backgroundColor: chosenOrders[index] ? "#dbeafe" : "white"
-                  }}
-                  className="!border-gray-300"
-                >
-                  <Table.Td>
-                    <Stack>
-                      {order.products.map((product) => (
-                        <Text key={product.name}>
-                          {product.name} - {product.quantity}
-                        </Text>
-                      ))}
-                    </Stack>
-                  </Table.Td>
-                  <Table.Td>{order.quantity}</Table.Td>
-                </Table.Tr>
-              ))}
-          </Table.Tbody>
-        </Table>
-      </ScrollArea.Autosize>
+    <Flex
+      gap={32}
+      py={8}
+      px={0}
+      direction={{ base: "column", md: "row" }}
+      align={{ md: "flex-start", base: "stretch" }}
+      style={{
+        minHeight: 340,
+        background: "rgba(248,250,255,0.97)",
+        borderRadius: rem(16)
+      }}
+    >
+      <Box w={{ base: "100%", md: "60%" }}>
+        <Text
+          fw={600}
+          fz="lg"
+          mb={8}
+          mt={4}
+          c="indigo.8"
+          style={{ letterSpacing: 0.2 }}
+        >
+          Danh sách đơn cần đóng
+        </Text>
+        <ScrollArea.Autosize mah={460} mx={-2}>
+          <Table
+            striped
+            highlightOnHover
+            withTableBorder
+            withColumnBorders
+            verticalSpacing="sm"
+            horizontalSpacing="md"
+            className="rounded-xl"
+            miw={320}
+          >
+            <Table.Thead bg="indigo.0">
+              <Table.Tr>
+                <Table.Th style={{ width: 220 }}>Sản phẩm</Table.Th>
+                <Table.Th>Số đơn</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {allProducts &&
+                orders.map((order, index) => (
+                  <Table.Tr
+                    key={index}
+                    onClick={() => toggleOrders(index)}
+                    style={{
+                      cursor: "pointer",
+                      background: chosenOrders[index]
+                        ? "rgba(129,140,248,0.16)"
+                        : undefined,
+                      transition: "background 0.15s"
+                    }}
+                  >
+                    <Table.Td>
+                      <Stack gap={2}>
+                        {order.products.map((product, i) => (
+                          <Text
+                            key={product.name + i}
+                            fz="sm"
+                            fw={500}
+                            c={chosenOrders[index] ? "indigo.7" : undefined}
+                          >
+                            {product.name}{" "}
+                            <Text span c="dimmed" fz="xs">
+                              ×{product.quantity}
+                            </Text>
+                          </Text>
+                        ))}
+                      </Stack>
+                    </Table.Td>
+                    <Table.Td>{order.quantity}</Table.Td>
+                  </Table.Tr>
+                ))}
+            </Table.Tbody>
+          </Table>
+        </ScrollArea.Autosize>
+      </Box>
+
       {chosenOrders.some((e) => e) && (
         <>
-          <Divider orientation="vertical" />
-          <Stack gap={16} pt={16} className="grow">
-            <Checkbox
-              label="Tính số còn lại"
-              checked={calRest}
-              onChange={() => setCalRest((prev) => !prev)}
-            />
-            <Divider w={"100%"} />
-            <Stack>
-              {chosenItems &&
+          <Divider orientation="vertical" visibleFrom="md" />
+          <Stack
+            gap={16}
+            pt={12}
+            className="grow"
+            px={{ base: 0, md: 14 }}
+            w={{ base: "100%", md: 320 }}
+            align="stretch"
+          >
+            <Flex align="center" gap={8}>
+              <Checkbox
+                label="Tính số còn lại"
+                checked={calRest}
+                onChange={() => setCalRest((prev) => !prev)}
+                color="indigo"
+              />
+              <Tooltip label="Hiển thị số lượng còn dư sau khi đóng đơn">
+                <IconCalculator size={17} color="#6366f1" />
+              </Tooltip>
+            </Flex>
+            <Divider w="100%" />
+            <Title order={6} fw={600} c="indigo.8" mb={-6}>
+              Danh sách mặt hàng cần dùng
+            </Title>
+            <Stack gap={6}>
+              {chosenItems && Object.entries(chosenItems).length > 0 ? (
                 Object.entries(chosenItems).map(([itemId, quantity]) => (
-                  <Text key={itemId}>
-                    {allItems?.[itemId]?.name || "Unknown Item"}: {quantity}
+                  <Text key={itemId} fz="sm" fw={500}>
+                    {allItems?.[itemId]?.name || (
+                      <Text span c="red">
+                        ?
+                      </Text>
+                    )}
+                    :{" "}
+                    <Text span c="indigo.7">
+                      {quantity}
+                    </Text>
                   </Text>
-                ))}
+                ))
+              ) : (
+                <Text c="dimmed" fz="sm">
+                  Không có mặt hàng nào
+                </Text>
+              )}
             </Stack>
           </Stack>
         </>

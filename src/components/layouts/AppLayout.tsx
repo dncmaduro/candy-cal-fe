@@ -1,4 +1,13 @@
-import { AppShell, Badge, Box, Button, Flex, Group } from "@mantine/core"
+import {
+  AppShell,
+  Badge,
+  Box,
+  Button,
+  Container,
+  Flex,
+  Group,
+  rem
+} from "@mantine/core"
 import { Link, useNavigate } from "@tanstack/react-router"
 import { ReactNode, useEffect } from "react"
 import { useUserStore } from "../../store/userStore"
@@ -12,14 +21,29 @@ interface Props {
   children: ReactNode
 }
 
+const navs = [
+  { to: "/storage", label: "Kho chứa" },
+  // { to: "/cal", label: "Tính toán" },
+  { to: "/calfile", label: "Tính đơn vận" },
+  { to: "/orders-logs", label: "Lịch sử vận đơn" }
+]
+
 const NavButton = ({ to, label }: { to: string; label: string }) => {
   const pathname = window.location.pathname
+  const active = pathname === to
   return (
     <Button
       component={Link}
       to={to}
-      color={pathname === to ? "indigo" : "gray"}
-      variant={pathname === to ? "light" : "subtle"}
+      variant={active ? "light" : "subtle"}
+      color={active ? "indigo" : "gray"}
+      px="md"
+      radius="xl"
+      fw={500}
+      style={{
+        boxShadow: active ? "0 2px 12px 0 rgba(60,80,180,0.10)" : "none",
+        transition: "box-shadow 0.18s"
+      }}
     >
       {label}
     </Button>
@@ -29,6 +53,7 @@ const NavButton = ({ to, label }: { to: string; label: string }) => {
 export const AppLayout = ({ children }: Props) => {
   const { accessToken, setUser, clearUser } = useUserStore()
   const { checkToken, getNewToken } = useUsers()
+  const navigate = useNavigate()
 
   const { mutate: getToken } = useMutation({
     mutationKey: ["getNewToken"],
@@ -50,9 +75,7 @@ export const AppLayout = ({ children }: Props) => {
   const { data: isTokenValid } = useQuery({
     queryKey: ["validateToken"],
     queryFn: checkToken,
-    select: (data) => {
-      return data.data.valid
-    },
+    select: (data) => data.data.valid,
     refetchInterval: 1000 * 30 // 30s
   })
 
@@ -68,33 +91,59 @@ export const AppLayout = ({ children }: Props) => {
     }
   }, [accessToken])
 
-  const navigate = useNavigate()
-
   return (
-    <AppShell header={{ height: 60 }}>
-      <AppShell.Header className="border-b border-gray-300 shadow-sm">
-        <Flex
-          gap={32}
-          px={32}
-          h={"100%"}
-          align="center"
-          justify={"space-between"}
-        >
-          <Group>
-            <NavButton to="/storage" label="Kho chứa" />
-            {/* <NavButton to="/cal" label="Tính toán" /> */}
-            <NavButton to="/calfile" label="Nhập file XLSX để tính" />
-            <NavButton to="/logs" label="Lịch sử" />
-            <Badge ml={16} variant="outline" color="red">
-              version 1.1.1
-            </Badge>
-          </Group>
-          <UserMenu />
-        </Flex>
+    <AppShell
+      header={{ height: 64 }}
+      padding="md"
+      withBorder={false}
+      style={{ background: "#f8fafc" }}
+    >
+      <AppShell.Header
+        style={{
+          boxShadow:
+            "0 2px 18px 0 rgba(120,120,150,0.06), 0 1.5px 0px 0 #ececec",
+          background: "#fff",
+          zIndex: 200
+        }}
+      >
+        <Container size="xl" px={{ base: 16, md: 32 }} h="100%">
+          <Flex
+            h="100%"
+            align="center"
+            justify="space-between"
+            gap={16}
+            style={{ minHeight: rem(60) }}
+          >
+            <Group gap={8}>
+              {navs.map((n) => (
+                <NavButton key={n.to} to={n.to} label={n.label} />
+              ))}
+              <Badge
+                ml={16}
+                variant="gradient"
+                gradient={{ from: "red", to: "orange", deg: 112 }}
+                radius="sm"
+                size="md"
+                fw={700}
+                style={{
+                  fontFamily: "Montserrat, sans-serif",
+                  letterSpacing: 0.2
+                }}
+              >
+                v1.1.2
+              </Badge>
+            </Group>
+            <UserMenu />
+          </Flex>
+        </Container>
       </AppShell.Header>
 
-      <AppShell.Main>
-        <Box px={32}>{children}</Box>
+      <AppShell.Main style={{ background: "none" }} h={"calc(100vh - 128px)"}>
+        <Container size="xl">
+          <Box w="100%" maw={1200} mx="auto">
+            {children}
+          </Box>
+        </Container>
       </AppShell.Main>
     </AppShell>
   )

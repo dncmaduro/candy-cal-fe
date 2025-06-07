@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { AppLayout } from "../../components/layouts/AppLayout"
-import { Tabs } from "@mantine/core"
+import { ScrollArea, Tabs } from "@mantine/core"
 import { Items } from "../../components/storage/Items"
 import { Products } from "../../components/storage/Products"
 import { useEffect } from "react"
@@ -55,6 +55,7 @@ function RouteComponent() {
           defaultValue={tab}
           mt={16}
           onChange={(value) => handleChange(value)}
+          h={"90vh"}
         >
           <Tabs.List>
             {tabOptions.map((tab) => (
@@ -64,13 +65,15 @@ function RouteComponent() {
             ))}
           </Tabs.List>
 
-          <Tabs.Panel value="items">
-            <Items />
-          </Tabs.Panel>
+          <ScrollArea.Autosize mah={"95%"}>
+            <Tabs.Panel value="items">
+              <Items />
+            </Tabs.Panel>
 
-          <Tabs.Panel value="products">
-            <Products />
-          </Tabs.Panel>
+            <Tabs.Panel value="products">
+              <Products />
+            </Tabs.Panel>
+          </ScrollArea.Autosize>
         </Tabs>
       </AppLayout>
     </>

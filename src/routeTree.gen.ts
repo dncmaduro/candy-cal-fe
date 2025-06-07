@@ -14,7 +14,6 @@ import { Route as rootRoute } from './routes/__root'
 import { Route as IndexImport } from './routes/index'
 import { Route as StorageIndexImport } from './routes/storage/index'
 import { Route as OrdersLogsIndexImport } from './routes/orders-logs/index'
-import { Route as LogsIndexImport } from './routes/logs/index'
 import { Route as CalfileIndexImport } from './routes/calfile/index'
 import { Route as CalIndexImport } from './routes/cal/index'
 
@@ -35,12 +34,6 @@ const StorageIndexRoute = StorageIndexImport.update({
 const OrdersLogsIndexRoute = OrdersLogsIndexImport.update({
   id: '/orders-logs/',
   path: '/orders-logs/',
-  getParentRoute: () => rootRoute,
-} as any)
-
-const LogsIndexRoute = LogsIndexImport.update({
-  id: '/logs/',
-  path: '/logs/',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -81,13 +74,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CalfileIndexImport
       parentRoute: typeof rootRoute
     }
-    '/logs/': {
-      id: '/logs/'
-      path: '/logs'
-      fullPath: '/logs'
-      preLoaderRoute: typeof LogsIndexImport
-      parentRoute: typeof rootRoute
-    }
     '/orders-logs/': {
       id: '/orders-logs/'
       path: '/orders-logs'
@@ -111,7 +97,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cal': typeof CalIndexRoute
   '/calfile': typeof CalfileIndexRoute
-  '/logs': typeof LogsIndexRoute
   '/orders-logs': typeof OrdersLogsIndexRoute
   '/storage': typeof StorageIndexRoute
 }
@@ -120,7 +105,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cal': typeof CalIndexRoute
   '/calfile': typeof CalfileIndexRoute
-  '/logs': typeof LogsIndexRoute
   '/orders-logs': typeof OrdersLogsIndexRoute
   '/storage': typeof StorageIndexRoute
 }
@@ -130,24 +114,16 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/cal/': typeof CalIndexRoute
   '/calfile/': typeof CalfileIndexRoute
-  '/logs/': typeof LogsIndexRoute
   '/orders-logs/': typeof OrdersLogsIndexRoute
   '/storage/': typeof StorageIndexRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/cal' | '/calfile' | '/logs' | '/orders-logs' | '/storage'
+  fullPaths: '/' | '/cal' | '/calfile' | '/orders-logs' | '/storage'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/cal' | '/calfile' | '/logs' | '/orders-logs' | '/storage'
-  id:
-    | '__root__'
-    | '/'
-    | '/cal/'
-    | '/calfile/'
-    | '/logs/'
-    | '/orders-logs/'
-    | '/storage/'
+  to: '/' | '/cal' | '/calfile' | '/orders-logs' | '/storage'
+  id: '__root__' | '/' | '/cal/' | '/calfile/' | '/orders-logs/' | '/storage/'
   fileRoutesById: FileRoutesById
 }
 
@@ -155,7 +131,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CalIndexRoute: typeof CalIndexRoute
   CalfileIndexRoute: typeof CalfileIndexRoute
-  LogsIndexRoute: typeof LogsIndexRoute
   OrdersLogsIndexRoute: typeof OrdersLogsIndexRoute
   StorageIndexRoute: typeof StorageIndexRoute
 }
@@ -164,7 +139,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CalIndexRoute: CalIndexRoute,
   CalfileIndexRoute: CalfileIndexRoute,
-  LogsIndexRoute: LogsIndexRoute,
   OrdersLogsIndexRoute: OrdersLogsIndexRoute,
   StorageIndexRoute: StorageIndexRoute,
 }
@@ -182,7 +156,6 @@ export const routeTree = rootRoute
         "/",
         "/cal/",
         "/calfile/",
-        "/logs/",
         "/orders-logs/",
         "/storage/"
       ]
@@ -195,9 +168,6 @@ export const routeTree = rootRoute
     },
     "/calfile/": {
       "filePath": "calfile/index.tsx"
-    },
-    "/logs/": {
-      "filePath": "logs/index.tsx"
     },
     "/orders-logs/": {
       "filePath": "orders-logs/index.tsx"
