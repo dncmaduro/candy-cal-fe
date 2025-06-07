@@ -165,3 +165,9 @@ export interface GetLogsRangeResponse {
     quantity: number
   }[]
 }
+
+export interface GetMeResponse {
+  username: string
+  name: string
+  role: string
+}
