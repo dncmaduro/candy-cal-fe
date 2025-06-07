@@ -3,16 +3,19 @@ import { useItems } from "../../hooks/useItems"
 import {
   Box,
   Button,
+  Divider,
   Flex,
   Loader,
   Table,
   Text,
-  TextInput
+  TextInput,
+  rem,
+  Tooltip
 } from "@mantine/core"
 import { modals } from "@mantine/modals"
 import { ItemModal } from "./ItemModal"
 import { useEffect, useState } from "react"
-import { IconSearch } from "@tabler/icons-react"
+import { IconPlus, IconSearch } from "@tabler/icons-react"
 import { useDebouncedValue } from "@mantine/hooks"
 
 export const Items = () => {
@@ -27,9 +30,7 @@ export const Items = () => {
   } = useQuery({
     queryKey: ["searchItems", debouncedSearchText],
     queryFn: () => searchItems(debouncedSearchText),
-    select: (data) => {
-      return data.data
-    }
+    select: (data) => data.data
   })
 
   useEffect(() => {
@@ -37,61 +38,149 @@ export const Items = () => {
   }, [debouncedSearchText])
 
   return (
-    <Box mt={32}>
-      <Text className="!text-lg !font-bold">Các mặt hàng đang có</Text>
-      <Flex justify="flex-end" gap={16}>
-        <TextInput
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-          leftSection={<IconSearch size={16} />}
-        />
-        <Button
-          onClick={() =>
-            modals.open({
-              title: <Text className="!font-bold">Thêm sản phẩm mới</Text>,
-              children: <ItemModal refetch={refetch} />
-            })
-          }
-        >
-          Thêm mặt hàng
-        </Button>
+    <Box
+      mt={40}
+      mx="auto"
+      px={{ base: 8, md: 0 }}
+      w="100%"
+      maw={900}
+      style={{
+        background: "rgba(255,255,255,0.95)",
+        borderRadius: rem(20),
+        boxShadow: "0 4px 32px 0 rgba(60,80,180,0.07)",
+        border: "1px solid #ececec"
+      }}
+    >
+      <Flex
+        align="center"
+        justify="space-between"
+        pt={32}
+        pb={8}
+        px={{ base: 8, md: 28 }}
+        direction={{ base: "column", sm: "row" }}
+        gap={8}
+      >
+        <Box>
+          <Text fw={700} fz="xl" mb={2}>
+            Các mặt hàng đang có
+          </Text>
+          <Text c="dimmed" fz="sm">
+            Quản lý và chỉnh sửa danh sách mặt hàng
+          </Text>
+        </Box>
+        <Flex gap={12} align="center" w={{ base: "100%", sm: "auto" }}>
+          <TextInput
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            leftSection={<IconSearch size={16} />}
+            placeholder="Tìm kiếm mặt hàng..."
+            size="md"
+            w={{ base: "100%", sm: 240 }}
+            radius="md"
+            styles={{
+              input: { background: "#f4f6fb", border: "1px solid #ececec" }
+            }}
+          />
+          <Tooltip label="Thêm mặt hàng mới" withArrow>
+            <Button
+              color="indigo"
+              leftSection={<IconPlus size={18} />}
+              radius="xl"
+              size="md"
+              px={18}
+              onClick={() =>
+                modals.open({
+                  title: (
+                    <Text fw={700} fz="md">
+                      Thêm sản phẩm mới
+                    </Text>
+                  ),
+                  children: <ItemModal refetch={refetch} />
+                })
+              }
+              style={{
+                fontWeight: 600,
+                letterSpacing: 0.1
+              }}
+            >
+              Thêm mặt hàng
+            </Button>
+          </Tooltip>
+        </Flex>
       </Flex>
-      <Table className="rounded-lg border border-gray-300" mt={40}>
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th>Tên mặt hàng</Table.Th>
-            <Table.Th>Số lượng/thùng</Table.Th>
-            <Table.Th>Hành động</Table.Th>
-          </Table.Tr>
-        </Table.Thead>
 
-        <Table.Tbody>
-          {isLoading ? (
-            <Loader p={16} mx={"auto"} />
-          ) : (
-            itemsData &&
-            itemsData.map((item) => (
-              <Table.Tr key={item._id}>
-                <Table.Td>{item.name}</Table.Td>
-                <Table.Td>{item.quantityPerBox}</Table.Td>
-                <Table.Td>
-                  <Button
-                    variant="light"
-                    onClick={() =>
-                      modals.open({
-                        title: <Text className="!font-bold">Sửa mặt hàng</Text>,
-                        children: <ItemModal item={item} refetch={refetch} />
-                      })
-                    }
-                  >
-                    Chỉnh sửa
-                  </Button>
+      <Divider my={0} />
+
+      <Box px={{ base: 4, md: 28 }} py={20}>
+        <Table
+          highlightOnHover
+          striped
+          withColumnBorders
+          withTableBorder
+          verticalSpacing="sm"
+          horizontalSpacing="md"
+          stickyHeader
+          className="rounded-xl"
+          miw={420}
+        >
+          <Table.Thead bg="indigo.0">
+            <Table.Tr>
+              <Table.Th style={{ width: 240 }}>Tên mặt hàng</Table.Th>
+              <Table.Th>Số lượng/thùng</Table.Th>
+              <Table.Th />
+            </Table.Tr>
+          </Table.Thead>
+
+          <Table.Tbody>
+            {isLoading ? (
+              <Table.Tr>
+                <Table.Td colSpan={3}>
+                  <Flex justify="center" align="center" h={60}>
+                    <Loader />
+                  </Flex>
                 </Table.Td>
               </Table.Tr>
-            ))
-          )}
-        </Table.Tbody>
-      </Table>
+            ) : itemsData && itemsData.length > 0 ? (
+              itemsData.map((item) => (
+                <Table.Tr key={item._id}>
+                  <Table.Td fw={500}>{item.name}</Table.Td>
+                  <Table.Td>{item.quantityPerBox}</Table.Td>
+                  <Table.Td>
+                    <Button
+                      variant="light"
+                      color="indigo"
+                      size="xs"
+                      radius="xl"
+                      px={14}
+                      onClick={() =>
+                        modals.open({
+                          title: (
+                            <Text fw={700} fz="md">
+                              Sửa mặt hàng
+                            </Text>
+                          ),
+                          children: <ItemModal item={item} refetch={refetch} />
+                        })
+                      }
+                      style={{ fontWeight: 500 }}
+                    >
+                      Chỉnh sửa
+                    </Button>
+                  </Table.Td>
+                </Table.Tr>
+              ))
+            ) : (
+              <Table.Tr>
+                <Table.Td colSpan={3}>
+                  <Flex justify="center" align="center" h={60}>
+                    <Text c="dimmed">Không có mặt hàng nào</Text>
+                  </Flex>
+                </Table.Td>
+              </Table.Tr>
+            )}
+          </Table.Tbody>
+        </Table>
+      </Box>
     </Box>
   )
 }

@@ -4,6 +4,7 @@ import { callApi } from "./axios"
 import {
   CheckTokenRequest,
   CheckTokenResponse,
+  GetMeResponse,
   LoginRequest,
   LoginResponse,
   RefreshTokenRequest,
@@ -38,5 +39,13 @@ export const useUsers = () => {
     })
   }
 
-  return { login, getNewToken, checkToken }
+  const getMe = async () => {
+    return callApi<never, GetMeResponse>({
+      method: "GET",
+      path: `/v1/users/me`,
+      token: accessToken
+    })
+  }
+
+  return { login, getNewToken, checkToken, getMe }
 }
