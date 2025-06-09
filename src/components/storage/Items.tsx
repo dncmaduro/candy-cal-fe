@@ -2,20 +2,16 @@ import { useQuery } from "@tanstack/react-query"
 import { useItems } from "../../hooks/useItems"
 import {
   Box,
-  Button,
   Divider,
   Flex,
   Loader,
   Table,
   Text,
   TextInput,
-  rem,
-  Tooltip
+  rem
 } from "@mantine/core"
-import { modals } from "@mantine/modals"
-import { ItemModal } from "./ItemModal"
 import { useEffect, useState } from "react"
-import { IconPlus, IconSearch } from "@tabler/icons-react"
+import { IconSearch } from "@tabler/icons-react"
 import { useDebouncedValue } from "@mantine/hooks"
 
 export const Items = () => {
@@ -81,31 +77,6 @@ export const Items = () => {
               input: { background: "#f4f6fb", border: "1px solid #ececec" }
             }}
           />
-          <Tooltip label="Thêm mặt hàng mới" withArrow>
-            <Button
-              color="indigo"
-              leftSection={<IconPlus size={18} />}
-              radius="xl"
-              size="md"
-              px={18}
-              onClick={() =>
-                modals.open({
-                  title: (
-                    <Text fw={700} fz="md">
-                      Thêm sản phẩm mới
-                    </Text>
-                  ),
-                  children: <ItemModal refetch={refetch} />
-                })
-              }
-              style={{
-                fontWeight: 600,
-                letterSpacing: 0.1
-              }}
-            >
-              Thêm mặt hàng
-            </Button>
-          </Tooltip>
         </Flex>
       </Flex>
 
@@ -126,8 +97,6 @@ export const Items = () => {
           <Table.Thead bg="indigo.0">
             <Table.Tr>
               <Table.Th style={{ width: 240 }}>Tên mặt hàng</Table.Th>
-              <Table.Th>Số lượng/thùng</Table.Th>
-              <Table.Th />
             </Table.Tr>
           </Table.Thead>
 
@@ -144,29 +113,6 @@ export const Items = () => {
               itemsData.map((item) => (
                 <Table.Tr key={item._id}>
                   <Table.Td fw={500}>{item.name}</Table.Td>
-                  <Table.Td>{item.quantityPerBox}</Table.Td>
-                  <Table.Td>
-                    <Button
-                      variant="light"
-                      color="indigo"
-                      size="xs"
-                      radius="xl"
-                      px={14}
-                      onClick={() =>
-                        modals.open({
-                          title: (
-                            <Text fw={700} fz="md">
-                              Sửa mặt hàng
-                            </Text>
-                          ),
-                          children: <ItemModal item={item} refetch={refetch} />
-                        })
-                      }
-                      style={{ fontWeight: 500 }}
-                    >
-                      Chỉnh sửa
-                    </Button>
-                  </Table.Td>
                 </Table.Tr>
               ))
             ) : (

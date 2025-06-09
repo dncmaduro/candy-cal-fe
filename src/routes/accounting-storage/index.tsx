@@ -1,16 +1,16 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { AppLayout } from "../../components/layouts/AppLayout"
-import { ScrollArea, Tabs } from "@mantine/core"
-import { Products } from "../../components/storage/Products"
 import { useEffect } from "react"
 import { Helmet } from "react-helmet-async"
+import { AppLayout } from "../../components/layouts/AppLayout"
+import { ScrollArea, Tabs } from "@mantine/core"
 import { Items } from "../../components/accounting-storage/Items"
+import { StorageLogs } from "../../components/accounting-storage/StorageLogs"
 
 type StorageTab = {
   tab: string
 }
 
-export const Route = createFileRoute("/storage/")({
+export const Route = createFileRoute("/accounting-storage/")({
   component: RouteComponent,
   validateSearch: (search: Record<string, unknown>): StorageTab => {
     return {
@@ -29,18 +29,18 @@ function RouteComponent() {
       value: "items"
     },
     {
-      label: "Sản phẩm",
-      value: "products"
+      label: "Lịch sử xuất/nhập kho",
+      value: "storagelogs"
     }
   ]
 
   const handleChange = (value: string | null) => {
-    navigate({ to: `/storage?tab=${value ?? "items"}` })
+    navigate({ to: `/accounting-storage?tab=${value ?? "items"}` })
   }
 
   useEffect(() => {
     if (!tab) {
-      navigate({ to: `/storage`, search: { tab: "items" } })
+      navigate({ to: `/accounting-storage`, search: { tab: "items" } })
     }
   }, [])
 
@@ -67,11 +67,12 @@ function RouteComponent() {
 
           <ScrollArea.Autosize mah={"95%"}>
             <Tabs.Panel value="items">
-              <Items readOnly />
+              <Items />
             </Tabs.Panel>
 
-            <Tabs.Panel value="products">
-              <Products />
+            <Tabs.Panel value="storagelogs">
+              {/* Placeholder for future storage logs component */}
+              <StorageLogs />
             </Tabs.Panel>
           </ScrollArea.Autosize>
         </Tabs>

@@ -1,12 +1,38 @@
 export interface CreateItemRequest {
+  code: string
   name: string
-  quantityPerBox: number
+  receivedQuantity: {
+    quantity: number
+    real: number
+  }
+  deliveredQuantity: {
+    quantity: number
+    real: number
+  }
+  restQuantity: {
+    quantity: number
+    real: number
+  }
+  note?: string
 }
 
 export interface ItemResponse {
   _id: string
   name: string
-  quantityPerBox: number
+  receivedQuantity: {
+    quantity: number
+    real: number
+  }
+  deliveredQuantity: {
+    quantity: number
+    real: number
+  }
+  restQuantity: {
+    quantity: number
+    real: number
+  }
+  code: string
+  note?: string
 }
 
 export interface CreateProductRequest {
@@ -170,4 +196,90 @@ export interface GetMeResponse {
   username: string
   name: string
   role: string
+}
+
+export interface GetStorageLogsRequest {
+  page: number
+  limit: number
+  startDate?: string
+  endDate?: string
+  status?: string
+  tag?: string
+  itemId?: string
+}
+
+export interface GetStorageLogsResponse {
+  data: {
+    _id: string
+    item: {
+      _id: string
+      quantity: number
+    }
+    note?: string
+    status: string
+    date: Date
+    tag?: string
+    itemId?: string
+  }[]
+  total: number
+}
+
+export interface CreateStorageLogRequest {
+  item: {
+    _id: string
+    quantity: number
+  }
+  note?: string
+  status: string
+  date: Date
+  tag?: string
+}
+
+export interface CreateStorageLogResponse {
+  item: {
+    _id: string
+    quantity: number
+  }
+  note?: string
+  status: string
+  date: Date
+  tag?: string
+  _id: string
+}
+
+export interface UpdateStorageLogRequest {
+  item: {
+    _id: string
+    quantity: number
+  }
+  note?: string
+  status: string
+  date: Date
+  tag?: string
+}
+
+export interface UpdateStorageLogResponse {
+  item: {
+    _id: string
+    quantity: number
+  }
+  note?: string
+  status: string
+  date: Date
+  tag?: string
+  _id: string
+}
+
+export interface GetStorageLogsByMonthRequest {
+  year: number
+  month: number
+}
+
+export interface GetStorageLogsByMonthResponse {
+  items: {
+    _id: string
+    name: string
+    deliveredQuantity: number
+    receivedQuantity: number
+  }[]
 }

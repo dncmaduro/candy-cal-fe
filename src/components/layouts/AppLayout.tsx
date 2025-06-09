@@ -16,17 +16,11 @@ import { useUsers } from "../../hooks/useUsers"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { saveToCookies } from "../../store/cookies"
 import { CToast } from "../common/CToast"
+import { NAVS } from "../../constants/navs"
 
 interface Props {
   children: ReactNode
 }
-
-const navs = [
-  { to: "/storage", label: "Kho chứa" },
-  // { to: "/cal", label: "Tính toán" },
-  { to: "/calfile", label: "Tính đơn vận" },
-  { to: "/orders-logs", label: "Lịch sử vận đơn" }
-]
 
 const NavButton = ({ to, label }: { to: string; label: string }) => {
   const pathname = window.location.pathname
@@ -52,7 +46,7 @@ const NavButton = ({ to, label }: { to: string; label: string }) => {
 
 export const AppLayout = ({ children }: Props) => {
   const { accessToken, setUser, clearUser } = useUserStore()
-  const { checkToken, getNewToken } = useUsers()
+  const { checkToken, getNewToken, getMe } = useUsers()
   const navigate = useNavigate()
 
   const { mutate: getToken } = useMutation({
@@ -70,6 +64,13 @@ export const AppLayout = ({ children }: Props) => {
         title: "Vui lòng đăng nhập lại!"
       })
     }
+  })
+
+  const { data: meData } = useQuery({
+    queryKey: ["getMe"],
+    queryFn: getMe,
+    enabled: !!accessToken,
+    select: (data) => data.data
   })
 
   const { data: isTokenValid } = useQuery({
@@ -115,14 +116,17 @@ export const AppLayout = ({ children }: Props) => {
             style={{ minHeight: rem(60) }}
           >
             <Group gap={8}>
-              {navs.map((n) => (
+              {NAVS.filter((n) => {
+                if (!meData) return false
+                return meData.role === "admin" || n.role === meData.role
+              }).map((n) => (
                 <NavButton key={n.to} to={n.to} label={n.label} />
               ))}
               <Badge
                 ml={16}
                 variant="gradient"
-                gradient={{ from: "red", to: "orange", deg: 112 }}
-                radius="sm"
+                gradient={{ from: "indigo", to: "violet", deg: 112 }}
+                radius="xl"
                 size="md"
                 fw={700}
                 style={{
@@ -130,7 +134,7 @@ export const AppLayout = ({ children }: Props) => {
                   letterSpacing: 0.2
                 }}
               >
-                v1.1.2
+                {import.meta.env.VITE_APP_VERSION}
               </Badge>
             </Group>
             <UserMenu />
