@@ -38,7 +38,7 @@ function RouteComponent() {
 
   useEffect(() => {
     if (accessToken) {
-      navigate({ to: "/storage" })
+      navigate({ to: "/postauth" })
     }
   }, [accessToken])
 
@@ -51,7 +51,7 @@ function RouteComponent() {
       CToast.success({
         title: "Đăng nhập thành công"
       })
-      navigate({ to: "/storage" })
+      navigate({ to: "/postauth" })
     },
     onError: () => {
       CToast.error({
