@@ -18,6 +18,7 @@ import { Route as OrdersLogsIndexImport } from './routes/orders-logs/index'
 import { Route as CalfileIndexImport } from './routes/calfile/index'
 import { Route as CalIndexImport } from './routes/cal/index'
 import { Route as AccountingStorageIndexImport } from './routes/accounting-storage/index'
+import { Route as AccessDeniedIndexImport } from './routes/access-denied/index'
 
 // Create/Update Routes
 
@@ -63,6 +64,12 @@ const AccountingStorageIndexRoute = AccountingStorageIndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const AccessDeniedIndexRoute = AccessDeniedIndexImport.update({
+  id: '/access-denied/',
+  path: '/access-denied/',
+  getParentRoute: () => rootRoute,
+} as any)
+
 // Populate the FileRoutesByPath interface
 
 declare module '@tanstack/react-router' {
@@ -72,6 +79,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/access-denied/': {
+      id: '/access-denied/'
+      path: '/access-denied'
+      fullPath: '/access-denied'
+      preLoaderRoute: typeof AccessDeniedIndexImport
       parentRoute: typeof rootRoute
     }
     '/accounting-storage/': {
@@ -123,6 +137,7 @@ declare module '@tanstack/react-router' {
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/access-denied': typeof AccessDeniedIndexRoute
   '/accounting-storage': typeof AccountingStorageIndexRoute
   '/cal': typeof CalIndexRoute
   '/calfile': typeof CalfileIndexRoute
@@ -133,6 +148,7 @@ export interface FileRoutesByFullPath {
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/access-denied': typeof AccessDeniedIndexRoute
   '/accounting-storage': typeof AccountingStorageIndexRoute
   '/cal': typeof CalIndexRoute
   '/calfile': typeof CalfileIndexRoute
@@ -144,6 +160,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
+  '/access-denied/': typeof AccessDeniedIndexRoute
   '/accounting-storage/': typeof AccountingStorageIndexRoute
   '/cal/': typeof CalIndexRoute
   '/calfile/': typeof CalfileIndexRoute
@@ -156,6 +173,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/access-denied'
     | '/accounting-storage'
     | '/cal'
     | '/calfile'
@@ -165,6 +183,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/access-denied'
     | '/accounting-storage'
     | '/cal'
     | '/calfile'
@@ -174,6 +193,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/access-denied/'
     | '/accounting-storage/'
     | '/cal/'
     | '/calfile/'
@@ -185,6 +205,7 @@ export interface FileRouteTypes {
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AccessDeniedIndexRoute: typeof AccessDeniedIndexRoute
   AccountingStorageIndexRoute: typeof AccountingStorageIndexRoute
   CalIndexRoute: typeof CalIndexRoute
   CalfileIndexRoute: typeof CalfileIndexRoute
@@ -195,6 +216,7 @@ export interface RootRouteChildren {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AccessDeniedIndexRoute: AccessDeniedIndexRoute,
   AccountingStorageIndexRoute: AccountingStorageIndexRoute,
   CalIndexRoute: CalIndexRoute,
   CalfileIndexRoute: CalfileIndexRoute,
@@ -214,6 +236,7 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
+        "/access-denied/",
         "/accounting-storage/",
         "/cal/",
         "/calfile/",
@@ -224,6 +247,9 @@ export const routeTree = rootRoute
     },
     "/": {
       "filePath": "index.tsx"
+    },
+    "/access-denied/": {
+      "filePath": "access-denied/index.tsx"
     },
     "/accounting-storage/": {
       "filePath": "accounting-storage/index.tsx"

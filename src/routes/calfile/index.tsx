@@ -19,12 +19,14 @@ import { useState } from "react"
 import { AppLayout } from "../../components/layouts/AppLayout"
 import { Helmet } from "react-helmet-async"
 import { IconUpload, IconCalculator, IconHistory } from "@tabler/icons-react"
+import { useAuthGuard } from "../../hooks/useAuthGuard"
 
 export const Route = createFileRoute("/calfile/")({
   component: RouteComponent
 })
 
 function RouteComponent() {
+  useAuthGuard(["admin", "order-emp"])
   const { calFile } = useProducts()
   const [items, setItems] = useState<{ _id: string; quantity: number }[]>([])
   const [orders, setOrders] = useState<

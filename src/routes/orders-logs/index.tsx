@@ -22,12 +22,14 @@ import { modals } from "@mantine/modals"
 import { CalResultModal } from "../../components/cal/CalResultModal"
 import { DatePickerInput } from "@mantine/dates"
 import { IconListDetails, IconCalendarSearch } from "@tabler/icons-react"
+import { useAuthGuard } from "../../hooks/useAuthGuard"
 
 export const Route = createFileRoute("/orders-logs/")({
   component: RouteComponent
 })
 
 function RouteComponent() {
+  useAuthGuard(["admin", "order-emp"])
   const DATA_PER_PAGE = 10
 
   const [startDate, setStartDate] = useState<Date | null>(
