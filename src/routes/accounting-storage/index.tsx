@@ -5,6 +5,7 @@ import { AppLayout } from "../../components/layouts/AppLayout"
 import { ScrollArea, Tabs } from "@mantine/core"
 import { Items } from "../../components/accounting-storage/Items"
 import { StorageLogs } from "../../components/accounting-storage/StorageLogs"
+import { useAuthGuard } from "../../hooks/useAuthGuard"
 
 type StorageTab = {
   tab: string
@@ -20,6 +21,7 @@ export const Route = createFileRoute("/accounting-storage/")({
 })
 
 function RouteComponent() {
+  useAuthGuard(["admin", "accounting-emp"])
   const { tab } = Route.useSearch()
   const navigate = useNavigate()
 

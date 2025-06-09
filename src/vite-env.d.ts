@@ -2,7 +2,7 @@
 
 interface ImportMetaEnv {
   readonly BACKEND_URL: string
-  readonly APP_VERSION: string
+  readonly ENV: string
 }
 
 interface ImportMeta {

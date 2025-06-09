@@ -5,6 +5,7 @@ import { Products } from "../../components/storage/Products"
 import { useEffect } from "react"
 import { Helmet } from "react-helmet-async"
 import { Items } from "../../components/accounting-storage/Items"
+import { useAuthGuard } from "../../hooks/useAuthGuard"
 
 type StorageTab = {
   tab: string
@@ -20,6 +21,7 @@ export const Route = createFileRoute("/storage/")({
 })
 
 function RouteComponent() {
+  useAuthGuard(["admin", "order-emp"])
   const { tab } = Route.useSearch()
   const navigate = useNavigate()
 

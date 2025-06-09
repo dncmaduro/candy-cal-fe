@@ -17,12 +17,14 @@ import { IconPlus, IconTrash } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
 import { CalItemsRequest } from "../../hooks/models"
 import { Helmet } from "react-helmet-async"
+import { useAuthGuard } from "../../hooks/useAuthGuard"
 
 export const Route = createFileRoute("/cal/")({
   component: RouteComponent
 })
 
 function RouteComponent() {
+  useAuthGuard(["admin", "order-emp"])
   const { getAllProducts, calProducts } = useProducts()
 
   const { data: productsData } = useQuery({
