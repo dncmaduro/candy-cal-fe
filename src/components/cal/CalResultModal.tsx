@@ -38,7 +38,7 @@ interface Props {
 }
 
 export const CalResultModal = ({ items, orders, readOnly }: Props) => {
-  const { getAllItems } = useItems()
+  const { searchItems } = useItems()
   const { createLog } = useLogs()
   const [date, setDate] = useState<Date | null>(
     new Date(new Date().setHours(0, 0, 0, 0))
@@ -46,7 +46,7 @@ export const CalResultModal = ({ items, orders, readOnly }: Props) => {
 
   const { data: allItems } = useQuery({
     queryKey: ["getAllItems"],
-    queryFn: getAllItems,
+    queryFn: () => searchItems(""),
     select: (data) =>
       data.data.reduce(
         (acc, item) => ({ ...acc, [item._id]: item }),
