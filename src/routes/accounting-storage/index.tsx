@@ -6,6 +6,7 @@ import { ScrollArea, Tabs } from "@mantine/core"
 import { Items } from "../../components/accounting-storage/Items"
 import { StorageLogs } from "../../components/accounting-storage/StorageLogs"
 import { useAuthGuard } from "../../hooks/useAuthGuard"
+import { MonthlyExports } from "../../components/accounting-storage/MonthlyExports"
 
 type StorageTab = {
   tab: string
@@ -33,6 +34,10 @@ function RouteComponent() {
     {
       label: "Lịch sử xuất/nhập kho",
       value: "storagelogs"
+    },
+    {
+      label: "Xuất hàng theo tháng",
+      value: "monthly-exports"
     }
   ]
 
@@ -73,8 +78,12 @@ function RouteComponent() {
             </Tabs.Panel>
 
             <Tabs.Panel value="storagelogs">
-              {/* Placeholder for future storage logs component */}
               <StorageLogs />
+            </Tabs.Panel>
+
+            <Tabs.Panel value="monthly-exports">
+              {/* Placeholder for future monthly exports component */}
+              <MonthlyExports />
             </Tabs.Panel>
           </ScrollArea.Autosize>
         </Tabs>
