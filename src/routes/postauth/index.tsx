@@ -25,33 +25,24 @@ function RouteComponent() {
   })
 
   useEffect(() => {
-    if (!accessToken) {
+    // Không có token hoặc token hỏng, về login, đừng render gì
+    if (!accessToken || isError) {
       clearUser()
       navigate({ to: "/" })
     }
-    // Nếu gọi getMe mà fail (token hết hạn hoặc lỗi), cũng clear & về login
-    if (accessToken && isError) {
-      clearUser()
-      navigate({ to: "/" })
-    }
-  }, [accessToken, isError])
+  }, [accessToken, isError, clearUser, navigate])
 
-  // Loading trạng thái gọi getMe
-  if (isLoading) return null
+  // Khi đang loading hoặc đang navigate thì render null (chặn nháy UI/flicker)
+  if (!accessToken || isLoading || isError) return null
 
-  if (
-    meData?.role === "admin" ||
-    meData?.role === "order-manager" ||
-    meData?.role === "order-emp"
-  ) {
+  // Nếu có meData thì route theo role
+  if (meData?.role === "admin" || meData?.role === "order-emp") {
     return <Navigate to="/storage" />
-  }
-  if (meData?.role === "client") {
-    return <Navigate to="/orders" />
   }
   if (meData?.role === "accounting-emp") {
     return <Navigate to="/accounting-storage" />
   }
-  // fallback
-  return <Navigate to="/" />
+
+  // Nếu không xác định role, cũng trả null chờ fetch tiếp hoặc sẽ bị navigate ở useEffect
+  return null
 }
