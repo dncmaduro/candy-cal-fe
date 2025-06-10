@@ -147,7 +147,7 @@ export const AppLayout = ({ children }: Props) => {
               >
                 {import.meta.env.VITE_ENV === "development"
                   ? "DEVELOPMENT"
-                  : "v2.0.1"}
+                  : "v2.0.2"}
               </Badge>
             </Group>
             <UserMenu />
