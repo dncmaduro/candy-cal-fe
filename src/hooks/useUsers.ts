@@ -2,13 +2,19 @@ import { getFromCookies } from "../store/cookies"
 import { useUserStore } from "../store/userStore"
 import { callApi } from "./axios"
 import {
+  ChangePasswordRequest,
+  ChangePasswordResponse,
   CheckTokenRequest,
   CheckTokenResponse,
   GetMeResponse,
   LoginRequest,
   LoginResponse,
   RefreshTokenRequest,
-  RefreshTokenResponse
+  RefreshTokenResponse,
+  UpdateAvatarRequest,
+  UpdateAvatarResponse,
+  UpdateUserRequest,
+  UpdateUserResponse
 } from "./models"
 
 export const useUsers = () => {
@@ -47,5 +53,40 @@ export const useUsers = () => {
     })
   }
 
-  return { login, getNewToken, checkToken, getMe }
+  const changePassword = async (req: ChangePasswordRequest) => {
+    return callApi<ChangePasswordRequest, ChangePasswordResponse>({
+      method: "PATCH",
+      path: `/v1/users/change-password`,
+      data: req,
+      token: accessToken
+    })
+  }
+
+  const updateAvatar = async (req: UpdateAvatarRequest) => {
+    return callApi<UpdateAvatarRequest, UpdateAvatarResponse>({
+      method: "PATCH",
+      path: `/v1/users/avatar`,
+      data: req,
+      token: accessToken
+    })
+  }
+
+  const updateUser = async (req: UpdateUserRequest) => {
+    return callApi<UpdateUserRequest, UpdateUserResponse>({
+      method: "PATCH",
+      path: `/v1/users/update`,
+      data: req,
+      token: accessToken
+    })
+  }
+
+  return {
+    login,
+    getNewToken,
+    checkToken,
+    getMe,
+    changePassword,
+    updateAvatar,
+    updateUser
+  }
 }

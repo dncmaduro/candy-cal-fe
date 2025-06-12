@@ -81,17 +81,6 @@ export const AppLayout = ({ children }: Props) => {
   })
 
   useEffect(() => {
-    if (!accessToken) {
-      navigate({ to: "/" })
-    }
-    // Nếu đã login nhưng getMe fail => về login luôn
-    if (accessToken && !meData) {
-      clearUser()
-      navigate({ to: "/" })
-    }
-  }, [accessToken, meData])
-
-  useEffect(() => {
     if (!isTokenValid) {
       getToken()
     }
@@ -147,7 +136,7 @@ export const AppLayout = ({ children }: Props) => {
               >
                 {import.meta.env.VITE_ENV === "development"
                   ? "DEVELOPMENT"
-                  : "v2.0.3"}
+                  : "v2.0.5"}
               </Badge>
             </Group>
             <UserMenu />

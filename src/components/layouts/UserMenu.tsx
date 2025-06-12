@@ -4,13 +4,14 @@ import { useUserStore } from "../../store/userStore"
 import { useUsers } from "../../hooks/useUsers"
 import { useQuery } from "@tanstack/react-query"
 import { useMemo } from "react"
+import { Link } from "@tanstack/react-router"
 
 export const UserMenu = () => {
   const { clearUser } = useUserStore()
   const { getMe } = useUsers()
 
   const { data: meData } = useQuery({
-    queryKey: ["get-me"],
+    queryKey: ["getMe"],
     queryFn: () => getMe(),
     select: (data) => data.data
   })
@@ -39,7 +40,12 @@ export const UserMenu = () => {
             boxShadow: "0 2px 8px 0 rgba(60, 60, 80, 0.06)"
           }}
         >
-          <Avatar size="sm" radius="xl" alt={meData?.name} />
+          <Avatar
+            size="sm"
+            radius="xl"
+            alt={meData?.name}
+            src={meData?.avatarUrl}
+          />
           <Box>
             <Text fw={500} fz="sm" lh={1.2}>
               {meData?.name ?? "Người dùng"}
@@ -57,6 +63,7 @@ export const UserMenu = () => {
             <Avatar
               size={54}
               radius={32}
+              src={meData?.avatarUrl}
               alt={meData?.name}
               style={{ border: "2px solid #ececec" }}
             />
@@ -77,6 +84,8 @@ export const UserMenu = () => {
             /* Chuyển trang tài khoản nếu có */
           }}
           fz="sm"
+          component={Link}
+          to="/user"
         >
           Thông tin tài khoản
         </Menu.Item>

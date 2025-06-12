@@ -196,6 +196,7 @@ export interface GetMeResponse {
   username: string
   name: string
   role: string
+  avatarUrl?: string
 }
 
 export interface GetStorageLogsRequest {
@@ -291,4 +292,29 @@ export interface GetStorageLogsByMonthResponse {
       receivedQuantity: number
     }[]
   }[]
+}
+
+export interface ChangePasswordRequest {
+  oldPassword: string
+  newPassword: string
+}
+
+export interface ChangePasswordResponse {
+  message: string
+}
+
+export interface UpdateAvatarRequest {
+  avatarUrl: string
+}
+
+export interface UpdateAvatarResponse {
+  message: string
+}
+
+export interface UpdateUserRequest {
+  name: string
+}
+
+export interface UpdateUserResponse {
+  message: string
 }
