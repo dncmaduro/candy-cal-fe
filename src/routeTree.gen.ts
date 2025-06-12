@@ -12,6 +12,7 @@
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as IndexImport } from './routes/index'
+import { Route as UserIndexImport } from './routes/user/index'
 import { Route as StorageIndexImport } from './routes/storage/index'
 import { Route as PostauthIndexImport } from './routes/postauth/index'
 import { Route as OrdersLogsIndexImport } from './routes/orders-logs/index'
@@ -25,6 +26,12 @@ import { Route as AccessDeniedIndexImport } from './routes/access-denied/index'
 const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const UserIndexRoute = UserIndexImport.update({
+  id: '/user/',
+  path: '/user/',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -130,6 +137,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StorageIndexImport
       parentRoute: typeof rootRoute
     }
+    '/user/': {
+      id: '/user/'
+      path: '/user'
+      fullPath: '/user'
+      preLoaderRoute: typeof UserIndexImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -144,6 +158,7 @@ export interface FileRoutesByFullPath {
   '/orders-logs': typeof OrdersLogsIndexRoute
   '/postauth': typeof PostauthIndexRoute
   '/storage': typeof StorageIndexRoute
+  '/user': typeof UserIndexRoute
 }
 
 export interface FileRoutesByTo {
@@ -155,6 +170,7 @@ export interface FileRoutesByTo {
   '/orders-logs': typeof OrdersLogsIndexRoute
   '/postauth': typeof PostauthIndexRoute
   '/storage': typeof StorageIndexRoute
+  '/user': typeof UserIndexRoute
 }
 
 export interface FileRoutesById {
@@ -167,6 +183,7 @@ export interface FileRoutesById {
   '/orders-logs/': typeof OrdersLogsIndexRoute
   '/postauth/': typeof PostauthIndexRoute
   '/storage/': typeof StorageIndexRoute
+  '/user/': typeof UserIndexRoute
 }
 
 export interface FileRouteTypes {
@@ -180,6 +197,7 @@ export interface FileRouteTypes {
     | '/orders-logs'
     | '/postauth'
     | '/storage'
+    | '/user'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -190,6 +208,7 @@ export interface FileRouteTypes {
     | '/orders-logs'
     | '/postauth'
     | '/storage'
+    | '/user'
   id:
     | '__root__'
     | '/'
@@ -200,6 +219,7 @@ export interface FileRouteTypes {
     | '/orders-logs/'
     | '/postauth/'
     | '/storage/'
+    | '/user/'
   fileRoutesById: FileRoutesById
 }
 
@@ -212,6 +232,7 @@ export interface RootRouteChildren {
   OrdersLogsIndexRoute: typeof OrdersLogsIndexRoute
   PostauthIndexRoute: typeof PostauthIndexRoute
   StorageIndexRoute: typeof StorageIndexRoute
+  UserIndexRoute: typeof UserIndexRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -223,6 +244,7 @@ const rootRouteChildren: RootRouteChildren = {
   OrdersLogsIndexRoute: OrdersLogsIndexRoute,
   PostauthIndexRoute: PostauthIndexRoute,
   StorageIndexRoute: StorageIndexRoute,
+  UserIndexRoute: UserIndexRoute,
 }
 
 export const routeTree = rootRoute
@@ -242,7 +264,8 @@ export const routeTree = rootRoute
         "/calfile/",
         "/orders-logs/",
         "/postauth/",
-        "/storage/"
+        "/storage/",
+        "/user/"
       ]
     },
     "/": {
@@ -268,6 +291,9 @@ export const routeTree = rootRoute
     },
     "/storage/": {
       "filePath": "storage/index.tsx"
+    },
+    "/user/": {
+      "filePath": "user/index.tsx"
     }
   }
 }

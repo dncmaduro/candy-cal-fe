@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { useEffect } from "react"
 
-export const useAuthGuard = (roles?: string[]) => {
+export const useAuthGuard = (roles: string[]) => {
   const { getMe } = useUsers()
   const { accessToken, clearUser } = useUserStore()
   const navigate = useNavigate()
@@ -21,6 +21,9 @@ export const useAuthGuard = (roles?: string[]) => {
   })
 
   useEffect(() => {
+    if (roles.includes("all")) {
+      roles = ["admin", "order-emp", "accounting-emp"]
+    }
     // Nếu chưa login hoặc token fail, về login
     if (!accessToken || isError) {
       clearUser()

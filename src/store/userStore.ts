@@ -1,5 +1,6 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
+import { saveToCookies } from "./cookies"
 
 interface UserState {
   accessToken: string
@@ -12,7 +13,10 @@ export const useUserStore = create<UserState>()(
     (set) => ({
       accessToken: "",
       setUser: (accessToken) => set({ accessToken }),
-      clearUser: () => set({ accessToken: "" })
+      clearUser: () => {
+        saveToCookies("refreshToken", "")
+        set({ accessToken: "" })
+      }
     }),
     {
       name: "user-store"
