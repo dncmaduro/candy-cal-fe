@@ -13,7 +13,7 @@ import { useItems } from "../../hooks/useItems"
 import { useMutation } from "@tanstack/react-query"
 import { modals } from "@mantine/modals"
 import { CToast } from "../common/CToast"
-import { IconCheck } from "@tabler/icons-react"
+import { IconCheck, IconTrash } from "@tabler/icons-react"
 
 interface Props {
   item?: ItemResponse
@@ -39,7 +39,7 @@ export const ItemModal = ({ item, refetch }: Props) => {
         }
   })
 
-  const { createItem, updateItem } = useItems()
+  const { createItem, updateItem, deleteItem } = useItems()
 
   const { mutate: create, isPending: creating } = useMutation({
     mutationKey: ["createItem"],
@@ -65,6 +65,23 @@ export const ItemModal = ({ item, refetch }: Props) => {
       modals.closeAll()
       CToast.success({
         title: "Cập nhật sản phẩm thành công"
+      })
+      refetch()
+    },
+    onError: () => {
+      CToast.error({
+        title: "Có lỗi xảy ra"
+      })
+    }
+  })
+
+  const { mutate: remove, isPending: removing } = useMutation({
+    mutationKey: ["deleteItem"],
+    mutationFn: deleteItem,
+    onSuccess: () => {
+      modals.closeAll()
+      CToast.success({
+        title: "Xoá sản phẩm thành công"
       })
       refetch()
     },
@@ -239,18 +256,31 @@ export const ItemModal = ({ item, refetch }: Props) => {
           )}
         />
 
-        <Button
-          type="submit"
-          loading={creating || updating}
-          leftSection={<IconCheck size={18} />}
-          color="indigo"
-          radius="xl"
-          size="md"
-          fw={600}
-          mt={6}
-        >
-          Xác nhận
-        </Button>
+        <Group mt={6} justify="flex-end">
+          <Button
+            variant="outline"
+            color="red"
+            radius="xl"
+            size="md"
+            onClick={() => item?._id && remove(item?._id)}
+            loading={removing}
+            leftSection={<IconTrash size={18} />}
+            fw={600}
+          >
+            Xoá
+          </Button>
+          <Button
+            type="submit"
+            loading={creating || updating}
+            leftSection={<IconCheck size={18} />}
+            color="indigo"
+            radius="xl"
+            size="md"
+            fw={600}
+          >
+            Xác nhận
+          </Button>
+        </Group>
       </Stack>
     </form>
   )

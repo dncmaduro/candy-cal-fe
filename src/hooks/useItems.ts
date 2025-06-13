@@ -47,11 +47,20 @@ export const useItems = () => {
     })
   }
 
+  const deleteItem = async (id: string) => {
+    return callApi<never, ItemResponse>({
+      path: `/v1/items/${id}`,
+      method: "DELETE",
+      token: accessToken
+    })
+  }
+
   return {
     createItem,
     updateItem,
     getAllItems,
     getItem,
-    searchItems
+    searchItems,
+    deleteItem
   }
 }
