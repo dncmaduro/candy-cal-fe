@@ -89,6 +89,7 @@ export interface CalItemsResponse {
     }[]
     quantity: number
   }[]
+  total: number
 }
 
 export interface CalItemsRequest {
@@ -190,6 +191,7 @@ export interface GetLogsRangeResponse {
     }[]
     quantity: number
   }[]
+  total: number
 }
 
 export interface GetMeResponse {

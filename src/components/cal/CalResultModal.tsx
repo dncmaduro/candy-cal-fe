@@ -34,10 +34,11 @@ interface Props {
     }[]
     quantity: number
   }[]
+  total: number
   readOnly?: boolean
 }
 
-export const CalResultModal = ({ items, orders, readOnly }: Props) => {
+export const CalResultModal = ({ items, orders, readOnly, total }: Props) => {
   const { searchItems } = useItems()
   const { createLog } = useLogs()
   const [date, setDate] = useState<Date | null>(
@@ -146,7 +147,7 @@ export const CalResultModal = ({ items, orders, readOnly }: Props) => {
         </Tabs.Panel>
 
         <Tabs.Panel value="orders">
-          <CalOrders orders={orders} allCalItems={items} />
+          <CalOrders orders={orders} allCalItems={items} total={total} />
         </Tabs.Panel>
       </Tabs>
 
