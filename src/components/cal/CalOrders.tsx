@@ -26,13 +26,14 @@ interface Props {
     }[]
     quantity: number
   }[]
+  total: number
   allCalItems: {
     _id: string
     quantity: number
   }[]
 }
 
-export const CalOrders = ({ orders, allCalItems }: Props) => {
+export const CalOrders = ({ orders, allCalItems, total }: Props) => {
   const { getAllProducts } = useProducts()
   const { getAllItems } = useItems()
   const [calRest, setCalRest] = useState<boolean>(false)
@@ -141,7 +142,7 @@ export const CalOrders = ({ orders, allCalItems }: Props) => {
           c="indigo.8"
           style={{ letterSpacing: 0.2 }}
         >
-          Danh sách đơn cần đóng
+          Danh sách đơn cần đóng ({total} đơn)
         </Text>
         <ScrollArea.Autosize mah={460} mx={-2}>
           <Table
