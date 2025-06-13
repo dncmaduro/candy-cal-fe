@@ -35,11 +35,11 @@ export const ProductModal = ({ product, refetch }: Props) => {
   })
 
   const { createProduct, updateProduct } = useProducts()
-  const { getAllItems } = useItems()
+  const { searchItems } = useItems()
 
   const { data: itemsData } = useQuery({
-    queryKey: ["getAllItems"],
-    queryFn: getAllItems,
+    queryKey: ["searchItems"],
+    queryFn: () => searchItems(""),
     select: (data) => {
       return data.data.map((item) => ({
         value: item._id,
@@ -47,8 +47,6 @@ export const ProductModal = ({ product, refetch }: Props) => {
       }))
     }
   })
-
-  console.log(itemsData)
 
   const { mutate: create } = useMutation({
     mutationKey: ["createProduct"],
