@@ -1,11 +1,11 @@
-import { ItemResponse } from "../../hooks/models"
+import { StorageItemResponse } from "../../hooks/models"
 import { Box, Stack, Text, Table, Divider } from "@mantine/core"
 
 interface Props {
-  item: ItemResponse
+  item: StorageItemResponse
 }
 
-export const ItemDetailModal = ({ item }: Props) => {
+export const StorageItemDetailModal = ({ item }: Props) => {
   return (
     <Box style={{ width: "100%", margin: "0 auto" }}>
       <Stack gap={10}>
