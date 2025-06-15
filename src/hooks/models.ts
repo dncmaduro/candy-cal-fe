@@ -1,4 +1,10 @@
 export interface CreateItemRequest {
+  name: string
+  note?: string
+  variants: string[]
+}
+
+export interface CreateStorageItemRequest {
   code: string
   name: string
   receivedQuantity: {
@@ -17,6 +23,13 @@ export interface CreateItemRequest {
 }
 
 export interface ItemResponse {
+  _id: string
+  name: string
+  note?: string
+  variants: string[]
+}
+
+export interface StorageItemResponse {
   _id: string
   name: string
   receivedQuantity: {

@@ -3,7 +3,7 @@ import { useEffect } from "react"
 import { Helmet } from "react-helmet-async"
 import { AppLayout } from "../../components/layouts/AppLayout"
 import { ScrollArea, Tabs } from "@mantine/core"
-import { Items } from "../../components/accounting-storage/Items"
+import { StorageItems } from "../../components/accounting-storage/StorageItems"
 import { StorageLogs } from "../../components/accounting-storage/StorageLogs"
 import { useAuthGuard } from "../../hooks/useAuthGuard"
 import { MonthlyExports } from "../../components/accounting-storage/MonthlyExports"
@@ -74,7 +74,7 @@ function RouteComponent() {
 
           <ScrollArea.Autosize mah={"95%"}>
             <Tabs.Panel value="items">
-              <Items />
+              <StorageItems />
             </Tabs.Panel>
 
             <Tabs.Panel value="storagelogs">

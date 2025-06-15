@@ -4,8 +4,8 @@ import { ScrollArea, Tabs } from "@mantine/core"
 import { Products } from "../../components/storage/Products"
 import { useEffect } from "react"
 import { Helmet } from "react-helmet-async"
-import { Items } from "../../components/accounting-storage/Items"
 import { useAuthGuard } from "../../hooks/useAuthGuard"
+import { Items } from "../../components/accounting-storage/Items"
 
 type StorageTab = {
   tab: string
@@ -69,7 +69,7 @@ function RouteComponent() {
 
           <ScrollArea.Autosize mah={"95%"}>
             <Tabs.Panel value="items">
-              <Items readOnly />
+              <Items />
             </Tabs.Panel>
 
             <Tabs.Panel value="products">
