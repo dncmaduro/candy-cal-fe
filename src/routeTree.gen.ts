@@ -16,6 +16,7 @@ import { Route as UserIndexImport } from './routes/user/index'
 import { Route as StorageIndexImport } from './routes/storage/index'
 import { Route as PostauthIndexImport } from './routes/postauth/index'
 import { Route as OrdersLogsIndexImport } from './routes/orders-logs/index'
+import { Route as DeliveredRequestsIndexImport } from './routes/delivered-requests/index'
 import { Route as CalfileIndexImport } from './routes/calfile/index'
 import { Route as CalIndexImport } from './routes/cal/index'
 import { Route as AccountingStorageIndexImport } from './routes/accounting-storage/index'
@@ -50,6 +51,12 @@ const PostauthIndexRoute = PostauthIndexImport.update({
 const OrdersLogsIndexRoute = OrdersLogsIndexImport.update({
   id: '/orders-logs/',
   path: '/orders-logs/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const DeliveredRequestsIndexRoute = DeliveredRequestsIndexImport.update({
+  id: '/delivered-requests/',
+  path: '/delivered-requests/',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -116,6 +123,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CalfileIndexImport
       parentRoute: typeof rootRoute
     }
+    '/delivered-requests/': {
+      id: '/delivered-requests/'
+      path: '/delivered-requests'
+      fullPath: '/delivered-requests'
+      preLoaderRoute: typeof DeliveredRequestsIndexImport
+      parentRoute: typeof rootRoute
+    }
     '/orders-logs/': {
       id: '/orders-logs/'
       path: '/orders-logs'
@@ -155,6 +169,7 @@ export interface FileRoutesByFullPath {
   '/accounting-storage': typeof AccountingStorageIndexRoute
   '/cal': typeof CalIndexRoute
   '/calfile': typeof CalfileIndexRoute
+  '/delivered-requests': typeof DeliveredRequestsIndexRoute
   '/orders-logs': typeof OrdersLogsIndexRoute
   '/postauth': typeof PostauthIndexRoute
   '/storage': typeof StorageIndexRoute
@@ -167,6 +182,7 @@ export interface FileRoutesByTo {
   '/accounting-storage': typeof AccountingStorageIndexRoute
   '/cal': typeof CalIndexRoute
   '/calfile': typeof CalfileIndexRoute
+  '/delivered-requests': typeof DeliveredRequestsIndexRoute
   '/orders-logs': typeof OrdersLogsIndexRoute
   '/postauth': typeof PostauthIndexRoute
   '/storage': typeof StorageIndexRoute
@@ -180,6 +196,7 @@ export interface FileRoutesById {
   '/accounting-storage/': typeof AccountingStorageIndexRoute
   '/cal/': typeof CalIndexRoute
   '/calfile/': typeof CalfileIndexRoute
+  '/delivered-requests/': typeof DeliveredRequestsIndexRoute
   '/orders-logs/': typeof OrdersLogsIndexRoute
   '/postauth/': typeof PostauthIndexRoute
   '/storage/': typeof StorageIndexRoute
@@ -194,6 +211,7 @@ export interface FileRouteTypes {
     | '/accounting-storage'
     | '/cal'
     | '/calfile'
+    | '/delivered-requests'
     | '/orders-logs'
     | '/postauth'
     | '/storage'
@@ -205,6 +223,7 @@ export interface FileRouteTypes {
     | '/accounting-storage'
     | '/cal'
     | '/calfile'
+    | '/delivered-requests'
     | '/orders-logs'
     | '/postauth'
     | '/storage'
@@ -216,6 +235,7 @@ export interface FileRouteTypes {
     | '/accounting-storage/'
     | '/cal/'
     | '/calfile/'
+    | '/delivered-requests/'
     | '/orders-logs/'
     | '/postauth/'
     | '/storage/'
@@ -229,6 +249,7 @@ export interface RootRouteChildren {
   AccountingStorageIndexRoute: typeof AccountingStorageIndexRoute
   CalIndexRoute: typeof CalIndexRoute
   CalfileIndexRoute: typeof CalfileIndexRoute
+  DeliveredRequestsIndexRoute: typeof DeliveredRequestsIndexRoute
   OrdersLogsIndexRoute: typeof OrdersLogsIndexRoute
   PostauthIndexRoute: typeof PostauthIndexRoute
   StorageIndexRoute: typeof StorageIndexRoute
@@ -241,6 +262,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountingStorageIndexRoute: AccountingStorageIndexRoute,
   CalIndexRoute: CalIndexRoute,
   CalfileIndexRoute: CalfileIndexRoute,
+  DeliveredRequestsIndexRoute: DeliveredRequestsIndexRoute,
   OrdersLogsIndexRoute: OrdersLogsIndexRoute,
   PostauthIndexRoute: PostauthIndexRoute,
   StorageIndexRoute: StorageIndexRoute,
@@ -262,6 +284,7 @@ export const routeTree = rootRoute
         "/accounting-storage/",
         "/cal/",
         "/calfile/",
+        "/delivered-requests/",
         "/orders-logs/",
         "/postauth/",
         "/storage/",
@@ -282,6 +305,9 @@ export const routeTree = rootRoute
     },
     "/calfile/": {
       "filePath": "calfile/index.tsx"
+    },
+    "/delivered-requests/": {
+      "filePath": "delivered-requests/index.tsx"
     },
     "/orders-logs/": {
       "filePath": "orders-logs/index.tsx"

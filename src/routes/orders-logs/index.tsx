@@ -17,7 +17,7 @@ import {
 import { useLogs } from "../../hooks/useLogs"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { useEffect, useState } from "react"
-import { format } from "date-fns"
+import { format, isEqual } from "date-fns"
 import { modals } from "@mantine/modals"
 import { CalResultModal } from "../../components/cal/CalResultModal"
 import { DatePickerInput } from "@mantine/dates"
@@ -55,16 +55,28 @@ function RouteComponent() {
     }: {
       startDate: string
       endDate: string
+      viewSingleDate?: boolean
+      date?: Date
     }) => getLogsRange({ startDate, endDate }),
-    onSuccess: (response) => {
+    onSuccess: (response, variables) => {
+      const startDate = new Date(response.data.startDate)
+      const endDate = new Date(response.data.endDate)
+      const modalTitle = isEqual(startDate, endDate)
+        ? "Vận đơn ngày " + format(startDate, "dd/MM/yyyy")
+        : "Vận đơn từ " +
+          format(startDate, "dd/MM/yyyy") +
+          " đến " +
+          format(endDate, "dd/MM/yyyy")
       modals.open({
-        title: `Vận đơn từ ${format(response.data.startDate, "dd/MM/yyyy")} đến ${format(response.data.endDate, "dd/MM/yyyy")}`,
+        title: modalTitle,
         children: (
           <CalResultModal
             readOnly
             items={response.data.items}
             orders={response.data.orders}
             total={response.data.total}
+            viewSingleDate={variables.viewSingleDate}
+            singleDate={variables.date}
           />
         ),
         size: "xl",
@@ -203,7 +215,9 @@ function RouteComponent() {
                           onClick={() => {
                             viewLogsRange({
                               startDate: log.date,
-                              endDate: log.date
+                              endDate: log.date,
+                              viewSingleDate: true,
+                              date: new Date(log.date)
                             })
                           }}
                         >

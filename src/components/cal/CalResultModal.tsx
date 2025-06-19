@@ -26,6 +26,23 @@ interface Props {
   items: {
     _id: string
     quantity: number
+    storageItems: {
+      code: string
+      name: string
+      receivedQuantity: {
+        quantity: number
+        real: number
+      }
+      deliveredQuantity: {
+        quantity: number
+        real: number
+      }
+      restQuantity: {
+        quantity: number
+        real: number
+      }
+      note?: string
+    }[]
   }[]
   orders: {
     products: {
@@ -36,9 +53,18 @@ interface Props {
   }[]
   total: number
   readOnly?: boolean
+  viewSingleDate?: boolean
+  singleDate?: Date
 }
 
-export const CalResultModal = ({ items, orders, readOnly, total }: Props) => {
+export const CalResultModal = ({
+  items,
+  orders,
+  readOnly,
+  total,
+  viewSingleDate,
+  singleDate
+}: Props) => {
   const { searchItems } = useItems()
   const { createLog } = useLogs()
   const [date, setDate] = useState<Date | null>(
@@ -46,7 +72,7 @@ export const CalResultModal = ({ items, orders, readOnly, total }: Props) => {
   )
 
   const { data: allItems } = useQuery({
-    queryKey: ["getAllItems"],
+    queryKey: ["searchItems"],
     queryFn: () => searchItems(""),
     select: (data) =>
       data.data.reduce(
@@ -147,13 +173,19 @@ export const CalResultModal = ({ items, orders, readOnly, total }: Props) => {
         </Tabs.Panel>
 
         <Tabs.Panel value="orders">
-          <CalOrders orders={orders} allCalItems={items} total={total} />
+          <CalOrders
+            orders={orders}
+            allCalItems={items}
+            total={total}
+            viewSingleDate={viewSingleDate}
+            singleDate={singleDate}
+          />
         </Tabs.Panel>
       </Tabs>
 
       {!readOnly && (
         <>
-          <Divider mt={24} mb={20} />
+          <Divider mt={24} mb={20} label={"Lưu lịch sử vận đơn"} />
           <Group align="end" gap={16} px={4} wrap="wrap">
             <DatePickerInput
               label="Ngày vận đơn"
