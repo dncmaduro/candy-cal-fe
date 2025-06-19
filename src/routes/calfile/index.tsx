@@ -25,10 +25,33 @@ export const Route = createFileRoute("/calfile/")({
   component: RouteComponent
 })
 
+interface ItemType {
+  _id: string
+  quantity: number
+  storageItems: {
+    code: string
+    name: string
+    receivedQuantity: {
+      quantity: number
+      real: number
+    }
+    deliveredQuantity: {
+      quantity: number
+      real: number
+    }
+    restQuantity: {
+      quantity: number
+      real: number
+    }
+    note?: string
+    _id: string
+  }[]
+}
+
 function RouteComponent() {
   useAuthGuard(["admin", "order-emp"])
   const { calFile } = useProducts()
-  const [items, setItems] = useState<{ _id: string; quantity: number }[]>([])
+  const [items, setItems] = useState<ItemType[]>([])
   const [orders, setOrders] = useState<
     { products: { name: string; quantity: number }[]; quantity: number }[]
   >([])

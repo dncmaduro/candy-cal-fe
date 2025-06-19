@@ -118,7 +118,7 @@ export const AppLayout = ({ children }: Props) => {
             <Group gap={8}>
               {NAVS.filter((n) => {
                 if (!meData) return false
-                return meData.role === "admin" || n.role === meData.role
+                return meData.role === "admin" || n.roles.includes(meData.role)
               }).map((n) => (
                 <NavButton key={n.to} to={n.to} label={n.label} />
               ))}
@@ -136,7 +136,7 @@ export const AppLayout = ({ children }: Props) => {
               >
                 {import.meta.env.VITE_ENV === "development"
                   ? "DEVELOPMENT"
-                  : "v2.1.0"}
+                  : "v2.2.0"}
               </Badge>
             </Group>
             <UserMenu />

@@ -93,7 +93,26 @@ export interface CalCombosRequest {
 export interface CalItemsResponse {
   items: {
     _id: string
+    name: string
     quantity: number
+    storageItems: {
+      code: string
+      name: string
+      receivedQuantity: {
+        quantity: number
+        real: number
+      }
+      deliveredQuantity: {
+        quantity: number
+        real: number
+      }
+      restQuantity: {
+        quantity: number
+        real: number
+      }
+      note?: string
+      _id: string
+    }[]
   }[]
   orders: {
     products: {
@@ -149,6 +168,23 @@ export interface CreateLogRequest {
   items: {
     _id: string
     quantity: number
+    storageItems: {
+      code: string
+      name: string
+      receivedQuantity: {
+        quantity: number
+        real: number
+      }
+      deliveredQuantity: {
+        quantity: number
+        real: number
+      }
+      restQuantity: {
+        quantity: number
+        real: number
+      }
+      note?: string
+    }[]
   }[]
   orders: {
     products: {
@@ -169,6 +205,24 @@ export interface Log {
   items: {
     _id: string
     quantity: number
+    storageItems: {
+      code: string
+      name: string
+      receivedQuantity: {
+        quantity: number
+        real: number
+      }
+      deliveredQuantity: {
+        quantity: number
+        real: number
+      }
+      restQuantity: {
+        quantity: number
+        real: number
+      }
+      note?: string
+      _id: string
+    }[]
   }[]
   orders: {
     products: {
@@ -196,6 +250,23 @@ export interface GetLogsRangeResponse {
   items: {
     _id: string
     quantity: number
+    storageItems: {
+      code: string
+      name: string
+      receivedQuantity: {
+        quantity: number
+        real: number
+      }
+      deliveredQuantity: {
+        quantity: number
+        real: number
+      }
+      restQuantity: {
+        quantity: number
+        real: number
+      }
+      note?: string
+    }[]
   }[]
   orders: {
     products: {
@@ -332,4 +403,127 @@ export interface UpdateUserRequest {
 
 export interface UpdateUserResponse {
   message: string
+}
+
+export interface CreateDeliveredRequestRequest {
+  items: {
+    _id: string
+    quantity: number
+  }[]
+  note?: string
+  date: Date
+}
+
+export interface CreateDeliveredRequestResponse {
+  date: Date
+  items: {
+    _id: string
+    quantity: number
+  }[]
+  note?: string
+  accepted?: boolean
+  updatedAt?: Date
+  comments?: {
+    userId: string
+    name: string
+    text: string
+    date: Date
+  }[]
+}
+
+export interface CreateDeliveredRequestCommentRequest {
+  requestId: string
+  comment: {
+    userId: string
+    name: string
+    text: string
+    date: Date
+  }
+}
+
+export interface CreateDeliveredRequestCommentResponse {
+  date: Date
+  items: {
+    _id: string
+    quantity: number
+  }[]
+  note?: string
+  accepted?: boolean
+  updatedAt?: Date
+  comments?: {
+    userId: string
+    name: string
+    text: string
+    date: Date
+  }[]
+}
+
+export interface AcceptDeliveredRequestRequest {
+  requestId: string
+}
+
+export interface AcceptDeliveredRequestResponse {
+  date: Date
+  items: {
+    _id: string
+    quantity: number
+  }[]
+  note?: string
+  accepted?: boolean
+  updatedAt?: Date
+  comments?: {
+    userId: string
+    name: string
+    text: string
+    date: Date
+  }[]
+}
+
+export interface SearchDeliveredRequestsRequest {
+  startDate?: string
+  endDate?: string
+  page?: number
+  limit?: number
+}
+
+export interface SearchDeliveredRequestsResponse {
+  requests: {
+    _id: string
+    date: Date
+    items: {
+      _id: string
+      quantity: number
+    }[]
+    note?: string
+    accepted?: boolean
+    updatedAt?: Date
+    comments?: {
+      userId: string
+      name: string
+      text: string
+      date: Date
+    }[]
+  }[]
+  total: number
+}
+
+export interface GetDeliveredRequestRequest {
+  requestId: string
+}
+
+export interface GetDeliveredRequestResponse {
+  date: Date
+  items: {
+    _id: string
+    quantity: number
+  }[]
+  note?: string
+  accepted?: boolean
+  updatedAt?: Date
+  comments?: {
+    userId: string
+    name: string
+    text: string
+    date: Date
+  }[]
 }
