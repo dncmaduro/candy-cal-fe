@@ -1,13 +1,15 @@
 import {
   ActionIcon,
   AppShell,
-  Box,
   Button,
   Stack,
   Text,
-  TextInput
+  TextInput,
+  PasswordInput,
+  Paper,
+  Center
 } from "@mantine/core"
-import { IconEye, IconEyeClosed } from "@tabler/icons-react"
+import { IconEye, IconEyeClosed, IconCandy } from "@tabler/icons-react"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useEffect, useState } from "react"
 import { Helmet } from "react-helmet-async"
@@ -28,7 +30,11 @@ interface LoginType {
 }
 
 function RouteComponent() {
-  const { handleSubmit, control } = useForm<LoginType>({
+  const {
+    handleSubmit,
+    control,
+    formState: { errors }
+  } = useForm<LoginType>({
     defaultValues: {}
   })
 
@@ -72,53 +78,104 @@ function RouteComponent() {
         <title>MyCandy x Chíp</title>
       </Helmet>
       <AppShell>
-        <AppShell.Main h={"100vh"} w={"100vw"}>
-          <Box h="100%" className="relative flex items-center justify-center">
-            <Box mx="auto" my="auto">
-              <Box
-                w={400}
-                py={32}
-                px={24}
-                className="rounded-lg border border-gray-200"
-              >
-                <form onSubmit={handleSubmit(onSubmit)}>
-                  <Stack>
-                    <Text>Đăng nhập vào CandyCal</Text>
-                    <Controller
-                      control={control}
-                      name="username"
-                      render={({ field }) => (
-                        <TextInput {...field} label="Tên người dùng" />
-                      )}
-                    />
-                    <Controller
-                      control={control}
-                      name="password"
-                      render={({ field }) => (
-                        <TextInput
-                          {...field}
-                          label="Mật khẩu"
-                          type={showPw ? "text" : "password"}
-                          rightSection={
-                            <ActionIcon
-                              size={"md"}
-                              variant="subtle"
-                              onClick={() => setShowPw((prev) => !prev)}
-                            >
-                              {showPw ? <IconEye /> : <IconEyeClosed />}
-                            </ActionIcon>
-                          }
-                        />
-                      )}
-                    />
-                    <Button type="submit" loading={isLogging}>
-                      Đăng nhập
-                    </Button>
-                  </Stack>
-                </form>
-              </Box>
-            </Box>
-          </Box>
+        <AppShell.Main h={"100vh"} w={"100vw"} bg="gray.0">
+          <Center h="100%">
+            <Paper
+              withBorder
+              shadow="md"
+              p={32}
+              pt={40}
+              w={400}
+              radius={24}
+              style={{
+                background: "rgba(255,255,255,0.99)",
+                border: "1.5px solid #ececec",
+                minWidth: 330,
+                position: "relative"
+              }}
+            >
+              <Stack align="center" mb={18} gap={6}>
+                {/* Có logo thì để dưới đây */}
+                <IconCandy size={48} color="#6366f1" />
+                <Text
+                  fw={800}
+                  fz={24}
+                  ta="center"
+                  mt={8}
+                  style={{ letterSpacing: 0.2 }}
+                >
+                  Đăng nhập vào CandyCal
+                </Text>
+                <Text c="dimmed" fz={13} ta="center" mb={2}>
+                  Quản lý kho vận MyCandy
+                </Text>
+              </Stack>
+              <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
+                <Stack gap={12}>
+                  <Controller
+                    control={control}
+                    name="username"
+                    rules={{ required: "Tên người dùng không được bỏ trống" }}
+                    render={({ field }) => (
+                      <TextInput
+                        {...field}
+                        label="Tên người dùng"
+                        placeholder="Nhập tên tài khoản"
+                        error={errors.username?.message}
+                        size="md"
+                        autoFocus
+                        radius="md"
+                        required
+                        spellCheck={false}
+                      />
+                    )}
+                  />
+                  <Controller
+                    control={control}
+                    name="password"
+                    rules={{ required: "Mật khẩu không được bỏ trống" }}
+                    render={({ field }) => (
+                      <PasswordInput
+                        {...field}
+                        label="Mật khẩu"
+                        placeholder="Nhập mật khẩu"
+                        error={errors.password?.message}
+                        size="md"
+                        radius="md"
+                        required
+                        rightSection={
+                          <ActionIcon
+                            size={"md"}
+                            variant="subtle"
+                            tabIndex={-1}
+                            onClick={() => setShowPw((prev) => !prev)}
+                          >
+                            {showPw ? <IconEye /> : <IconEyeClosed />}
+                          </ActionIcon>
+                        }
+                        type={showPw ? "text" : "password"}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleSubmit(onSubmit)()
+                        }}
+                      />
+                    )}
+                  />
+                  <Button
+                    type="submit"
+                    loading={isLogging}
+                    fullWidth
+                    size="md"
+                    radius="xl"
+                    fw={700}
+                    mt={6}
+                    disabled={isLogging}
+                  >
+                    Đăng nhập
+                  </Button>
+                </Stack>
+              </form>
+            </Paper>
+          </Center>
         </AppShell.Main>
       </AppShell>
     </>
