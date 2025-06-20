@@ -103,7 +103,7 @@ export const Items = () => {
                 modals.open({
                   size: "lg",
                   title: (
-                    <Text fw={700} fz="md">
+                    <Text fw={700} className="!font-bold" fz="md">
                       Thêm sản phẩm mới
                     </Text>
                   ),
@@ -188,7 +188,7 @@ export const Items = () => {
                         modals.open({
                           size: "lg",
                           title: (
-                            <Text fw={700} fz="md">
+                            <Text fw={700} className="!font-bold" fz="md">
                               Chỉnh sửa mặt hàng
                             </Text>
                           ),

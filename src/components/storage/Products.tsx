@@ -12,7 +12,8 @@ import {
   Text,
   TextInput,
   rem,
-  Tooltip
+  Tooltip,
+  Badge
 } from "@mantine/core"
 import { IconPlus, IconSearch } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
@@ -144,7 +145,21 @@ export const Products = () => {
             ) : productsData && productsData.length > 0 ? (
               productsData.map((product) => (
                 <Table.Tr key={product._id}>
-                  <Table.Td fw={500}>{product.name}</Table.Td>
+                  <Table.Td fw={500} w={"30%"}>
+                    <Flex align={"center"} gap={12}>
+                      <Text>{product.name}</Text>
+                      {product.isReady && (
+                        <Badge
+                          variant="outline"
+                          color="red"
+                          radius={"xl"}
+                          size="xs"
+                        >
+                          Sẵn hàng
+                        </Badge>
+                      )}
+                    </Flex>
+                  </Table.Td>
                   <Table.Td>
                     <ProductItems items={product.items} />
                   </Table.Td>

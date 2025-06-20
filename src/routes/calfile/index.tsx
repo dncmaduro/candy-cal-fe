@@ -53,9 +53,11 @@ function RouteComponent() {
   const { calFile } = useProducts()
   const [items, setItems] = useState<ItemType[]>([])
   const [orders, setOrders] = useState<
-    { products: { name: string; quantity: number }[]; quantity: number }[]
+    {
+      products: { name: string; quantity: number; isReady: boolean }[]
+      quantity: number
+    }[]
   >([])
-  const [total, setTotal] = useState<number>(0)
   const [file, setFile] = useState<File | null>(null)
   const [latestFileName, setLatestFileName] = useState<string | undefined>()
 
@@ -65,7 +67,6 @@ function RouteComponent() {
     onSuccess: (response) => {
       setItems(response.data.items)
       setOrders(response.data.orders)
-      setTotal(response.data.total)
       setLatestFileName(file?.name)
       modals.open({
         title: `Tổng sản phẩm trong File ${file?.name}`,
@@ -73,7 +74,6 @@ function RouteComponent() {
           <CalResultModal
             items={response.data.items}
             orders={response.data.orders}
-            total={response.data.total}
           />
         ),
         size: "xl",
@@ -161,13 +161,7 @@ function RouteComponent() {
                 onClick={() =>
                   modals.open({
                     title: `Tổng sản phẩm trong File ${latestFileName}`,
-                    children: (
-                      <CalResultModal
-                        items={items}
-                        orders={orders}
-                        total={total}
-                      />
-                    ),
+                    children: <CalResultModal items={items} orders={orders} />,
                     size: "xl",
                     w: 1400
                   })
