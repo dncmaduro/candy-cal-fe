@@ -74,7 +74,6 @@ function RouteComponent() {
             readOnly
             items={response.data.items}
             orders={response.data.orders}
-            total={response.data.total}
             viewSingleDate={variables.viewSingleDate}
             singleDate={variables.date}
           />

@@ -12,12 +12,12 @@ import {
   Text,
   Title,
   rem,
-  Tooltip,
-  Button
+  Button,
+  Group,
+  Select
 } from "@mantine/core"
 import { useEffect, useMemo, useState } from "react"
 import { useItems } from "../../hooks/useItems"
-import { IconBox, IconCalculator } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
 import { SendDeliveredRequestModal } from "./SendDeliveredRequestModal"
 
@@ -26,10 +26,10 @@ interface Props {
     products: {
       name: string
       quantity: number
+      isReady: boolean
     }[]
     quantity: number
   }[]
-  total: number
   allCalItems: {
     _id: string
     quantity: number
@@ -38,16 +38,45 @@ interface Props {
   singleDate?: Date
 }
 
+const VIEW_MODES = [
+  { value: "all", label: "Tất cả sản phẩm" },
+  { value: "ready", label: "Chỉ sản phẩm đã đóng sẵn" },
+  { value: "not-ready", label: "Chỉ sản phẩm chưa đóng sẵn" }
+]
+
 export const CalOrders = ({
   orders,
   allCalItems,
-  total,
   viewSingleDate,
   singleDate
 }: Props) => {
   const { getAllProducts } = useProducts()
   const { searchItems, searchStorageItems } = useItems()
   const [calRest, setCalRest] = useState<boolean>(false)
+  const [viewMode, setViewMode] = useState<"all" | "ready" | "not-ready">("all")
+
+  const notReadyOrders = useMemo(() => {
+    return orders
+      .map((order) => ({
+        products: order.products.filter((product) => product.isReady === false),
+        quantity: order.quantity
+      }))
+      .filter((order) => order.products.length > 0)
+  }, [orders])
+
+  // Filter orders theo view mode
+  const filteredOrders = useMemo(() => {
+    if (viewMode === "all") return orders
+    const isReadyValue = viewMode === "ready"
+    return orders
+      .map((order) => ({
+        products: order.products.filter(
+          (product) => product.isReady === isReadyValue
+        ),
+        quantity: order.quantity
+      }))
+      .filter((order) => order.products.length > 0)
+  }, [orders, viewMode])
 
   const { data: allProducts } = useQuery({
     queryKey: ["getAllProducts"],
@@ -59,6 +88,30 @@ export const CalOrders = ({
       )
     }
   })
+
+  const notReadyItems = useMemo(() => {
+    if (!notReadyOrders.length || !allProducts) return {}
+    const allProductsByName = Object.values(allProducts).reduce(
+      (acc, product) => ({ ...acc, [product.name]: product }),
+      {} as Record<string, ProductResponse>
+    )
+    return notReadyOrders.reduce(
+      (acc, order) => {
+        order.products.forEach((p) => {
+          const product = allProductsByName[p.name]
+          product?.items.forEach((item) => {
+            if (acc[item._id]) {
+              acc[item._id] += item.quantity * p.quantity * order.quantity
+            } else {
+              acc[item._id] = item.quantity * p.quantity * order.quantity
+            }
+          })
+        })
+        return acc
+      },
+      {} as Record<string, number>
+    )
+  }, [notReadyOrders, allProducts])
 
   const { data: allStorageItems } = useQuery({
     queryKey: ["searchStorageItems"],
@@ -96,6 +149,11 @@ export const CalOrders = ({
     orders.map((_) => false)
   )
 
+  // Reset chọn đơn khi đổi view mode
+  useEffect(() => {
+    setChosenOrders(filteredOrders.map((_) => false))
+  }, [viewMode, orders])
+
   const toggleOrders = (index: number) => {
     setChosenOrders((prev) => {
       const updated = [...prev]
@@ -104,13 +162,14 @@ export const CalOrders = ({
     })
   }
 
+  // Tính các item cần dùng theo view mode và chosenOrders
   const [chosenItems, setChosenItems] = useState<Record<string, number>>()
 
   useEffect(() => {
     const items = chosenOrders.reduce(
       (acc, chosen, index) => {
         if (chosen) {
-          const order = orders[index]
+          const order = filteredOrders[index]
           order.products.forEach((p) => {
             const product = allProductsByName[p.name]
             product.items.forEach((item) => {
@@ -141,10 +200,32 @@ export const CalOrders = ({
     } else {
       setChosenItems(items)
     }
-  }, [chosenOrders, calRest])
+  }, [chosenOrders, calRest, filteredOrders, allCalItems, allProductsByName])
+
+  const filteredTotalOrders = useMemo(() => {
+    return filteredOrders.reduce((acc, order) => acc + order.quantity, 0)
+  }, [filteredOrders])
 
   return (
     <Stack>
+      <Group justify="space-between" align="center" mb={-10} mt={10} mx={4}>
+        <Select
+          data={VIEW_MODES}
+          value={viewMode}
+          onChange={(val) => setViewMode(val as "all" | "ready" | "not-ready")}
+          size="sm"
+          w={260}
+          allowDeselect={false}
+        />
+        {/* Cái này nếu muốn giữ lại tính năng cũ */}
+        {/* <Checkbox
+          label="Tính số còn lại"
+          checked={calRest}
+          onChange={() => setCalRest((prev) => !prev)}
+          color="indigo"
+        /> */}
+      </Group>
+
       <Flex
         gap={32}
         py={8}
@@ -166,7 +247,7 @@ export const CalOrders = ({
             c="indigo.8"
             style={{ letterSpacing: 0.2 }}
           >
-            Danh sách đơn cần đóng ({total} đơn)
+            Danh sách đơn cần đóng ({filteredTotalOrders} đơn)
           </Text>
           <ScrollArea.Autosize mah={460} mx={-2}>
             <Table
@@ -187,7 +268,7 @@ export const CalOrders = ({
               </Table.Thead>
               <Table.Tbody>
                 {allProducts &&
-                  orders.map((order, index) => (
+                  filteredOrders.map((order, index) => (
                     <Table.Tr
                       key={index}
                       onClick={() => toggleOrders(index)}
@@ -242,9 +323,6 @@ export const CalOrders = ({
                   onChange={() => setCalRest((prev) => !prev)}
                   color="indigo"
                 />
-                <Tooltip label="Hiển thị số lượng còn dư sau khi đóng đơn">
-                  <IconCalculator size={17} color="#6366f1" />
-                </Tooltip>
               </Flex>
               <Divider w="100%" />
               <Title order={6} fw={600} c="indigo.8" mb={-6}>
@@ -275,50 +353,94 @@ export const CalOrders = ({
           </>
         )}
       </Flex>
+
       {viewSingleDate && singleDate && (
         <>
           <Divider mt={24} mb={20} label={"Gửi yêu cầu xuất kho cho kế toán"} />
-          <Button
-            color="indigo"
-            size="md"
-            radius="xl"
-            fw={600}
-            px={22}
-            variant="light"
-            disabled={!chosenOrders.some((e) => e) || !chosenItems}
-            onClick={() => {
-              modals.open({
-                title: "Gửi yêu cầu xuất kho",
-                size: "xl",
-                children: (
-                  <SendDeliveredRequestModal
-                    date={singleDate}
-                    allItems={itemsData || []}
-                    items={
-                      chosenItems
-                        ? Object.entries(chosenItems).map(
-                            ([itemId, quantity]) => {
-                              const item = allItems?.[itemId]
-                              return {
-                                _id: itemId,
-                                quantity: quantity,
-                                storageItems:
-                                  allStorageItems?.filter((si) =>
-                                    item?.variants.includes(si._id)
-                                  ) ?? []
+          <Group>
+            <Button
+              color="indigo"
+              size="md"
+              radius="xl"
+              fw={600}
+              px={22}
+              className="flex-1"
+              variant="light"
+              disabled={!chosenOrders.some((e) => e) || !chosenItems}
+              onClick={() => {
+                modals.open({
+                  title: "Gửi yêu cầu xuất kho",
+                  size: "xl",
+                  children: (
+                    <SendDeliveredRequestModal
+                      date={singleDate}
+                      allItems={itemsData || []}
+                      items={
+                        chosenItems
+                          ? Object.entries(chosenItems).map(
+                              ([itemId, quantity]) => {
+                                const item = allItems?.[itemId]
+                                return {
+                                  _id: itemId,
+                                  quantity: quantity,
+                                  storageItems:
+                                    allStorageItems?.filter((si) =>
+                                      item?.variants.includes(si._id)
+                                    ) ?? []
+                                }
                               }
-                            }
-                          )
-                        : []
-                    }
-                  />
-                )
-              })
-            }}
-            rightSection={<IconBox size={17} />}
-          >
-            Gửi yêu cầu xuất kho
-          </Button>
+                            )
+                          : []
+                      }
+                    />
+                  )
+                })
+              }}
+            >
+              Gửi yêu cầu xuất kho ({chosenOrders.length} đơn)
+            </Button>
+            <Button
+              color="indigo"
+              className="flex-1"
+              size="md"
+              radius="xl"
+              fw={600}
+              px={22}
+              variant="outline"
+              onClick={() => {
+                modals.open({
+                  title: "Gửi yêu cầu cho đơn không sẵn",
+                  size: "xl",
+                  children: (
+                    <SendDeliveredRequestModal
+                      date={singleDate}
+                      allItems={itemsData || []}
+                      items={
+                        notReadyItems &&
+                        Object.entries(notReadyItems).length > 0
+                          ? Object.entries(notReadyItems).map(
+                              ([itemId, quantity]) => {
+                                const item = allItems?.[itemId]
+                                return {
+                                  _id: itemId,
+                                  quantity: quantity,
+                                  storageItems:
+                                    allStorageItems?.filter((si) =>
+                                      item?.variants.includes(si._id)
+                                    ) ?? []
+                                }
+                              }
+                            )
+                          : []
+                      }
+                    />
+                  )
+                })
+              }}
+            >
+              Gửi yêu cầu cho đơn không sẵn
+            </Button>
+          </Group>
         </>
       )}
     </Stack>
