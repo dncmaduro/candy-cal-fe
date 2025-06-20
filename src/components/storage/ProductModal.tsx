@@ -14,7 +14,8 @@ import {
   Group,
   Box,
   Divider,
-  Text
+  Text,
+  Switch
 } from "@mantine/core"
 import { IconPlus, IconTrash } from "@tabler/icons-react"
 import { useItems } from "../../hooks/useItems"
@@ -28,7 +29,8 @@ export const ProductModal = ({ product, refetch }: Props) => {
   const { handleSubmit, control } = useForm<CreateProductRequest>({
     defaultValues: product ?? {
       name: "",
-      items: []
+      items: [],
+      isReady: false
     }
   })
 
@@ -105,6 +107,19 @@ export const ProductModal = ({ product, refetch }: Props) => {
               size="md"
             />
           )}
+        />
+        <Controller
+          name="isReady"
+          control={control}
+          render={({ field }) => {
+            return (
+              <Switch
+                checked={field.value}
+                label="Sẵn hàng"
+                onChange={field.onChange}
+              />
+            )
+          }}
         />
         <Divider label="Thành phần sản phẩm" labelPosition="center" my={8} />
         <Box>

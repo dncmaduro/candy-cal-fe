@@ -48,10 +48,10 @@ interface Props {
     products: {
       name: string
       quantity: number
+      isReady: boolean
     }[]
     quantity: number
   }[]
-  total: number
   readOnly?: boolean
   viewSingleDate?: boolean
   singleDate?: Date
@@ -61,7 +61,6 @@ export const CalResultModal = ({
   items,
   orders,
   readOnly,
-  total,
   viewSingleDate,
   singleDate
 }: Props) => {
@@ -176,7 +175,6 @@ export const CalResultModal = ({
           <CalOrders
             orders={orders}
             allCalItems={items}
-            total={total}
             viewSingleDate={viewSingleDate}
             singleDate={singleDate}
           />
