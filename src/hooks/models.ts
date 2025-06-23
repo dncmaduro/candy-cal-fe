@@ -289,6 +289,7 @@ export interface GetMeResponse {
   name: string
   role: string
   avatarUrl?: string
+  _id: string
 }
 
 export interface GetStorageLogsRequest {
@@ -532,4 +533,23 @@ export interface GetDeliveredRequestResponse {
     text: string
     date: Date
   }[]
+}
+
+export interface Notification {
+  _id: string
+  title: string
+  content: string
+  createdAt: Date
+  read: boolean
+  type: string
+  link?: string
+}
+
+export interface GetNotificationsRequest {
+  page: number
+}
+
+export interface GetNotificationsResponse {
+  notifications: Notification[]
+  hasMore: boolean
 }
