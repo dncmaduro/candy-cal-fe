@@ -17,6 +17,7 @@ import { useMutation, useQuery } from "@tanstack/react-query"
 import { saveToCookies } from "../../store/cookies"
 import { CToast } from "../common/CToast"
 import { NAVS } from "../../constants/navs"
+import { Notifications } from "./Notifications"
 
 interface Props {
   children: ReactNode
@@ -139,7 +140,10 @@ export const AppLayout = ({ children }: Props) => {
                   : "v2.2.1"}
               </Badge>
             </Group>
-            <UserMenu />
+            <Group>
+              <Notifications />
+              <UserMenu />
+            </Group>
           </Flex>
         </Container>
       </AppShell.Header>
