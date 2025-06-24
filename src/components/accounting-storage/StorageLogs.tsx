@@ -12,7 +12,7 @@ import {
   Group,
   Tooltip
 } from "@mantine/core"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useState, useMemo } from "react"
 import { modals } from "@mantine/modals"
 import { IconPlus, IconEdit, IconTrash, IconNote } from "@tabler/icons-react"
@@ -26,6 +26,7 @@ import {
   RECEIVED_TAG_OPTION
 } from "../../constants/tags"
 import { STATUS_OPTIONS } from "../../constants/status"
+import { CToast } from "../common/CToast"
 
 export const StorageLogs = () => {
   const TAG_OPTIONS = [...DELIVERED_TAG_OPTIONS, ...RECEIVED_TAG_OPTION]
@@ -38,12 +39,12 @@ export const StorageLogs = () => {
   const [status, setStatus] = useState<string | null>(null)
   const [tag, setTag] = useState<string | null>(null)
 
-  const { searchItems } = useItems()
+  const { searchStorageItems } = useItems()
   const { getStorageLogs, deleteStorageLog } = useLogs()
 
   const { data: itemsData } = useQuery({
-    queryKey: ["items"],
-    queryFn: () => searchItems(""),
+    queryKey: ["searchStorageItems"],
+    queryFn: () => searchStorageItems(""),
     select: (data) => data.data
   })
 
@@ -96,6 +97,16 @@ export const StorageLogs = () => {
       {} as Record<string, any>
     )
   }, [itemsData])
+
+  const { mutate: remove } = useMutation({
+    mutationFn: deleteStorageLog,
+    onSuccess: () => {
+      CToast.success({
+        title: "Xóa log kho thành công"
+      })
+      refetch()
+    }
+  })
 
   const openModal = (log?: any) => {
     modals.open({
@@ -306,8 +317,7 @@ export const StorageLogs = () => {
                         radius="xl"
                         leftSection={<IconTrash size={16} />}
                         onClick={() => {
-                          deleteStorageLog(log._id)
-                          refetch()
+                          remove(log._id)
                         }}
                       >
                         Xóa
