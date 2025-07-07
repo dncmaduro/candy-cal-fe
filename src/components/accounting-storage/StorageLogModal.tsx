@@ -18,6 +18,8 @@ import {
   RECEIVED_TAG_OPTION
 } from "../../constants/tags"
 import { STATUS_OPTIONS } from "../../constants/status"
+import { useMutation } from "@tanstack/react-query"
+import { CToast } from "../common/CToast"
 
 interface Props {
   itemsList: any[]
@@ -48,6 +50,39 @@ export const StorageLogModal = ({ itemsList, log, onSuccess }: Props) => {
     label: it.name
   }))
 
+  const { mutate: createLog, isPending: isCreating } = useMutation({
+    mutationFn: createStorageLog,
+    onSuccess: () => {
+      onSuccess()
+      CToast.success({
+        title: "Tạo log kho thành công"
+      })
+    },
+    onError: (error) => {
+      CToast.error({
+        title: "Lỗi khi tạo log kho",
+        subtitle: error.message || "Vui lòng thử lại sau"
+      })
+    }
+  })
+
+  const { mutate: updateLog, isPending: isUpdating } = useMutation({
+    mutationFn: (data: any) => updateStorageLog(log._id, data),
+    onSuccess: () => {
+      onSuccess()
+      CToast.success({
+        title: "Cập nhật log kho thành công"
+      })
+    },
+    onError: (error) => {
+      CToast.error({
+        title: "Lỗi khi cập nhật log kho",
+        subtitle: error.message || "Vui lòng thử lại sau"
+      })
+    }
+  })
+  const isLoading = isCreating || isUpdating
+
   const onSubmit = (values: any) => {
     const submitData = {
       item: {
@@ -61,9 +96,9 @@ export const StorageLogModal = ({ itemsList, log, onSuccess }: Props) => {
     }
 
     if (isEdit) {
-      updateStorageLog(log._id, submitData).then(onSuccess)
+      updateLog(submitData)
     } else {
-      createStorageLog(submitData).then(onSuccess)
+      createLog(submitData)
     }
   }
 
@@ -189,6 +224,7 @@ export const StorageLogModal = ({ itemsList, log, onSuccess }: Props) => {
           radius="xl"
           size="md"
           fw={600}
+          loading={isLoading}
         >
           {isEdit ? "Cập nhật" : "Tạo mới"}
         </Button>
