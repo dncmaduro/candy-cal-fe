@@ -4,5 +4,6 @@ export const DELIVERED_TAG_OPTIONS = [
   { value: "deliver-tiktokshop", label: "Xuất TiktokShop" },
   { value: "deliver-single", label: "Xuất kho lẻ" },
   { value: "deliver-marketing", label: "Xuất kho marketing" },
-  { value: "deliver-error", label: "Xuất hàng lỗi" }
+  { value: "deliver-error", label: "Xuất hàng lỗi" },
+  { value: "deliver-employee", label: "Xuất hàng cho nhân viên" }
 ]
