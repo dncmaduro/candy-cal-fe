@@ -204,6 +204,7 @@ export const StorageLogs = () => {
           valueFormat="DD/MM/YYYY"
           size="sm"
           radius="md"
+          clearable
           w={130}
         />
         <DatePickerInput
@@ -213,6 +214,7 @@ export const StorageLogs = () => {
           valueFormat="DD/MM/YYYY"
           size="sm"
           radius="md"
+          clearable
           w={130}
         />
         <Select

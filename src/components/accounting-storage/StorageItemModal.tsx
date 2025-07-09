@@ -13,10 +13,11 @@ import {
   Textarea
 } from "@mantine/core"
 import { useItems } from "../../hooks/useItems"
-import { useMutation } from "@tanstack/react-query"
+import { useMutation, useQuery } from "@tanstack/react-query"
 import { modals } from "@mantine/modals"
 import { CToast } from "../common/CToast"
 import { IconCheck, IconTrash } from "@tabler/icons-react"
+import { useUsers } from "../../hooks/useUsers"
 
 interface Props {
   item?: StorageItemResponse
@@ -43,6 +44,12 @@ export const StorageItemModal = ({ item, refetch }: Props) => {
   })
 
   const { createStorageItem, updateStorageItem, deleteStorageItem } = useItems()
+  const { getMe } = useUsers()
+  const { data: meData } = useQuery({
+    queryKey: ["getMe"],
+    queryFn: () => getMe(),
+    select: (data) => data.data
+  })
 
   const { mutate: create, isPending: creating } = useMutation({
     mutationKey: ["createStorageItem"],
@@ -144,7 +151,7 @@ export const StorageItemModal = ({ item, refetch }: Props) => {
                 <NumberInput
                   label="Số lượng"
                   min={0}
-                  disabled={!!item?._id}
+                  disabled={!!item?._id && meData?.role !== "admin"}
                   size="sm"
                   radius="md"
                   hideControls
@@ -180,7 +187,7 @@ export const StorageItemModal = ({ item, refetch }: Props) => {
               render={({ field }) => (
                 <NumberInput
                   label="Số lượng"
-                  disabled={!!item?._id}
+                  disabled={!!item?._id && meData?.role !== "admin"}
                   min={0}
                   size="sm"
                   radius="md"
@@ -218,7 +225,7 @@ export const StorageItemModal = ({ item, refetch }: Props) => {
                 <NumberInput
                   label="Số lượng"
                   min={0}
-                  disabled={!!item?._id}
+                  disabled={!!item?._id && meData?.role !== "admin"}
                   size="sm"
                   radius="md"
                   hideControls
