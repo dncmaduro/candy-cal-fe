@@ -28,7 +28,11 @@ import {
 import { STATUS_OPTIONS } from "../../constants/status"
 import { CToast } from "../common/CToast"
 
-export const StorageLogs = () => {
+interface Props {
+  activeTab: string
+}
+
+export const StorageLogs = ({ activeTab }: Props) => {
   const TAG_OPTIONS = [...DELIVERED_TAG_OPTIONS, ...RECEIVED_TAG_OPTION]
   const queryClient = useQueryClient()
   const [page, setPage] = useState(1)
@@ -43,7 +47,17 @@ export const StorageLogs = () => {
   const { getStorageLogs, deleteStorageLog } = useLogs()
 
   const { data: itemsData } = useQuery({
-    queryKey: ["searchStorageItems"],
+    queryKey: [
+      "searchStorageItems",
+      activeTab,
+      page,
+      limit,
+      startDate,
+      endDate,
+      status,
+      tag,
+      itemId
+    ],
     queryFn: () => searchStorageItems(""),
     select: (data) => data.data
   })

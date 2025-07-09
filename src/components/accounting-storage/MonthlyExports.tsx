@@ -14,12 +14,16 @@ import { useState } from "react"
 import { useLogs } from "../../hooks/useLogs"
 import { DailyMatrixTable } from "./DailyMatrixTable"
 
-export const MonthlyExports = () => {
+interface Props {
+  activeTab: string
+}
+
+export const MonthlyExports = ({ activeTab }: Props) => {
   const [month, setMonth] = useState<Date | null>(new Date())
   const { getStorageLogsByMonth } = useLogs()
 
   const { data: monthlogsData, isFetching } = useQuery({
-    queryKey: ["getStorageLogsByMonth", month],
+    queryKey: ["getStorageLogsByMonth", month, activeTab],
     queryFn: () =>
       getStorageLogsByMonth(
         month

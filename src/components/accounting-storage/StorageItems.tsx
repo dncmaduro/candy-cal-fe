@@ -34,9 +34,10 @@ const MODE_OPTIONS = [
 
 interface Props {
   readOnly?: boolean
+  activeTab: string
 }
 
-export const StorageItems = ({ readOnly }: Props) => {
+export const StorageItems = ({ readOnly, activeTab }: Props) => {
   const { searchStorageItems } = useItems()
   const [searchText, setSearchText] = useState<string>("")
   const [debouncedSearchText] = useDebouncedValue(searchText, 300)
@@ -48,7 +49,7 @@ export const StorageItems = ({ readOnly }: Props) => {
     refetch,
     isLoading
   } = useQuery({
-    queryKey: ["searchStorageItems", debouncedSearchText],
+    queryKey: ["searchStorageItems", debouncedSearchText, activeTab],
     queryFn: () => searchStorageItems(debouncedSearchText),
     select: (data) => data.data
   })
