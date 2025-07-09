@@ -40,7 +40,15 @@ export const StorageLogModal = ({ itemsList, log, onSuccess }: Props) => {
       quantity: defaultItem?.quantity ?? 1,
       note: log?.note || "",
       status: log?.status || "delivered",
-      date: log?.date ? new Date(log.date) : new Date(),
+      date: log?.date
+        ? new Date(log.date)
+        : new Date(
+            Date.UTC(
+              new Date().getUTCFullYear(),
+              new Date().getUTCMonth(),
+              new Date().getUTCDate()
+            )
+          ),
       tag: log?.tag || ""
     }
   })
@@ -94,6 +102,7 @@ export const StorageLogModal = ({ itemsList, log, onSuccess }: Props) => {
       date: values.date,
       tag: values.tag
     }
+    console.log("Submit data:", submitData)
 
     if (isEdit) {
       updateLog(submitData)
