@@ -16,7 +16,7 @@ export const Route = createFileRoute("/accounting-storage/")({
   component: RouteComponent,
   validateSearch: (search: Record<string, unknown>): StorageTab => {
     return {
-      tab: String(search.tag ?? "items")
+      tab: String(search.tab ?? "items")
     }
   }
 })
@@ -74,16 +74,16 @@ function RouteComponent() {
 
           <ScrollArea.Autosize mah={"95%"}>
             <Tabs.Panel value="items">
-              <StorageItems />
+              <StorageItems activeTab={tab} />
             </Tabs.Panel>
 
             <Tabs.Panel value="storagelogs">
-              <StorageLogs />
+              <StorageLogs activeTab={tab} />
             </Tabs.Panel>
 
             <Tabs.Panel value="monthly-exports">
               {/* Placeholder for future monthly exports component */}
-              <MonthlyExports />
+              <MonthlyExports activeTab={tab} />
             </Tabs.Panel>
           </ScrollArea.Autosize>
         </Tabs>
