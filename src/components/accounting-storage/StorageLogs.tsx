@@ -13,7 +13,7 @@ import {
   Tooltip
 } from "@mantine/core"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { modals } from "@mantine/modals"
 import { IconPlus, IconEdit, IconTrash, IconNote } from "@tabler/icons-react"
 import { useItems } from "../../hooks/useItems"
@@ -148,6 +148,10 @@ export const StorageLogs = ({ activeTab }: Props) => {
 
   // Table col count (name, status, date, items, note, action)
   const colCount = 6
+
+  useEffect(() => {
+    setPage(1)
+  }, [startDate, endDate, status, tag, itemId])
 
   return (
     <Box
