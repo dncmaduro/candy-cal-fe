@@ -554,3 +554,7 @@ export interface GetNotificationsResponse {
   notifications: Notification[]
   hasMore: boolean
 }
+
+export interface UndoAcceptDeliveredRequestRequest {
+  requestId: string
+}

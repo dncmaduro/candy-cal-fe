@@ -9,7 +9,8 @@ import {
   GetDeliveredRequestRequest,
   GetDeliveredRequestResponse,
   SearchDeliveredRequestsRequest,
-  SearchDeliveredRequestsResponse
+  SearchDeliveredRequestsResponse,
+  UndoAcceptDeliveredRequestRequest
 } from "./models"
 
 export const useDeliveredRequests = () => {
@@ -71,11 +72,20 @@ export const useDeliveredRequests = () => {
     })
   }
 
+  const undoAcceptRequest = async (req: UndoAcceptDeliveredRequestRequest) => {
+    return callApi<never, any>({
+      path: `/v1/deliveredrequests/${req.requestId}/undo-request`,
+      method: "PATCH",
+      token: accessToken
+    })
+  }
+
   return {
     createDeliveredRequest,
     createDeliveredRequestComment,
     acceptDeliveredRequest,
     searchDeliveredRequests,
-    getDeliveredRequest
+    getDeliveredRequest,
+    undoAcceptRequest
   }
 }

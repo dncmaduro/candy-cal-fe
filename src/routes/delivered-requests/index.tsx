@@ -19,7 +19,7 @@ import {
 import { DatePickerInput } from "@mantine/dates"
 import { format } from "date-fns"
 import { useUsers } from "../../hooks/useUsers"
-import { IconCheck, IconEye } from "@tabler/icons-react"
+import { IconArrowBackUp, IconCheck, IconEye } from "@tabler/icons-react"
 import { CToast } from "../../components/common/CToast"
 import { modals } from "@mantine/modals"
 import { DeliveredRequestModal } from "../../components/delivered-requests/DeliveredRequestModal"
@@ -42,7 +42,7 @@ function RouteComponent() {
     select: (data) => data.data
   })
 
-  const { searchDeliveredRequests, acceptDeliveredRequest } =
+  const { searchDeliveredRequests, acceptDeliveredRequest, undoAcceptRequest } =
     useDeliveredRequests()
 
   const {
@@ -82,6 +82,23 @@ function RouteComponent() {
     }
   })
 
+  const { mutate: undo } = useMutation({
+    mutationFn: undoAcceptRequest,
+    onSuccess: () => {
+      refetch()
+      CToast.success({
+        title: "Yêu cầu xuất kho đã được hoàn tác"
+      })
+    },
+    onError: (error) => {
+      CToast.error({
+        title: "Có lỗi xảy ra khi hoàn tác yêu cầu xuất kho",
+        subtitle: error.message || "Vui lòng thử lại sau"
+      })
+      refetch()
+    }
+  })
+
   const requests = requestsData?.requests || []
   const total = requestsData?.total || 0
 
@@ -108,6 +125,25 @@ function RouteComponent() {
       children: (
         <Text>
           Bạn chắc chắn muốn xác nhận yêu cầu xuất kho trong ngày{" "}
+          {format(new Date(req.date), "dd/MM/yyyy")}?
+        </Text>
+      )
+    })
+  }
+
+  const handleUndoRequest = (req: { _id: string; date: Date }) => {
+    modals.openConfirmModal({
+      title: <b>Xác nhận hoàn tác yêu cầu</b>,
+      size: "lg",
+      labels: {
+        confirm: "Hoàn tác",
+        cancel: "Hủy"
+      },
+      centered: true,
+      onConfirm: () => undo({ requestId: req._id }),
+      children: (
+        <Text>
+          Bạn chắc chắn muốn hoàn tác yêu cầu xuất kho trong ngày{" "}
           {format(new Date(req.date), "dd/MM/yyyy")}?
         </Text>
       )
@@ -257,7 +293,14 @@ function RouteComponent() {
                               Chấp nhận yêu cầu
                             </Button>
                           ) : (
-                            <></>
+                            <Button
+                              color="yellow"
+                              variant="light"
+                              leftSection={<IconArrowBackUp />}
+                              onClick={() => handleUndoRequest(req)}
+                            >
+                              Hoàn tác yêu cầu
+                            </Button>
                           )}
                         </Flex>
                       </Table.Td>
