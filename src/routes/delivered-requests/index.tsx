@@ -19,9 +19,10 @@ import {
 import { DatePickerInput } from "@mantine/dates"
 import { format } from "date-fns"
 import { useUsers } from "../../hooks/useUsers"
-import { IconCheck } from "@tabler/icons-react"
+import { IconCheck, IconEye } from "@tabler/icons-react"
 import { CToast } from "../../components/common/CToast"
 import { modals } from "@mantine/modals"
+import { DeliveredRequestModal } from "../../components/delivered-requests/DeliveredRequestModal"
 
 export const Route = createFileRoute("/delivered-requests/")({
   component: RouteComponent
@@ -93,6 +94,25 @@ function RouteComponent() {
     { label: "Cập nhật", key: "updatedAt", width: 110 },
     { label: "Hành động", key: "actions", width: 120 }
   ]
+
+  const handleAcceptRequest = (req: { _id: string; date: Date }) => {
+    modals.openConfirmModal({
+      title: <b>Xác nhận chấp nhận yêu cầu</b>,
+      size: "lg",
+      labels: {
+        confirm: "Chấp nhận",
+        cancel: "Hủy"
+      },
+      centered: true,
+      onConfirm: () => accept({ requestId: req._id }),
+      children: (
+        <Text>
+          Bạn chắc chắn muốn xác nhận yêu cầu xuất kho trong ngày{" "}
+          {format(new Date(req.date), "dd/MM/yyyy")}?
+        </Text>
+      )
+    })
+  }
 
   return (
     <AppLayout>
@@ -204,39 +224,42 @@ function RouteComponent() {
                         )}
                       </Table.Td>
                       <Table.Td>
-                        {/* Hành động: có thể thêm nút chi tiết/sửa/xóa nếu cần */}
-                        {meData &&
-                        ["admin", "accounting-emp"].includes(meData?.role) &&
-                        !req.accepted ? (
+                        <Flex gap={8}>
                           <Button
-                            color="green"
-                            leftSection={<IconCheck />}
                             variant="light"
+                            leftSection={<IconEye />}
                             onClick={() =>
-                              modals.openConfirmModal({
-                                title: <b>Xác nhận chấp nhận yêu cầu</b>,
-                                size: "lg",
-                                labels: {
-                                  confirm: "Chấp nhận",
-                                  cancel: "Hủy"
-                                },
-                                centered: true,
-                                onConfirm: () => accept({ requestId: req._id }),
+                              modals.open({
+                                title: "Chi tiết yêu cầu xuất kho",
                                 children: (
-                                  <Text>
-                                    Bạn chắc chắn muốn xác nhận yêu cầu xuất kho
-                                    trong ngày{" "}
-                                    {format(new Date(req.date), "dd/MM/yyyy")}?
-                                  </Text>
-                                )
+                                  <DeliveredRequestModal
+                                    request={req}
+                                    acceptRequest={() =>
+                                      handleAcceptRequest(req)
+                                    }
+                                  />
+                                ),
+                                size: "xl"
                               })
                             }
                           >
-                            Chấp nhận yêu cầu
+                            Xem chi tiết
                           </Button>
-                        ) : (
-                          <></>
-                        )}
+                          {meData &&
+                          ["admin", "accounting-emp"].includes(meData?.role) &&
+                          !req.accepted ? (
+                            <Button
+                              color="green"
+                              leftSection={<IconCheck />}
+                              variant="light"
+                              onClick={() => handleAcceptRequest(req)}
+                            >
+                              Chấp nhận yêu cầu
+                            </Button>
+                          ) : (
+                            <></>
+                          )}
+                        </Flex>
                       </Table.Td>
                     </Table.Tr>
                   )
