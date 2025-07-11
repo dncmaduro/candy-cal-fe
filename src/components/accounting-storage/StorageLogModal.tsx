@@ -102,7 +102,6 @@ export const StorageLogModal = ({ itemsList, log, onSuccess }: Props) => {
       date: values.date,
       tag: values.tag
     }
-    console.log("Submit data:", submitData)
 
     if (isEdit) {
       updateLog(submitData)
