@@ -2,8 +2,10 @@ import {
   Box,
   Divider,
   Flex,
+  Group,
   Loader,
   rem,
+  Select,
   Table,
   Tabs,
   Text
@@ -13,6 +15,10 @@ import { useQuery } from "@tanstack/react-query"
 import { useState } from "react"
 import { useLogs } from "../../hooks/useLogs"
 import { DailyMatrixTable } from "./DailyMatrixTable"
+import {
+  DELIVERED_TAG_OPTIONS,
+  RECEIVED_TAG_OPTION
+} from "../../constants/tags"
 
 interface Props {
   activeTab: string
@@ -20,16 +26,31 @@ interface Props {
 
 export const MonthlyExports = ({ activeTab }: Props) => {
   const [month, setMonth] = useState<Date | null>(new Date())
+  const [tag, setTag] = useState<string | null>("")
   const { getStorageLogsByMonth } = useLogs()
+  const TAG_OPTIONS = [
+    { value: "", label: "Tất cả" },
+    ...DELIVERED_TAG_OPTIONS,
+    ...RECEIVED_TAG_OPTION
+  ]
 
   const { data: monthlogsData, isFetching } = useQuery({
-    queryKey: ["getStorageLogsByMonth", month, activeTab],
-    queryFn: () =>
-      getStorageLogsByMonth(
+    queryKey: ["getStorageLogsByMonth", month, activeTab, tag],
+    queryFn: () => {
+      return getStorageLogsByMonth(
         month
-          ? { month: month.getMonth() + 1, year: month.getFullYear() }
-          : { month: new Date().getMonth() + 1, year: new Date().getFullYear() }
-      ),
+          ? {
+              month: month.getMonth() + 1,
+              year: month.getFullYear(),
+              tag: tag ?? undefined
+            }
+          : {
+              month: new Date().getMonth() + 1,
+              year: new Date().getFullYear(),
+              tag: tag ?? undefined
+            }
+      )
+    },
     enabled: !!month,
     select: (data) => data.data
   })
@@ -66,13 +87,21 @@ export const MonthlyExports = ({ activeTab }: Props) => {
           </Text>
         </Box>
 
-        <MonthPickerInput
-          value={month}
-          onChange={setMonth}
-          valueFormat="MM/YYYY"
-          label="Chọn tháng"
-          w={200}
-        />
+        <Group>
+          <Select
+            data={TAG_OPTIONS}
+            value={tag}
+            onChange={setTag}
+            label="Trạng thái"
+          />
+          <MonthPickerInput
+            value={month}
+            onChange={setMonth}
+            valueFormat="MM/YYYY"
+            label="Chọn tháng"
+            w={200}
+          />
+        </Group>
       </Flex>
 
       <Divider my={0} />

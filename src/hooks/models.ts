@@ -367,6 +367,7 @@ export interface UpdateStorageLogResponse {
 export interface GetStorageLogsByMonthRequest {
   year: number
   month: number
+  tag?: string
 }
 
 export interface GetStorageLogsByMonthResponse {

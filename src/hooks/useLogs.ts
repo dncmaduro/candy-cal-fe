@@ -89,8 +89,13 @@ export const useLogs = () => {
   }
 
   const getStorageLogsByMonth = async (req: GetStorageLogsByMonthRequest) => {
+    const query = toQueryString({
+      year: req.year,
+      month: req.month,
+      tag: req.tag
+    })
     return callApi<never, GetStorageLogsByMonthResponse>({
-      path: `/v1/storagelogs/month?year=${req.year}&month=${req.month}`,
+      path: `/v1/storagelogs/month?${query}`,
       method: "GET",
       token: accessToken
     })
