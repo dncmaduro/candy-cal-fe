@@ -330,18 +330,31 @@ export const StorageLogs = ({ activeTab }: Props) => {
                       >
                         Sửa
                       </Button>
-                      <Button
-                        variant="light"
-                        color="red"
-                        size="xs"
-                        radius="xl"
-                        leftSection={<IconTrash size={16} />}
-                        onClick={() => {
-                          remove(log._id)
-                        }}
-                      >
-                        Xóa
-                      </Button>
+                      {log.tag === "deliver-tiktokshop" ? (
+                        <Tooltip label="Xoá log xuất của TiktokShop bằng cách hoàn tác yêu cầu xuất hàng">
+                          <Button
+                            variant="light"
+                            color="red"
+                            size="xs"
+                            radius="xl"
+                            leftSection={<IconTrash size={16} />}
+                            disabled
+                          >
+                            Xóa
+                          </Button>
+                        </Tooltip>
+                      ) : (
+                        <Button
+                          variant="light"
+                          color="red"
+                          size="xs"
+                          radius="xl"
+                          leftSection={<IconTrash size={16} />}
+                          onClick={() => remove(log._id)}
+                        >
+                          Xóa
+                        </Button>
+                      )}
                       {log.note && (
                         <Tooltip label={log.note}>
                           <IconNote size={16} />
