@@ -82,7 +82,6 @@ function RouteComponent() {
             </Tabs.Panel>
 
             <Tabs.Panel value="monthly-exports">
-              {/* Placeholder for future monthly exports component */}
               <MonthlyExports activeTab={tab} />
             </Tabs.Panel>
           </ScrollArea.Autosize>

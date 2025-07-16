@@ -1,48 +1,54 @@
 import { Controller, useFieldArray, useForm } from "react-hook-form"
-import { CreateProductRequest, ProductResponse } from "../../hooks/models"
-import { useProducts } from "../../hooks/useProducts"
-import { useMutation, useQuery } from "@tanstack/react-query"
-import { modals } from "@mantine/modals"
-import { CToast } from "../common/CToast"
 import {
   Button,
   Stack,
-  TextInput,
   Select,
   NumberInput,
   ActionIcon,
   Group,
   Box,
   Divider,
-  Text
+  Text,
+  Switch,
+  Textarea
 } from "@mantine/core"
 import { IconPlus, IconTrash } from "@tabler/icons-react"
-import { useItems } from "../../hooks/useItems"
+import { useProducts } from "../../hooks/useProducts"
+import { useMutation, useQuery } from "@tanstack/react-query"
+import { modals } from "@mantine/modals"
+import { CToast } from "../common/CToast"
+import { ReadyComboResponse, CreateReadyComboRequest } from "../../hooks/models"
+import { useReadyCombos } from "../../hooks/useReadyCombos"
 
 interface Props {
-  product?: ProductResponse
+  combo?: ReadyComboResponse
   refetch: () => void
 }
 
-export const ProductModal = ({ product, refetch }: Props) => {
-  const { handleSubmit, control } = useForm<CreateProductRequest>({
-    defaultValues: product ?? {
-      name: "",
-      items: []
-    }
+export const ReadyComboModal = ({ combo, refetch }: Props) => {
+  const { handleSubmit, control } = useForm<CreateReadyComboRequest>({
+    defaultValues: combo
+      ? {
+          products: combo.products,
+          isReady: combo.isReady,
+          note: combo.note || ""
+        }
+      : {
+          products: [],
+          isReady: false,
+          note: ""
+        }
   })
 
   const { fields, append, remove } = useFieldArray({
     control,
-    name: "items"
+    name: "products"
   })
 
-  const { createProduct, updateProduct } = useProducts()
-  const { searchItems } = useItems()
-
-  const { data: itemsData } = useQuery({
-    queryKey: ["searchItems"],
-    queryFn: () => searchItems(""),
+  const { searchProducts } = useProducts()
+  const { data: productsData } = useQuery({
+    queryKey: ["searchProducts"],
+    queryFn: () => searchProducts(""),
     select: (data) =>
       data.data.map((item) => ({
         value: item._id,
@@ -50,12 +56,14 @@ export const ProductModal = ({ product, refetch }: Props) => {
       }))
   })
 
+  const { createCombo, updateCombo } = useReadyCombos()
+
   const { mutate: create } = useMutation({
-    mutationKey: ["createProduct"],
-    mutationFn: createProduct,
+    mutationKey: ["createCombo"],
+    mutationFn: createCombo,
     onSuccess: () => {
       modals.closeAll()
-      CToast.success({ title: "Tạo sản phẩm thành công" })
+      CToast.success({ title: "Tạo combo thành công" })
       refetch()
     },
     onError: () => {
@@ -64,11 +72,11 @@ export const ProductModal = ({ product, refetch }: Props) => {
   })
 
   const { mutate: update } = useMutation({
-    mutationKey: ["updateProduct"],
-    mutationFn: updateProduct,
+    mutationKey: ["updateCombo"],
+    mutationFn: ({ _id, ...rest }: any) => updateCombo(_id, rest),
     onSuccess: () => {
       modals.closeAll()
-      CToast.success({ title: "Cập nhật sản phẩm thành công" })
+      CToast.success({ title: "Cập nhật combo thành công" })
       refetch()
     },
     onError: () => {
@@ -76,12 +84,9 @@ export const ProductModal = ({ product, refetch }: Props) => {
     }
   })
 
-  const submit = (values: CreateProductRequest) => {
-    if (product?._id) {
-      update({
-        _id: product?._id,
-        ...values
-      })
+  const submit = (values: CreateReadyComboRequest) => {
+    if (combo?._id) {
+      update({ _id: combo._id, ...values })
     } else {
       create(values)
     }
@@ -91,45 +96,60 @@ export const ProductModal = ({ product, refetch }: Props) => {
     <form onSubmit={handleSubmit(submit)}>
       <Stack gap={20} p={2}>
         <Text fw={700} fz="lg" mb={2}>
-          {product ? "Chỉnh sửa sản phẩm" : "Tạo sản phẩm mới"}
+          {combo ? "Chỉnh sửa combo" : "Tạo combo mới"}
         </Text>
+
         <Controller
-          name="name"
+          name="isReady"
           control={control}
           render={({ field }) => (
-            <TextInput
-              label="Tên sản phẩm"
-              placeholder="Nhập tên sản phẩm"
-              required
+            <Switch
+              checked={field.value}
+              label="Combo đã sẵn sàng"
+              onChange={field.onChange}
+            />
+          )}
+        />
+
+        <Controller
+          name="note"
+          control={control}
+          render={({ field }) => (
+            <Textarea
+              label="Ghi chú"
+              placeholder="Thêm ghi chú (nếu có)"
+              autosize
+              minRows={2}
               {...field}
               size="md"
             />
           )}
         />
-        <Divider label="Thành phần sản phẩm" labelPosition="center" my={8} />
+
+        <Divider label="Thành phần combo" labelPosition="center" my={8} />
         <Box>
           <Stack gap={10}>
             {fields.map((field, index) => (
               <Group key={field.id} align="flex-end" gap={10}>
                 <Controller
-                  name={`items.${index}._id`}
+                  name={`products.${index}._id`}
                   control={control}
                   render={({ field }) => (
                     <Select
                       className="grow"
-                      data={itemsData}
-                      placeholder="Chọn mặt hàng"
+                      data={productsData}
+                      placeholder="Chọn sản phẩm"
                       required
                       searchable
                       {...field}
-                      label={index === 0 ? "Mặt hàng" : undefined}
+                      label={index === 0 ? "Sản phẩm" : undefined}
                       w={180}
                       size="sm"
                     />
                   )}
                 />
                 <Controller
-                  name={`items.${index}.quantity`}
+                  name={`products.${index}.quantity`}
                   control={control}
                   render={({ field }) => (
                     <NumberInput
@@ -164,13 +184,13 @@ export const ProductModal = ({ product, refetch }: Props) => {
               size="sm"
               style={{ fontWeight: 600 }}
             >
-              Thêm mặt hàng
+              Thêm sản phẩm
             </Button>
           </Stack>
         </Box>
         <Divider my={8} />
         <Button type="submit" color="indigo" radius="xl" fw={600} size="md">
-          {product ? "Lưu thay đổi" : "Tạo sản phẩm"}
+          {combo ? "Lưu thay đổi" : "Tạo combo"}
         </Button>
       </Stack>
     </form>

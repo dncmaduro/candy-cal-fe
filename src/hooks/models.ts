@@ -54,7 +54,6 @@ export interface CreateProductRequest {
     _id: string
     quantity: number
   }[]
-  isReady: boolean
 }
 
 export interface ProductResponse {
@@ -64,7 +63,6 @@ export interface ProductResponse {
     _id: string
     quantity: number
   }[]
-  isReady: boolean
 }
 
 export interface CreateComboRequest {
@@ -120,7 +118,6 @@ export interface CalItemsResponse {
     products: {
       name: string
       quantity: number
-      isReady: boolean
     }[]
     quantity: number
   }[]
@@ -193,7 +190,6 @@ export interface CreateLogRequest {
     products: {
       name: string
       quantity: number
-      isReady: boolean
     }[]
     quantity: number
   }[]
@@ -232,7 +228,6 @@ export interface Log {
     products: {
       name: string
       quantity: number
-      isReady: boolean
     }[]
     quantity: number
   }[]
@@ -277,7 +272,6 @@ export interface GetLogsRangeResponse {
     products: {
       name: string
       quantity: number
-      isReady: boolean
     }[]
     quantity: number
   }[]
@@ -557,4 +551,37 @@ export interface GetNotificationsResponse {
 
 export interface UndoAcceptDeliveredRequestRequest {
   requestId: string
+}
+
+export interface CreateReadyComboRequest {
+  products: {
+    _id: string
+    quantity: number
+  }[]
+  isReady: boolean
+  note?: string
+}
+
+export interface ReadyComboResponse {
+  _id: string
+  products: {
+    _id: string
+    quantity: number
+  }[]
+  isReady: boolean
+  note?: string
+}
+
+export interface UpdateReadyComboRequest {
+  products: {
+    _id: string
+    quantity: number
+  }[]
+  isReady: boolean
+  note?: string
+}
+
+export interface SearchCombosRequest {
+  searchText?: string
+  isReady?: boolean
 }

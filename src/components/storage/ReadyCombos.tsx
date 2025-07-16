@@ -1,7 +1,3 @@
-import { useEffect, useState } from "react"
-import { useProducts } from "../../hooks/useProducts"
-import { useDebouncedValue } from "@mantine/hooks"
-import { useQuery } from "@tanstack/react-query"
 import {
   Box,
   Button,
@@ -12,31 +8,62 @@ import {
   Text,
   TextInput,
   rem,
-  Tooltip
+  Tooltip,
+  Badge,
+  Select
 } from "@mantine/core"
-import { IconPlus, IconSearch } from "@tabler/icons-react"
+import { IconSearch, IconPlus } from "@tabler/icons-react"
+import { useProducts } from "../../hooks/useProducts"
+import { useReadyCombos } from "../../hooks/useReadyCombos"
+import { useDebouncedValue } from "@mantine/hooks"
+import { useMemo, useState } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { modals } from "@mantine/modals"
-import { ProductItems } from "./ProductItems"
-import { ProductModal } from "./ProductModal"
+import { ReadyComboModal } from "./ReadyComboModal"
 
-export const Products = () => {
+const READY_FILTERS = [
+  { value: "all", label: "Tất cả trạng thái" },
+  { value: "true", label: "Đã đóng sẵn" },
+  { value: "false", label: "Chưa đóng" }
+]
+
+export const ReadyCombos = () => {
   const { searchProducts } = useProducts()
+  const { searchCombos } = useReadyCombos()
   const [searchText, setSearchText] = useState<string>("")
   const [debouncedSearchText] = useDebouncedValue(searchText, 300)
+  const [readyFilter, setReadyFilter] = useState<"all" | "true" | "false">(
+    "all"
+  )
 
-  const {
-    data: productsData,
-    refetch,
-    isLoading
-  } = useQuery({
-    queryKey: ["searchProducts", debouncedSearchText],
-    queryFn: () => searchProducts(debouncedSearchText),
+  const isReady = useMemo(() => {
+    if (readyFilter === "all") return undefined
+    return readyFilter === "true"
+  }, [readyFilter])
+
+  const { data: productsData } = useQuery({
+    queryKey: ["products"],
+    queryFn: () => searchProducts(""),
     select: (data) => data.data
   })
 
-  useEffect(() => {
-    refetch()
-  }, [debouncedSearchText])
+  const {
+    data: combosData,
+    isLoading,
+    refetch
+  } = useQuery({
+    queryKey: ["ready-combos", debouncedSearchText, isReady],
+    queryFn: () => searchCombos({ searchText: debouncedSearchText, isReady }),
+    select: (data) => data.data
+  })
+
+  const productsMap = (productsData || []).reduce(
+    (acc, product) => {
+      acc[product._id] = product
+      return acc
+    },
+    {} as Record<string, any>
+  )
 
   return (
     <Box
@@ -62,10 +89,10 @@ export const Products = () => {
       >
         <Box>
           <Text fw={700} fz="xl" mb={2}>
-            Các sản phẩm đang có
+            Các combo đóng sẵn
           </Text>
           <Text c="dimmed" fz="sm">
-            Quản lý, chỉnh sửa và tìm kiếm sản phẩm
+            Quản lý, chỉnh sửa và tìm kiếm combo đã đóng sẵn
           </Text>
         </Box>
         <Flex gap={12} align="center" w={{ base: "100%", sm: "auto" }}>
@@ -73,7 +100,7 @@ export const Products = () => {
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             leftSection={<IconSearch size={16} />}
-            placeholder="Tìm kiếm sản phẩm..."
+            placeholder="Tìm kiếm combo..."
             size="md"
             w={{ base: "100%", sm: 260 }}
             radius="md"
@@ -81,7 +108,17 @@ export const Products = () => {
               input: { background: "#f4f6fb", border: "1px solid #ececec" }
             }}
           />
-          <Tooltip label="Thêm sản phẩm mới" withArrow>
+          {/* Select filter trạng thái ready */}
+          <Select
+            value={readyFilter}
+            onChange={(val) => setReadyFilter(val as "all" | "true" | "false")}
+            data={READY_FILTERS}
+            size="md"
+            radius="md"
+            w={160}
+            allowDeselect={false}
+          />
+          <Tooltip label="Thêm combo mới" withArrow>
             <Button
               color="indigo"
               leftSection={<IconPlus size={18} />}
@@ -92,10 +129,10 @@ export const Products = () => {
                 modals.open({
                   title: (
                     <Text fw={700} fz="md">
-                      Thêm sản phẩm mới
+                      Thêm combo mới
                     </Text>
                   ),
-                  children: <ProductModal refetch={refetch} />,
+                  children: <ReadyComboModal refetch={refetch} />,
                   size: "lg"
                 })
               }
@@ -104,7 +141,7 @@ export const Products = () => {
                 letterSpacing: 0.1
               }}
             >
-              Thêm sản phẩm
+              Thêm combo
             </Button>
           </Tooltip>
         </Flex>
@@ -126,31 +163,47 @@ export const Products = () => {
         >
           <Table.Thead bg="indigo.0">
             <Table.Tr>
-              <Table.Th style={{ width: 240 }}>Tên sản phẩm</Table.Th>
-              <Table.Th>Các mặt hàng</Table.Th>
+              <Table.Th>Các sản phẩm</Table.Th>
+              <Table.Th>Trạng thái</Table.Th>
               <Table.Th>Hành động</Table.Th>
+              <Table.Th>Ghi chú</Table.Th>
             </Table.Tr>
           </Table.Thead>
 
           <Table.Tbody>
             {isLoading ? (
               <Table.Tr>
-                <Table.Td colSpan={3}>
+                <Table.Td colSpan={4}>
                   <Flex justify="center" align="center" h={60}>
                     <Loader />
                   </Flex>
                 </Table.Td>
               </Table.Tr>
-            ) : productsData && productsData.length > 0 ? (
-              productsData.map((product) => (
-                <Table.Tr key={product._id}>
-                  <Table.Td fw={500} w={"30%"}>
-                    <Flex align={"center"} gap={12}>
-                      <Text>{product.name}</Text>
+            ) : combosData && combosData.length > 0 ? (
+              combosData.map((combo: any) => (
+                <Table.Tr key={combo._id}>
+                  <Table.Td>
+                    <Flex direction="column" gap={4}>
+                      {combo.products.map((prod: any) => (
+                        <Flex key={prod._id} gap={6} align="center">
+                          <Text fz="sm">
+                            {productsMap[prod._id]?.name || "?"}{" "}
+                            <Text span c="gray.6" fz="xs">
+                              ×{prod.quantity}
+                            </Text>
+                          </Text>
+                        </Flex>
+                      ))}
                     </Flex>
                   </Table.Td>
                   <Table.Td>
-                    <ProductItems items={product.items} />
+                    <Badge
+                      color={combo.isReady ? "teal" : "gray"}
+                      variant={combo.isReady ? "filled" : "outline"}
+                      radius="sm"
+                    >
+                      {combo.isReady ? "Đã đóng sẵn" : "Chưa đóng"}
+                    </Badge>
                   </Table.Td>
                   <Table.Td>
                     <Button
@@ -163,11 +216,11 @@ export const Products = () => {
                         modals.open({
                           title: (
                             <Text fw={700} fz="md">
-                              Sửa sản phẩm
+                              Sửa combo
                             </Text>
                           ),
                           children: (
-                            <ProductModal product={product} refetch={refetch} />
+                            <ReadyComboModal combo={combo} refetch={refetch} />
                           ),
                           size: "lg"
                         })
@@ -177,13 +230,18 @@ export const Products = () => {
                       Chỉnh sửa
                     </Button>
                   </Table.Td>
+                  <Table.Td>
+                    <Text c="dimmed" fz="xs">
+                      {combo.note}
+                    </Text>
+                  </Table.Td>
                 </Table.Tr>
               ))
             ) : (
               <Table.Tr>
-                <Table.Td colSpan={3}>
+                <Table.Td colSpan={4}>
                   <Flex justify="center" align="center" h={60}>
-                    <Text c="dimmed">Không có sản phẩm nào</Text>
+                    <Text c="dimmed">Không có combo nào</Text>
                   </Flex>
                 </Table.Td>
               </Table.Tr>
