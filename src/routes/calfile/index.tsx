@@ -54,7 +54,7 @@ function RouteComponent() {
   const [items, setItems] = useState<ItemType[]>([])
   const [orders, setOrders] = useState<
     {
-      products: { name: string; quantity: number; isReady: boolean }[]
+      products: { name: string; quantity: number }[]
       quantity: number
     }[]
   >([])

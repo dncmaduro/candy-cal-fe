@@ -1,6 +1,10 @@
 import { useQuery } from "@tanstack/react-query"
 import { useProducts } from "../../hooks/useProducts"
-import { ItemResponse, ProductResponse } from "../../hooks/models"
+import {
+  ItemResponse,
+  ProductResponse,
+  ReadyComboResponse
+} from "../../hooks/models"
 import {
   Box,
   Checkbox,
@@ -20,13 +24,14 @@ import { useEffect, useMemo, useState } from "react"
 import { useItems } from "../../hooks/useItems"
 import { modals } from "@mantine/modals"
 import { SendDeliveredRequestModal } from "./SendDeliveredRequestModal"
+import { useReadyCombos } from "../../hooks/useReadyCombos"
+import { isEqual } from "lodash"
 
 interface Props {
   orders: {
     products: {
       name: string
       quantity: number
-      isReady: boolean
     }[]
     quantity: number
   }[]
@@ -44,6 +49,11 @@ const VIEW_MODES = [
   { value: "not-ready", label: "Chỉ sản phẩm chưa đóng sẵn" }
 ]
 
+// Hàm chuẩn hoá: sắp xếp theo _id, quantity để so sánh
+const normalizeProducts = (products: { _id: string; quantity: number }[]) =>
+  [...products].sort((a, b) => a._id.localeCompare(b._id))
+
+// ---- Main Component ----
 export const CalOrders = ({
   orders,
   allCalItems,
@@ -54,30 +64,16 @@ export const CalOrders = ({
   const { searchItems, searchStorageItems } = useItems()
   const [calRest, setCalRest] = useState<boolean>(false)
   const [viewMode, setViewMode] = useState<"all" | "ready" | "not-ready">("all")
+  const { searchCombos } = useReadyCombos()
 
-  const notReadyOrders = useMemo(() => {
-    return orders
-      .map((order) => ({
-        products: order.products.filter((product) => product.isReady === false),
-        quantity: order.quantity
-      }))
-      .filter((order) => order.products.length > 0)
-  }, [orders])
+  // Fetch combos đã sẵn sàng
+  const { data: readyCombosData } = useQuery({
+    queryKey: ["searchCombos"],
+    queryFn: () => searchCombos({ isReady: true }),
+    select: (data) => data.data as ReadyComboResponse[]
+  })
 
-  // Filter orders theo view mode
-  const filteredOrders = useMemo(() => {
-    if (viewMode === "all") return orders
-    const isReadyValue = viewMode === "ready"
-    return orders
-      .map((order) => ({
-        products: order.products.filter(
-          (product) => product.isReady === isReadyValue
-        ),
-        quantity: order.quantity
-      }))
-      .filter((order) => order.products.length > 0)
-  }, [orders, viewMode])
-
+  // Fetch all products, build 2 bảng tra cứu: byId & byName
   const { data: allProducts } = useQuery({
     queryKey: ["getAllProducts"],
     queryFn: getAllProducts,
@@ -86,38 +82,6 @@ export const CalOrders = ({
         (acc, product) => ({ ...acc, [product._id]: product }),
         {} as Record<string, ProductResponse>
       )
-    }
-  })
-
-  const notReadyItems = useMemo(() => {
-    if (!notReadyOrders.length || !allProducts) return {}
-    const allProductsByName = Object.values(allProducts).reduce(
-      (acc, product) => ({ ...acc, [product.name]: product }),
-      {} as Record<string, ProductResponse>
-    )
-    return notReadyOrders.reduce(
-      (acc, order) => {
-        order.products.forEach((p) => {
-          const product = allProductsByName[p.name]
-          product?.items.forEach((item) => {
-            if (acc[item._id]) {
-              acc[item._id] += item.quantity * p.quantity * order.quantity
-            } else {
-              acc[item._id] = item.quantity * p.quantity * order.quantity
-            }
-          })
-        })
-        return acc
-      },
-      {} as Record<string, number>
-    )
-  }, [notReadyOrders, allProducts])
-
-  const { data: allStorageItems } = useQuery({
-    queryKey: ["searchStorageItems"],
-    queryFn: () => searchStorageItems(""),
-    select: (data) => {
-      return data.data
     }
   })
 
@@ -130,12 +94,84 @@ export const CalOrders = ({
       : {}
   }, [allProducts])
 
+  // Chuẩn hóa các combo sẵn sàng để tiện so sánh
+  const normalizedCombos = useMemo(
+    () =>
+      readyCombosData
+        ? readyCombosData.map((combo) => normalizeProducts(combo.products))
+        : [],
+    [readyCombosData]
+  )
+
+  // Hàm kiểm tra order "ready" (phải giống y hệt 1 combo sẵn sàng)
+  const isOrderReady = (order: Props["orders"][0]) => {
+    if (!allProductsByName) return false
+    const normalizedOrderProducts = normalizeProducts(
+      order.products.map((p) => ({
+        _id: allProductsByName[p.name]?._id ?? "UNKNOWN",
+        quantity: p.quantity
+      }))
+    )
+    return normalizedCombos.some((comboProducts) =>
+      isEqual(comboProducts, normalizedOrderProducts)
+    )
+  }
+
+  // Lọc lại orders theo viewMode
+  const filteredOrders = useMemo(() => {
+    if (!allProductsByName) return []
+
+    if (viewMode === "ready") return orders.filter(isOrderReady)
+    if (viewMode === "not-ready") return orders.filter((o) => !isOrderReady(o))
+    return orders
+  }, [orders, allProductsByName, normalizedCombos, viewMode])
+
+  // Lọc ra notReadyOrders (order nào chưa "ready")
+  const notReadyOrders = useMemo(() => {
+    if (!allProductsByName) return []
+    return orders
+      .map((order) => ({
+        ...order,
+        products: order.products.filter(
+          (p) =>
+            !isOrderReady({
+              ...order,
+              products: [p]
+            })
+        )
+      }))
+      .filter((order) => order.products.length > 0)
+  }, [orders, allProductsByName, normalizedCombos])
+
+  // Tính các item cần dùng cho notReadyOrders
+  const notReadyItems = useMemo(() => {
+    if (!notReadyOrders.length || !allProductsByName) return {}
+    return notReadyOrders.reduce(
+      (acc, order) => {
+        order.products.forEach((p) => {
+          const product = allProductsByName[p.name]
+          product?.items.forEach((item) => {
+            acc[item._id] =
+              (acc[item._id] || 0) + item.quantity * p.quantity * order.quantity
+          })
+        })
+        return acc
+      },
+      {} as Record<string, number>
+    )
+  }, [notReadyOrders, allProductsByName])
+
+  // Fetch các mặt hàng (item) và item trong kho
+  const { data: allStorageItems } = useQuery({
+    queryKey: ["searchStorageItems"],
+    queryFn: () => searchStorageItems(""),
+    select: (data) => data.data
+  })
+
   const { data: itemsData } = useQuery({
     queryKey: ["searchItems"],
     queryFn: () => searchItems(""),
-    select: (data) => {
-      return data.data
-    }
+    select: (data) => data.data
   })
 
   const allItems = useMemo(() => {
@@ -145,14 +181,14 @@ export const CalOrders = ({
     )
   }, [itemsData])
 
+  // Quản lý state đơn được chọn (để tính mặt hàng cần dùng)
   const [chosenOrders, setChosenOrders] = useState<boolean[]>(
-    orders.map((_) => false)
+    orders.map(() => false)
   )
 
-  // Reset chọn đơn khi đổi view mode
   useEffect(() => {
-    setChosenOrders(filteredOrders.map((_) => false))
-  }, [viewMode, orders])
+    setChosenOrders(filteredOrders.map(() => false))
+  }, [viewMode, orders, filteredOrders])
 
   const toggleOrders = (index: number) => {
     setChosenOrders((prev) => {
@@ -162,7 +198,7 @@ export const CalOrders = ({
     })
   }
 
-  // Tính các item cần dùng theo view mode và chosenOrders
+  // Tính các item cần dùng cho chosenOrders
   const [chosenItems, setChosenItems] = useState<Record<string, number>>()
 
   useEffect(() => {
@@ -173,11 +209,9 @@ export const CalOrders = ({
           order.products.forEach((p) => {
             const product = allProductsByName[p.name]
             product.items.forEach((item) => {
-              if (acc[item._id]) {
-                acc[item._id] += item.quantity * p.quantity * order.quantity
-              } else {
-                acc[item._id] = item.quantity * p.quantity * order.quantity
-              }
+              acc[item._id] =
+                (acc[item._id] || 0) +
+                item.quantity * p.quantity * order.quantity
             })
           })
         }
@@ -190,7 +224,7 @@ export const CalOrders = ({
         (acc, item) => {
           const restQuantity = item.quantity - (items[item._id] || 0)
           if (restQuantity > 0) {
-            return { ...acc, [item._id]: restQuantity }
+            acc[item._id] = restQuantity
           }
           return acc
         },
@@ -217,13 +251,6 @@ export const CalOrders = ({
           w={260}
           allowDeselect={false}
         />
-        {/* Cái này nếu muốn giữ lại tính năng cũ */}
-        {/* <Checkbox
-          label="Tính số còn lại"
-          checked={calRest}
-          onChange={() => setCalRest((prev) => !prev)}
-          color="indigo"
-        /> */}
       </Group>
 
       <Flex

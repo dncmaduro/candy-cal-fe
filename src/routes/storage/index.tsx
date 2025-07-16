@@ -6,6 +6,7 @@ import { useEffect } from "react"
 import { Helmet } from "react-helmet-async"
 import { useAuthGuard } from "../../hooks/useAuthGuard"
 import { Items } from "../../components/accounting-storage/Items"
+import { ReadyCombos } from "../../components/storage/ReadyCombos"
 
 type StorageTab = {
   tab: string
@@ -15,7 +16,7 @@ export const Route = createFileRoute("/storage/")({
   component: RouteComponent,
   validateSearch: (search: Record<string, unknown>): StorageTab => {
     return {
-      tab: String(search.tag ?? "items")
+      tab: String(search.tab ?? "items")
     }
   }
 })
@@ -33,6 +34,10 @@ function RouteComponent() {
     {
       label: "Sản phẩm",
       value: "products"
+    },
+    {
+      label: "Các combo đóng sẵn",
+      value: "ready-combos"
     }
   ]
 
@@ -74,6 +79,10 @@ function RouteComponent() {
 
             <Tabs.Panel value="products">
               <Products />
+            </Tabs.Panel>
+
+            <Tabs.Panel value="ready-combos">
+              <ReadyCombos />
             </Tabs.Panel>
           </ScrollArea.Autosize>
         </Tabs>

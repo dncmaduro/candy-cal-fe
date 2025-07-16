@@ -48,7 +48,6 @@ interface Props {
     products: {
       name: string
       quantity: number
-      isReady: boolean
     }[]
     quantity: number
   }[]
