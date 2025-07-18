@@ -599,6 +599,7 @@ export interface LandingResponse {
     company: string
     quantity: number
     address: string
+    created_at: string
   }[]
   total: number
   page: number
