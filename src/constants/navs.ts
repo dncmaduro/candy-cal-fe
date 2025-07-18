@@ -10,3 +10,7 @@ export const NAVS = [
     roles: ["accounting-emp", "order-emp"]
   }
 ]
+
+export const LANDING_NAVS = [
+  { to: "/landing-page", label: "Trang chủ", roles: ["order-emp"] }
+]

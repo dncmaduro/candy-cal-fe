@@ -12,15 +12,18 @@
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as IndexImport } from './routes/index'
-import { Route as UserIndexImport } from './routes/user/index'
-import { Route as StorageIndexImport } from './routes/storage/index'
 import { Route as PostauthIndexImport } from './routes/postauth/index'
-import { Route as OrdersLogsIndexImport } from './routes/orders-logs/index'
-import { Route as DeliveredRequestsIndexImport } from './routes/delivered-requests/index'
-import { Route as CalfileIndexImport } from './routes/calfile/index'
-import { Route as CalIndexImport } from './routes/cal/index'
-import { Route as AccountingStorageIndexImport } from './routes/accounting-storage/index'
+import { Route as MarketingStorageIndexImport } from './routes/marketing-storage/index'
+import { Route as LandingIndexImport } from './routes/landing/index'
 import { Route as AccessDeniedIndexImport } from './routes/access-denied/index'
+import { Route as MarketingStorageUserIndexImport } from './routes/marketing-storage/user/index'
+import { Route as MarketingStorageStorageIndexImport } from './routes/marketing-storage/storage/index'
+import { Route as MarketingStorageOrdersLogsIndexImport } from './routes/marketing-storage/orders-logs/index'
+import { Route as MarketingStorageDeliveredRequestsIndexImport } from './routes/marketing-storage/delivered-requests/index'
+import { Route as MarketingStorageCalfileIndexImport } from './routes/marketing-storage/calfile/index'
+import { Route as MarketingStorageCalIndexImport } from './routes/marketing-storage/cal/index'
+import { Route as MarketingStorageAccountingStorageIndexImport } from './routes/marketing-storage/accounting-storage/index'
+import { Route as LandingLandingPageIndexImport } from './routes/landing/landing-page/index'
 
 // Create/Update Routes
 
@@ -30,57 +33,80 @@ const IndexRoute = IndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const UserIndexRoute = UserIndexImport.update({
-  id: '/user/',
-  path: '/user/',
-  getParentRoute: () => rootRoute,
-} as any)
-
-const StorageIndexRoute = StorageIndexImport.update({
-  id: '/storage/',
-  path: '/storage/',
-  getParentRoute: () => rootRoute,
-} as any)
-
 const PostauthIndexRoute = PostauthIndexImport.update({
   id: '/postauth/',
   path: '/postauth/',
   getParentRoute: () => rootRoute,
 } as any)
 
-const OrdersLogsIndexRoute = OrdersLogsIndexImport.update({
-  id: '/orders-logs/',
-  path: '/orders-logs/',
+const MarketingStorageIndexRoute = MarketingStorageIndexImport.update({
+  id: '/marketing-storage/',
+  path: '/marketing-storage/',
   getParentRoute: () => rootRoute,
 } as any)
 
-const DeliveredRequestsIndexRoute = DeliveredRequestsIndexImport.update({
-  id: '/delivered-requests/',
-  path: '/delivered-requests/',
-  getParentRoute: () => rootRoute,
-} as any)
-
-const CalfileIndexRoute = CalfileIndexImport.update({
-  id: '/calfile/',
-  path: '/calfile/',
-  getParentRoute: () => rootRoute,
-} as any)
-
-const CalIndexRoute = CalIndexImport.update({
-  id: '/cal/',
-  path: '/cal/',
-  getParentRoute: () => rootRoute,
-} as any)
-
-const AccountingStorageIndexRoute = AccountingStorageIndexImport.update({
-  id: '/accounting-storage/',
-  path: '/accounting-storage/',
+const LandingIndexRoute = LandingIndexImport.update({
+  id: '/landing/',
+  path: '/landing/',
   getParentRoute: () => rootRoute,
 } as any)
 
 const AccessDeniedIndexRoute = AccessDeniedIndexImport.update({
   id: '/access-denied/',
   path: '/access-denied/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const MarketingStorageUserIndexRoute = MarketingStorageUserIndexImport.update({
+  id: '/marketing-storage/user/',
+  path: '/marketing-storage/user/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const MarketingStorageStorageIndexRoute =
+  MarketingStorageStorageIndexImport.update({
+    id: '/marketing-storage/storage/',
+    path: '/marketing-storage/storage/',
+    getParentRoute: () => rootRoute,
+  } as any)
+
+const MarketingStorageOrdersLogsIndexRoute =
+  MarketingStorageOrdersLogsIndexImport.update({
+    id: '/marketing-storage/orders-logs/',
+    path: '/marketing-storage/orders-logs/',
+    getParentRoute: () => rootRoute,
+  } as any)
+
+const MarketingStorageDeliveredRequestsIndexRoute =
+  MarketingStorageDeliveredRequestsIndexImport.update({
+    id: '/marketing-storage/delivered-requests/',
+    path: '/marketing-storage/delivered-requests/',
+    getParentRoute: () => rootRoute,
+  } as any)
+
+const MarketingStorageCalfileIndexRoute =
+  MarketingStorageCalfileIndexImport.update({
+    id: '/marketing-storage/calfile/',
+    path: '/marketing-storage/calfile/',
+    getParentRoute: () => rootRoute,
+  } as any)
+
+const MarketingStorageCalIndexRoute = MarketingStorageCalIndexImport.update({
+  id: '/marketing-storage/cal/',
+  path: '/marketing-storage/cal/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const MarketingStorageAccountingStorageIndexRoute =
+  MarketingStorageAccountingStorageIndexImport.update({
+    id: '/marketing-storage/accounting-storage/',
+    path: '/marketing-storage/accounting-storage/',
+    getParentRoute: () => rootRoute,
+  } as any)
+
+const LandingLandingPageIndexRoute = LandingLandingPageIndexImport.update({
+  id: '/landing/landing-page/',
+  path: '/landing/landing-page/',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -102,39 +128,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccessDeniedIndexImport
       parentRoute: typeof rootRoute
     }
-    '/accounting-storage/': {
-      id: '/accounting-storage/'
-      path: '/accounting-storage'
-      fullPath: '/accounting-storage'
-      preLoaderRoute: typeof AccountingStorageIndexImport
+    '/landing/': {
+      id: '/landing/'
+      path: '/landing'
+      fullPath: '/landing'
+      preLoaderRoute: typeof LandingIndexImport
       parentRoute: typeof rootRoute
     }
-    '/cal/': {
-      id: '/cal/'
-      path: '/cal'
-      fullPath: '/cal'
-      preLoaderRoute: typeof CalIndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/calfile/': {
-      id: '/calfile/'
-      path: '/calfile'
-      fullPath: '/calfile'
-      preLoaderRoute: typeof CalfileIndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/delivered-requests/': {
-      id: '/delivered-requests/'
-      path: '/delivered-requests'
-      fullPath: '/delivered-requests'
-      preLoaderRoute: typeof DeliveredRequestsIndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/orders-logs/': {
-      id: '/orders-logs/'
-      path: '/orders-logs'
-      fullPath: '/orders-logs'
-      preLoaderRoute: typeof OrdersLogsIndexImport
+    '/marketing-storage/': {
+      id: '/marketing-storage/'
+      path: '/marketing-storage'
+      fullPath: '/marketing-storage'
+      preLoaderRoute: typeof MarketingStorageIndexImport
       parentRoute: typeof rootRoute
     }
     '/postauth/': {
@@ -144,18 +149,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PostauthIndexImport
       parentRoute: typeof rootRoute
     }
-    '/storage/': {
-      id: '/storage/'
-      path: '/storage'
-      fullPath: '/storage'
-      preLoaderRoute: typeof StorageIndexImport
+    '/landing/landing-page/': {
+      id: '/landing/landing-page/'
+      path: '/landing/landing-page'
+      fullPath: '/landing/landing-page'
+      preLoaderRoute: typeof LandingLandingPageIndexImport
       parentRoute: typeof rootRoute
     }
-    '/user/': {
-      id: '/user/'
-      path: '/user'
-      fullPath: '/user'
-      preLoaderRoute: typeof UserIndexImport
+    '/marketing-storage/accounting-storage/': {
+      id: '/marketing-storage/accounting-storage/'
+      path: '/marketing-storage/accounting-storage'
+      fullPath: '/marketing-storage/accounting-storage'
+      preLoaderRoute: typeof MarketingStorageAccountingStorageIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/marketing-storage/cal/': {
+      id: '/marketing-storage/cal/'
+      path: '/marketing-storage/cal'
+      fullPath: '/marketing-storage/cal'
+      preLoaderRoute: typeof MarketingStorageCalIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/marketing-storage/calfile/': {
+      id: '/marketing-storage/calfile/'
+      path: '/marketing-storage/calfile'
+      fullPath: '/marketing-storage/calfile'
+      preLoaderRoute: typeof MarketingStorageCalfileIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/marketing-storage/delivered-requests/': {
+      id: '/marketing-storage/delivered-requests/'
+      path: '/marketing-storage/delivered-requests'
+      fullPath: '/marketing-storage/delivered-requests'
+      preLoaderRoute: typeof MarketingStorageDeliveredRequestsIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/marketing-storage/orders-logs/': {
+      id: '/marketing-storage/orders-logs/'
+      path: '/marketing-storage/orders-logs'
+      fullPath: '/marketing-storage/orders-logs'
+      preLoaderRoute: typeof MarketingStorageOrdersLogsIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/marketing-storage/storage/': {
+      id: '/marketing-storage/storage/'
+      path: '/marketing-storage/storage'
+      fullPath: '/marketing-storage/storage'
+      preLoaderRoute: typeof MarketingStorageStorageIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/marketing-storage/user/': {
+      id: '/marketing-storage/user/'
+      path: '/marketing-storage/user'
+      fullPath: '/marketing-storage/user'
+      preLoaderRoute: typeof MarketingStorageUserIndexImport
       parentRoute: typeof rootRoute
     }
   }
@@ -166,41 +213,50 @@ declare module '@tanstack/react-router' {
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/access-denied': typeof AccessDeniedIndexRoute
-  '/accounting-storage': typeof AccountingStorageIndexRoute
-  '/cal': typeof CalIndexRoute
-  '/calfile': typeof CalfileIndexRoute
-  '/delivered-requests': typeof DeliveredRequestsIndexRoute
-  '/orders-logs': typeof OrdersLogsIndexRoute
+  '/landing': typeof LandingIndexRoute
+  '/marketing-storage': typeof MarketingStorageIndexRoute
   '/postauth': typeof PostauthIndexRoute
-  '/storage': typeof StorageIndexRoute
-  '/user': typeof UserIndexRoute
+  '/landing/landing-page': typeof LandingLandingPageIndexRoute
+  '/marketing-storage/accounting-storage': typeof MarketingStorageAccountingStorageIndexRoute
+  '/marketing-storage/cal': typeof MarketingStorageCalIndexRoute
+  '/marketing-storage/calfile': typeof MarketingStorageCalfileIndexRoute
+  '/marketing-storage/delivered-requests': typeof MarketingStorageDeliveredRequestsIndexRoute
+  '/marketing-storage/orders-logs': typeof MarketingStorageOrdersLogsIndexRoute
+  '/marketing-storage/storage': typeof MarketingStorageStorageIndexRoute
+  '/marketing-storage/user': typeof MarketingStorageUserIndexRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/access-denied': typeof AccessDeniedIndexRoute
-  '/accounting-storage': typeof AccountingStorageIndexRoute
-  '/cal': typeof CalIndexRoute
-  '/calfile': typeof CalfileIndexRoute
-  '/delivered-requests': typeof DeliveredRequestsIndexRoute
-  '/orders-logs': typeof OrdersLogsIndexRoute
+  '/landing': typeof LandingIndexRoute
+  '/marketing-storage': typeof MarketingStorageIndexRoute
   '/postauth': typeof PostauthIndexRoute
-  '/storage': typeof StorageIndexRoute
-  '/user': typeof UserIndexRoute
+  '/landing/landing-page': typeof LandingLandingPageIndexRoute
+  '/marketing-storage/accounting-storage': typeof MarketingStorageAccountingStorageIndexRoute
+  '/marketing-storage/cal': typeof MarketingStorageCalIndexRoute
+  '/marketing-storage/calfile': typeof MarketingStorageCalfileIndexRoute
+  '/marketing-storage/delivered-requests': typeof MarketingStorageDeliveredRequestsIndexRoute
+  '/marketing-storage/orders-logs': typeof MarketingStorageOrdersLogsIndexRoute
+  '/marketing-storage/storage': typeof MarketingStorageStorageIndexRoute
+  '/marketing-storage/user': typeof MarketingStorageUserIndexRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/access-denied/': typeof AccessDeniedIndexRoute
-  '/accounting-storage/': typeof AccountingStorageIndexRoute
-  '/cal/': typeof CalIndexRoute
-  '/calfile/': typeof CalfileIndexRoute
-  '/delivered-requests/': typeof DeliveredRequestsIndexRoute
-  '/orders-logs/': typeof OrdersLogsIndexRoute
+  '/landing/': typeof LandingIndexRoute
+  '/marketing-storage/': typeof MarketingStorageIndexRoute
   '/postauth/': typeof PostauthIndexRoute
-  '/storage/': typeof StorageIndexRoute
-  '/user/': typeof UserIndexRoute
+  '/landing/landing-page/': typeof LandingLandingPageIndexRoute
+  '/marketing-storage/accounting-storage/': typeof MarketingStorageAccountingStorageIndexRoute
+  '/marketing-storage/cal/': typeof MarketingStorageCalIndexRoute
+  '/marketing-storage/calfile/': typeof MarketingStorageCalfileIndexRoute
+  '/marketing-storage/delivered-requests/': typeof MarketingStorageDeliveredRequestsIndexRoute
+  '/marketing-storage/orders-logs/': typeof MarketingStorageOrdersLogsIndexRoute
+  '/marketing-storage/storage/': typeof MarketingStorageStorageIndexRoute
+  '/marketing-storage/user/': typeof MarketingStorageUserIndexRoute
 }
 
 export interface FileRouteTypes {
@@ -208,65 +264,82 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/access-denied'
-    | '/accounting-storage'
-    | '/cal'
-    | '/calfile'
-    | '/delivered-requests'
-    | '/orders-logs'
+    | '/landing'
+    | '/marketing-storage'
     | '/postauth'
-    | '/storage'
-    | '/user'
+    | '/landing/landing-page'
+    | '/marketing-storage/accounting-storage'
+    | '/marketing-storage/cal'
+    | '/marketing-storage/calfile'
+    | '/marketing-storage/delivered-requests'
+    | '/marketing-storage/orders-logs'
+    | '/marketing-storage/storage'
+    | '/marketing-storage/user'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/access-denied'
-    | '/accounting-storage'
-    | '/cal'
-    | '/calfile'
-    | '/delivered-requests'
-    | '/orders-logs'
+    | '/landing'
+    | '/marketing-storage'
     | '/postauth'
-    | '/storage'
-    | '/user'
+    | '/landing/landing-page'
+    | '/marketing-storage/accounting-storage'
+    | '/marketing-storage/cal'
+    | '/marketing-storage/calfile'
+    | '/marketing-storage/delivered-requests'
+    | '/marketing-storage/orders-logs'
+    | '/marketing-storage/storage'
+    | '/marketing-storage/user'
   id:
     | '__root__'
     | '/'
     | '/access-denied/'
-    | '/accounting-storage/'
-    | '/cal/'
-    | '/calfile/'
-    | '/delivered-requests/'
-    | '/orders-logs/'
+    | '/landing/'
+    | '/marketing-storage/'
     | '/postauth/'
-    | '/storage/'
-    | '/user/'
+    | '/landing/landing-page/'
+    | '/marketing-storage/accounting-storage/'
+    | '/marketing-storage/cal/'
+    | '/marketing-storage/calfile/'
+    | '/marketing-storage/delivered-requests/'
+    | '/marketing-storage/orders-logs/'
+    | '/marketing-storage/storage/'
+    | '/marketing-storage/user/'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccessDeniedIndexRoute: typeof AccessDeniedIndexRoute
-  AccountingStorageIndexRoute: typeof AccountingStorageIndexRoute
-  CalIndexRoute: typeof CalIndexRoute
-  CalfileIndexRoute: typeof CalfileIndexRoute
-  DeliveredRequestsIndexRoute: typeof DeliveredRequestsIndexRoute
-  OrdersLogsIndexRoute: typeof OrdersLogsIndexRoute
+  LandingIndexRoute: typeof LandingIndexRoute
+  MarketingStorageIndexRoute: typeof MarketingStorageIndexRoute
   PostauthIndexRoute: typeof PostauthIndexRoute
-  StorageIndexRoute: typeof StorageIndexRoute
-  UserIndexRoute: typeof UserIndexRoute
+  LandingLandingPageIndexRoute: typeof LandingLandingPageIndexRoute
+  MarketingStorageAccountingStorageIndexRoute: typeof MarketingStorageAccountingStorageIndexRoute
+  MarketingStorageCalIndexRoute: typeof MarketingStorageCalIndexRoute
+  MarketingStorageCalfileIndexRoute: typeof MarketingStorageCalfileIndexRoute
+  MarketingStorageDeliveredRequestsIndexRoute: typeof MarketingStorageDeliveredRequestsIndexRoute
+  MarketingStorageOrdersLogsIndexRoute: typeof MarketingStorageOrdersLogsIndexRoute
+  MarketingStorageStorageIndexRoute: typeof MarketingStorageStorageIndexRoute
+  MarketingStorageUserIndexRoute: typeof MarketingStorageUserIndexRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccessDeniedIndexRoute: AccessDeniedIndexRoute,
-  AccountingStorageIndexRoute: AccountingStorageIndexRoute,
-  CalIndexRoute: CalIndexRoute,
-  CalfileIndexRoute: CalfileIndexRoute,
-  DeliveredRequestsIndexRoute: DeliveredRequestsIndexRoute,
-  OrdersLogsIndexRoute: OrdersLogsIndexRoute,
+  LandingIndexRoute: LandingIndexRoute,
+  MarketingStorageIndexRoute: MarketingStorageIndexRoute,
   PostauthIndexRoute: PostauthIndexRoute,
-  StorageIndexRoute: StorageIndexRoute,
-  UserIndexRoute: UserIndexRoute,
+  LandingLandingPageIndexRoute: LandingLandingPageIndexRoute,
+  MarketingStorageAccountingStorageIndexRoute:
+    MarketingStorageAccountingStorageIndexRoute,
+  MarketingStorageCalIndexRoute: MarketingStorageCalIndexRoute,
+  MarketingStorageCalfileIndexRoute: MarketingStorageCalfileIndexRoute,
+  MarketingStorageDeliveredRequestsIndexRoute:
+    MarketingStorageDeliveredRequestsIndexRoute,
+  MarketingStorageOrdersLogsIndexRoute: MarketingStorageOrdersLogsIndexRoute,
+  MarketingStorageStorageIndexRoute: MarketingStorageStorageIndexRoute,
+  MarketingStorageUserIndexRoute: MarketingStorageUserIndexRoute,
 }
 
 export const routeTree = rootRoute
@@ -281,14 +354,17 @@ export const routeTree = rootRoute
       "children": [
         "/",
         "/access-denied/",
-        "/accounting-storage/",
-        "/cal/",
-        "/calfile/",
-        "/delivered-requests/",
-        "/orders-logs/",
+        "/landing/",
+        "/marketing-storage/",
         "/postauth/",
-        "/storage/",
-        "/user/"
+        "/landing/landing-page/",
+        "/marketing-storage/accounting-storage/",
+        "/marketing-storage/cal/",
+        "/marketing-storage/calfile/",
+        "/marketing-storage/delivered-requests/",
+        "/marketing-storage/orders-logs/",
+        "/marketing-storage/storage/",
+        "/marketing-storage/user/"
       ]
     },
     "/": {
@@ -297,29 +373,38 @@ export const routeTree = rootRoute
     "/access-denied/": {
       "filePath": "access-denied/index.tsx"
     },
-    "/accounting-storage/": {
-      "filePath": "accounting-storage/index.tsx"
+    "/landing/": {
+      "filePath": "landing/index.tsx"
     },
-    "/cal/": {
-      "filePath": "cal/index.tsx"
-    },
-    "/calfile/": {
-      "filePath": "calfile/index.tsx"
-    },
-    "/delivered-requests/": {
-      "filePath": "delivered-requests/index.tsx"
-    },
-    "/orders-logs/": {
-      "filePath": "orders-logs/index.tsx"
+    "/marketing-storage/": {
+      "filePath": "marketing-storage/index.tsx"
     },
     "/postauth/": {
       "filePath": "postauth/index.tsx"
     },
-    "/storage/": {
-      "filePath": "storage/index.tsx"
+    "/landing/landing-page/": {
+      "filePath": "landing/landing-page/index.tsx"
     },
-    "/user/": {
-      "filePath": "user/index.tsx"
+    "/marketing-storage/accounting-storage/": {
+      "filePath": "marketing-storage/accounting-storage/index.tsx"
+    },
+    "/marketing-storage/cal/": {
+      "filePath": "marketing-storage/cal/index.tsx"
+    },
+    "/marketing-storage/calfile/": {
+      "filePath": "marketing-storage/calfile/index.tsx"
+    },
+    "/marketing-storage/delivered-requests/": {
+      "filePath": "marketing-storage/delivered-requests/index.tsx"
+    },
+    "/marketing-storage/orders-logs/": {
+      "filePath": "marketing-storage/orders-logs/index.tsx"
+    },
+    "/marketing-storage/storage/": {
+      "filePath": "marketing-storage/storage/index.tsx"
+    },
+    "/marketing-storage/user/": {
+      "filePath": "marketing-storage/user/index.tsx"
     }
   }
 }

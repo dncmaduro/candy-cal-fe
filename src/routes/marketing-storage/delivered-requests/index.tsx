@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router"
-import { AppLayout } from "../../components/layouts/AppLayout"
-import { useAuthGuard } from "../../hooks/useAuthGuard"
+import { AppLayout } from "../../../components/layouts/AppLayout"
+import { useAuthGuard } from "../../../hooks/useAuthGuard"
 import { useState } from "react"
-import { useDeliveredRequests } from "../../hooks/useDeliveredRequests"
+import { useDeliveredRequests } from "../../../hooks/useDeliveredRequests"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import {
   Box,
@@ -18,13 +18,13 @@ import {
 } from "@mantine/core"
 import { DatePickerInput } from "@mantine/dates"
 import { format } from "date-fns"
-import { useUsers } from "../../hooks/useUsers"
+import { useUsers } from "../../../hooks/useUsers"
 import { IconArrowBackUp, IconCheck, IconEye } from "@tabler/icons-react"
-import { CToast } from "../../components/common/CToast"
+import { CToast } from "../../../components/common/CToast"
 import { modals } from "@mantine/modals"
-import { DeliveredRequestModal } from "../../components/delivered-requests/DeliveredRequestModal"
+import { DeliveredRequestModal } from "../../../components/delivered-requests/DeliveredRequestModal"
 
-export const Route = createFileRoute("/delivered-requests/")({
+export const Route = createFileRoute("/marketing-storage/delivered-requests/")({
   component: RouteComponent
 })
 

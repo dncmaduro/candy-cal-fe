@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router"
-import { useProducts } from "../../hooks/useProducts"
+import { useProducts } from "../../../hooks/useProducts"
 import { useMutation } from "@tanstack/react-query"
 import { modals } from "@mantine/modals"
-import { CalResultModal } from "../../components/cal/CalResultModal"
+import { CalResultModal } from "../../../components/cal/CalResultModal"
 import {
   Box,
   Button,
@@ -16,12 +16,12 @@ import {
 } from "@mantine/core"
 import { useFileDialog } from "@mantine/hooks"
 import { useState } from "react"
-import { AppLayout } from "../../components/layouts/AppLayout"
+import { AppLayout } from "../../../components/layouts/AppLayout"
 import { Helmet } from "react-helmet-async"
 import { IconUpload, IconCalculator, IconHistory } from "@tabler/icons-react"
-import { useAuthGuard } from "../../hooks/useAuthGuard"
+import { useAuthGuard } from "../../../hooks/useAuthGuard"
 
-export const Route = createFileRoute("/calfile/")({
+export const Route = createFileRoute("/marketing-storage/calfile/")({
   component: RouteComponent
 })
 

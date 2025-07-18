@@ -1,18 +1,18 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
+import { AppLayout } from "../../../components/layouts/AppLayout"
+import { ScrollArea, Tabs } from "@mantine/core"
+import { Products } from "../../../components/storage/Products"
 import { useEffect } from "react"
 import { Helmet } from "react-helmet-async"
-import { AppLayout } from "../../components/layouts/AppLayout"
-import { ScrollArea, Tabs } from "@mantine/core"
-import { StorageItems } from "../../components/accounting-storage/StorageItems"
-import { StorageLogs } from "../../components/accounting-storage/StorageLogs"
-import { useAuthGuard } from "../../hooks/useAuthGuard"
-import { MonthlyExports } from "../../components/accounting-storage/MonthlyExports"
+import { useAuthGuard } from "../../../hooks/useAuthGuard"
+import { Items } from "../../../components/accounting-storage/Items"
+import { ReadyCombos } from "../../../components/storage/ReadyCombos"
 
 type StorageTab = {
   tab: string
 }
 
-export const Route = createFileRoute("/accounting-storage/")({
+export const Route = createFileRoute("/marketing-storage/storage/")({
   component: RouteComponent,
   validateSearch: (search: Record<string, unknown>): StorageTab => {
     return {
@@ -22,7 +22,7 @@ export const Route = createFileRoute("/accounting-storage/")({
 })
 
 function RouteComponent() {
-  useAuthGuard(["admin", "accounting-emp"])
+  useAuthGuard(["admin", "order-emp"])
   const { tab } = Route.useSearch()
   const navigate = useNavigate()
 
@@ -32,22 +32,22 @@ function RouteComponent() {
       value: "items"
     },
     {
-      label: "Lịch sử xuất/nhập kho",
-      value: "storagelogs"
+      label: "Sản phẩm",
+      value: "products"
     },
     {
-      label: "Xuất hàng theo tháng",
-      value: "monthly-exports"
+      label: "Các combo đóng sẵn",
+      value: "ready-combos"
     }
   ]
 
   const handleChange = (value: string | null) => {
-    navigate({ to: `/accounting-storage?tab=${value ?? "items"}` })
+    navigate({ to: `/storage?tab=${value ?? "items"}` })
   }
 
   useEffect(() => {
     if (!tab) {
-      navigate({ to: `/accounting-storage`, search: { tab: "items" } })
+      navigate({ to: `/storage`, search: { tab: "items" } })
     }
   }, [])
 
@@ -74,15 +74,15 @@ function RouteComponent() {
 
           <ScrollArea.Autosize mah={"95%"}>
             <Tabs.Panel value="items">
-              <StorageItems activeTab={tab} />
+              <Items />
             </Tabs.Panel>
 
-            <Tabs.Panel value="storagelogs">
-              <StorageLogs activeTab={tab} />
+            <Tabs.Panel value="products">
+              <Products />
             </Tabs.Panel>
 
-            <Tabs.Panel value="monthly-exports">
-              <MonthlyExports activeTab={tab} />
+            <Tabs.Panel value="ready-combos">
+              <ReadyCombos />
             </Tabs.Panel>
           </ScrollArea.Autosize>
         </Tabs>

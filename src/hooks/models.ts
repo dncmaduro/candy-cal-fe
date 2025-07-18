@@ -585,3 +585,22 @@ export interface SearchCombosRequest {
   searchText?: string
   isReady?: boolean
 }
+
+export interface LandingRequest {
+  page: number
+  pageSize: number
+}
+
+export interface LandingResponse {
+  data: {
+    _id: string
+    fullName: string
+    phoneNumber: string
+    company: string
+    quantity: number
+    address: string
+  }[]
+  total: number
+  page: number
+  pageSize: number
+}
