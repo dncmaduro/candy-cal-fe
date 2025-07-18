@@ -1,5 +1,5 @@
-const NAVS_URL = "/marketing-storage"
-const LANDING_NAVS_URL = "/landing"
+export const NAVS_URL = "/marketing-storage"
+export const LANDING_NAVS_URL = "/landing"
 
 export const NAVS = [
   { to: `${NAVS_URL}/storage`, label: "Kho chứa", roles: ["order-emp"] },

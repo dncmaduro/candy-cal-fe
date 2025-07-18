@@ -7,6 +7,7 @@ import { StorageLogs } from "../../../components/accounting-storage/StorageLogs"
 import { useAuthGuard } from "../../../hooks/useAuthGuard"
 import { MonthlyExports } from "../../../components/accounting-storage/MonthlyExports"
 import { StorageItems } from "../../../components/accounting-storage/StorageItems"
+import { NAVS_URL } from "../../../constants/navs"
 
 type StorageTab = {
   tab: string
@@ -42,12 +43,15 @@ function RouteComponent() {
   ]
 
   const handleChange = (value: string | null) => {
-    navigate({ to: `/accounting-storage?tab=${value ?? "items"}` })
+    navigate({ to: `${NAVS_URL}/accounting-storage?tab=${value ?? "items"}` })
   }
 
   useEffect(() => {
     if (!tab) {
-      navigate({ to: `/accounting-storage`, search: { tab: "items" } })
+      navigate({
+        to: `${NAVS_URL}/accounting-storage`,
+        search: { tab: "items" }
+      })
     }
   }, [])
 
