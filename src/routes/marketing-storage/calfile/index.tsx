@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router"
 import { useProducts } from "../../../hooks/useProducts"
 import { useMutation } from "@tanstack/react-query"
 import { modals } from "@mantine/modals"
-import { CalResultModal } from "../../../components/cal/CalResultModal"
 import {
   Box,
   Button,
@@ -20,6 +19,7 @@ import { AppLayout } from "../../../components/layouts/AppLayout"
 import { Helmet } from "react-helmet-async"
 import { IconUpload, IconCalculator, IconHistory } from "@tabler/icons-react"
 import { useAuthGuard } from "../../../hooks/useAuthGuard"
+import { CalFileResultModal } from "../../../components/cal/CalFileResultModal"
 
 export const Route = createFileRoute("/marketing-storage/calfile/")({
   component: RouteComponent
@@ -71,7 +71,7 @@ function RouteComponent() {
       modals.open({
         title: `Tổng sản phẩm trong File ${file?.name}`,
         children: (
-          <CalResultModal
+          <CalFileResultModal
             items={response.data.items}
             orders={response.data.orders}
           />
@@ -161,7 +161,9 @@ function RouteComponent() {
                 onClick={() =>
                   modals.open({
                     title: `Tổng sản phẩm trong File ${latestFileName}`,
-                    children: <CalResultModal items={items} orders={orders} />,
+                    children: (
+                      <CalFileResultModal items={items} orders={orders} />
+                    ),
                     size: "xl",
                     w: 1400
                   })

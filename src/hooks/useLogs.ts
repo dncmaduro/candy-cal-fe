@@ -3,12 +3,18 @@ import { toQueryString } from "../utils/toQuery"
 import { callApi } from "./axios"
 import {
   CreateLogRequest,
+  CreateLogSessionRequest,
+  CreateLogSessionResponse,
   CreateStorageLogRequest,
   CreateStorageLogResponse,
   GetLogsRangeRequest,
   GetLogsRangeResponse,
   GetLogsRequest,
   GetLogsResponse,
+  GetOrderLogsByRangeRequest,
+  GetOrderLogsByRangeResponse,
+  GetOrderLogsRequest,
+  GetOrderLogsResponse,
   GetStorageLogsByMonthRequest,
   GetStorageLogsByMonthResponse,
   GetStorageLogsRequest,
@@ -101,6 +107,42 @@ export const useLogs = () => {
     })
   }
 
+  // new logs
+  const getOrderLogs = async (req: GetOrderLogsRequest) => {
+    const query = toQueryString({
+      page: req.page,
+      limit: req.limit
+    })
+
+    return callApi<never, GetOrderLogsResponse>({
+      path: `/v1/orderlogs?${query}`,
+      method: "GET",
+      token: accessToken
+    })
+  }
+
+  const createLogSession = async (req: CreateLogSessionRequest) => {
+    return callApi<CreateLogSessionRequest, CreateLogSessionResponse>({
+      path: `/v1/orderlogs`,
+      method: "POST",
+      data: req,
+      token: accessToken
+    })
+  }
+
+  const getOrderLogsByRange = async (req: GetOrderLogsByRangeRequest) => {
+    const query = toQueryString({
+      startDate: req.startDate,
+      endDate: req.endDate,
+      session: req.session
+    })
+    return callApi<never, GetOrderLogsByRangeResponse>({
+      path: `/v1/orderlogs/range?${query}`,
+      method: "GET",
+      token: accessToken
+    })
+  }
+
   return {
     createLog,
     getLogs,
@@ -109,6 +151,9 @@ export const useLogs = () => {
     createStorageLog,
     updateStorageLog,
     deleteStorageLog,
-    getStorageLogsByMonth
+    getStorageLogsByMonth,
+    getOrderLogs,
+    createLogSession,
+    getOrderLogsByRange
   }
 }

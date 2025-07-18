@@ -605,3 +605,87 @@ export interface LandingResponse {
   page: number
   pageSize: number
 }
+
+export interface GetOrderLogsRequest {
+  page: number
+  limit: number
+}
+
+export interface OrderLogItem {
+  _id: string
+  quantity: number
+  storageItems: {
+    code: string
+    name: string
+    receivedQuantity: {
+      quantity: number
+      real: number
+    }
+    deliveredQuantity: {
+      quantity: number
+      real: number
+    }
+    restQuantity: {
+      quantity: number
+      real: number
+    }
+    note?: string
+  }[]
+}
+
+export interface OrderLogProduct {
+  name: string
+  quantity: number
+}
+
+export interface OrderLogOrder {
+  products: OrderLogProduct[]
+  quantity: number
+}
+
+export interface OrderLogSession {
+  items: OrderLogItem[]
+  orders: OrderLogOrder[]
+}
+
+export interface GetOrderLogsResponse {
+  data: {
+    morning: OrderLogSession
+    afternoon?: OrderLogSession
+    date: string
+    updatedAt: string
+  }[]
+  total: number
+}
+
+export interface CreateLogSessionRequest {
+  date: Date
+  items: OrderLogItem[]
+  orders: OrderLogOrder[]
+  session: "morning" | "afternoon"
+}
+
+export interface CreateLogSessionResponse {
+  morning: OrderLogSession
+  afternoon?: OrderLogSession
+  date: string
+  updatedAt: string
+}
+
+export interface GetOrderLogsByRangeRequest {
+  startDate: string
+  endDate: string
+  session: "morning" | "afternoon" | "all"
+}
+
+export interface GetOrderLogsByRangeResponse {
+  startDate: string
+  endDate: string
+  items: {
+    _id: string
+    quantity: number
+    storageItems: OrderLogItem["storageItems"]
+  }[]
+  orders: { products: OrderLogProduct[]; quantity: number }[]
+  total: number
+}

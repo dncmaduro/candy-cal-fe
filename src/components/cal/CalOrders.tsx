@@ -49,11 +49,9 @@ const VIEW_MODES = [
   { value: "not-ready", label: "Chỉ sản phẩm chưa đóng sẵn" }
 ]
 
-// Hàm chuẩn hoá: sắp xếp theo _id, quantity để so sánh
 const normalizeProducts = (products: { _id: string; quantity: number }[]) =>
   [...products].sort((a, b) => a._id.localeCompare(b._id))
 
-// ---- Main Component ----
 export const CalOrders = ({
   orders,
   allCalItems,
@@ -66,14 +64,12 @@ export const CalOrders = ({
   const [viewMode, setViewMode] = useState<"all" | "ready" | "not-ready">("all")
   const { searchCombos } = useReadyCombos()
 
-  // Fetch combos đã sẵn sàng
   const { data: readyCombosData } = useQuery({
     queryKey: ["searchCombos"],
     queryFn: () => searchCombos({ isReady: true }),
     select: (data) => data.data as ReadyComboResponse[]
   })
 
-  // Fetch all products, build 2 bảng tra cứu: byId & byName
   const { data: allProducts } = useQuery({
     queryKey: ["getAllProducts"],
     queryFn: getAllProducts,
@@ -94,7 +90,6 @@ export const CalOrders = ({
       : {}
   }, [allProducts])
 
-  // Chuẩn hóa các combo sẵn sàng để tiện so sánh
   const normalizedCombos = useMemo(
     () =>
       readyCombosData
@@ -103,7 +98,6 @@ export const CalOrders = ({
     [readyCombosData]
   )
 
-  // Hàm kiểm tra order "ready" (phải giống y hệt 1 combo sẵn sàng)
   const isOrderReady = (order: Props["orders"][0]) => {
     if (!allProductsByName) return false
     const normalizedOrderProducts = normalizeProducts(
