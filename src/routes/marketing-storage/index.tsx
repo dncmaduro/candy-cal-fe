@@ -10,7 +10,7 @@ export const Route = createFileRoute("/marketing-storage/")({
 function RouteComponent() {
   const navigate = useNavigate()
   useEffect(() => {
-    navigate({ to: `/marketing-storage/${NAVS[0].to}` })
+    navigate({ to: `${NAVS[0].to}` })
   }, [])
 
   return <AppLayout>Hello "/marketing-storage/"!</AppLayout>

@@ -9,7 +9,7 @@ export const Route = createFileRoute("/landing/")({
 function RouteComponent() {
   const navigate = useNavigate()
   useEffect(() => {
-    navigate({ to: `/landing/${LANDING_NAVS[0].to}` })
+    navigate({ to: `${LANDING_NAVS[0].to}` })
   }, [])
 
   return <div>Hello "/landing/"!</div>
