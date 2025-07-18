@@ -15,7 +15,7 @@ import { useUsers } from "../../hooks/useUsers"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { saveToCookies } from "../../store/cookies"
 import { CToast } from "../common/CToast"
-import { NAVS } from "../../constants/navs"
+import { LANDING_NAVS } from "../../constants/navs"
 import { Notifications } from "./Notifications"
 import { NavButton } from "./NavButton"
 
@@ -23,7 +23,7 @@ interface Props {
   children: ReactNode
 }
 
-export const AppLayout = ({ children }: Props) => {
+export const LandingLayout = ({ children }: Props) => {
   const { accessToken, setUser, clearUser } = useUserStore()
   const { checkToken, getNewToken, getMe } = useUsers()
   const navigate = useNavigate()
@@ -95,7 +95,7 @@ export const AppLayout = ({ children }: Props) => {
             style={{ minHeight: rem(60) }}
           >
             <Group gap={8}>
-              {NAVS.filter((n) => {
+              {LANDING_NAVS.filter((n) => {
                 if (!meData) return false
                 return meData.role === "admin" || n.roles.includes(meData.role)
               }).map((n) => (

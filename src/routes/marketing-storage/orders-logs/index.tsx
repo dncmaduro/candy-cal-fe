@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router"
-import { AppLayout } from "../../components/layouts/AppLayout"
+import { AppLayout } from "../../../components/layouts/AppLayout"
 import {
   Box,
   Button,
@@ -14,17 +14,17 @@ import {
   Title,
   rem
 } from "@mantine/core"
-import { useLogs } from "../../hooks/useLogs"
+import { useLogs } from "../../../hooks/useLogs"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { useEffect, useState } from "react"
 import { format, isEqual } from "date-fns"
 import { modals } from "@mantine/modals"
-import { CalResultModal } from "../../components/cal/CalResultModal"
+import { CalResultModal } from "../../../components/cal/CalResultModal"
 import { DatePickerInput } from "@mantine/dates"
 import { IconListDetails, IconCalendarSearch } from "@tabler/icons-react"
-import { useAuthGuard } from "../../hooks/useAuthGuard"
+import { useAuthGuard } from "../../../hooks/useAuthGuard"
 
-export const Route = createFileRoute("/orders-logs/")({
+export const Route = createFileRoute("/marketing-storage/orders-logs/")({
   component: RouteComponent
 })
 

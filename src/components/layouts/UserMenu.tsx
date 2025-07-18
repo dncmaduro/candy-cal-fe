@@ -1,5 +1,10 @@
 import { Avatar, Box, Group, Menu, Stack, Text } from "@mantine/core"
-import { IconPower, IconUser } from "@tabler/icons-react"
+import {
+  IconAppWindow,
+  IconPackages,
+  IconPower,
+  IconUser
+} from "@tabler/icons-react"
 import { useUserStore } from "../../store/userStore"
 import { useUsers } from "../../hooks/useUsers"
 import { useQuery } from "@tanstack/react-query"
@@ -23,6 +28,19 @@ export const UserMenu = () => {
     if (meData.role === "order-emp") return "Nhân viên vận đơn"
     return meData.role
   }, [meData?.role])
+
+  const APPS = [
+    {
+      to: "/marketing-storage",
+      label: "Kho vận",
+      icon: <IconPackages size={18} />
+    },
+    {
+      to: "/landing",
+      label: "Landing Page",
+      icon: <IconAppWindow size={18} />
+    }
+  ]
 
   return (
     <Menu shadow="xl" withArrow position="bottom-end" offset={8}>
@@ -77,7 +95,28 @@ export const UserMenu = () => {
         </Box>
 
         <Menu.Divider my={0} />
+        <Menu.Label>Các ứng dụng</Menu.Label>
+        {APPS.map((app) => {
+          return (
+            <Menu.Item
+              key={app.to}
+              leftSection={app.icon}
+              fz="sm"
+              component="div"
+            >
+              <Link
+                to={app.to}
+                style={{ textDecoration: "none", color: "inherit" }}
+              >
+                {app.label}
+              </Link>
+            </Menu.Item>
+          )
+        })}
 
+        <Menu.Divider my={0} />
+
+        <Menu.Label>Tài khoản</Menu.Label>
         <Menu.Item
           leftSection={<IconUser size={18} />}
           onClick={() => {
