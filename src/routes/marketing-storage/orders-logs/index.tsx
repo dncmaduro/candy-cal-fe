@@ -15,7 +15,7 @@ import {
   rem
 } from "@mantine/core"
 import { useLogs } from "../../../hooks/useLogs"
-import { useMutation, useQuery } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 import { useEffect, useState } from "react"
 import { format, isEqual } from "date-fns"
 import { modals } from "@mantine/modals"
@@ -38,7 +38,7 @@ function RouteComponent() {
   const [endDate, setEndDate] = useState<Date | null>(
     new Date(new Date().setHours(0, 0, 0, 0))
   )
-  const { getLogs, getLogsRange } = useLogs()
+  const { getLogs, getOrderLogs } = useLogs()
   const [page, setPage] = useState<number>(1)
   const [totalPages, setTotalPages] = useState<number>(1)
 
@@ -48,41 +48,34 @@ function RouteComponent() {
     select: (data) => data.data
   })
 
-  const { mutate: viewLogsRange } = useMutation({
-    mutationFn: ({
-      startDate,
-      endDate
-    }: {
-      startDate: string
-      endDate: string
-      viewSingleDate?: boolean
-      date?: Date
-    }) => getLogsRange({ startDate, endDate }),
-    onSuccess: (response, variables) => {
-      const startDate = new Date(response.data.startDate)
-      const endDate = new Date(response.data.endDate)
-      const modalTitle = isEqual(startDate, endDate)
-        ? "Vận đơn ngày " + format(startDate, "dd/MM/yyyy")
-        : "Vận đơn từ " +
-          format(startDate, "dd/MM/yyyy") +
-          " đến " +
-          format(endDate, "dd/MM/yyyy")
-      modals.open({
-        title: modalTitle,
-        children: (
-          <CalResultModal
-            readOnly
-            items={response.data.items}
-            orders={response.data.orders}
-            viewSingleDate={variables.viewSingleDate}
-            singleDate={variables.date}
-          />
-        ),
-        size: "xl",
-        w: 1400
-      })
-    }
+  const { data: orderLogsData } = useQuery({
+    queryKey: ["orderLogs", page],
+    queryFn: () => getOrderLogs({ page, limit: DATA_PER_PAGE }),
+    select: (data) => data.data
   })
+
+  const viewLogsRange = (startDate: string, endDate: string) => {
+    const modalTitle = isEqual(startDate, endDate)
+      ? "Vận đơn ngày " + format(startDate, "dd/MM/yyyy")
+      : "Vận đơn từ " +
+        format(startDate, "dd/MM/yyyy") +
+        " đến " +
+        format(endDate, "dd/MM/yyyy")
+    modals.open({
+      title: modalTitle,
+      children: (
+        <CalResultModal
+          readOnly
+          viewSingleDate={true}
+          singleDate={new Date(startDate)}
+          startDate={startDate}
+          endDate={endDate}
+        />
+      ),
+      size: "xl",
+      w: 1400
+    })
+  }
 
   useEffect(() => {
     if (logsData) {
@@ -149,10 +142,10 @@ function RouteComponent() {
                 disabled={!startDate || !endDate}
                 onClick={() => {
                   if (startDate && endDate) {
-                    viewLogsRange({
-                      startDate: startDate.toISOString(),
-                      endDate: endDate.toISOString()
-                    })
+                    viewLogsRange(
+                      startDate.toISOString(),
+                      endDate.toISOString()
+                    )
                   }
                 }}
               >
@@ -191,8 +184,8 @@ function RouteComponent() {
                       </Flex>
                     </Table.Td>
                   </Table.Tr>
-                ) : logsData?.data?.length ? (
-                  logsData.data.map((log, index) => (
+                ) : orderLogsData?.data?.length ? (
+                  orderLogsData.data.map((log, index) => (
                     <Table.Tr key={index}>
                       <Table.Td>
                         {index + 1 + (page - 1) * DATA_PER_PAGE}
@@ -202,7 +195,16 @@ function RouteComponent() {
                         {format(log.updatedAt, "dd/MM/yyyy HH:mm:ss")}
                       </Table.Td>
                       <Table.Td>
-                        {log.orders.reduce((acc, o) => acc + o.quantity, 0)}
+                        {log.morning.orders.reduce(
+                          (acc, o) => acc + o.quantity,
+                          0
+                        ) +
+                          (log.afternoon
+                            ? log.afternoon.orders.reduce(
+                                (acc, o) => acc + o.quantity,
+                                0
+                              )
+                            : 0)}
                       </Table.Td>
                       <Table.Td>
                         <Button
@@ -212,12 +214,7 @@ function RouteComponent() {
                           radius="xl"
                           leftSection={<IconListDetails size={15} />}
                           onClick={() => {
-                            viewLogsRange({
-                              startDate: log.date,
-                              endDate: log.date,
-                              viewSingleDate: true,
-                              date: new Date(log.date)
-                            })
+                            viewLogsRange(log.date, log.date)
                           }}
                         >
                           Xem chi tiết

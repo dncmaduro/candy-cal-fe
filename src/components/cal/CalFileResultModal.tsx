@@ -16,7 +16,7 @@ import { CalOrders } from "./CalOrders"
 import { useLogs } from "../../hooks/useLogs"
 import { CToast } from "../common/CToast"
 import { DatePickerInput } from "@mantine/dates"
-import { useMemo, useState } from "react"
+import { useState } from "react"
 import {
   IconBox,
   IconClipboardList,
@@ -24,29 +24,43 @@ import {
 } from "@tabler/icons-react"
 
 interface Props {
-  readOnly?: boolean
-  viewSingleDate?: boolean
-  singleDate?: Date
-  startDate: string
-  endDate: string
+  items: {
+    _id: string
+    quantity: number
+    storageItems: {
+      code: string
+      name: string
+      receivedQuantity: {
+        quantity: number
+        real: number
+      }
+      deliveredQuantity: {
+        quantity: number
+        real: number
+      }
+      restQuantity: {
+        quantity: number
+        real: number
+      }
+      note?: string
+    }[]
+  }[]
+  orders: {
+    products: {
+      name: string
+      quantity: number
+    }[]
+    quantity: number
+  }[]
 }
 
-export const CalResultModal = ({
-  readOnly,
-  viewSingleDate,
-  singleDate,
-  startDate,
-  endDate
-}: Props) => {
+export const CalFileResultModal = ({ items, orders }: Props) => {
   const { searchItems } = useItems()
-  const { createLogSession, getOrderLogsByRange } = useLogs()
+  const { createLogSession } = useLogs()
   const [date, setDate] = useState<Date | null>(
     new Date(new Date().setHours(0, 0, 0, 0))
   )
   const [session, setSession] = useState<"morning" | "afternoon">("morning")
-  const [filteredSession, setFilteredSession] = useState<
-    "morning" | "afternoon" | "all"
-  >("all")
 
   const { data: allItems } = useQuery({
     queryKey: ["searchItems"],
@@ -57,40 +71,6 @@ export const CalResultModal = ({
         {} as Record<string, ItemResponse>
       )
   })
-
-  const { data: orderLogsData } = useQuery({
-    queryKey: ["viewOrderLogsRange", startDate, endDate, filteredSession],
-    queryFn: () =>
-      getOrderLogsByRange({
-        startDate,
-        endDate,
-        session: filteredSession
-      }),
-    select: (data) => {
-      return data.data
-    }
-  })
-
-  const { items, orders } = useMemo(() => {
-    return {
-      items: orderLogsData?.items || [],
-      orders: orderLogsData?.orders || []
-    }
-  }, [orderLogsData])
-
-  // const { mutate: saveHistory, isPending: isSaving } = useMutation({
-  //   mutationFn: createLog,
-  //   onSuccess: () => {
-  //     CToast.success({
-  //       title: "Lưu lịch sử thành công"
-  //     })
-  //   },
-  //   onError: () => {
-  //     CToast.error({
-  //       title: "Lưu lịch sử thất bại"
-  //     })
-  //   }
-  // })
 
   const { mutate: saveLogSession, isPending: isSavingSession } = useMutation({
     mutationFn: createLogSession,
@@ -117,14 +97,6 @@ export const CalResultModal = ({
     }
   ]
 
-  const filteredSessions = [
-    ...sessions,
-    {
-      label: "Tất cả",
-      value: "all"
-    }
-  ]
-
   return (
     <Box
       px={{ base: 0, md: 8 }}
@@ -145,19 +117,6 @@ export const CalResultModal = ({
         radius="xl"
         keepMounted={false}
       >
-        <Box w={"100%"} bg={"gray.1"} p={8} className="rounded-lg">
-          <Select
-            data={filteredSessions}
-            value={filteredSession}
-            onChange={(val) =>
-              setFilteredSession(val as "morning" | "afternoon" | "all")
-            }
-            label="Lọc theo buổi"
-            radius="md"
-            w={180}
-          />
-        </Box>
-        <Divider label="Kết quả" my={8} />
         <Tabs.List mb={8} justify="flex-start" style={{ gap: 12 }}>
           <Tabs.Tab
             value="items"
@@ -212,65 +171,58 @@ export const CalResultModal = ({
         </Tabs.Panel>
 
         <Tabs.Panel value="orders">
-          <CalOrders
-            orders={orders}
-            allCalItems={items}
-            viewSingleDate={viewSingleDate}
-            singleDate={singleDate}
-          />
+          <CalOrders orders={orders} allCalItems={items} />
         </Tabs.Panel>
       </Tabs>
 
-      {!readOnly && (
-        <>
-          <Divider mt={24} mb={20} label={"Lưu lịch sử vận đơn"} />
-          <Group align="end" gap={16} px={4} wrap="wrap">
-            <DatePickerInput
-              label="Ngày vận đơn"
-              value={date}
-              onChange={setDate}
-              maxDate={new Date()}
-              valueFormat="DD/MM/YYYY"
-              radius="md"
-              size="md"
-              leftSection={<IconCalendarPlus size={18} />}
-              style={{ minWidth: 180, fontWeight: 500 }}
-            />
-            <Select
-              label="Buổi"
-              data={sessions}
-              value={session}
-              onChange={(value) => setSession(value as "morning" | "afternoon")}
-              radius="md"
-              size="md"
-              w={180}
-              style={{ fontWeight: 500 }}
-            />
-            <Button
-              loading={isSavingSession}
-              color="indigo"
-              size="md"
-              radius="xl"
-              fw={600}
-              px={22}
-              disabled={!date}
-              onClick={() => {
-                if (date) {
-                  saveLogSession({
-                    date,
-                    items,
-                    orders,
-                    session
-                  })
-                }
-              }}
-              leftSection={<IconClipboardList size={17} />}
-            >
-              Lưu lịch sử
-            </Button>
-          </Group>
-        </>
-      )}
+      <>
+        <Divider mt={24} mb={20} label={"Lưu lịch sử vận đơn"} />
+        <Group align="end" gap={16} px={4} wrap="wrap">
+          <DatePickerInput
+            label="Ngày vận đơn"
+            value={date}
+            onChange={setDate}
+            maxDate={new Date()}
+            valueFormat="DD/MM/YYYY"
+            radius="md"
+            size="md"
+            leftSection={<IconCalendarPlus size={18} />}
+            style={{ minWidth: 180, fontWeight: 500 }}
+          />
+          <Select
+            label="Buổi"
+            data={sessions}
+            value={session}
+            onChange={(value) => setSession(value as "morning" | "afternoon")}
+            radius="md"
+            size="md"
+            w={180}
+            style={{ fontWeight: 500 }}
+          />
+          <Button
+            loading={isSavingSession}
+            color="indigo"
+            size="md"
+            radius="xl"
+            fw={600}
+            px={22}
+            disabled={!date}
+            onClick={() => {
+              if (date) {
+                saveLogSession({
+                  date,
+                  items,
+                  orders,
+                  session
+                })
+              }
+            }}
+            leftSection={<IconClipboardList size={17} />}
+          >
+            Lưu lịch sử
+          </Button>
+        </Group>
+      </>
     </Box>
   )
 }

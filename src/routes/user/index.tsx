@@ -32,17 +32,15 @@ function RouteComponent() {
   const queryClient = useQueryClient()
   const { getMe, updateUser } = useUsers()
 
-  // --- Get user info
   const { data: meData } = useQuery({
     queryKey: ["getMe"],
     queryFn: getMe,
     select: (data) => data.data
   })
 
-  // --- Update tên tài khoản
   const { control, handleSubmit } = useForm<{ name: string }>({
     defaultValues: { name: meData?.name || "" },
-    values: { name: meData?.name || "" } // cập nhật mỗi lần reload info
+    values: { name: meData?.name || "" }
   })
   const { mutate: updateUserMutate, isPending: isUpdatingUser } = useMutation({
     mutationFn: (req: { name: string }) => updateUser(req),
