@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query"
 import { Box, Table, Text, Flex, rem, Pagination, Divider } from "@mantine/core"
 import { useState } from "react"
 import { LandingLayout } from "../../../components/layouts/LandingLayout"
+import { format } from "date-fns"
 
 export const Route = createFileRoute("/landing/landing-page/")({
   component: RouteComponent
@@ -74,6 +75,7 @@ function RouteComponent() {
                 <Table.Th>Công ty</Table.Th>
                 <Table.Th>Số lượng</Table.Th>
                 <Table.Th>Địa chỉ</Table.Th>
+                <Table.Th>Thời gian đặt</Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
@@ -110,6 +112,16 @@ function RouteComponent() {
                     </Table.Td>
                     <Table.Td>
                       {item.address || (
+                        <Text c="gray.6" fz="sm">
+                          -
+                        </Text>
+                      )}
+                    </Table.Td>
+                    <Table.Td>
+                      {format(
+                        new Date(item.created_at),
+                        "dd/MM/yyyy HH:mm"
+                      ) || (
                         <Text c="gray.6" fz="sm">
                           -
                         </Text>
