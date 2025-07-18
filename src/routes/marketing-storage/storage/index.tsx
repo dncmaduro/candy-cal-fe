@@ -7,6 +7,7 @@ import { Helmet } from "react-helmet-async"
 import { useAuthGuard } from "../../../hooks/useAuthGuard"
 import { Items } from "../../../components/accounting-storage/Items"
 import { ReadyCombos } from "../../../components/storage/ReadyCombos"
+import { NAVS_URL } from "../../../constants/navs"
 
 type StorageTab = {
   tab: string
@@ -42,12 +43,12 @@ function RouteComponent() {
   ]
 
   const handleChange = (value: string | null) => {
-    navigate({ to: `/storage?tab=${value ?? "items"}` })
+    navigate({ to: `${NAVS_URL}/storage?tab=${value ?? "items"}` })
   }
 
   useEffect(() => {
     if (!tab) {
-      navigate({ to: `/storage`, search: { tab: "items" } })
+      navigate({ to: `${NAVS_URL}/storage`, search: { tab: "items" } })
     }
   }, [])
 

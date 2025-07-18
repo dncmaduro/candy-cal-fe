@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router"
-import { AppLayout } from "../../../components/layouts/AppLayout"
+import { AppLayout } from "../../components/layouts/AppLayout"
 import {
   Box,
   Button,
@@ -12,18 +12,18 @@ import {
   ActionIcon,
   FileInput
 } from "@mantine/core"
-import { useUsers } from "../../../hooks/useUsers"
+import { useUsers } from "../../hooks/useUsers"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { CToast } from "../../../components/common/CToast"
+import { CToast } from "../../components/common/CToast"
 import { Controller, useForm } from "react-hook-form"
 import { IconCamera } from "@tabler/icons-react"
-import { useAuthGuard } from "../../../hooks/useAuthGuard"
+import { useAuthGuard } from "../../hooks/useAuthGuard"
 import { modals } from "@mantine/modals"
-import { AvatarCropModal } from "../../../components/user/AvatarCropModal"
-import { ChangePasswordModal } from "../../../components/user/ChangePasswordModal"
+import { AvatarCropModal } from "../../components/user/AvatarCropModal"
+import { ChangePasswordModal } from "../../components/user/ChangePasswordModal"
 import { useState } from "react"
 
-export const Route = createFileRoute("/marketing-storage/user/")({
+export const Route = createFileRoute("/user/")({
   component: RouteComponent
 })
 
