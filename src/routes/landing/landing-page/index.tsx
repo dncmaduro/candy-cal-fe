@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { useLanding } from "../../../hooks/useLanding"
 import { useQuery } from "@tanstack/react-query"
-import { AppLayout } from "../../../components/layouts/AppLayout"
 import { Box, Table, Text, Flex, rem, Pagination, Divider } from "@mantine/core"
 import { useState } from "react"
+import { LandingLayout } from "../../../components/layouts/LandingLayout"
 
 export const Route = createFileRoute("/landing/landing-page/")({
   component: RouteComponent
@@ -25,7 +25,7 @@ function RouteComponent() {
   })
 
   return (
-    <AppLayout>
+    <LandingLayout>
       <Box
         mx="auto"
         mt={40}
@@ -143,6 +143,6 @@ function RouteComponent() {
           </Flex>
         </Box>
       </Box>
-    </AppLayout>
+    </LandingLayout>
   )
 }
