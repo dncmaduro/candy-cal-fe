@@ -689,3 +689,78 @@ export interface GetOrderLogsByRangeResponse {
   orders: { products: OrderLogProduct[]; quantity: number }[]
   total: number
 }
+
+export interface InsertIncomeRequest {
+  type: "affiliate" | "ads" | "other"
+  date: Date
+}
+
+export interface InsertIncomeResponse {
+  success: true
+}
+
+export interface DeleteIncomeByDateRequest {
+  date: Date
+}
+
+export interface UpdateAffiliateTypeResponse {
+  success: true
+}
+
+export interface GetIncomesByDateRequest {
+  date: Date
+  page: number
+  limit: number
+}
+
+export interface GetIncomesByDateResponse {
+  _id: string
+  orderId: string
+  customer: string
+  province: string
+  date: Date
+  products: {
+    creator?: string
+    code: string
+    name: string
+    source: "affiliate" | "affiliate-ads" | "ads" | "other"
+    quantity: number
+    quotation: number
+    price: number
+    affliateAdsPercentage?: number
+    sourceChecked: boolean
+    content?: string
+    box?: string
+  }[]
+}
+
+export interface UpdateIncomesBoxRequest {
+  date: Date
+}
+
+export interface GetTotalIncomesByMonthRequest {
+  month: number
+  year: number
+}
+
+export interface GetTotalIncomesByMonthResponse {
+  total: number
+}
+
+export interface GetTotalQuantityByMonthRequest {
+  month: number
+  year: number
+}
+
+export interface GetTotalQuantityByMonthResponse {
+  total: number
+}
+
+export interface GetKPIPercentageByMonthRequest {
+  month: number
+  year: number
+}
+
+export interface GetKPIPercentageByMonthResponse {
+  percentage: number
+}
