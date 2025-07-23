@@ -217,6 +217,7 @@ export const CalResultModal = ({
             allCalItems={items}
             viewSingleDate={viewSingleDate}
             singleDate={singleDate}
+            session={filteredSession}
           />
         </Tabs.Panel>
       </Tabs>
