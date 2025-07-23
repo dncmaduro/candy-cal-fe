@@ -41,6 +41,7 @@ interface Props {
   }[]
   viewSingleDate?: boolean
   singleDate?: Date
+  session?: "morning" | "afternoon" | "all"
 }
 
 const VIEW_MODES = [
@@ -56,7 +57,8 @@ export const CalOrders = ({
   orders,
   allCalItems,
   viewSingleDate,
-  singleDate
+  singleDate,
+  session
 }: Props) => {
   const { getAllProducts } = useProducts()
   const { searchItems, searchStorageItems } = useItems()
@@ -194,6 +196,14 @@ export const CalOrders = ({
 
   // Tính các item cần dùng cho chosenOrders
   const [chosenItems, setChosenItems] = useState<Record<string, number>>()
+
+  const clearChosenItems = () => {
+    setChosenItems({})
+  }
+
+  useEffect(() => {
+    clearChosenItems()
+  }, [session])
 
   useEffect(() => {
     const items = chosenOrders.reduce(
