@@ -4,7 +4,11 @@ export const LANDING_NAVS_URL = "/landing"
 export const NAVS = [
   { to: `${NAVS_URL}/storage`, label: "Kho chứa", roles: ["order-emp"] },
   // { to: "/cal", label: "Tính toán" },
-  { to: `${NAVS_URL}/calfile`, label: "Tính đơn vận", roles: ["order-emp"] },
+  {
+    to: `${NAVS_URL}/calfile`,
+    label: "Tính đơn vận",
+    roles: ["order-emp", "accounting-emp"]
+  },
   {
     to: `${NAVS_URL}/orders-logs`,
     label: "Lịch sử vận đơn",
