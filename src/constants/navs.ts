@@ -23,6 +23,11 @@ export const NAVS = [
     to: `${NAVS_URL}/delivered-requests`,
     label: "Yêu cầu xuất hàng",
     roles: ["accounting-emp", "order-emp"]
+  },
+  {
+    to: `${NAVS_URL}/incomes`,
+    label: "Doanh thu",
+    roles: ["accounting-emp", "order-emp"]
   }
 ]
 

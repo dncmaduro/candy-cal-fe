@@ -3,14 +3,17 @@ import { toQueryString } from "../utils/toQuery"
 import { callApi } from "./axios"
 import {
   DeleteIncomeByDateRequest,
-  GetIncomesByDateRequest,
-  GetIncomesByDateResponse,
+  GetIncomesByDateRangeRequest,
+  GetIncomesByDateRangeResponse,
   InsertIncomeRequest,
   InsertIncomeResponse,
-  TotalIncomesByMonthRequest,
-  TotalIncomesByMonthResponse,
+  GetTotalIncomesByMonthRequest,
+  GetTotalIncomesByMonthResponse,
   UpdateAffiliateTypeResponse,
-  UpdateIncomesBoxRequest
+  UpdateIncomesBoxRequest,
+  GetTotalQuantityByMonthResponse,
+  GetKPIPercentageByMonthRequest,
+  GetKPIPercentageByMonthResponse
 } from "./models"
 
 export const useIncomes = () => {
@@ -26,7 +29,7 @@ export const useIncomes = () => {
     })
 
     return callApi<FormData, InsertIncomeResponse>({
-      path: `/incomes`,
+      path: `/v1/incomes`,
       data: formData,
       method: "POST",
       token: accessToken
@@ -37,7 +40,7 @@ export const useIncomes = () => {
     const query = toQueryString(req)
 
     return callApi<never, never>({
-      path: `/incomes?${query}`,
+      path: `/v1/incomes?${query}`,
       method: "DELETE",
       token: accessToken
     })
@@ -48,18 +51,18 @@ export const useIncomes = () => {
     formData.append("file", file)
 
     return callApi<FormData, UpdateAffiliateTypeResponse>({
-      path: `/incomes/update-affiliate`,
+      path: `/v1/incomes/update-affiliate`,
       data: formData,
       method: "POST",
       token: accessToken
     })
   }
 
-  const getIncomesByDate = async (req: GetIncomesByDateRequest) => {
+  const getIncomesByDate = async (req: GetIncomesByDateRangeRequest) => {
     const query = toQueryString(req)
 
-    return callApi<never, GetIncomesByDateResponse[]>({
-      path: `/incomes?${query}`,
+    return callApi<never, GetIncomesByDateRangeResponse>({
+      path: `/v1/incomes?${query}`,
       method: "GET",
       token: accessToken
     })
@@ -75,15 +78,48 @@ export const useIncomes = () => {
     })
   }
 
-  const totalIncomesByMonth = async (req: TotalIncomesByMonthRequest) => {
+  const getTotalIncomesByMonth = async (req: GetTotalIncomesByMonthRequest) => {
     const query = toQueryString(req)
 
-    return callApi<never, TotalIncomesByMonthResponse>({
-      path: `/incomes/total-income-by-month?${query}`,
+    return callApi<never, GetTotalIncomesByMonthResponse>({
+      path: `/v1/incomes/total-income-by-month?${query}`,
       method: "GET",
       token: accessToken
     })
   }
 
-  return { insertIncome, deleteIncomeByDate }
+  const getTotalQuantityByMonth = async (
+    req: GetTotalIncomesByMonthRequest
+  ) => {
+    const query = toQueryString(req)
+
+    return callApi<never, GetTotalQuantityByMonthResponse>({
+      path: `/v1/incomes/total-quantity-by-month?${query}`,
+      method: "GET",
+      token: accessToken
+    })
+  }
+
+  const getKPIPercentageByMonth = async (
+    req: GetKPIPercentageByMonthRequest
+  ) => {
+    const query = toQueryString(req)
+
+    return callApi<never, GetKPIPercentageByMonthResponse>({
+      path: `/v1/incomes/kpi-percentage-by-month?${query}`,
+      method: "GET",
+      token: accessToken
+    })
+  }
+
+  return {
+    insertIncome,
+    deleteIncomeByDate,
+    updateAffiliateType,
+    getIncomesByDate,
+    updateIncomesBox,
+    getTotalIncomesByMonth,
+    getTotalQuantityByMonth,
+    getKPIPercentageByMonth
+  }
 }

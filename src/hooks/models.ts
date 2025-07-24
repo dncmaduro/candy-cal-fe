@@ -707,31 +707,35 @@ export interface UpdateAffiliateTypeResponse {
   success: true
 }
 
-export interface GetIncomesByDateRequest {
-  date: Date
+export interface GetIncomesByDateRangeRequest {
+  startDate: string
+  endDate: string
   page: number
   limit: number
 }
 
-export interface GetIncomesByDateResponse {
-  _id: string
-  orderId: string
-  customer: string
-  province: string
-  date: Date
-  products: {
-    creator?: string
-    code: string
-    name: string
-    source: "affiliate" | "affiliate-ads" | "ads" | "other"
-    quantity: number
-    quotation: number
-    price: number
-    affliateAdsPercentage?: number
-    sourceChecked: boolean
-    content?: string
-    box?: string
+export interface GetIncomesByDateRangeResponse {
+  incomes: {
+    _id: string
+    orderId: string
+    customer: string
+    province: string
+    date: Date
+    products: {
+      creator?: string
+      code: string
+      name: string
+      source: "affiliate" | "affiliate-ads" | "ads" | "other"
+      quantity: number
+      quotation: number
+      price: number
+      affliateAdsPercentage?: number
+      sourceChecked: boolean
+      content?: string
+      box?: string
+    }[]
   }[]
+  total: number
 }
 
 export interface UpdateIncomesBoxRequest {
@@ -763,4 +767,59 @@ export interface GetKPIPercentageByMonthRequest {
 
 export interface GetKPIPercentageByMonthResponse {
   percentage: number
+}
+
+export interface CreateMonthGoalRequest {
+  month: number
+  year: number
+  goal: number
+}
+
+export interface CreateMonthGoalResponse {
+  month: number
+  year: number
+  goal: number
+}
+
+export interface GetGoalsRequest {
+  year?: number
+  page?: number
+  limit?: number
+}
+
+export interface GetGoalsResponse {
+  monthGoals: {
+    month: number
+    year: number
+    goal: number
+  }[]
+  total: number
+}
+
+export interface GetGoalRequest {
+  month: number
+  year: number
+}
+
+export interface GetGoalResponse {
+  month: number
+  year: number
+  goal: number
+}
+
+export interface UpdateGoalRequest {
+  month: number
+  year: number
+  goal: number
+}
+
+export interface UpdateGoalResponse {
+  month: number
+  year: number
+  goal: number
+}
+
+export interface DeleteGoalRequest {
+  month: number
+  year: number
 }
