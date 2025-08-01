@@ -27,7 +27,8 @@ export const NAVS = [
   {
     to: `${NAVS_URL}/incomes`,
     label: "Doanh thu",
-    roles: ["accounting-emp", "order-emp"]
+    roles: ["accounting-emp", "order-emp"],
+    beta: true
   }
 ]
 

@@ -32,7 +32,10 @@ export const useIncomes = () => {
       path: `/v1/incomes`,
       data: formData,
       method: "POST",
-      token: accessToken
+      token: accessToken,
+      headers: {
+        "Content-Type": "multipart/form-data"
+      }
     })
   }
 
@@ -54,11 +57,14 @@ export const useIncomes = () => {
       path: `/v1/incomes/update-affiliate`,
       data: formData,
       method: "POST",
-      token: accessToken
+      token: accessToken,
+      headers: {
+        "Content-Type": "multipart/form-data"
+      }
     })
   }
 
-  const getIncomesByDate = async (req: GetIncomesByDateRangeRequest) => {
+  const getIncomesByDateRange = async (req: GetIncomesByDateRangeRequest) => {
     const query = toQueryString(req)
 
     return callApi<never, GetIncomesByDateRangeResponse>({
@@ -72,7 +78,7 @@ export const useIncomes = () => {
     const query = toQueryString(req)
 
     return callApi<UpdateIncomesBoxRequest, never>({
-      path: `incomes/update-box?${query}`,
+      path: `/v1/incomes/update-box?${query}`,
       method: "PATCH",
       token: accessToken
     })
@@ -116,7 +122,7 @@ export const useIncomes = () => {
     insertIncome,
     deleteIncomeByDate,
     updateAffiliateType,
-    getIncomesByDate,
+    getIncomesByDateRange,
     updateIncomesBox,
     getTotalIncomesByMonth,
     getTotalQuantityByMonth,

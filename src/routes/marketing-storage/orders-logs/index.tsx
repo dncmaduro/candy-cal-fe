@@ -85,7 +85,7 @@ function RouteComponent() {
 
   return (
     <AppLayout>
-      <Container size="lg" py={32}>
+      <Container size="1600" py={32}>
         <Box
           bg="white"
           style={{
@@ -94,6 +94,7 @@ function RouteComponent() {
             border: "1px solid #ececec"
           }}
           px={{ base: 8, md: 32 }}
+          w={"100%"}
           py={{ base: 16, md: 36 }}
         >
           <Flex

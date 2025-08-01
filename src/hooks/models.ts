@@ -712,6 +712,9 @@ export interface GetIncomesByDateRangeRequest {
   endDate: string
   page: number
   limit: number
+  orderId?: string
+  productCode?: string
+  productSource?: string
 }
 
 export interface GetIncomesByDateRangeResponse {
@@ -783,8 +786,6 @@ export interface CreateMonthGoalResponse {
 
 export interface GetGoalsRequest {
   year?: number
-  page?: number
-  limit?: number
 }
 
 export interface GetGoalsResponse {
@@ -792,6 +793,9 @@ export interface GetGoalsResponse {
     month: number
     year: number
     goal: number
+    totalIncome: number
+    totalQuantity: number
+    KPIPercentage: number
   }[]
   total: number
 }
@@ -822,4 +826,64 @@ export interface UpdateGoalResponse {
 export interface DeleteGoalRequest {
   month: number
   year: number
+}
+
+export interface CreatePackingRuleRequest {
+  productCode: string
+  requirements: {
+    minQuantity: number | null
+    maxQuantity: number | null
+    packingType: string
+  }[]
+}
+
+export interface CreatePackingRuleResponse {
+  productCode: string
+  requirements: {
+    minQuantity: number | null
+    maxQuantity: number | null
+    packingType: string
+  }[]
+}
+
+export interface UpdatePackingRuleRequest {
+  requirements: {
+    minQuantity: number | null
+    maxQuantity: number | null
+    packingType: string
+  }[]
+}
+
+export interface UpdatePackingRuleResponse {
+  productCode: string
+  requirements: {
+    minQuantity: number | null
+    maxQuantity: number | null
+    packingType: string
+  }[]
+}
+
+export interface GetPackingRuleResponse {
+  productCode: string
+  requirements: {
+    minQuantity: number | null
+    maxQuantity: number | null
+    packingType: string
+  }[]
+}
+
+export interface SearchPackingRulesRequest {
+  searchText?: string
+  packingType?: string
+}
+
+export interface SearchPackingRulesResponse {
+  rules: {
+    productCode: string
+    requirements: {
+      minQuantity: number | null
+      maxQuantity: number | null
+      packingType: string
+    }[]
+  }[]
 }

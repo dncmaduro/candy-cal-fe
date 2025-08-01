@@ -157,7 +157,6 @@ function RouteComponent() {
         mx="auto"
         px={{ base: 8, md: 0 }}
         w="100%"
-        maw={1200}
         style={{
           background: "rgba(255,255,255,0.97)",
           borderRadius: rem(20),

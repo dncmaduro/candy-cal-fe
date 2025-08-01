@@ -12,3 +12,11 @@
   --color-indigo-800: #3b5bdb;
   --color-indigo-900: #364fc7;
 }
+
+.panels-scroll-area > div {
+  max-width: 100%;
+}
+
+.panels-scroll-area .mantine-ScrollArea-viewport > div {
+  display: block!important;
+}

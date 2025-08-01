@@ -86,7 +86,7 @@ export const AppLayout = ({ children }: Props) => {
           zIndex: 200
         }}
       >
-        <Container size="xl" px={{ base: 16, md: 32 }} h="100%">
+        <Container size="1600" px={{ base: 16, md: 32 }} h="100%">
           <Flex
             h="100%"
             align="center"
@@ -99,7 +99,7 @@ export const AppLayout = ({ children }: Props) => {
                 if (!meData) return false
                 return meData.role === "admin" || n.roles.includes(meData.role)
               }).map((n) => (
-                <NavButton key={n.to} to={n.to} label={n.label} />
+                <NavButton key={n.to} to={n.to} label={n.label} beta={n.beta} />
               ))}
               <Badge
                 ml={16}
@@ -115,7 +115,7 @@ export const AppLayout = ({ children }: Props) => {
               >
                 {import.meta.env.VITE_ENV === "development"
                   ? "DEVELOPMENT"
-                  : "v2.4.1"}
+                  : "v2.5.0"}
               </Badge>
             </Group>
             <Group>
@@ -127,8 +127,8 @@ export const AppLayout = ({ children }: Props) => {
       </AppShell.Header>
 
       <AppShell.Main style={{ background: "none" }} h={"calc(100vh - 128px)"}>
-        <Container size="xl">
-          <Box w="100%" maw={1200} mx="auto">
+        <Container size="1600">
+          <Box w="100%" maw={1600} mx="auto">
             {children}
           </Box>
         </Container>

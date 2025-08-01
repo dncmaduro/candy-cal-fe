@@ -7,6 +7,7 @@ import { NAVS_URL } from "../../../constants/navs"
 import { Incomes } from "../../../components/incomes/Incomes"
 import { Helmet } from "react-helmet-async"
 import { MonthGoals } from "../../../components/incomes/MonthGoals"
+import { PackingRules } from "../../../components/incomes/PackingRules"
 
 type Subtab = {
   tab: string
@@ -16,7 +17,7 @@ export const Route = createFileRoute("/marketing-storage/incomes/")({
   component: RouteComponent,
   validateSearch: (search: Record<string, unknown>): Subtab => {
     return {
-      tab: String(search.tab ?? "items")
+      tab: String(search.tab ?? "incomes")
     }
   }
 })
@@ -34,6 +35,10 @@ function RouteComponent() {
     {
       label: "KPI",
       value: "kpi"
+    },
+    {
+      label: "Quy cách đóng hộp",
+      value: "packing-rules"
     }
   ]
 
@@ -68,13 +73,17 @@ function RouteComponent() {
             ))}
           </Tabs.List>
 
-          <ScrollArea.Autosize mah={"95%"}>
+          <ScrollArea.Autosize mah={"95%"} className="panels-scroll-area">
             <Tabs.Panel value="incomes">
               <Incomes />
             </Tabs.Panel>
 
             <Tabs.Panel value="kpi">
               <MonthGoals />
+            </Tabs.Panel>
+
+            <Tabs.Panel value="packing-rules">
+              <PackingRules />
             </Tabs.Panel>
           </ScrollArea.Autosize>
         </Tabs>

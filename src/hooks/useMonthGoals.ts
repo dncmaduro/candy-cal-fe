@@ -13,12 +13,12 @@ import {
   UpdateGoalResponse
 } from "./models"
 
-export const useMonthGoal = () => {
+export const useMonthGoals = () => {
   const { accessToken } = useUserStore()
 
   const createMonthGoal = async (req: CreateMonthGoalRequest) => {
     return callApi<CreateMonthGoalRequest, CreateMonthGoalResponse>({
-      path: `/v1/monthgoal`,
+      path: `/v1/monthgoals`,
       method: "POST",
       data: req,
       token: accessToken
@@ -29,7 +29,7 @@ export const useMonthGoal = () => {
     const query = toQueryString(req)
 
     return callApi<never, GetGoalsResponse>({
-      path: `/v1/monthgoal/year?${query}`,
+      path: `/v1/monthgoals/year?${query}`,
       method: "GET",
       token: accessToken
     })
@@ -39,7 +39,7 @@ export const useMonthGoal = () => {
     const query = toQueryString(req)
 
     return callApi<never, GetGoalResponse>({
-      path: `/v1/monthgoal/month?${query}`,
+      path: `/v1/monthgoals/month?${query}`,
       method: "GET",
       token: accessToken
     })
@@ -47,7 +47,7 @@ export const useMonthGoal = () => {
 
   const updateGoal = async (req: UpdateGoalRequest) => {
     return callApi<UpdateGoalRequest, UpdateGoalResponse>({
-      path: `/v1/monthgoal`,
+      path: `/v1/monthgoals`,
       method: "PATCH",
       data: req,
       token: accessToken
@@ -58,7 +58,7 @@ export const useMonthGoal = () => {
     const query = toQueryString(req)
 
     return callApi<never, never>({
-      path: `/v1/monthgoal?${query}`,
+      path: `/v1/monthgoals?${query}`,
       method: "DELETE",
       token: accessToken
     })
