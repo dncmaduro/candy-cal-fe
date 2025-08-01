@@ -689,3 +689,201 @@ export interface GetOrderLogsByRangeResponse {
   orders: { products: OrderLogProduct[]; quantity: number }[]
   total: number
 }
+
+export interface InsertIncomeRequest {
+  type: "affiliate" | "ads" | "other"
+  date: Date
+}
+
+export interface InsertIncomeResponse {
+  success: true
+}
+
+export interface DeleteIncomeByDateRequest {
+  date: Date
+}
+
+export interface UpdateAffiliateTypeResponse {
+  success: true
+}
+
+export interface GetIncomesByDateRangeRequest {
+  startDate: string
+  endDate: string
+  page: number
+  limit: number
+  orderId?: string
+  productCode?: string
+  productSource?: string
+}
+
+export interface GetIncomesByDateRangeResponse {
+  incomes: {
+    _id: string
+    orderId: string
+    customer: string
+    province: string
+    date: Date
+    products: {
+      creator?: string
+      code: string
+      name: string
+      source: "affiliate" | "affiliate-ads" | "ads" | "other"
+      quantity: number
+      quotation: number
+      price: number
+      affliateAdsPercentage?: number
+      sourceChecked: boolean
+      content?: string
+      box?: string
+    }[]
+  }[]
+  total: number
+}
+
+export interface UpdateIncomesBoxRequest {
+  date: Date
+}
+
+export interface GetTotalIncomesByMonthRequest {
+  month: number
+  year: number
+}
+
+export interface GetTotalIncomesByMonthResponse {
+  total: number
+}
+
+export interface GetTotalQuantityByMonthRequest {
+  month: number
+  year: number
+}
+
+export interface GetTotalQuantityByMonthResponse {
+  total: number
+}
+
+export interface GetKPIPercentageByMonthRequest {
+  month: number
+  year: number
+}
+
+export interface GetKPIPercentageByMonthResponse {
+  percentage: number
+}
+
+export interface CreateMonthGoalRequest {
+  month: number
+  year: number
+  goal: number
+}
+
+export interface CreateMonthGoalResponse {
+  month: number
+  year: number
+  goal: number
+}
+
+export interface GetGoalsRequest {
+  year?: number
+}
+
+export interface GetGoalsResponse {
+  monthGoals: {
+    month: number
+    year: number
+    goal: number
+    totalIncome: number
+    totalQuantity: number
+    KPIPercentage: number
+  }[]
+  total: number
+}
+
+export interface GetGoalRequest {
+  month: number
+  year: number
+}
+
+export interface GetGoalResponse {
+  month: number
+  year: number
+  goal: number
+}
+
+export interface UpdateGoalRequest {
+  month: number
+  year: number
+  goal: number
+}
+
+export interface UpdateGoalResponse {
+  month: number
+  year: number
+  goal: number
+}
+
+export interface DeleteGoalRequest {
+  month: number
+  year: number
+}
+
+export interface CreatePackingRuleRequest {
+  productCode: string
+  requirements: {
+    minQuantity: number | null
+    maxQuantity: number | null
+    packingType: string
+  }[]
+}
+
+export interface CreatePackingRuleResponse {
+  productCode: string
+  requirements: {
+    minQuantity: number | null
+    maxQuantity: number | null
+    packingType: string
+  }[]
+}
+
+export interface UpdatePackingRuleRequest {
+  requirements: {
+    minQuantity: number | null
+    maxQuantity: number | null
+    packingType: string
+  }[]
+}
+
+export interface UpdatePackingRuleResponse {
+  productCode: string
+  requirements: {
+    minQuantity: number | null
+    maxQuantity: number | null
+    packingType: string
+  }[]
+}
+
+export interface GetPackingRuleResponse {
+  productCode: string
+  requirements: {
+    minQuantity: number | null
+    maxQuantity: number | null
+    packingType: string
+  }[]
+}
+
+export interface SearchPackingRulesRequest {
+  searchText?: string
+  packingType?: string
+}
+
+export interface SearchPackingRulesResponse {
+  rules: {
+    productCode: string
+    requirements: {
+      minQuantity: number | null
+      maxQuantity: number | null
+      packingType: string
+    }[]
+  }[]
+}

@@ -1,7 +1,13 @@
-import { Button } from "@mantine/core"
+import { Badge, Button, Group, Text } from "@mantine/core"
 import { Link } from "@tanstack/react-router"
 
-export const NavButton = ({ to, label }: { to: string; label: string }) => {
+interface Props {
+  to: string
+  label: string
+  beta?: boolean
+}
+
+export const NavButton = ({ to, label, beta }: Props) => {
   const pathname = window.location.pathname
   const active = pathname === to
   return (
@@ -18,7 +24,14 @@ export const NavButton = ({ to, label }: { to: string; label: string }) => {
         transition: "box-shadow 0.18s"
       }}
     >
-      {label}
+      <Group gap={4}>
+        <Text>{label}</Text>
+        {beta && (
+          <Badge size="xs" color="red" variant="outline">
+            Beta
+          </Badge>
+        )}
+      </Group>
     </Button>
   )
 }

@@ -55,7 +55,7 @@ function RouteComponent() {
   return (
     <>
       <Helmet>
-        <title>MyCandy x Chíp</title>
+        <title>Quản lý kho và sản phẩm - MyCandy</title>
       </Helmet>
       <AppLayout>
         <Tabs

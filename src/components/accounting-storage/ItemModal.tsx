@@ -22,7 +22,6 @@ interface Props {
 export const ItemModal = ({ item, refetch }: Props) => {
   const { searchStorageItems, updateItem, deleteItem, createItem } = useItems()
 
-  // Fetch all items to select as variants
   const { data: storageItems, isLoading } = useQuery({
     queryKey: ["storageItems"],
     queryFn: () => searchStorageItems(""),
