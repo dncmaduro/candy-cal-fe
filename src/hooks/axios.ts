@@ -31,7 +31,8 @@ export async function callApi<D = unknown, T = unknown>({
     url: (customUrl ?? import.meta.env.VITE_BACKEND_URL) + path,
     headers: convertedHeaders,
     data,
-    method
+    method,
+    responseType: headers?.["Content-Type"]?.includes("sheet") ? "blob" : "json"
   })
 
   return response

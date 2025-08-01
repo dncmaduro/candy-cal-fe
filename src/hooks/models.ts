@@ -887,3 +887,11 @@ export interface SearchPackingRulesResponse {
     }[]
   }[]
 }
+
+export interface ExportXlsxIncomesRequest {
+  startDate: string
+  endDate: string
+  orderId?: string
+  productCode?: string
+  productSource?: string
+}
