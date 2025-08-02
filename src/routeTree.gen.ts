@@ -19,6 +19,7 @@ import { Route as LandingIndexImport } from './routes/landing/index'
 import { Route as AccessDeniedIndexImport } from './routes/access-denied/index'
 import { Route as MarketingStorageStorageIndexImport } from './routes/marketing-storage/storage/index'
 import { Route as MarketingStorageOrdersLogsIndexImport } from './routes/marketing-storage/orders-logs/index'
+import { Route as MarketingStorageLogsIndexImport } from './routes/marketing-storage/logs/index'
 import { Route as MarketingStorageIncomesIndexImport } from './routes/marketing-storage/incomes/index'
 import { Route as MarketingStorageDeliveredRequestsIndexImport } from './routes/marketing-storage/delivered-requests/index'
 import { Route as MarketingStorageCalfileIndexImport } from './routes/marketing-storage/calfile/index'
@@ -77,6 +78,12 @@ const MarketingStorageOrdersLogsIndexRoute =
     path: '/marketing-storage/orders-logs/',
     getParentRoute: () => rootRoute,
   } as any)
+
+const MarketingStorageLogsIndexRoute = MarketingStorageLogsIndexImport.update({
+  id: '/marketing-storage/logs/',
+  path: '/marketing-storage/logs/',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const MarketingStorageIncomesIndexRoute =
   MarketingStorageIncomesIndexImport.update({
@@ -206,6 +213,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MarketingStorageIncomesIndexImport
       parentRoute: typeof rootRoute
     }
+    '/marketing-storage/logs/': {
+      id: '/marketing-storage/logs/'
+      path: '/marketing-storage/logs'
+      fullPath: '/marketing-storage/logs'
+      preLoaderRoute: typeof MarketingStorageLogsIndexImport
+      parentRoute: typeof rootRoute
+    }
     '/marketing-storage/orders-logs/': {
       id: '/marketing-storage/orders-logs/'
       path: '/marketing-storage/orders-logs'
@@ -238,6 +252,7 @@ export interface FileRoutesByFullPath {
   '/marketing-storage/calfile': typeof MarketingStorageCalfileIndexRoute
   '/marketing-storage/delivered-requests': typeof MarketingStorageDeliveredRequestsIndexRoute
   '/marketing-storage/incomes': typeof MarketingStorageIncomesIndexRoute
+  '/marketing-storage/logs': typeof MarketingStorageLogsIndexRoute
   '/marketing-storage/orders-logs': typeof MarketingStorageOrdersLogsIndexRoute
   '/marketing-storage/storage': typeof MarketingStorageStorageIndexRoute
 }
@@ -255,6 +270,7 @@ export interface FileRoutesByTo {
   '/marketing-storage/calfile': typeof MarketingStorageCalfileIndexRoute
   '/marketing-storage/delivered-requests': typeof MarketingStorageDeliveredRequestsIndexRoute
   '/marketing-storage/incomes': typeof MarketingStorageIncomesIndexRoute
+  '/marketing-storage/logs': typeof MarketingStorageLogsIndexRoute
   '/marketing-storage/orders-logs': typeof MarketingStorageOrdersLogsIndexRoute
   '/marketing-storage/storage': typeof MarketingStorageStorageIndexRoute
 }
@@ -273,6 +289,7 @@ export interface FileRoutesById {
   '/marketing-storage/calfile/': typeof MarketingStorageCalfileIndexRoute
   '/marketing-storage/delivered-requests/': typeof MarketingStorageDeliveredRequestsIndexRoute
   '/marketing-storage/incomes/': typeof MarketingStorageIncomesIndexRoute
+  '/marketing-storage/logs/': typeof MarketingStorageLogsIndexRoute
   '/marketing-storage/orders-logs/': typeof MarketingStorageOrdersLogsIndexRoute
   '/marketing-storage/storage/': typeof MarketingStorageStorageIndexRoute
 }
@@ -292,6 +309,7 @@ export interface FileRouteTypes {
     | '/marketing-storage/calfile'
     | '/marketing-storage/delivered-requests'
     | '/marketing-storage/incomes'
+    | '/marketing-storage/logs'
     | '/marketing-storage/orders-logs'
     | '/marketing-storage/storage'
   fileRoutesByTo: FileRoutesByTo
@@ -308,6 +326,7 @@ export interface FileRouteTypes {
     | '/marketing-storage/calfile'
     | '/marketing-storage/delivered-requests'
     | '/marketing-storage/incomes'
+    | '/marketing-storage/logs'
     | '/marketing-storage/orders-logs'
     | '/marketing-storage/storage'
   id:
@@ -324,6 +343,7 @@ export interface FileRouteTypes {
     | '/marketing-storage/calfile/'
     | '/marketing-storage/delivered-requests/'
     | '/marketing-storage/incomes/'
+    | '/marketing-storage/logs/'
     | '/marketing-storage/orders-logs/'
     | '/marketing-storage/storage/'
   fileRoutesById: FileRoutesById
@@ -342,6 +362,7 @@ export interface RootRouteChildren {
   MarketingStorageCalfileIndexRoute: typeof MarketingStorageCalfileIndexRoute
   MarketingStorageDeliveredRequestsIndexRoute: typeof MarketingStorageDeliveredRequestsIndexRoute
   MarketingStorageIncomesIndexRoute: typeof MarketingStorageIncomesIndexRoute
+  MarketingStorageLogsIndexRoute: typeof MarketingStorageLogsIndexRoute
   MarketingStorageOrdersLogsIndexRoute: typeof MarketingStorageOrdersLogsIndexRoute
   MarketingStorageStorageIndexRoute: typeof MarketingStorageStorageIndexRoute
 }
@@ -361,6 +382,7 @@ const rootRouteChildren: RootRouteChildren = {
   MarketingStorageDeliveredRequestsIndexRoute:
     MarketingStorageDeliveredRequestsIndexRoute,
   MarketingStorageIncomesIndexRoute: MarketingStorageIncomesIndexRoute,
+  MarketingStorageLogsIndexRoute: MarketingStorageLogsIndexRoute,
   MarketingStorageOrdersLogsIndexRoute: MarketingStorageOrdersLogsIndexRoute,
   MarketingStorageStorageIndexRoute: MarketingStorageStorageIndexRoute,
 }
@@ -387,6 +409,7 @@ export const routeTree = rootRoute
         "/marketing-storage/calfile/",
         "/marketing-storage/delivered-requests/",
         "/marketing-storage/incomes/",
+        "/marketing-storage/logs/",
         "/marketing-storage/orders-logs/",
         "/marketing-storage/storage/"
       ]
@@ -426,6 +449,9 @@ export const routeTree = rootRoute
     },
     "/marketing-storage/incomes/": {
       "filePath": "marketing-storage/incomes/index.tsx"
+    },
+    "/marketing-storage/logs/": {
+      "filePath": "marketing-storage/logs/index.tsx"
     },
     "/marketing-storage/orders-logs/": {
       "filePath": "marketing-storage/orders-logs/index.tsx"
