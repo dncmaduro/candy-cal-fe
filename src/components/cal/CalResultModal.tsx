@@ -25,19 +25,11 @@ import {
 
 interface Props {
   readOnly?: boolean
-  viewSingleDate?: boolean
-  singleDate?: Date
   startDate: string
   endDate: string
 }
 
-export const CalResultModal = ({
-  readOnly,
-  viewSingleDate,
-  singleDate,
-  startDate,
-  endDate
-}: Props) => {
+export const CalResultModal = ({ readOnly, startDate, endDate }: Props) => {
   const { searchItems } = useItems()
   const { createLogSession, getOrderLogsByRange } = useLogs()
   const [date, setDate] = useState<Date | null>(
@@ -212,13 +204,7 @@ export const CalResultModal = ({
         </Tabs.Panel>
 
         <Tabs.Panel value="orders">
-          <CalOrders
-            orders={orders}
-            allCalItems={items}
-            viewSingleDate={viewSingleDate}
-            singleDate={singleDate}
-            session={filteredSession}
-          />
+          <CalOrders orders={orders} allCalItems={items} />
         </Tabs.Panel>
       </Tabs>
 

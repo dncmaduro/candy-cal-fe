@@ -1,11 +1,11 @@
-import { useMutation, useQuery } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 import { useItems } from "../../hooks/useItems"
 import {
   Box,
   Button,
+  Collapse,
   Divider,
-  Group,
-  Select,
+  Stack,
   Table,
   Tabs,
   Text,
@@ -13,15 +13,13 @@ import {
 } from "@mantine/core"
 import { ItemResponse } from "../../hooks/models"
 import { CalOrders } from "./CalOrders"
-import { useLogs } from "../../hooks/useLogs"
-import { CToast } from "../common/CToast"
-import { DatePickerInput } from "@mantine/dates"
-import { useState } from "react"
 import {
   IconBox,
   IconClipboardList,
   IconCalendarPlus
 } from "@tabler/icons-react"
+import { useDisclosure } from "@mantine/hooks"
+import { SaveLogDiv } from "./SaveLogDiv"
 
 interface Props {
   items: {
@@ -52,16 +50,18 @@ interface Props {
     }[]
     quantity: number
   }[]
+  readOnly?: boolean
+  date?: Date
 }
 
-export const CalFileResultModal = ({ items, orders }: Props) => {
+export const CalFileResultModal = ({
+  items,
+  orders,
+  readOnly,
+  date
+}: Props) => {
   const { searchItems } = useItems()
-  const { createLogSession } = useLogs()
-  const [date, setDate] = useState<Date | null>(
-    new Date(new Date().setHours(0, 0, 0, 0))
-  )
-  const [session, setSession] = useState<"morning" | "afternoon">("morning")
-
+  const [saveLogDiv, { toggle }] = useDisclosure(false)
   const { data: allItems } = useQuery({
     queryKey: ["searchItems"],
     queryFn: () => searchItems(""),
@@ -71,31 +71,6 @@ export const CalFileResultModal = ({ items, orders }: Props) => {
         {} as Record<string, ItemResponse>
       )
   })
-
-  const { mutate: saveLogSession, isPending: isSavingSession } = useMutation({
-    mutationFn: createLogSession,
-    onSuccess: () => {
-      CToast.success({
-        title: "Lưu lịch sử thành công"
-      })
-    },
-    onError: () => {
-      CToast.error({
-        title: "Lưu lịch sử thất bại"
-      })
-    }
-  })
-
-  const sessions = [
-    {
-      label: "Buổi sáng",
-      value: "morning"
-    },
-    {
-      label: "Buổi chiều",
-      value: "afternoon"
-    }
-  ]
 
   return (
     <Box
@@ -171,58 +146,34 @@ export const CalFileResultModal = ({ items, orders }: Props) => {
         </Tabs.Panel>
 
         <Tabs.Panel value="orders">
-          <CalOrders orders={orders} allCalItems={items} />
+          <CalOrders orders={orders} allCalItems={items} date={date} />
         </Tabs.Panel>
       </Tabs>
 
-      <>
-        <Divider mt={24} mb={20} label={"Lưu lịch sử vận đơn"} />
-        <Group align="end" gap={16} px={4} wrap="wrap">
-          <DatePickerInput
-            label="Ngày vận đơn"
-            value={date}
-            onChange={setDate}
-            maxDate={new Date()}
-            valueFormat="DD/MM/YYYY"
-            radius="md"
-            size="md"
-            leftSection={<IconCalendarPlus size={18} />}
-            style={{ minWidth: 180, fontWeight: 500 }}
-          />
-          <Select
-            label="Buổi"
-            data={sessions}
-            value={session}
-            onChange={(value) => setSession(value as "morning" | "afternoon")}
-            radius="md"
-            size="md"
-            w={180}
-            style={{ fontWeight: 500 }}
-          />
-          <Button
-            loading={isSavingSession}
-            color="indigo"
-            size="md"
-            radius="xl"
-            fw={600}
-            px={22}
-            disabled={!date}
-            onClick={() => {
-              if (date) {
-                saveLogSession({
-                  date,
-                  items,
-                  orders,
-                  session
-                })
-              }
-            }}
-            leftSection={<IconClipboardList size={17} />}
-          >
-            Lưu lịch sử
-          </Button>
-        </Group>
-      </>
+      {!readOnly && (
+        <>
+          <Divider mt={24} mb={20} label={"Lưu lịch sử vận đơn"} />
+          <Stack gap={16} px={4}>
+            <Button
+              color="indigo"
+              variant="outline"
+              size="md"
+              radius="xl"
+              fw={600}
+              px={22}
+              onClick={() => {
+                toggle()
+              }}
+              leftSection={<IconCalendarPlus size={16} />}
+            >
+              Lưu log
+            </Button>
+            <Collapse in={saveLogDiv}>
+              <SaveLogDiv items={items} orders={orders} />
+            </Collapse>
+          </Stack>
+        </>
+      )}
     </Box>
   )
 }

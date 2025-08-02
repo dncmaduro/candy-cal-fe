@@ -96,7 +96,7 @@ export const AppLayout = ({ children }: Props) => {
           >
             <Group gap={8}>
               {NAVS.filter((n) => {
-                if (!meData) return false
+                if (!meData || n.deprecated) return false
                 return meData.role === "admin" || n.roles.includes(meData.role)
               }).map((n) => (
                 <NavButton key={n.to} to={n.to} label={n.label} beta={n.beta} />

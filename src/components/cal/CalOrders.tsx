@@ -39,9 +39,7 @@ interface Props {
     _id: string
     quantity: number
   }[]
-  viewSingleDate?: boolean
-  singleDate?: Date
-  session?: "morning" | "afternoon" | "all"
+  date?: Date
 }
 
 const VIEW_MODES = [
@@ -53,13 +51,7 @@ const VIEW_MODES = [
 const normalizeProducts = (products: { _id: string; quantity: number }[]) =>
   [...products].sort((a, b) => a._id.localeCompare(b._id))
 
-export const CalOrders = ({
-  orders,
-  allCalItems,
-  viewSingleDate,
-  singleDate,
-  session
-}: Props) => {
+export const CalOrders = ({ orders, allCalItems, date }: Props) => {
   const { getAllProducts } = useProducts()
   const { searchItems, searchStorageItems } = useItems()
   const [calRest, setCalRest] = useState<boolean>(false)
@@ -196,14 +188,6 @@ export const CalOrders = ({
 
   // Tính các item cần dùng cho chosenOrders
   const [chosenItems, setChosenItems] = useState<Record<string, number>>()
-
-  const clearChosenItems = () => {
-    setChosenItems({})
-  }
-
-  useEffect(() => {
-    clearChosenItems()
-  }, [session])
 
   useEffect(() => {
     const items = chosenOrders.reduce(
@@ -385,7 +369,7 @@ export const CalOrders = ({
         )}
       </Flex>
 
-      {viewSingleDate && singleDate && (
+      {date && (
         <>
           <Divider mt={24} mb={20} label={"Gửi yêu cầu xuất kho cho kế toán"} />
           <Group>
@@ -404,7 +388,7 @@ export const CalOrders = ({
                   size: "xl",
                   children: (
                     <SendDeliveredRequestModal
-                      date={singleDate}
+                      date={date}
                       allItems={itemsData || []}
                       items={
                         chosenItems
@@ -444,7 +428,7 @@ export const CalOrders = ({
                   size: "xl",
                   children: (
                     <SendDeliveredRequestModal
-                      date={singleDate}
+                      date={date}
                       allItems={itemsData || []}
                       items={
                         notReadyItems &&

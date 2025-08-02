@@ -12,7 +12,14 @@ export const NAVS = [
   {
     to: `${NAVS_URL}/orders-logs`,
     label: "Lịch sử vận đơn",
-    roles: ["order-emp"]
+    roles: ["order-emp"],
+    deprecated: true
+  },
+  {
+    to: `${NAVS_URL}/logs`,
+    label: "Lịch sử kho",
+    roles: ["admin", "order-emp", "accounting-emp"],
+    beta: true
   },
   {
     to: `${NAVS_URL}/accounting-storage`,

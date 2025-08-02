@@ -64,13 +64,7 @@ function RouteComponent() {
     modals.open({
       title: modalTitle,
       children: (
-        <CalResultModal
-          readOnly
-          viewSingleDate={true}
-          singleDate={new Date(startDate)}
-          startDate={startDate}
-          endDate={endDate}
-        />
+        <CalResultModal readOnly startDate={startDate} endDate={endDate} />
       ),
       size: "xl",
       w: 1400

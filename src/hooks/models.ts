@@ -163,6 +163,7 @@ export interface CheckTokenResponse {
   valid: boolean
 }
 
+/** @deprecated */
 export interface CreateLogRequest {
   date: Date
   items: {
@@ -886,4 +887,227 @@ export interface SearchPackingRulesResponse {
       packingType: string
     }[]
   }[]
+}
+
+export interface CreateSessionLogRequest {
+  time: Date
+  items: {
+    _id: string
+    quantity: number
+    storageItems: {
+      code: string
+      name: string
+      receivedQuantity: {
+        quantity: number
+        real: number
+      }
+      deliveredQuantity: {
+        quantity: number
+        real: number
+      }
+      restQuantity: {
+        quantity: number
+        real: number
+      }
+      note?: string
+    }[]
+  }[]
+  orders: {
+    products: {
+      name: string
+      quantity: number
+    }[]
+    quantity: number
+  }[]
+}
+
+export interface GetSessionLogsRequest {
+  page: number
+  limit: number
+}
+
+export interface GetSessionLogsResponse {
+  data: {
+    _id: string
+    time: Date
+    items: {
+      _id: string
+      quantity: number
+      storageItems: {
+        code: string
+        name: string
+        receivedQuantity: {
+          quantity: number
+          real: number
+        }
+        deliveredQuantity: {
+          quantity: number
+          real: number
+        }
+        restQuantity: {
+          quantity: number
+          real: number
+        }
+        note?: string
+      }[]
+    }[]
+    orders: {
+      products: {
+        name: string
+        quantity: number
+      }[]
+      quantity: number
+    }[]
+  }[]
+  total: number
+}
+
+export interface CreateDailyLogRequest {
+  date: Date
+  items: {
+    _id: string
+    quantity: number
+    storageItems: {
+      code: string
+      name: string
+      receivedQuantity: {
+        quantity: number
+        real: number
+      }
+      deliveredQuantity: {
+        quantity: number
+        real: number
+      }
+      restQuantity: {
+        quantity: number
+        real: number
+      }
+      note?: string
+    }[]
+  }[]
+  orders: {
+    products: {
+      name: string
+      quantity: number
+    }[]
+    quantity: number
+  }[]
+}
+
+export interface GetDailyLogsRequest {
+  page: number
+  limit: number
+}
+
+export interface GetDailyLogsResponse {
+  data: {
+    _id: string
+    date: Date
+    items: {
+      _id: string
+      quantity: number
+      storageItems: {
+        code: string
+        name: string
+        receivedQuantity: {
+          quantity: number
+          real: number
+        }
+        deliveredQuantity: {
+          quantity: number
+          real: number
+        }
+        restQuantity: {
+          quantity: number
+          real: number
+        }
+        note?: string
+      }[]
+    }[]
+    orders: {
+      products: {
+        name: string
+        quantity: number
+      }[]
+      quantity: number
+    }[]
+    updatedAt: string
+  }[]
+  total: number
+}
+
+export interface GetDailyLogByDateRequest {
+  date: Date
+}
+
+export interface GetDailyLogByDateResponse {
+  _id: string
+  date: Date
+  items: {
+    _id: string
+    quantity: number
+    storageItems: {
+      code: string
+      name: string
+      receivedQuantity: {
+        quantity: number
+        real: number
+      }
+      deliveredQuantity: {
+        quantity: number
+        real: number
+      }
+      restQuantity: {
+        quantity: number
+        real: number
+      }
+      note?: string
+    }[]
+  }[]
+  orders: {
+    products: {
+      name: string
+      quantity: number
+    }[]
+    quantity: number
+  }[]
+  updatedAt: string
+}
+
+export interface GetSessionLogByIdRequest {
+  id: string
+}
+
+export interface GetSessionLogByIdResponse {
+  _id: string
+  time: Date
+  items: {
+    _id: string
+    quantity: number
+    storageItems: {
+      code: string
+      name: string
+      receivedQuantity: {
+        quantity: number
+        real: number
+      }
+      deliveredQuantity: {
+        quantity: number
+        real: number
+      }
+      restQuantity: {
+        quantity: number
+        real: number
+      }
+      note?: string
+    }[]
+  }[]
+  orders: {
+    products: {
+      name: string
+      quantity: number
+    }[]
+    quantity: number
+  }[]
+  updatedAt: string
 }
