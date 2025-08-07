@@ -1,5 +1,4 @@
 import {
-  ActionIcon,
   AppShell,
   Button,
   Stack,
@@ -9,9 +8,9 @@ import {
   Paper,
   Center
 } from "@mantine/core"
-import { IconEye, IconEyeClosed, IconCandy } from "@tabler/icons-react"
+import { IconCandy } from "@tabler/icons-react"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { Helmet } from "react-helmet-async"
 import { Controller, useForm } from "react-hook-form"
 import { useUsers } from "../hooks/useUsers"
@@ -69,8 +68,6 @@ function RouteComponent() {
   const onSubmit = (values: LoginType) => {
     tryLogin(values)
   }
-
-  const [showPw, setShowPw] = useState(false)
 
   return (
     <>
@@ -143,20 +140,6 @@ function RouteComponent() {
                         size="md"
                         radius="md"
                         required
-                        rightSection={
-                          <ActionIcon
-                            size={"md"}
-                            variant="subtle"
-                            tabIndex={-1}
-                            onClick={() => setShowPw((prev) => !prev)}
-                          >
-                            {showPw ? <IconEye /> : <IconEyeClosed />}
-                          </ActionIcon>
-                        }
-                        type={showPw ? "text" : "password"}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") handleSubmit(onSubmit)()
-                        }}
                       />
                     )}
                   />

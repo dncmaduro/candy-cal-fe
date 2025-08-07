@@ -104,6 +104,7 @@ export const SaveLogDiv = ({ items, orders }: Props) => {
           size="md"
           radius={"md"}
           label="Chọn loại log"
+          allowDeselect={false}
           value={option}
           onChange={(val) => setOption(val as "session-log" | "daily-log")}
         />
