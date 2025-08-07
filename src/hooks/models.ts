@@ -1111,3 +1111,7 @@ export interface GetSessionLogByIdResponse {
   }[]
   updatedAt: string
 }
+
+export interface GetUnviewedCountResponse {
+  count: number
+}

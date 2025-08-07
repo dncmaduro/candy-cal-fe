@@ -1,6 +1,10 @@
 import { useUserStore } from "../store/userStore"
 import { callApi } from "./axios"
-import { GetNotificationsRequest, GetNotificationsResponse } from "./models"
+import {
+  GetNotificationsRequest,
+  GetNotificationsResponse,
+  GetUnviewedCountResponse
+} from "./models"
 import sound from "../public/dingdong.mp3"
 
 export const useNotifications = () => {
@@ -50,12 +54,30 @@ export const useNotifications = () => {
     })
   }
 
+  const markAllViewed = async () => {
+    return callApi<never, never>({
+      path: `/v1/notifications/allviewed`,
+      method: "POST",
+      token: accessToken
+    })
+  }
+
+  const getUnviewedCount = async () => {
+    return callApi<never, GetUnviewedCountResponse>({
+      path: `/v1/notifications/unviewed-count`,
+      method: "GET",
+      token: accessToken
+    })
+  }
+
   return {
     getNotifications,
     playNotificationSound,
     markAsRead,
     markAllAsRead,
     markAsUnread,
-    deleteNotification
+    deleteNotification,
+    getUnviewedCount,
+    markAllViewed
   }
 }
