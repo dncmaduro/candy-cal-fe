@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery } from "@tanstack/react-query"
 import { useEffect, useMemo, useState } from "react"
 import { useIncomes } from "../../hooks/useIncomes"
 import {
@@ -21,7 +21,7 @@ import { DatePickerInput } from "@mantine/dates"
 import { format } from "date-fns"
 import { modals } from "@mantine/modals"
 import { InsertIncomeModal } from "./InsertIncomeModal"
-import { IconBox, IconPlus, IconX } from "@tabler/icons-react"
+import { IconBox, IconDownload, IconPlus, IconX } from "@tabler/icons-react"
 import { AffTypeModal } from "./AffTypeModal"
 import { DeleteIncomeModal } from "./DeleteIncomeModal"
 import { useProducts } from "../../hooks/useProducts"
@@ -29,6 +29,8 @@ import { useMonthGoals } from "../../hooks/useMonthGoals"
 import { KPIBox } from "./KPIBox"
 import { BoxUpdateModal } from "./BoxUpdateModal"
 import { PackingRulesBoxTypes } from "../../constants/rules"
+import { ExportXlsxIncomesRequest } from "../../hooks/models"
+import { CToast } from "../common/CToast"
 
 export const Incomes = () => {
   const [step, setStep] = useState<"income" | "aff">()
@@ -47,7 +49,8 @@ export const Incomes = () => {
     getIncomesByDateRange,
     getKPIPercentageByMonth,
     getTotalIncomesByMonth,
-    getTotalQuantityByMonth
+    getTotalQuantityByMonth,
+    exportXlsxIncomes
   } = useIncomes()
   const { searchProducts } = useProducts()
   const currentYear = new Date().getFullYear()
@@ -117,6 +120,27 @@ export const Incomes = () => {
     queryKey: ["getGoal", currentMonth, currentYear],
     queryFn: () => getGoal({ month: currentMonth, year: currentYear }),
     select: (data) => data.data
+  })
+
+  const { mutate: exportXlsx } = useMutation({
+    mutationFn: (req: ExportXlsxIncomesRequest) => exportXlsxIncomes(req),
+    onSuccess: (response, args) => {
+      const url = URL.createObjectURL(response.data)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = `Báo cáo doanh thu_${format(new Date(), "dd-MM-yyyy")}_${format(args.startDate, "ddMMyyyy")}_${format(
+        args.endDate,
+        "ddMMyyyy"
+      )}_${args.orderId ?? ""}_${args.productCode ?? ""}_${
+        args.productSource ?? ""
+      }.xlsx`
+      link.click()
+      URL.revokeObjectURL(url)
+      CToast.success({ title: "Xuất file Excel thành công" })
+    },
+    onError: () => {
+      CToast.error({ title: "Có lỗi xảy ra khi xuất file Excel" })
+    }
   })
 
   const productCodeOptions = useMemo(() => {
@@ -351,7 +375,7 @@ export const Incomes = () => {
       <Divider my={0} />
       <Flex
         justify={"flex-end"}
-        align={"center"}
+        align={"flex-end"}
         pt={16}
         pb={8}
         gap={8}
@@ -384,6 +408,27 @@ export const Incomes = () => {
           placeholder="Tìm kiếm theo nguồn sản phẩm"
           clearable
         />
+        <Button
+          color="green"
+          size="md"
+          leftSection={<IconDownload size={16} />}
+          onClick={() => {
+            exportXlsx({
+              startDate: startDate
+                ? new Date(startDate.setHours(0, 0, 0, 0)).toISOString()
+                : new Date(new Date().setHours(0, 0, 0, 0)).toISOString(),
+              endDate: endDate
+                ? new Date(endDate.setHours(23, 59, 59, 999)).toISOString()
+                : new Date(new Date().setHours(23, 59, 59, 999)).toISOString(),
+              orderId,
+              productCode,
+              productSource
+            })
+          }}
+          variant="light"
+        >
+          Xuất file Excel
+        </Button>
       </Flex>
       <Box px={{ base: 4, md: 28 }} py={20} maw={"100%"}>
         <ScrollArea.Autosize scrollbars="x" offsetScrollbars>

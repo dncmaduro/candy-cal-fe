@@ -13,7 +13,8 @@ import {
   UpdateIncomesBoxRequest,
   GetTotalQuantityByMonthResponse,
   GetKPIPercentageByMonthRequest,
-  GetKPIPercentageByMonthResponse
+  GetKPIPercentageByMonthResponse,
+  ExportXlsxIncomesRequest
 } from "./models"
 
 export const useIncomes = () => {
@@ -118,6 +119,20 @@ export const useIncomes = () => {
     })
   }
 
+  const exportXlsxIncomes = async (req: ExportXlsxIncomesRequest) => {
+    const query = toQueryString(req)
+
+    return callApi<never, Blob>({
+      path: `/v1/incomes/export-xlsx?${query}`,
+      method: "GET",
+      token: accessToken,
+      headers: {
+        "Content-Type":
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+    })
+  }
+
   return {
     insertIncome,
     deleteIncomeByDate,
@@ -126,6 +141,7 @@ export const useIncomes = () => {
     updateIncomesBox,
     getTotalIncomesByMonth,
     getTotalQuantityByMonth,
-    getKPIPercentageByMonth
+    getKPIPercentageByMonth,
+    exportXlsxIncomes
   }
 }
