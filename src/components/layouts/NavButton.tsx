@@ -1,37 +1,70 @@
-import { Badge, Button, Group, Text } from "@mantine/core"
 import { Link } from "@tanstack/react-router"
+import * as TablerIcons from "@tabler/icons-react"
+import { ReactNode } from "react"
 
 interface Props {
   to: string
   label: string
+  // Support both dynamic icon name and direct ReactNode for backward compatibility
+  iconName?: keyof typeof TablerIcons | string
+  icon?: ReactNode
   beta?: boolean
+  collapsed?: boolean
 }
 
-export const NavButton = ({ to, label, beta }: Props) => {
+export const NavButton = ({
+  to,
+  label,
+  iconName,
+  icon,
+  beta,
+  collapsed
+}: Props) => {
   const pathname = window.location.pathname
   const active = pathname === to
+
+  // Resolve icon component from Tabler by name if provided
+  let ResolvedIcon: ReactNode = null
+  if (iconName && typeof iconName === "string") {
+    const Cmp =
+      (TablerIcons as any)[iconName] ||
+      (TablerIcons as any)["IconSquareRounded"]
+    if (Cmp) ResolvedIcon = <Cmp size={20} />
+  }
+
+  const baseClasses = [
+    "flex items-center gap-2 rounded-xl transition-colors duration-150",
+    "text-gray-600 hover:text-gray-900",
+    active ? "bg-indigo-50 text-indigo-700 shadow-sm" : "hover:bg-gray-50",
+    collapsed
+      ? "justify-center w-12 h-12 p-0"
+      : "justify-start w-full px-3 py-2"
+  ].join(" ")
+
   return (
-    <Button
-      component={Link}
-      to={to}
-      variant={active ? "light" : "subtle"}
-      color={active ? "indigo" : "gray"}
-      px="md"
-      radius="xl"
-      fw={500}
-      style={{
-        boxShadow: active ? "0 2px 12px 0 rgba(60,80,180,0.10)" : "none",
-        transition: "box-shadow 0.18s"
-      }}
-    >
-      <Group gap={4}>
-        <Text>{label}</Text>
-        {beta && (
-          <Badge size="xs" color="red" variant="outline">
-            Beta
-          </Badge>
-        )}
-      </Group>
-    </Button>
+    <Link to={to} title={collapsed ? label : undefined} className={baseClasses}>
+      {/* Icon */}
+      <span
+        className={
+          collapsed
+            ? "flex items-center justify-center"
+            : "flex items-center justify-center"
+        }
+      >
+        {icon ?? ResolvedIcon}
+      </span>
+
+      {/* Label + Beta (hidden when collapsed) */}
+      {!collapsed && (
+        <span className="flex items-center gap-2">
+          <span className="text-sm font-medium">{label}</span>
+          {beta && (
+            <span className="inline-flex items-center rounded-full border border-red-300 px-2 py-0.5 text-[10px] font-semibold text-red-600">
+              Beta
+            </span>
+          )}
+        </span>
+      )}
+    </Link>
   )
 }
