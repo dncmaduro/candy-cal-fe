@@ -46,6 +46,13 @@ export const NAVS = [
     icon: "IconCoin",
     roles: ["accounting-emp", "order-emp"],
     beta: true
+  },
+  {
+    to: `${NAVS_URL}/system-logs`,
+    label: "Lịch sử hệ thống",
+    icon: "IconAutomaticGearbox",
+    roles: ["admin"],
+    beta: true
   }
 ]
 

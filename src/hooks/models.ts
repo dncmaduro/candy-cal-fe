@@ -1123,3 +1123,40 @@ export interface GetSessionLogByIdResponse {
 export interface GetUnviewedCountResponse {
   count: number
 }
+
+export interface GetSystemLogsRequest {
+  page: number
+  limit: number
+  startTime?: string
+  endTime?: string
+  userId?: string
+  type?: string
+  action?: string
+  entity?: string
+  entityId?: string
+  result?: "success" | "failed"
+}
+
+export interface GetSystemLogsResponse {
+  data: {
+    _id: string
+    type: string
+    action: string
+    userId: string
+    time: Date
+    entity?: string
+    entityId?: string
+    result?: "success" | "failed"
+    meta?: Record<string, any>
+    ip?: string
+    userAgent?: string
+  }[]
+  total: number
+}
+
+export interface GetInformationSystemLogsRespomse {
+  data: {
+    label: string
+    value: string
+  }[]
+}
