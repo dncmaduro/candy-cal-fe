@@ -338,7 +338,7 @@ export const Incomes = () => {
       >
         <KPIBox
           label="KPI tháng này"
-          value={monthGoalData?.goal.toLocaleString() ?? "..."}
+          value={monthGoalData ? monthGoalData.goal.toLocaleString() : "..."}
           unit="VNĐ"
           color="indigo"
         />
