@@ -1,12 +1,4 @@
-import {
-  AppShell,
-  Badge,
-  Box,
-  Container,
-  Flex,
-  Group,
-  rem
-} from "@mantine/core"
+import { Badge, Box, Container, Group, rem } from "@mantine/core"
 import { useNavigate } from "@tanstack/react-router"
 import { ReactNode, useEffect } from "react"
 import { useUserStore } from "../../store/userStore"
@@ -15,18 +7,16 @@ import { useUsers } from "../../hooks/useUsers"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { saveToCookies } from "../../store/cookies"
 import { CToast } from "../common/CToast"
-import { NAVS } from "../../constants/navs"
 import { Notifications } from "./Notifications"
-import { NavButton } from "./NavButton"
+import { Sidebar } from "./Sidebar"
+import { useUIStore } from "../../store/uiStore"
 
-interface Props {
-  children: ReactNode
-}
-
-export const AppLayout = ({ children }: Props) => {
+export const AppLayout = ({ children }: { children: ReactNode }) => {
   const { accessToken, setUser, clearUser } = useUserStore()
   const { checkToken, getNewToken, getMe } = useUsers()
   const navigate = useNavigate()
+  const collapsed = useUIStore((s) => s.sidebarCollapsed)
+  const setCollapsed = useUIStore((s) => s.setSidebarCollapsed)
 
   const { mutate: getToken } = useMutation({
     mutationKey: ["getNewToken"],
@@ -72,67 +62,71 @@ export const AppLayout = ({ children }: Props) => {
   }, [accessToken])
 
   return (
-    <AppShell
-      header={{ height: 64 }}
-      padding="md"
-      withBorder={false}
-      style={{ background: "#f8fafc" }}
-    >
-      <AppShell.Header
+    <div style={{ display: "flex", minHeight: "100vh", background: "#f8fafc" }}>
+      <Sidebar
+        meData={meData}
+        collapsed={collapsed}
+        setCollapsed={setCollapsed}
+      />
+      <div
         style={{
-          boxShadow:
-            "0 2px 18px 0 rgba(120,120,150,0.06), 0 1.5px 0px 0 #ececec",
-          background: "#fff",
-          zIndex: 200
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          minHeight: "100vh"
         }}
       >
-        <Container size="1600" px={{ base: 16, md: 32 }} h="100%">
-          <Flex
-            h="100%"
-            align="center"
-            justify="space-between"
-            gap={16}
-            style={{ minHeight: rem(60) }}
-          >
-            <Group gap={8}>
-              {NAVS.filter((n) => {
-                if (!meData || n.deprecated) return false
-                return meData.role === "admin" || n.roles.includes(meData.role)
-              }).map((n) => (
-                <NavButton key={n.to} to={n.to} label={n.label} beta={n.beta} />
-              ))}
-              <Badge
-                ml={16}
-                variant="gradient"
-                gradient={{ from: "indigo", to: "violet", deg: 112 }}
-                radius="xl"
-                size="md"
-                fw={700}
-                style={{
-                  fontFamily: "Montserrat, sans-serif",
-                  letterSpacing: 0.2
-                }}
-              >
-                {import.meta.env.VITE_ENV === "development"
-                  ? "DEVELOPMENT"
-                  : "v2.5.0"}
-              </Badge>
-            </Group>
-            <Group>
-              <Notifications />
-              <UserMenu />
-            </Group>
-          </Flex>
-        </Container>
-      </AppShell.Header>
-
-      <AppShell.Main style={{ background: "none" }} h={"calc(100vh - 128px)"}>
-        <Container size="1600">
-          <Box w="100%" maw={1600} mx="auto">
-            {children}
-          </Box>
-        </Container>
-      </AppShell.Main>
-    </AppShell>
+        <header
+          style={{
+            boxShadow:
+              "0 2px 18px 0 rgba(120,120,150,0.06), 0 1.5px 0px 0 #ececec",
+            background: "#fff",
+            zIndex: 200,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            height: rem(64),
+            position: "sticky",
+            top: 0
+          }}
+        >
+          <Group gap={8} style={{ marginLeft: rem(16) }}>
+            <Badge
+              ml={0}
+              variant="gradient"
+              gradient={{ from: "indigo", to: "violet", deg: 112 }}
+              radius="xl"
+              size="md"
+              fw={700}
+              style={{
+                fontFamily: "Montserrat, sans-serif",
+                letterSpacing: 0.2
+              }}
+            >
+              {import.meta.env.VITE_ENV === "development"
+                ? "DEVELOPMENT"
+                : "v2.5.0"}
+            </Badge>
+          </Group>
+          <Group gap={8} style={{ marginRight: rem(16) }}>
+            <Notifications />
+            <UserMenu />
+          </Group>
+        </header>
+        <main
+          style={{
+            flex: 1,
+            background: "none",
+            minHeight: "calc(100vh - 64px)"
+          }}
+        >
+          <Container size="1600">
+            <Box w="100%" maw={1600} mx="auto">
+              {children}
+            </Box>
+          </Container>
+        </main>
+      </div>
+    </div>
   )
 }

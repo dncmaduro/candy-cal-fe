@@ -32,7 +32,11 @@ export async function callApi<D = unknown, T = unknown>({
     headers: convertedHeaders,
     data,
     method,
-    responseType: headers?.["Content-Type"]?.includes("sheet") ? "blob" : "json"
+    responseType:
+      headers?.["Content-Type"] ===
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        ? "blob"
+        : "json"
   })
 
   return response
