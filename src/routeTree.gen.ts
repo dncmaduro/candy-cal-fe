@@ -17,6 +17,7 @@ import { Route as PostauthIndexImport } from './routes/postauth/index'
 import { Route as MarketingStorageIndexImport } from './routes/marketing-storage/index'
 import { Route as LandingIndexImport } from './routes/landing/index'
 import { Route as AccessDeniedIndexImport } from './routes/access-denied/index'
+import { Route as MarketingStorageSystemLogsIndexImport } from './routes/marketing-storage/system-logs/index'
 import { Route as MarketingStorageStorageIndexImport } from './routes/marketing-storage/storage/index'
 import { Route as MarketingStorageOrdersLogsIndexImport } from './routes/marketing-storage/orders-logs/index'
 import { Route as MarketingStorageLogsIndexImport } from './routes/marketing-storage/logs/index'
@@ -64,6 +65,13 @@ const AccessDeniedIndexRoute = AccessDeniedIndexImport.update({
   path: '/access-denied/',
   getParentRoute: () => rootRoute,
 } as any)
+
+const MarketingStorageSystemLogsIndexRoute =
+  MarketingStorageSystemLogsIndexImport.update({
+    id: '/marketing-storage/system-logs/',
+    path: '/marketing-storage/system-logs/',
+    getParentRoute: () => rootRoute,
+  } as any)
 
 const MarketingStorageStorageIndexRoute =
   MarketingStorageStorageIndexImport.update({
@@ -234,6 +242,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MarketingStorageStorageIndexImport
       parentRoute: typeof rootRoute
     }
+    '/marketing-storage/system-logs/': {
+      id: '/marketing-storage/system-logs/'
+      path: '/marketing-storage/system-logs'
+      fullPath: '/marketing-storage/system-logs'
+      preLoaderRoute: typeof MarketingStorageSystemLogsIndexImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -255,6 +270,7 @@ export interface FileRoutesByFullPath {
   '/marketing-storage/logs': typeof MarketingStorageLogsIndexRoute
   '/marketing-storage/orders-logs': typeof MarketingStorageOrdersLogsIndexRoute
   '/marketing-storage/storage': typeof MarketingStorageStorageIndexRoute
+  '/marketing-storage/system-logs': typeof MarketingStorageSystemLogsIndexRoute
 }
 
 export interface FileRoutesByTo {
@@ -273,6 +289,7 @@ export interface FileRoutesByTo {
   '/marketing-storage/logs': typeof MarketingStorageLogsIndexRoute
   '/marketing-storage/orders-logs': typeof MarketingStorageOrdersLogsIndexRoute
   '/marketing-storage/storage': typeof MarketingStorageStorageIndexRoute
+  '/marketing-storage/system-logs': typeof MarketingStorageSystemLogsIndexRoute
 }
 
 export interface FileRoutesById {
@@ -292,6 +309,7 @@ export interface FileRoutesById {
   '/marketing-storage/logs/': typeof MarketingStorageLogsIndexRoute
   '/marketing-storage/orders-logs/': typeof MarketingStorageOrdersLogsIndexRoute
   '/marketing-storage/storage/': typeof MarketingStorageStorageIndexRoute
+  '/marketing-storage/system-logs/': typeof MarketingStorageSystemLogsIndexRoute
 }
 
 export interface FileRouteTypes {
@@ -312,6 +330,7 @@ export interface FileRouteTypes {
     | '/marketing-storage/logs'
     | '/marketing-storage/orders-logs'
     | '/marketing-storage/storage'
+    | '/marketing-storage/system-logs'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -329,6 +348,7 @@ export interface FileRouteTypes {
     | '/marketing-storage/logs'
     | '/marketing-storage/orders-logs'
     | '/marketing-storage/storage'
+    | '/marketing-storage/system-logs'
   id:
     | '__root__'
     | '/'
@@ -346,6 +366,7 @@ export interface FileRouteTypes {
     | '/marketing-storage/logs/'
     | '/marketing-storage/orders-logs/'
     | '/marketing-storage/storage/'
+    | '/marketing-storage/system-logs/'
   fileRoutesById: FileRoutesById
 }
 
@@ -365,6 +386,7 @@ export interface RootRouteChildren {
   MarketingStorageLogsIndexRoute: typeof MarketingStorageLogsIndexRoute
   MarketingStorageOrdersLogsIndexRoute: typeof MarketingStorageOrdersLogsIndexRoute
   MarketingStorageStorageIndexRoute: typeof MarketingStorageStorageIndexRoute
+  MarketingStorageSystemLogsIndexRoute: typeof MarketingStorageSystemLogsIndexRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -385,6 +407,7 @@ const rootRouteChildren: RootRouteChildren = {
   MarketingStorageLogsIndexRoute: MarketingStorageLogsIndexRoute,
   MarketingStorageOrdersLogsIndexRoute: MarketingStorageOrdersLogsIndexRoute,
   MarketingStorageStorageIndexRoute: MarketingStorageStorageIndexRoute,
+  MarketingStorageSystemLogsIndexRoute: MarketingStorageSystemLogsIndexRoute,
 }
 
 export const routeTree = rootRoute
@@ -411,7 +434,8 @@ export const routeTree = rootRoute
         "/marketing-storage/incomes/",
         "/marketing-storage/logs/",
         "/marketing-storage/orders-logs/",
-        "/marketing-storage/storage/"
+        "/marketing-storage/storage/",
+        "/marketing-storage/system-logs/"
       ]
     },
     "/": {
@@ -458,6 +482,9 @@ export const routeTree = rootRoute
     },
     "/marketing-storage/storage/": {
       "filePath": "marketing-storage/storage/index.tsx"
+    },
+    "/marketing-storage/system-logs/": {
+      "filePath": "marketing-storage/system-logs/index.tsx"
     }
   }
 }
