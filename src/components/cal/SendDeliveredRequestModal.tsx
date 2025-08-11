@@ -16,7 +16,7 @@ import { useDeliveredRequests } from "../../hooks/useDeliveredRequests"
 import { ItemResponse } from "../../hooks/models"
 
 interface StorageItemInput {
-  [storageItemId: string]: number
+  [storageKey: string]: number // use composite key: `${itemId}__${storageItemId}`
 }
 
 interface Props {
@@ -55,7 +55,8 @@ export const SendDeliveredRequestModal = ({ items, allItems, date }: Props) => {
     const map: Record<string, number> = {}
     items.forEach((item) => {
       const sum = item.storageItems.reduce((acc, si) => {
-        return acc + (quantities[si._id] || 0)
+        const key = `${item._id}__${si._id}`
+        return acc + (quantities[key] || 0)
       }, 0)
       map[item._id] = sum
     })
@@ -65,27 +66,26 @@ export const SendDeliveredRequestModal = ({ items, allItems, date }: Props) => {
   const isValid = items.every(
     (item) =>
       itemTotalByItemId[item._id] === item.quantity &&
-      item.storageItems.every(
-        (si) =>
-          (quantities[si._id] ?? 0) >= 0 &&
-          (quantities[si._id] ?? 0) <= si.restQuantity.quantity
-      )
+      item.storageItems.every((si) => {
+        const key = `${item._id}__${si._id}`
+        const q = quantities[key] ?? 0
+        return q >= 0 && q <= si.restQuantity.quantity
+      })
   )
 
   const body = useMemo(() => {
-    let result: { _id: string; quantity: number }[] = []
+    // Aggregate by storageItemId across all items
+    const agg: Record<string, number> = {}
     items.forEach((item) => {
       item.storageItems.forEach((si) => {
-        const q = quantities[si._id] || 0
+        const key = `${item._id}__${si._id}`
+        const q = quantities[key] || 0
         if (q > 0) {
-          result.push({
-            _id: si._id,
-            quantity: q
-          })
+          agg[si._id] = (agg[si._id] ?? 0) + q
         }
       })
     })
-    return result
+    return Object.entries(agg).map(([id, quantity]) => ({ _id: id, quantity }))
   }, [quantities, items])
 
   const { mutate: sendRequest, isPending } = useMutation({
@@ -137,30 +137,34 @@ export const SendDeliveredRequestModal = ({ items, allItems, date }: Props) => {
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
-                  {item.storageItems.map((si) => (
-                    <Table.Tr key={si._id}>
-                      <Table.Td>{si.name}</Table.Td>
-                      <Table.Td>{si.restQuantity.quantity}</Table.Td>
-                      <Table.Td>
-                        <NumberInput
-                          min={0}
-                          max={Math.min(
-                            si.restQuantity.quantity,
-                            item.quantity
-                          )}
-                          onChange={(value) => {
-                            setQuantities((q) => ({
-                              ...q,
-                              [si._id]: typeof value === "number" ? value : 0
-                            }))
-                          }}
-                          disabled={isPending}
-                          size="xs"
-                          w={90}
-                        />
-                      </Table.Td>
-                    </Table.Tr>
-                  ))}
+                  {item.storageItems.map((si) => {
+                    const key = `${item._id}__${si._id}`
+                    return (
+                      <Table.Tr key={si._id}>
+                        <Table.Td>{si.name}</Table.Td>
+                        <Table.Td>{si.restQuantity.quantity}</Table.Td>
+                        <Table.Td>
+                          <NumberInput
+                            min={0}
+                            max={Math.min(
+                              si.restQuantity.quantity,
+                              item.quantity
+                            )}
+                            value={quantities[key] ?? 0}
+                            onChange={(value) => {
+                              setQuantities((q) => ({
+                                ...q,
+                                [key]: typeof value === "number" ? value : 0
+                              }))
+                            }}
+                            disabled={isPending}
+                            size="xs"
+                            w={90}
+                          />
+                        </Table.Td>
+                      </Table.Tr>
+                    )
+                  })}
                 </Table.Tbody>
               </Table>
               <Group mt={8} gap={16}>
