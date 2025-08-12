@@ -733,7 +733,10 @@ export interface GetIncomesByDateRangeResponse {
       quantity: number
       quotation: number
       price: number
-      affliateAdsPercentage?: number
+      affiliateAdsPercentage?: number
+      affiliateAdsAmount?: number
+      standardAffPercentage?: number
+      standardAffAmount?: number
       sourceChecked: boolean
       content?: string
       box?: string
@@ -752,7 +755,10 @@ export interface GetTotalIncomesByMonthRequest {
 }
 
 export interface GetTotalIncomesByMonthResponse {
-  total: number
+  totalIncome: {
+    live: number
+    shop: number
+  }
 }
 
 export interface GetTotalQuantityByMonthRequest {
@@ -761,7 +767,10 @@ export interface GetTotalQuantityByMonthRequest {
 }
 
 export interface GetTotalQuantityByMonthResponse {
-  total: number
+  totalQuantity: {
+    live: number
+    shop: number
+  }
 }
 
 export interface GetKPIPercentageByMonthRequest {
@@ -770,19 +779,24 @@ export interface GetKPIPercentageByMonthRequest {
 }
 
 export interface GetKPIPercentageByMonthResponse {
-  percentage: number
+  KPIPercentage: {
+    live: number
+    shop: number
+  }
 }
 
 export interface CreateMonthGoalRequest {
   month: number
   year: number
-  goal: number
+  liveStreamGoal: number
+  shopGoal: number
 }
 
 export interface CreateMonthGoalResponse {
   month: number
   year: number
-  goal: number
+  liveStreamGoal: number
+  shopGoal: number
 }
 
 export interface GetGoalsRequest {
@@ -793,7 +807,8 @@ export interface GetGoalsResponse {
   monthGoals: {
     month: number
     year: number
-    goal: number
+    liveStreamGoal: number
+    shopGoal: number
     totalIncome: number
     totalQuantity: number
     KPIPercentage: number
@@ -809,19 +824,22 @@ export interface GetGoalRequest {
 export interface GetGoalResponse {
   month: number
   year: number
-  goal: number
+  liveStreamGoal: number
+  shopGoal: number
 }
 
 export interface UpdateGoalRequest {
   month: number
   year: number
-  goal: number
+  liveStreamGoal: number
+  shopGoal: number
 }
 
 export interface UpdateGoalResponse {
   month: number
   year: number
-  goal: number
+  liveStreamGoal: number
+  shopGoal: number
 }
 
 export interface DeleteGoalRequest {
@@ -1159,4 +1177,19 @@ export interface GetInformationSystemLogsRespomse {
     label: string
     value: string
   }[]
+}
+
+export interface GetDailyStatsRequest {
+  date: string
+}
+
+export interface GetDailyStatsResponse {
+  boxes: { box: string; quantity: number }[]
+  totalIncome: number
+  sources: {
+    ads: number
+    affiliate: number
+    affiliateAds: number
+    other: number
+  }
 }

@@ -76,7 +76,11 @@ function RouteComponent() {
             ))}
           </Tabs.List>
 
-          <ScrollArea.Autosize mah={"95%"}>
+          <ScrollArea.Autosize
+            mah={"95%"}
+            maw={"100%"}
+            className="panels-scroll-area"
+          >
             <Tabs.Panel value="items">
               <StorageItems activeTab={tab} />
             </Tabs.Panel>

@@ -15,7 +15,8 @@ import {
   NumberInput,
   TextInput,
   Select,
-  Badge
+  Badge,
+  Stack
 } from "@mantine/core"
 import { DatePickerInput } from "@mantine/dates"
 import { format } from "date-fns"
@@ -27,10 +28,10 @@ import { DeleteIncomeModal } from "./DeleteIncomeModal"
 import { useProducts } from "../../hooks/useProducts"
 import { useMonthGoals } from "../../hooks/useMonthGoals"
 import { KPIBox } from "./KPIBox"
-import { BoxUpdateModal } from "./BoxUpdateModal"
 import { PackingRulesBoxTypes } from "../../constants/rules"
 import { ExportXlsxIncomesRequest } from "../../hooks/models"
 import { CToast } from "../common/CToast"
+import { DailyStatsModal } from "./DailyStatsModal"
 
 export const Incomes = () => {
   const [step, setStep] = useState<"income" | "aff">()
@@ -39,6 +40,7 @@ export const Incomes = () => {
   const [orderId, setOrderId] = useState<string>()
   const [productCode, setProductCode] = useState<string>()
   const [productSource, setProductSource] = useState<string>()
+  const [kpiView, setKpiView] = useState<"live" | "shop" | "total">("live")
   const [startDate, setStartDate] = useState<Date | null>(() => {
     const d = new Date()
     d.setDate(d.getDate() - 30)
@@ -54,7 +56,7 @@ export const Incomes = () => {
   } = useIncomes()
   const { searchProducts } = useProducts()
   const currentYear = new Date().getFullYear()
-  const currentMonth = new Date().getMonth() - 1
+  const currentMonth = new Date().getMonth()
   const { getGoal } = useMonthGoals()
 
   const {
@@ -180,17 +182,27 @@ export const Incomes = () => {
     { label: "Mã đơn hàng", key: "orderId", width: 130 },
     { label: "Khách hàng", key: "customer", width: 140 },
     { label: "Tỉnh thành", key: "province", width: 120 },
-    { label: "Tổng số SP", key: "products", width: 90 },
     { label: "Mã sản phẩm", key: "code", width: 110 },
     // { label: "Tên sản phẩm", key: "name", width: 160 },
     { label: "Nguồn", key: "source", width: 100 },
     { label: "Số lượng", key: "quantity", width: 80 },
     { label: "Báo giá", key: "quotation", width: 90 },
     { label: "Giá bán", key: "price", width: 90 },
-    { label: "Phần trăm Affiliate", key: "affliateAdsPercentage", width: 70 },
     { label: "Loại nội dung", key: "content", width: 110 },
     { label: "Quy cách đóng hộp", key: "box", width: 60 },
-    { label: "Nhà sáng tạo", key: "creator", width: 90 }
+    { label: "Nhà sáng tạo", key: "creator", width: 90 },
+    { label: "Phần trăm Affiliate", key: "affiliateAdsPercentage", width: 100 },
+    { label: "Số tiền Affiliate", key: "affiliateAdsAmount", width: 100 },
+    {
+      label: "Phần trăm Affiliate tiêu chuẩn",
+      key: "standardAffPercentage",
+      width: 100
+    },
+    {
+      label: "Số tiền Affiliate tiêu chuẩn",
+      key: "standardAffAmount",
+      width: 100
+    }
   ]
 
   useEffect(() => {
@@ -233,6 +245,61 @@ export const Incomes = () => {
     "affiliate-ads": "violet",
     other: "blue"
   }
+
+  // Derived KPI values based on selected view
+  const goalValue = monthGoalData
+    ? kpiView === "live"
+      ? monthGoalData.liveStreamGoal
+      : kpiView === "shop"
+        ? monthGoalData.shopGoal
+        : (monthGoalData.liveStreamGoal || 0) + (monthGoalData.shopGoal || 0)
+    : undefined
+
+  const incomeValue = totalIncomesData
+    ? kpiView === "live"
+      ? totalIncomesData.totalIncome?.live
+      : kpiView === "shop"
+        ? totalIncomesData.totalIncome?.shop
+        : (totalIncomesData.totalIncome?.live || 0) +
+          (totalIncomesData.totalIncome?.shop || 0)
+    : undefined
+
+  const quantityValue = totalQuantityData
+    ? kpiView === "live"
+      ? totalQuantityData.totalQuantity?.live
+      : kpiView === "shop"
+        ? totalQuantityData.totalQuantity?.shop
+        : (totalQuantityData.totalQuantity?.live || 0) +
+          (totalQuantityData.totalQuantity?.shop || 0)
+    : undefined
+
+  const percentageValue = (() => {
+    if (!monthGoalData) return undefined
+    if (kpiView === "total") {
+      const totalGoal =
+        (monthGoalData.liveStreamGoal || 0) + (monthGoalData.shopGoal || 0)
+      if (!totalGoal) return 0
+      const totalIncome =
+        (totalIncomesData?.totalIncome?.live || 0) +
+        (totalIncomesData?.totalIncome?.shop || 0)
+      return (totalIncome / totalGoal) * 100
+    }
+    const split = KPIPercentageData?.KPIPercentage
+    if (!split) return undefined
+    return split[kpiView]
+  })()
+
+  const percentageDisplay =
+    percentageValue !== undefined && percentageValue !== null
+      ? `${Math.round((percentageValue + Number.EPSILON) * 100) / 100}%`
+      : "..."
+
+  const percentageColor = (() => {
+    if (percentageValue === undefined || percentageValue === null) return "red"
+    if (percentageValue >= 100) return "green"
+    if (percentageValue >= 70) return "yellow"
+    return "red"
+  })()
 
   return (
     <Box
@@ -301,13 +368,13 @@ export const Incomes = () => {
             leftSection={<IconBox size={16} />}
             onClick={() => {
               modals.open({
-                title: <b>Cập nhật quy cách đóng hàng</b>,
-                children: <BoxUpdateModal />,
+                title: <b>Chỉ số ngày</b>,
+                children: <DailyStatsModal />,
                 size: "lg"
               })
             }}
           >
-            Cập nhật quy cách đóng hàng
+            Xem chỉ số ngày
           </Button>
           <Button
             leftSection={<IconX size={16} />}
@@ -328,50 +395,57 @@ export const Incomes = () => {
         </Group>
       </Flex>
       <Divider my={0} />
-      <Flex
+      <Stack
         px={{ base: 8, md: 28 }}
         py={18}
         gap={18}
-        wrap="wrap"
         justify="flex-start"
-        align="center"
+        align="flex-start"
       >
-        <KPIBox
-          label="KPI tháng này"
-          value={monthGoalData ? monthGoalData.goal.toLocaleString() : "..."}
-          unit="VNĐ"
-          color="indigo"
+        <Select
+          label="Chế độ xem"
+          value={kpiView}
+          onChange={(v) => setKpiView((v as any) ?? "live")}
+          data={[
+            { label: "Livestream", value: "live" },
+            { label: "Shop", value: "shop" },
+            { label: "Tổng", value: "total" }
+          ]}
+          size="sm"
+          w={160}
         />
-        <KPIBox
-          label="Doanh thu đã đạt"
-          value={totalIncomesData?.total.toLocaleString() ?? "..."}
-          unit="VNĐ"
-          color="teal"
-        />
-        <KPIBox
-          label="Tổng số lượng sản phẩm"
-          value={totalQuantityData?.total.toLocaleString() ?? "..."}
-          unit="sp"
-          color="cyan"
-        />
-        <KPIBox
-          label="Tỉ lệ đạt KPI"
-          value={
-            KPIPercentageData?.percentage !== undefined
-              ? `${KPIPercentageData.percentage}%`
-              : "..."
-          }
-          color={
-            KPIPercentageData?.percentage !== undefined &&
-            KPIPercentageData.percentage >= 100
-              ? "green"
-              : KPIPercentageData?.percentage !== undefined &&
-                  KPIPercentageData.percentage >= 70
-                ? "yellow"
-                : "red"
-          }
-        />
-      </Flex>
+        <Group w={"100%"} justify="space-between" align="center">
+          <KPIBox
+            label={`KPI tháng này${kpiView === "total" ? " (Tổng)" : kpiView === "live" ? " (Live)" : " (Shop)"}`}
+            value={goalValue !== undefined ? goalValue.toLocaleString() : "..."}
+            unit="VNĐ"
+            color="indigo"
+          />
+          <KPIBox
+            label={`Doanh thu đã đạt${kpiView === "total" ? " (Tổng)" : kpiView === "live" ? " (Live)" : " (Shop)"}`}
+            value={
+              incomeValue !== undefined ? incomeValue.toLocaleString() : "..."
+            }
+            unit="VNĐ"
+            color="teal"
+          />
+          <KPIBox
+            label={`Tổng số lượng sản phẩm${kpiView === "total" ? " (Tổng)" : kpiView === "live" ? " (Live)" : " (Shop)"}`}
+            value={
+              quantityValue !== undefined
+                ? quantityValue.toLocaleString()
+                : "..."
+            }
+            unit="sp"
+            color="cyan"
+          />
+          <KPIBox
+            label={`Tỉ lệ đạt KPI${kpiView === "total" ? " (Tổng)" : kpiView === "live" ? " (Live)" : " (Shop)"}`}
+            value={percentageDisplay}
+            color={percentageColor}
+          />
+        </Group>
+      </Stack>
       <Divider my={0} />
       <Flex
         justify={"flex-end"}
@@ -440,7 +514,7 @@ export const Incomes = () => {
             horizontalSpacing="md"
             stickyHeader
             className="rounded-xl"
-            miw={1600}
+            miw={1800}
           >
             <Table.Thead>
               <Table.Tr>
@@ -491,12 +565,12 @@ export const Incomes = () => {
                           >
                             {item.province}
                           </Table.Td>
-                          <Table.Td
+                          {/* <Table.Td
                             rowSpan={productLen}
                             style={{ verticalAlign: "middle" }}
                           >
                             {item.products.length}
-                          </Table.Td>
+                          </Table.Td> */}
                         </>
                       )}
                       <Table.Td>
@@ -529,7 +603,6 @@ export const Incomes = () => {
                       <Table.Td>{prod.quantity}</Table.Td>
                       <Table.Td>{prod.quotation?.toLocaleString()}</Table.Td>
                       <Table.Td>{prod.price?.toLocaleString()}</Table.Td>
-                      <Table.Td>{prod.affliateAdsPercentage ?? "-"}</Table.Td>
                       <Table.Td>
                         <span
                           style={{
@@ -548,6 +621,14 @@ export const Incomes = () => {
                           ?.label ?? "-"}
                       </Table.Td>
                       <Table.Td>{prod.creator ?? "-"}</Table.Td>
+                      <Table.Td>{prod.affiliateAdsPercentage ?? "-"}</Table.Td>
+                      <Table.Td>
+                        {prod.affiliateAdsAmount?.toLocaleString()}
+                      </Table.Td>
+                      <Table.Td>{prod.standardAffPercentage ?? "-"}</Table.Td>
+                      <Table.Td>
+                        {prod.standardAffAmount?.toLocaleString()}
+                      </Table.Td>
                     </Table.Tr>
                   ))
                 })

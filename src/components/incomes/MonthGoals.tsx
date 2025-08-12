@@ -33,6 +33,11 @@ export const MonthGoals = () => {
 
   const monthGoals = goalsData?.monthGoals || []
 
+  const totalYearGoal = monthGoals.reduce(
+    (sum, m) => sum + (m.liveStreamGoal || 0) + (m.shopGoal || 0),
+    0
+  )
+
   return (
     <Box
       mt={40}
@@ -108,17 +113,15 @@ export const MonthGoals = () => {
           <Table.Thead>
             <Table.Tr>
               <Table.Th style={{ width: 120 }}>Tháng</Table.Th>
-              <Table.Th>KPI</Table.Th>
-              <Table.Th>Doanh thu</Table.Th>
-              <Table.Th>Số lượng sản phẩm</Table.Th>
-              <Table.Th>Tỉ lệ đạt KPI</Table.Th>
+              <Table.Th>KPI Live</Table.Th>
+              <Table.Th>KPI Shop</Table.Th>
               <Table.Th style={{ width: 180 }}></Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
             {isLoading ? (
               <Table.Tr>
-                <Table.Td colSpan={2}>
+                <Table.Td colSpan={7}>
                   <Flex justify="center" align="center" h={60}>
                     <Loader />
                   </Flex>
@@ -130,18 +133,10 @@ export const MonthGoals = () => {
                   <Table.Td>
                     {m.month + 1}/{m.year}
                   </Table.Td>
-                  <Table.Td>{m.goal.toLocaleString()}</Table.Td>
                   <Table.Td>
-                    {m.totalIncome ? m.totalIncome.toLocaleString() : 0}
+                    {m.liveStreamGoal?.toLocaleString?.() || 0}
                   </Table.Td>
-                  <Table.Td>
-                    {m.totalQuantity ? m.totalQuantity.toLocaleString() : 0}
-                  </Table.Td>
-                  <Table.Td>
-                    {m.KPIPercentage !== undefined
-                      ? `${m.KPIPercentage}%`
-                      : "..."}
-                  </Table.Td>
+                  <Table.Td>{m.shopGoal?.toLocaleString?.() || 0}</Table.Td>
                   <Table.Td>
                     <Group>
                       <Button
@@ -159,7 +154,15 @@ export const MonthGoals = () => {
                               </Text>
                             ),
                             children: (
-                              <MonthGoalModal monthGoal={m} refetch={refetch} />
+                              <MonthGoalModal
+                                monthGoal={{
+                                  month: m.month,
+                                  year: m.year,
+                                  liveStreamGoal: m.liveStreamGoal,
+                                  shopGoal: m.shopGoal
+                                }}
+                                refetch={refetch}
+                              />
                             )
                           })
                         }
@@ -172,7 +175,7 @@ export const MonthGoals = () => {
               ))
             ) : (
               <Table.Tr>
-                <Table.Td colSpan={2}>
+                <Table.Td colSpan={7}>
                   <Flex justify="center" align="center" h={60}>
                     <Text c="dimmed">Không có dữ liệu</Text>
                   </Flex>
@@ -183,8 +186,12 @@ export const MonthGoals = () => {
         </Table>
         <Flex justify="end" mt={16}>
           <Text fw={700}>
-            Tổng mục tiêu năm:{" "}
-            {monthGoals.reduce((sum, m) => sum + m.goal, 0).toLocaleString()}
+            Tổng mục tiêu năm: {totalYearGoal.toLocaleString()}
+          </Text>
+        </Flex>
+        <Flex justify="end" mt={4}>
+          <Text c="dimmed" fz="sm">
+            (Live + Shop)
           </Text>
         </Flex>
       </Box>

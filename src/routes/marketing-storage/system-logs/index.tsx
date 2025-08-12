@@ -216,8 +216,8 @@ function RouteComponent() {
         <Box px={{ base: 8, md: 28 }} py={16}>
           <Group gap={12} align="flex-end" wrap="wrap">
             <Select
-              label="User"
-              placeholder="Chọn user"
+              label="Người dùng"
+              placeholder="Chọn người dùng"
               data={usersOptions ?? []}
               value={userId || null}
               onChange={(v) => setUserId(v ?? "")}
@@ -226,8 +226,8 @@ function RouteComponent() {
               w={260}
             />
             <Select
-              label="Type"
-              placeholder="Chọn type"
+              label="Loại"
+              placeholder="Chọn loại"
               data={typesOptions ?? []}
               value={type || null}
               onChange={(v) => setType(v ?? "")}
@@ -236,8 +236,8 @@ function RouteComponent() {
               w={200}
             />
             <Select
-              label="Action"
-              placeholder="Chọn action"
+              label="Hành động"
+              placeholder="Chọn hành động"
               data={actionsOptions ?? []}
               value={action || null}
               onChange={(v) => setAction(v ?? "")}
@@ -246,8 +246,8 @@ function RouteComponent() {
               w={220}
             />
             <Select
-              label="Entity"
-              placeholder="Chọn entity"
+              label="Thực thể"
+              placeholder="Chọn thực thể"
               data={entitiesOptions ?? []}
               value={entity || null}
               onChange={(v) => {
@@ -259,8 +259,8 @@ function RouteComponent() {
               w={220}
             />
             <Select
-              label="Entity ID"
-              placeholder={entity ? "Chọn entityId" : "Chọn entity trước"}
+              label="ID thực thể"
+              placeholder={entity ? "Chọn ID thực thể" : "Chọn thực thể trước"}
               data={entityIdsOptions ?? []}
               value={entityId || null}
               onChange={(v) => setEntityId(v ?? "")}
@@ -313,13 +313,13 @@ function RouteComponent() {
               <Table.Thead>
                 <Table.Tr>
                   <Table.Th style={{ width: 170 }}>Thời gian</Table.Th>
-                  <Table.Th style={{ width: 160 }}>User</Table.Th>
-                  <Table.Th style={{ width: 140 }}>Type</Table.Th>
-                  <Table.Th style={{ width: 140 }}>Action</Table.Th>
-                  <Table.Th style={{ width: 220 }}>Entity</Table.Th>
+                  <Table.Th style={{ width: 160 }}>Người dùng</Table.Th>
+                  <Table.Th style={{ width: 140 }}>Loại</Table.Th>
+                  <Table.Th style={{ width: 140 }}>Hành động</Table.Th>
+                  <Table.Th style={{ width: 220 }}>Thực thể</Table.Th>
                   <Table.Th style={{ width: 120 }}>Kết quả</Table.Th>
                   <Table.Th style={{ width: 140 }}>IP</Table.Th>
-                  <Table.Th style={{ width: 260 }}>User Agent</Table.Th>
+                  <Table.Th style={{ width: 260 }}>Trình duyệt</Table.Th>
                   <Table.Th style={{ width: 120 }}></Table.Th>
                 </Table.Tr>
               </Table.Thead>
@@ -426,8 +426,6 @@ function RouteComponent() {
               total={Math.ceil((total || 1) / limit)}
               value={page}
               onChange={setPage}
-              size="md"
-              radius="xl"
             />
           </Flex>
         </Box>

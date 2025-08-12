@@ -14,7 +14,9 @@ import {
   GetTotalQuantityByMonthResponse,
   GetKPIPercentageByMonthRequest,
   GetKPIPercentageByMonthResponse,
-  ExportXlsxIncomesRequest
+  ExportXlsxIncomesRequest,
+  GetDailyStatsRequest,
+  GetDailyStatsResponse
 } from "./models"
 
 export const useIncomes = () => {
@@ -89,7 +91,7 @@ export const useIncomes = () => {
     const query = toQueryString(req)
 
     return callApi<never, GetTotalIncomesByMonthResponse>({
-      path: `/v1/incomes/total-income-by-month?${query}`,
+      path: `/v1/incomes/income-split-by-month?${query}`,
       method: "GET",
       token: accessToken
     })
@@ -101,7 +103,7 @@ export const useIncomes = () => {
     const query = toQueryString(req)
 
     return callApi<never, GetTotalQuantityByMonthResponse>({
-      path: `/v1/incomes/total-quantity-by-month?${query}`,
+      path: `/v1/incomes/quantity-split-by-month?${query}`,
       method: "GET",
       token: accessToken
     })
@@ -113,7 +115,17 @@ export const useIncomes = () => {
     const query = toQueryString(req)
 
     return callApi<never, GetKPIPercentageByMonthResponse>({
-      path: `/v1/incomes/kpi-percentage-by-month?${query}`,
+      path: `/v1/incomes/kpi-percentage-split-by-month?${query}`,
+      method: "GET",
+      token: accessToken
+    })
+  }
+
+  const getDailyStats = async (req: GetDailyStatsRequest) => {
+    const query = toQueryString(req)
+
+    return callApi<never, GetDailyStatsResponse>({
+      path: `/v1/incomes/daily-stats?${query}`,
       method: "GET",
       token: accessToken
     })
@@ -142,6 +154,7 @@ export const useIncomes = () => {
     getTotalIncomesByMonth,
     getTotalQuantityByMonth,
     getKPIPercentageByMonth,
+    getDailyStats,
     exportXlsxIncomes
   }
 }
