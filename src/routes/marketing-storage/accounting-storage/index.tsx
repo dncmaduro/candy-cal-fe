@@ -58,7 +58,7 @@ function RouteComponent() {
   return (
     <>
       <Helmet>
-        <title>MyCandy x Chíp</title>
+        <title>{`Kho - ${tab === "storagelogs" ? "Lịch sử xuất/nhập" : tab === "monthly-exports" ? "Xuất hàng theo tháng" : "Mặt hàng"} | MyCandy`}</title>
       </Helmet>
       <AppLayout>
         <Tabs

@@ -71,7 +71,7 @@ function RouteComponent() {
   return (
     <>
       <Helmet>
-        <title>MyCandy x Chíp</title>
+        <title>Tính mặt hàng - Công cụ | MyCandy</title>
       </Helmet>
       <AppLayout>
         <Box mt={32} w={1000} mx="auto">

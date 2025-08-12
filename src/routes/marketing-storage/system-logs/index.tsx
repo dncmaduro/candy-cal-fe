@@ -159,7 +159,7 @@ function RouteComponent() {
   return (
     <AppLayout>
       <Helmet>
-        <title>Nhật ký hệ thống - MyCandy</title>
+        <title>Hệ thống - Nhật ký | MyCandy</title>
       </Helmet>
       <Box
         mt={40}

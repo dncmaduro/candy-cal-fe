@@ -55,7 +55,7 @@ function RouteComponent() {
   return (
     <>
       <Helmet>
-        <title>Quản lý kho và sản phẩm - MyCandy</title>
+        <title>{`Kho & Sản phẩm - ${tab === "products" ? "Sản phẩm" : tab === "ready-combos" ? "Combo đóng sẵn" : "Mặt hàng"} | MyCandy`}</title>
       </Helmet>
       <AppLayout>
         <Tabs
