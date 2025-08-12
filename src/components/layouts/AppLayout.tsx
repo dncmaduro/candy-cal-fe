@@ -1,4 +1,5 @@
 import { Badge, Box, Container, Group, rem } from "@mantine/core"
+import pkg from "../../../package.json"
 import { useNavigate } from "@tanstack/react-router"
 import { ReactNode, useEffect } from "react"
 import { useUserStore } from "../../store/userStore"
@@ -105,7 +106,7 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
             >
               {import.meta.env.VITE_ENV === "development"
                 ? "DEVELOPMENT"
-                : "v2.5.0"}
+                : `v${pkg.version}`}
             </Badge>
           </Group>
           <Group gap={8} style={{ marginRight: rem(16) }}>
