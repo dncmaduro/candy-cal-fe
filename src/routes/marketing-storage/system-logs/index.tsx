@@ -29,7 +29,7 @@ export const Route = createFileRoute("/marketing-storage/system-logs/")({
 })
 
 function RouteComponent() {
-  useAuthGuard(["admin"]) // Chỉ admin được xem nhật ký hệ thống
+  useAuthGuard(["admin", "system-emp"]) // Chỉ admin được xem nhật ký hệ thống
 
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(10)
