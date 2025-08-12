@@ -24,7 +24,7 @@ export const Route = createFileRoute("/marketing-storage/cal/")({
 })
 
 function RouteComponent() {
-  useAuthGuard(["admin", "order-emp"])
+  useAuthGuard(["admin", "order-emp", "system-emp"])
   const { getAllProducts, calProducts } = useProducts()
 
   const { data: productsData } = useQuery({

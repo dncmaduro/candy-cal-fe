@@ -30,7 +30,7 @@ export const Route = createFileRoute("/marketing-storage/delivered-requests/")({
 })
 
 function RouteComponent() {
-  useAuthGuard(["admin", "accounting-emp", "order-emp"])
+  useAuthGuard(["admin", "accounting-emp", "order-emp", "system-emp"])
   const [page, setPage] = useState(1)
   const [limit] = useState(10)
   const [startDate, setStartDate] = useState<Date | null>(null)

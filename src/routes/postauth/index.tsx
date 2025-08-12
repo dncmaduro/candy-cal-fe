@@ -36,7 +36,11 @@ function RouteComponent() {
 
   if (!accessToken || isLoading || isError) return null
 
-  if (meData?.role === "admin" || meData?.role === "order-emp") {
+  if (
+    meData?.role === "admin" ||
+    meData?.role === "order-emp" ||
+    meData?.role === "system-emp"
+  ) {
     return <Navigate to="/marketing-storage/storage" />
   }
   if (meData?.role === "accounting-emp") {
