@@ -74,9 +74,11 @@ function RouteComponent() {
       ? "Quản trị viên"
       : meData?.role === "order-emp"
         ? "Nhân viên vận đơn"
-        : meData?.role === "accounting-emp"
-          ? "Nhân viên kế toán"
-          : meData?.role || ""
+        : meData?.role === "system-emp"
+          ? "Nhân viên hệ thống"
+          : meData?.role === "accounting-emp"
+            ? "Nhân viên kế toán"
+            : meData?.role || ""
 
   return (
     <AppLayout>

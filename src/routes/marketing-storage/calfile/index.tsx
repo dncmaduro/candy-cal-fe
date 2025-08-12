@@ -49,7 +49,7 @@ interface ItemType {
 }
 
 function RouteComponent() {
-  useAuthGuard(["admin", "order-emp", "accounting-emp"])
+  useAuthGuard(["admin", "order-emp", "accounting-emp", "system-emp"])
   const { calFile } = useProducts()
   const [items, setItems] = useState<ItemType[]>([])
   const [orders, setOrders] = useState<

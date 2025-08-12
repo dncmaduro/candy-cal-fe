@@ -23,7 +23,7 @@ export const Route = createFileRoute("/marketing-storage/storage/")({
 })
 
 function RouteComponent() {
-  useAuthGuard(["admin", "order-emp"])
+  useAuthGuard(["admin", "order-emp", "system-emp"])
   const { tab } = Route.useSearch()
   const navigate = useNavigate()
 
