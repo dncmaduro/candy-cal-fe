@@ -161,7 +161,7 @@ export const DailyMatrixTable = ({ data, isFetching, month }: Props) => {
   const totalCols = 1 + daysInMonth * (view === "both" ? 2 : 1)
 
   return (
-    <Box py={16} px={8} w="100%" mt={16}>
+    <Box py={16} px={8} maw="100%" mt={16}>
       <Group justify="flex-end" mb={16}>
         <Select
           data={viewOptions}

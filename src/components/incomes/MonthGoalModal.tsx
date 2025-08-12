@@ -12,7 +12,8 @@ interface Props {
   monthGoal?: {
     month: number
     year: number
-    goal: number
+    liveStreamGoal: number
+    shopGoal: number
   }
   refetch: () => void
 }
@@ -25,7 +26,8 @@ export const MonthGoalModal = ({ monthGoal, refetch }: Props) => {
     defaultValues: monthGoal ?? {
       month: new Date().getMonth(),
       year: new Date().getFullYear(),
-      goal: 1_000_000
+      liveStreamGoal: 1_000_000,
+      shopGoal: 1_000_000
     }
   })
 
@@ -86,22 +88,35 @@ export const MonthGoalModal = ({ monthGoal, refetch }: Props) => {
           onChange={(val) => setMonth(val)}
           label="Tháng"
           size="md"
+          valueFormat="MM/YYYY"
         />
         <Controller
           control={control}
-          name="goal"
-          render={({ field }) => {
-            return (
-              <NumberInput
-                label="KPI"
-                placeholder="Nhập KPI"
-                min={0}
-                size="md"
-                {...field}
-                thousandSeparator=","
-              />
-            )
-          }}
+          name="liveStreamGoal"
+          render={({ field }) => (
+            <NumberInput
+              label="KPI Live"
+              placeholder="Nhập KPI Live"
+              min={0}
+              size="md"
+              thousandSeparator=","
+              {...field}
+            />
+          )}
+        />
+        <Controller
+          control={control}
+          name="shopGoal"
+          render={({ field }) => (
+            <NumberInput
+              label="KPI Shop"
+              placeholder="Nhập KPI Shop"
+              min={0}
+              size="md"
+              thousandSeparator=","
+              {...field}
+            />
+          )}
         />
         <Group justify="flex-end">
           <Button type="submit" color="indigo" size="md" fw={600}>
