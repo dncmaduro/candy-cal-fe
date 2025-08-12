@@ -3,6 +3,8 @@ import { useUsers } from "../../hooks/useUsers"
 import { useQuery } from "@tanstack/react-query"
 import { useUserStore } from "../../store/userStore"
 import { useEffect } from "react"
+import { Helmet } from "react-helmet-async"
+import { AppLayout } from "../../components/layouts/AppLayout"
 
 export const Route = createFileRoute("/postauth/")({
   component: RouteComponent
@@ -41,5 +43,14 @@ function RouteComponent() {
     return <Navigate to="/marketing-storage/accounting-storage" />
   }
 
-  return null
+  return (
+    <>
+      <Helmet>
+        <title>Bảng điều khiển | MyCandy</title>
+      </Helmet>
+      <AppLayout>
+        <div />
+      </AppLayout>
+    </>
+  )
 }

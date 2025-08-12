@@ -23,6 +23,7 @@ import { IconArrowBackUp, IconCheck, IconEye } from "@tabler/icons-react"
 import { CToast } from "../../../components/common/CToast"
 import { modals } from "@mantine/modals"
 import { DeliveredRequestModal } from "../../../components/delivered-requests/DeliveredRequestModal"
+import { Helmet } from "react-helmet-async"
 
 export const Route = createFileRoute("/marketing-storage/delivered-requests/")({
   component: RouteComponent
@@ -152,6 +153,9 @@ function RouteComponent() {
 
   return (
     <AppLayout>
+      <Helmet>
+        <title>Kho - Yêu cầu xuất kho | MyCandy</title>
+      </Helmet>
       <Box
         mt={40}
         mx="auto"

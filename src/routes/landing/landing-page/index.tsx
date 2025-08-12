@@ -2,9 +2,10 @@ import { createFileRoute } from "@tanstack/react-router"
 import { useLanding } from "../../../hooks/useLanding"
 import { useQuery } from "@tanstack/react-query"
 import { Box, Table, Text, Flex, rem, Pagination, Divider } from "@mantine/core"
+import { format } from "date-fns"
 import { useState } from "react"
 import { LandingLayout } from "../../../components/layouts/LandingLayout"
-import { format } from "date-fns"
+import { Helmet } from "react-helmet-async"
 
 export const Route = createFileRoute("/landing/landing-page/")({
   component: RouteComponent
@@ -27,6 +28,9 @@ function RouteComponent() {
 
   return (
     <LandingLayout>
+      <Helmet>
+        <title>Landing - Đơn hàng | MyCandy</title>
+      </Helmet>
       <Box
         mx="auto"
         mt={40}

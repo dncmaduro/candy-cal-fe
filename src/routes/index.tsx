@@ -72,7 +72,7 @@ function RouteComponent() {
   return (
     <>
       <Helmet>
-        <title>MyCandy x Chíp</title>
+        <title>Đăng nhập | MyCandy</title>
       </Helmet>
       <AppShell>
         <AppShell.Main h={"100vh"} w={"100vw"} bg="gray.0">

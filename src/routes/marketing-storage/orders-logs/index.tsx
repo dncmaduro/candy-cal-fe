@@ -23,6 +23,7 @@ import { CalResultModal } from "../../../components/cal/CalResultModal"
 import { DatePickerInput } from "@mantine/dates"
 import { IconListDetails, IconCalendarSearch } from "@tabler/icons-react"
 import { useAuthGuard } from "../../../hooks/useAuthGuard"
+import { Helmet } from "react-helmet-async"
 
 export const Route = createFileRoute("/marketing-storage/orders-logs/")({
   component: RouteComponent
@@ -79,6 +80,9 @@ function RouteComponent() {
 
   return (
     <AppLayout>
+      <Helmet>
+        <title>Đóng hàng - Lịch sử vận đơn | MyCandy</title>
+      </Helmet>
       <Container size="1600" py={32}>
         <Box
           bg="white"

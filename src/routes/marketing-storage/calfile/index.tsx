@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router"
+import { Helmet } from "react-helmet-async"
 import { useProducts } from "../../../hooks/useProducts"
 import { useMutation } from "@tanstack/react-query"
 import { modals } from "@mantine/modals"
@@ -16,7 +17,6 @@ import {
 import { useFileDialog } from "@mantine/hooks"
 import { useState } from "react"
 import { AppLayout } from "../../../components/layouts/AppLayout"
-import { Helmet } from "react-helmet-async"
 import { IconUpload, IconCalculator, IconHistory } from "@tabler/icons-react"
 import { useAuthGuard } from "../../../hooks/useAuthGuard"
 import { CalFileResultModal } from "../../../components/cal/CalFileResultModal"
@@ -91,7 +91,7 @@ function RouteComponent() {
   return (
     <>
       <Helmet>
-        <title>MyCandy x Chíp</title>
+        <title>Tính từ file Excel - Công cụ | MyCandy</title>
       </Helmet>
       <AppLayout>
         <Container size="sm" pt={48} pb={56}>
