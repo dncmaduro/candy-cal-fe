@@ -38,7 +38,7 @@ import { PackingRulesBoxTypes } from "../../constants/rules"
 import { ExportXlsxIncomesRequest } from "../../hooks/models"
 import { CToast } from "../common/CToast"
 import { DailyStatsModal } from "./DailyStatsModal"
-import { TopCreatorsModal } from "./TopCreatorsModal.tsx"
+import { TopCreatorsModal } from "./TopCreatorsModal"
 import { Can } from "../common/Can"
 
 export const Incomes = () => {
@@ -87,11 +87,9 @@ export const Incomes = () => {
         page,
         limit,
         startDate: startDate
-          ? new Date(startDate.setHours(0, 0, 0, 0)).toISOString()
-          : new Date(new Date().setHours(0, 0, 0, 0)).toISOString(),
-        endDate: endDate
-          ? new Date(endDate.setHours(23, 59, 59, 999)).toISOString()
-          : new Date(new Date().setHours(23, 59, 59, 999)).toISOString(),
+          ? startOfDayISO(startDate)
+          : startOfDayISO(new Date()),
+        endDate: endDate ? endOfDayISO(endDate) : endOfDayISO(new Date()),
         orderId,
         productCode,
         productSource
@@ -309,6 +307,18 @@ export const Incomes = () => {
     return "red"
   })()
 
+  // Date helpers (avoid mutating state dates via setHours each call)
+  const startOfDayISO = (d: Date) => {
+    const dt = new Date(d)
+    dt.setHours(0, 0, 0, 0)
+    return dt.toISOString()
+  }
+  const endOfDayISO = (d: Date) => {
+    const dt = new Date(d)
+    dt.setHours(23, 59, 59, 999)
+    return dt.toISOString()
+  }
+
   return (
     <Box
       mt={40}
@@ -518,11 +528,9 @@ export const Incomes = () => {
           onClick={() => {
             exportXlsx({
               startDate: startDate
-                ? new Date(startDate.setHours(0, 0, 0, 0)).toISOString()
-                : new Date(new Date().setHours(0, 0, 0, 0)).toISOString(),
-              endDate: endDate
-                ? new Date(endDate.setHours(23, 59, 59, 999)).toISOString()
-                : new Date(new Date().setHours(23, 59, 59, 999)).toISOString(),
+                ? startOfDayISO(startDate)
+                : startOfDayISO(new Date()),
+              endDate: endDate ? endOfDayISO(endDate) : endOfDayISO(new Date()),
               orderId,
               productCode,
               productSource
@@ -594,32 +602,11 @@ export const Incomes = () => {
                           >
                             {item.province}
                           </Table.Td>
-                          {/* <Table.Td
-                            rowSpan={productLen}
-                            style={{ verticalAlign: "middle" }}
-                          >
-                            {item.products.length}
-                          </Table.Td> */}
                         </>
                       )}
                       <Table.Td>
-                        {/* <Tooltip label={prod.name} position="top" withArrow> */}
                         <span>{prod.code}</span>
-                        {/* </Tooltip> */}
                       </Table.Td>
-                      {/* <Table.Td>
-                        <span
-                          style={{
-                            display: "inline-block",
-                            maxWidth: 120,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap"
-                          }}
-                        >
-                          {prod.name}
-                        </span>
-                      </Table.Td> */}
                       <Table.Td miw={140}>
                         <Badge
                           color={sourceColors[prod.source]}
