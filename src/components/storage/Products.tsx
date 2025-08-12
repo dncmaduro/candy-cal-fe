@@ -18,6 +18,7 @@ import { IconPlus, IconSearch } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
 import { ProductItems } from "./ProductItems"
 import { ProductModal } from "./ProductModal"
+import { Can } from "../common/Can"
 
 export const Products = () => {
   const { searchProducts } = useProducts()
@@ -82,30 +83,32 @@ export const Products = () => {
             }}
           />
           <Tooltip label="Thêm sản phẩm mới" withArrow>
-            <Button
-              color="indigo"
-              leftSection={<IconPlus size={18} />}
-              radius="xl"
-              size="md"
-              px={18}
-              onClick={() =>
-                modals.open({
-                  title: (
-                    <Text fw={700} fz="md">
-                      Thêm sản phẩm mới
-                    </Text>
-                  ),
-                  children: <ProductModal refetch={refetch} />,
-                  size: "lg"
-                })
-              }
-              style={{
-                fontWeight: 600,
-                letterSpacing: 0.1
-              }}
-            >
-              Thêm sản phẩm
-            </Button>
+            <Can roles={["admin", "order-emp"]}>
+              <Button
+                color="indigo"
+                leftSection={<IconPlus size={18} />}
+                radius="xl"
+                size="md"
+                px={18}
+                onClick={() =>
+                  modals.open({
+                    title: (
+                      <Text fw={700} fz="md">
+                        Thêm sản phẩm mới
+                      </Text>
+                    ),
+                    children: <ProductModal refetch={refetch} />,
+                    size: "lg"
+                  })
+                }
+                style={{
+                  fontWeight: 600,
+                  letterSpacing: 0.1
+                }}
+              >
+                Thêm sản phẩm
+              </Button>
+            </Can>
           </Tooltip>
         </Flex>
       </Flex>
@@ -153,29 +156,34 @@ export const Products = () => {
                     <ProductItems items={product.items} />
                   </Table.Td>
                   <Table.Td>
-                    <Button
-                      variant="light"
-                      color="indigo"
-                      size="xs"
-                      radius="xl"
-                      px={14}
-                      onClick={() =>
-                        modals.open({
-                          title: (
-                            <Text fw={700} fz="md">
-                              Sửa sản phẩm
-                            </Text>
-                          ),
-                          children: (
-                            <ProductModal product={product} refetch={refetch} />
-                          ),
-                          size: "lg"
-                        })
-                      }
-                      style={{ fontWeight: 500 }}
-                    >
-                      Chỉnh sửa
-                    </Button>
+                    <Can roles={["admin", "order-emp"]}>
+                      <Button
+                        variant="light"
+                        color="indigo"
+                        size="xs"
+                        radius="xl"
+                        px={14}
+                        onClick={() =>
+                          modals.open({
+                            title: (
+                              <Text fw={700} fz="md">
+                                Sửa sản phẩm
+                              </Text>
+                            ),
+                            children: (
+                              <ProductModal
+                                product={product}
+                                refetch={refetch}
+                              />
+                            ),
+                            size: "lg"
+                          })
+                        }
+                        style={{ fontWeight: 500 }}
+                      >
+                        Chỉnh sửa
+                      </Button>
+                    </Can>
                   </Table.Td>
                 </Table.Tr>
               ))

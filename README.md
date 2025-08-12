@@ -1,156 +1,106 @@
-# Candy Cal FE (v3.0.0)
+# Candy Cal FE (v3.0.1)
 
-Ứng dụng frontend quản trị & vận hành bán hàng (MyCandy) xây dựng bằng React + TypeScript + Vite. Đây là phiên bản 3.0.0 (phiên bản đầy đủ đầu tiên) với hệ thống quản lý doanh thu, KPI, kho, đơn hàng, logs hệ thống và nhiều tính năng hỗ trợ quy trình nội bộ.
+Ứng dụng frontend quản trị & vận hành bán hàng (MyCandy) xây dựng bằng React + TypeScript + Vite. Hỗ trợ theo dõi doanh thu, KPI, kho, logs, thông báo realtime và quy trình nội bộ (yêu cầu xuất kho, combos sẵn, mục tiêu tháng...).
 
 ## 1. Stack chính
 
-- React 18 + TypeScript
-- Vite 6
-- Mantine UI 7 (core, dates, modals, notifications, form, carousel, dropzone)
-- TanStack Router & React Query (routing + data fetching / caching)
-- Zustand (state management nhẹ)
-- Axios (HTTP client wrapper `callApi`)
-- Date libs: date-fns, dayjs
-- Socket.io-client (realtime notifications / logs)
-- TailwindCSS (utility classes bổ sung)
+- React 18 + TypeScript + Vite 6
+- Mantine UI 7 (core, dates, modals, notifications ...)
+- TanStack Router & React Query
+- Zustand (state client)
+- Axios wrapper
+- date-fns / dayjs, Socket.io-client
+- TailwindCSS (bổ sung utility)
 
-## 2. Cấu trúc thư mục chính
+## 2. Cấu trúc thư mục (rút gọn)
 
 ```
 src/
-  components/        // UI components (theo domain: incomes, storage, logs, user ...)
+  components/        // UI theo domain (incomes, storage, logs, user, ...)
   constants/         // Hằng số (navs, rules, status, tags)
-  hooks/             // Custom hooks: gọi API, logic domain (useIncomes, useMonthGoals ...)
-  routes/            // Định nghĩa route TanStack (layout + pages)
-  store/             // Zustand stores (userStore, uiStore ...)
-  utils/             // Helpers (toQuery, cropper ...)
-  layouts/           // App layout, sidebar, header
+  hooks/             // Hooks nghiệp vụ & gọi API
+  routes/            // Khai báo route + layout
+  store/             // Zustand stores (user, ui ...)
+  utils/             // Helpers chung
 ```
 
-## 3. Domain & Tính năng
+## 3. Chức năng chính
 
-### 3.1 Doanh thu & KPI
+### Doanh thu & KPI
 
-- Import doanh thu theo file + cập nhật loại affiliate.
-- Lọc / tìm kiếm theo thời gian, mã đơn, mã sản phẩm, nguồn.
-- Tính và hiển thị KPI theo tháng (tách LiveStream & Shop).
-- 3 chế độ xem KPI: Live / Shop / Tổng (tự tính % khi ở chế độ Tổng).
-- Tách số liệu doanh thu / số lượng / % KPI theo nguồn (split endpoints).
-- Daily stats modal: tổng doanh thu ngày + phân bổ theo nguồn + thống kê quy cách đóng hộp.
+- Lọc / tìm kiếm theo thời gian, mã đơn, sản phẩm, nguồn.
+- KPI tháng tách LiveStream & Shop + chế độ xem Tổng (tự hợp nhất %).
+- Thống kê ngày (daily stats) + phân bổ theo nguồn & box.
+- Top nhà sáng tạo (bảng + biểu đồ) với phần “Khác”.
 
-### 3.2 Goals (Month Goals)
+### Goals (Month Goals)
 
-- Tạo / cập nhật mục tiêu tháng với 2 field: `liveStreamGoal`, `shopGoal`.
-- Tính tổng mục tiêu năm (cộng 2 loại) & % hoàn thành.
+- Mục tiêu tháng 2 loại (LiveStream / Shop) & tổng hợp mục tiêu năm.
 
-### 3.3 Kho & Sản phẩm
+### Kho & Sản phẩm
 
-- Quản lý item, product, combo, ready combo.
-- Quy tắc đóng gói (Packing Rules) theo khoảng quantity.
-- Ghi nhận nhập / xuất kho theo tag, trạng thái & log theo ngày / tháng.
+- Item, Product, Ready Combo, Packing Rules theo khoảng số lượng.
+- Log nhập/xuất kho: theo ngày, ca (sáng/chiều), tag & trạng thái.
 
-### 3.4 Logs & Nhật ký
+### Yêu cầu xuất kho
 
-- Daily Logs, Session Logs, Order Logs (sáng/chiều), System Logs.
-- System Logs có bộ lọc theo user, type, action, entity, result, thời gian.
-- Chi tiết meta hiển thị qua modal.
+- Tạo yêu cầu từ danh sách đơn / đơn chưa đóng sẵn, kế toán duyệt / hoàn tác.
 
-### 3.5 Delivered / Ready / Requests
+### Logs & Nhật ký
 
-- Yêu cầu giao hàng (delivered requests) + chấp nhận / huỷ.
-- Ready combos: tạo & cập nhật tình trạng.
+- Daily / Session / Order / System logs với modal chi tiết và bộ lọc.
 
-### 3.6 Notifications
+### Thông báo & Người dùng
 
-- Thông báo realtime (socket) + đánh dấu đã đọc + đếm chưa xem.
+- Realtime notifications, đánh dấu đã đọc.
+- Quản lý hồ sơ, avatar, phân quyền nhiều vai trò.
 
-### 3.7 Người dùng
+### Phân quyền giao diện
 
-- Avatar crop & upload.
-- Đổi mật khẩu, cập nhật hồ sơ.
-- Phân quyền role (admin, accounting-emp, order-emp, system-emp ...).
+- Ẩn / hiện nút thao tác thay đổi dữ liệu theo role (admin, accounting-emp, order-emp...).
 
-## 4. Hook kiến trúc API
+## 4. Bảo mật & Quyền
 
-Mỗi domain có hook riêng (ví dụ `useIncomes`, `useMonthGoals`, `useSystemLogs`). Pattern chuẩn:
+- Route guard yêu cầu role.
+- Token quản lý trong state; chỉ hiển thị thao tác ghi dữ liệu khi có quyền.
 
-```ts
-const { accessToken } = useUserStore()
-callApi<RequestType, ResponseType>({ path, method, data, token: accessToken })
+## 5. Triển khai & Scripts
+
 ```
-
-Tạo query string qua helper `toQueryString`.
-
-## 5. Các endpoint mới (v3.0.0)
-
-| Chức năng               | Endpoint                                  | Response chính                      |
-| ----------------------- | ----------------------------------------- | ----------------------------------- |
-| Doanh thu tháng (split) | /v1/incomes/income-split-by-month         | { totalIncome: { live, shop } }     |
-| Số lượng tháng (split)  | /v1/incomes/quantity-split-by-month       | { totalQuantity: { live, shop } }   |
-| % KPI tháng (split)     | /v1/incomes/kpi-percentage-split-by-month | { KPIPercentage: { live, shop } }   |
-| Daily stats             | /v1/incomes/daily-stats                   | { totalIncome, boxes[], sources{} } |
-| Month Goals (CRUD)      | /v1/monthgoals                            | liveStreamGoal + shopGoal           |
-
-## 6. Model thay đổi quan trọng
-
-- Thay `goal` -> `liveStreamGoal`, `shopGoal` ở tất cả MonthGoal interfaces.
-- Thay các response đơn giá trị sang object split `{ live, shop }`:
-  - GetTotalIncomesByMonthResponse
-  - GetTotalQuantityByMonthResponse
-  - GetKPIPercentageByMonthResponse
-- Thêm `GetDailyStatsResponse.sources`.
-
-## 7. UI cập nhật chính
-
-- MonthGoals table: hiển thị KPI Live / KPI Shop thay cột KPI đơn.
-- MonthGoalModal: nhập 2 trường KPI.
-- Incomes page: Select chế độ xem KPI, tự tính % tổng.
-- DailyStatsModal: chọn ngày (default hôm qua) + bảng nguồn + bảng box.
-- System Logs: Việt hoá toàn bộ label & cột.
-
-## 8. State & Hiệu năng
-
-- React Query dùng cache key chi tiết tránh đụng cache.
-- Chuyển view KPI không refetch ngoài các split endpoints (tận dụng dữ liệu đã có để tính tổng).
-- Tách modal logic qua `modals.open` của Mantine.
-
-## 9. Phát triển & Scripts
-
-```bash
 pnpm|npm install
-npm run start         # Dev
-npm run build         # Build production
-npm run preview       # Serve build
-npm run lint          # ESLint
-npm run routes        # Generate TanStack route tree
+npm run start     # Dev
+npm run build     # Build
+npm run preview   # Preview build
+npm run lint      # ESLint
+npm run routes    # Generate router tree
 ```
 
-## 10. Chuẩn code
+## 6. Roadmap ngắn
 
-- ESLint + Prettier + TypeScript strict-ish.
-- Commitlint + Husky (nếu đã cài hook) cho conventional commits.
-
-## 11. Roadmap (dự kiến)
-
-- Dashboard tổng hợp realtime.
+- Dashboard realtime.
 - Biểu đồ KPI theo thời gian.
-- Phân rã thêm nguồn doanh thu chi tiết.
-- Xuất báo cáo PDF.
+- Xuất báo cáo nâng cao (PDF / đa định dạng).
 
-## 12. Bảo mật & Quyền
+## 7. Changelog
 
-- Token lưu trong state (Zustand) + axios interceptor (callApi wrapper) truyền header.
-- Guard route qua hook `useAuthGuard(roles)`. Ẩn / chặn truy cập nếu thiếu quyền.
+### 3.0.1
 
-## 13. Triển khai
+- Thêm component Can cho kiểm soát hiển thị theo role.
+- Siết quyền mutation: chỉ role phù hợp mới thấy nút thêm / sửa / xoá / gửi yêu cầu ở các màn hình (Incomes, MonthGoals, PackingRules, Storage Items/Logs, Products, ReadyCombos, Delivered Requests, Cal Orders, Cal Result Save...).
+- Bổ sung gating phần lưu lịch sử vận đơn & gửi yêu cầu xuất kho.
+- Cập nhật tài liệu đơn giản hoá nội dung tránh lộ chi tiết triển khai.
 
-Có cấu hình `netlify.toml` và `vercel.json` (có thể deploy trên Netlify/Vercel). Build output: `dist/`.
+### 3.0.0
 
-## 14. Versioning
+- Refactor KPI tách LiveStream & Shop + chế độ Tổng.
+- Dual Month Goals (liveStreamGoal + shopGoal).
+- Daily Stats modal & phân bổ nguồn.
+- Top Creators (bảng + biểu đồ + nhóm “Khác”).
+- Việt hoá System Logs & chuẩn hoá tiêu đề trang.
+- Thêm thống kê kho theo ngày & ca.
+- Ready combos & yêu cầu xuất kho.
 
-- 3.0.0: Phiên bản đầy đủ đầu tiên với refactor KPI split + Month Goals dual, Daily stats modal, Việt hoá logs.
-
-## 15. Giấy phép
+## 8. Giấy phép
 
 Nội bộ (Internal Use Only) – không public trừ khi có chỉ định.
 

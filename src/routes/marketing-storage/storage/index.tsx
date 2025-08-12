@@ -5,7 +5,7 @@ import { Products } from "../../../components/storage/Products"
 import { useEffect } from "react"
 import { Helmet } from "react-helmet-async"
 import { useAuthGuard } from "../../../hooks/useAuthGuard"
-import { Items } from "../../../components/accounting-storage/Items"
+import { Items } from "../../../components/storage/Items"
 import { ReadyCombos } from "../../../components/storage/ReadyCombos"
 import { NAVS_URL } from "../../../constants/navs"
 

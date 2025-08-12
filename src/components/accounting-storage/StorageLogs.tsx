@@ -27,6 +27,7 @@ import {
 } from "../../constants/tags"
 import { STATUS_OPTIONS } from "../../constants/status"
 import { CToast } from "../common/CToast"
+import { Can } from "../common/Can"
 
 interface Props {
   activeTab: string
@@ -319,41 +320,45 @@ export const StorageLogs = ({ activeTab }: Props) => {
                   </Table.Td>
                   <Table.Td>
                     <Group gap={8}>
-                      <Button
-                        variant="light"
-                        color="yellow"
-                        size="xs"
-                        radius="xl"
-                        leftSection={<IconEdit size={16} />}
-                        onClick={() => openModal(log)}
-                      >
-                        Sửa
-                      </Button>
-                      {log.tag === "deliver-tiktokshop" ? (
-                        <Tooltip label="Xoá log xuất của TiktokShop bằng cách hoàn tác yêu cầu xuất hàng">
+                      <Can roles={["admin", "accounting-emp"]}>
+                        <Button
+                          variant="light"
+                          color="yellow"
+                          size="xs"
+                          radius="xl"
+                          leftSection={<IconEdit size={16} />}
+                          onClick={() => openModal(log)}
+                        >
+                          Sửa
+                        </Button>
+                      </Can>
+                      <Can roles={["admin", "accounting-emp"]}>
+                        {log.tag === "deliver-tiktokshop" ? (
+                          <Tooltip label="Xoá log xuất của TiktokShop bằng cách hoàn tác yêu cầu xuất hàng">
+                            <Button
+                              variant="light"
+                              color="red"
+                              size="xs"
+                              radius="xl"
+                              leftSection={<IconTrash size={16} />}
+                              disabled
+                            >
+                              Xóa
+                            </Button>
+                          </Tooltip>
+                        ) : (
                           <Button
                             variant="light"
                             color="red"
                             size="xs"
                             radius="xl"
                             leftSection={<IconTrash size={16} />}
-                            disabled
+                            onClick={() => remove(log._id)}
                           >
                             Xóa
                           </Button>
-                        </Tooltip>
-                      ) : (
-                        <Button
-                          variant="light"
-                          color="red"
-                          size="xs"
-                          radius="xl"
-                          leftSection={<IconTrash size={16} />}
-                          onClick={() => remove(log._id)}
-                        >
-                          Xóa
-                        </Button>
-                      )}
+                        )}
+                      </Can>
                       {log.note && (
                         <Tooltip label={log.note}>
                           <IconNote size={16} />

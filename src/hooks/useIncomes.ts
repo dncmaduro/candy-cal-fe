@@ -16,7 +16,9 @@ import {
   GetKPIPercentageByMonthResponse,
   ExportXlsxIncomesRequest,
   GetDailyStatsRequest,
-  GetDailyStatsResponse
+  GetDailyStatsResponse,
+  GetTopCreatorsRequest,
+  GetTopCreatorsResponse
 } from "./models"
 
 export const useIncomes = () => {
@@ -131,6 +133,15 @@ export const useIncomes = () => {
     })
   }
 
+  const getTopCreators = async (req: GetTopCreatorsRequest) => {
+    const query = toQueryString(req)
+    return callApi<never, GetTopCreatorsResponse>({
+      path: `/v1/incomes/top-creators?${query}`,
+      method: "GET",
+      token: accessToken
+    })
+  }
+
   const exportXlsxIncomes = async (req: ExportXlsxIncomesRequest) => {
     const query = toQueryString(req)
 
@@ -155,6 +166,7 @@ export const useIncomes = () => {
     getTotalQuantityByMonth,
     getKPIPercentageByMonth,
     getDailyStats,
+    getTopCreators,
     exportXlsxIncomes
   }
 }

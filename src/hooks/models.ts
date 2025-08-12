@@ -1193,3 +1193,19 @@ export interface GetDailyStatsResponse {
     other: number
   }
 }
+
+export interface GetTopCreatorsRequest {
+  startDate: string
+  endDate: string
+}
+
+export interface TopCreatorItem {
+  creator: string
+  totalIncome: number
+  percentage: number
+}
+
+export interface GetTopCreatorsResponse {
+  affiliate: TopCreatorItem[]
+  affiliateAds: TopCreatorItem[]
+}
