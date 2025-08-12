@@ -19,6 +19,7 @@ import {
 import { IconPlus, IconSearch } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
 import { PackingRuleModal } from "./PackingRuleModal"
+import { Can } from "../common/Can"
 
 export const PackingRules = () => {
   const { searchRules } = usePackingRules()
@@ -87,20 +88,22 @@ export const PackingRules = () => {
             clearable
             onChange={(value) => setPackingType(value)}
           />
-          <Button
-            radius={"xl"}
-            size="md"
-            leftSection={<IconPlus size={16} />}
-            onClick={() =>
-              modals.open({
-                title: <b>Thêm quy cách đóng hàng</b>,
-                children: <PackingRuleModal refetch={refetch} />,
-                size: "lg"
-              })
-            }
-          >
-            Thêm quy tắc
-          </Button>
+          <Can roles={["admin", "accounting-emp"]}>
+            <Button
+              radius={"xl"}
+              size="md"
+              leftSection={<IconPlus size={16} />}
+              onClick={() =>
+                modals.open({
+                  title: <b>Thêm quy cách đóng hàng</b>,
+                  children: <PackingRuleModal refetch={refetch} />,
+                  size: "lg"
+                })
+              }
+            >
+              Thêm quy tắc
+            </Button>
+          </Can>
         </Group>
       </Flex>
       <Divider my={0} />
@@ -163,31 +166,33 @@ export const PackingRules = () => {
                         {req.maxQuantity != null ? req.maxQuantity : "-"}
                       </Table.Td>
                       <Table.Td>
-                        <Button
-                          variant="light"
-                          color="indigo"
-                          size="xs"
-                          radius="xl"
-                          onClick={() =>
-                            modals.open({
-                              size: "lg",
-                              title: (
-                                <Text fw={700} className="!font-bold" fz="md">
-                                  Chỉnh sửa quy tắc đóng hàng
-                                </Text>
-                              ),
-                              children: (
-                                <PackingRuleModal
-                                  rule={rule}
-                                  refetch={refetch}
-                                />
-                              )
-                            })
-                          }
-                          style={{ fontWeight: 500 }}
-                        >
-                          Chỉnh sửa
-                        </Button>
+                        <Can roles={["admin", "accounting-emp"]}>
+                          <Button
+                            variant="light"
+                            color="indigo"
+                            size="xs"
+                            radius="xl"
+                            onClick={() =>
+                              modals.open({
+                                size: "lg",
+                                title: (
+                                  <Text fw={700} className="!font-bold" fz="md">
+                                    Chỉnh sửa quy tắc đóng hàng
+                                  </Text>
+                                ),
+                                children: (
+                                  <PackingRuleModal
+                                    rule={rule}
+                                    refetch={refetch}
+                                  />
+                                )
+                              })
+                            }
+                            style={{ fontWeight: 500 }}
+                          >
+                            Chỉnh sửa
+                          </Button>
+                        </Can>
                       </Table.Td>
                     </Table.Tr>
                   ))

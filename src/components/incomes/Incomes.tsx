@@ -22,7 +22,13 @@ import { DatePickerInput } from "@mantine/dates"
 import { format } from "date-fns"
 import { modals } from "@mantine/modals"
 import { InsertIncomeModal } from "./InsertIncomeModal"
-import { IconBox, IconDownload, IconPlus, IconX } from "@tabler/icons-react"
+import {
+  IconBox,
+  IconDownload,
+  IconPlus,
+  IconX,
+  IconStars
+} from "@tabler/icons-react"
 import { AffTypeModal } from "./AffTypeModal"
 import { DeleteIncomeModal } from "./DeleteIncomeModal"
 import { useProducts } from "../../hooks/useProducts"
@@ -32,6 +38,8 @@ import { PackingRulesBoxTypes } from "../../constants/rules"
 import { ExportXlsxIncomesRequest } from "../../hooks/models"
 import { CToast } from "../common/CToast"
 import { DailyStatsModal } from "./DailyStatsModal"
+import { TopCreatorsModal } from "./TopCreatorsModal.tsx"
+import { Can } from "../common/Can"
 
 export const Incomes = () => {
   const [step, setStep] = useState<"income" | "aff">()
@@ -350,16 +358,19 @@ export const Incomes = () => {
             radius="md"
             clearable
           />
-          <Button
-            onClick={() => {
-              setStep("income")
-            }}
-            size="md"
-            radius={"xl"}
-            leftSection={<IconPlus size={16} />}
-          >
-            Thêm doanh thu
-          </Button>
+          <Can roles={["admin", "accounting-emp"]}>
+            <Button
+              onClick={() => {
+                setStep("income")
+              }}
+              size="md"
+              radius={"xl"}
+              leftSection={<IconPlus size={16} />}
+            >
+              Thêm doanh thu
+            </Button>
+          </Can>
+          {/* View buttons open for all users */}
           <Button
             color="blue"
             variant="light"
@@ -377,21 +388,39 @@ export const Incomes = () => {
             Xem chỉ số ngày
           </Button>
           <Button
-            leftSection={<IconX size={16} />}
-            color="red"
-            variant="outline"
+            color="grape"
+            variant="light"
             size="md"
-            radius={"xl"}
-            onClick={() =>
+            radius="xl"
+            leftSection={<IconStars size={16} />}
+            onClick={() => {
               modals.open({
-                title: <b>Xoá doanh thu</b>,
-                children: <DeleteIncomeModal />,
-                size: "lg"
+                title: <b>Top nhà sáng tạo</b>,
+                children: <TopCreatorsModal />,
+                size: "xl"
               })
-            }
+            }}
           >
-            Xoá doanh thu
+            Top nhà sáng tạo
           </Button>
+          <Can roles={["admin", "accounting-emp"]}>
+            <Button
+              leftSection={<IconX size={16} />}
+              color="red"
+              variant="outline"
+              size="md"
+              radius={"xl"}
+              onClick={() =>
+                modals.open({
+                  title: <b>Xoá doanh thu</b>,
+                  children: <DeleteIncomeModal />,
+                  size: "lg"
+                })
+              }
+            >
+              Xoá doanh thu
+            </Button>
+          </Can>
         </Group>
       </Flex>
       <Divider my={0} />

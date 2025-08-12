@@ -22,6 +22,7 @@ import {
   IconClipboardList,
   IconCalendarPlus
 } from "@tabler/icons-react"
+import { Can } from "../common/Can"
 
 interface Props {
   readOnly?: boolean
@@ -209,54 +210,58 @@ export const CalResultModal = ({ readOnly, startDate, endDate }: Props) => {
       </Tabs>
 
       {!readOnly && (
-        <>
-          <Divider mt={24} mb={20} label={"Lưu lịch sử vận đơn"} />
-          <Group align="end" gap={16} px={4} wrap="wrap">
-            <DatePickerInput
-              label="Ngày vận đơn"
-              value={date}
-              onChange={setDate}
-              maxDate={new Date()}
-              valueFormat="DD/MM/YYYY"
-              radius="md"
-              size="md"
-              leftSection={<IconCalendarPlus size={18} />}
-              style={{ minWidth: 180, fontWeight: 500 }}
-            />
-            <Select
-              label="Buổi"
-              data={sessions}
-              value={session}
-              onChange={(value) => setSession(value as "morning" | "afternoon")}
-              radius="md"
-              size="md"
-              w={180}
-              style={{ fontWeight: 500 }}
-            />
-            <Button
-              loading={isSavingSession}
-              color="indigo"
-              size="md"
-              radius="xl"
-              fw={600}
-              px={22}
-              disabled={!date}
-              onClick={() => {
-                if (date) {
-                  saveLogSession({
-                    date,
-                    items,
-                    orders,
-                    session
-                  })
+        <Can roles={["admin", "order-emp"]}>
+          <>
+            <Divider mt={24} mb={20} label={"Lưu lịch sử vận đơn"} />
+            <Group align="end" gap={16} px={4} wrap="wrap">
+              <DatePickerInput
+                label="Ngày vận đơn"
+                value={date}
+                onChange={setDate}
+                maxDate={new Date()}
+                valueFormat="DD/MM/YYYY"
+                radius="md"
+                size="md"
+                leftSection={<IconCalendarPlus size={18} />}
+                style={{ minWidth: 180, fontWeight: 500 }}
+              />
+              <Select
+                label="Buổi"
+                data={sessions}
+                value={session}
+                onChange={(value) =>
+                  setSession(value as "morning" | "afternoon")
                 }
-              }}
-              leftSection={<IconClipboardList size={17} />}
-            >
-              Lưu lịch sử
-            </Button>
-          </Group>
-        </>
+                radius="md"
+                size="md"
+                w={180}
+                style={{ fontWeight: 500 }}
+              />
+              <Button
+                loading={isSavingSession}
+                color="indigo"
+                size="md"
+                radius="xl"
+                fw={600}
+                px={22}
+                disabled={!date}
+                onClick={() => {
+                  if (date) {
+                    saveLogSession({
+                      date,
+                      items,
+                      orders,
+                      session
+                    })
+                  }
+                }}
+                leftSection={<IconClipboardList size={17} />}
+              >
+                Lưu lịch sử
+              </Button>
+            </Group>
+          </>
+        </Can>
       )}
     </Box>
   )

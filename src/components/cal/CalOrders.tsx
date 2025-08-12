@@ -26,6 +26,7 @@ import { modals } from "@mantine/modals"
 import { SendDeliveredRequestModal } from "./SendDeliveredRequestModal"
 import { useReadyCombos } from "../../hooks/useReadyCombos"
 import { isEqual } from "lodash"
+import { Can } from "../common/Can"
 
 interface Props {
   orders: {
@@ -372,90 +373,92 @@ export const CalOrders = ({ orders, allCalItems, date }: Props) => {
       {date && (
         <>
           <Divider mt={24} mb={20} label={"Gửi yêu cầu xuất kho cho kế toán"} />
-          <Group>
-            <Button
-              color="indigo"
-              size="md"
-              radius="xl"
-              fw={600}
-              px={22}
-              className="flex-1"
-              variant="light"
-              disabled={!chosenOrders.some((e) => e) || !chosenItems}
-              onClick={() => {
-                modals.open({
-                  title: "Gửi yêu cầu xuất kho",
-                  size: "xl",
-                  children: (
-                    <SendDeliveredRequestModal
-                      date={date}
-                      allItems={itemsData || []}
-                      items={
-                        chosenItems
-                          ? Object.entries(chosenItems).map(
-                              ([itemId, quantity]) => {
-                                const item = allItems?.[itemId]
-                                return {
-                                  _id: itemId,
-                                  quantity: quantity,
-                                  storageItems:
-                                    allStorageItems?.filter((si) =>
-                                      item?.variants.includes(si._id)
-                                    ) ?? []
+          <Can roles={["admin", "order-emp"]}>
+            <Group>
+              <Button
+                color="indigo"
+                size="md"
+                radius="xl"
+                fw={600}
+                px={22}
+                className="flex-1"
+                variant="light"
+                disabled={!chosenOrders.some((e) => e) || !chosenItems}
+                onClick={() => {
+                  modals.open({
+                    title: "Gửi yêu cầu xuất kho",
+                    size: "xl",
+                    children: (
+                      <SendDeliveredRequestModal
+                        date={date}
+                        allItems={itemsData || []}
+                        items={
+                          chosenItems
+                            ? Object.entries(chosenItems).map(
+                                ([itemId, quantity]) => {
+                                  const item = allItems?.[itemId]
+                                  return {
+                                    _id: itemId,
+                                    quantity: quantity,
+                                    storageItems:
+                                      allStorageItems?.filter((si) =>
+                                        item?.variants.includes(si._id)
+                                      ) ?? []
+                                  }
                                 }
-                              }
-                            )
-                          : []
-                      }
-                    />
-                  )
-                })
-              }}
-            >
-              Gửi yêu cầu xuất kho ({chosenOrders.length} đơn)
-            </Button>
-            <Button
-              color="indigo"
-              className="flex-1"
-              size="md"
-              radius="xl"
-              fw={600}
-              px={22}
-              variant="outline"
-              onClick={() => {
-                modals.open({
-                  title: "Gửi yêu cầu cho đơn không sẵn",
-                  size: "xl",
-                  children: (
-                    <SendDeliveredRequestModal
-                      date={date}
-                      allItems={itemsData || []}
-                      items={
-                        notReadyItems &&
-                        Object.entries(notReadyItems).length > 0
-                          ? Object.entries(notReadyItems).map(
-                              ([itemId, quantity]) => {
-                                const item = allItems?.[itemId]
-                                return {
-                                  _id: itemId,
-                                  quantity: quantity,
-                                  storageItems:
-                                    allStorageItems?.filter((si) =>
-                                      item?.variants.includes(si._id)
-                                    ) ?? []
+                              )
+                            : []
+                        }
+                      />
+                    )
+                  })
+                }}
+              >
+                Gửi yêu cầu xuất kho ({chosenOrders.length} đơn)
+              </Button>
+              <Button
+                color="indigo"
+                className="flex-1"
+                size="md"
+                radius="xl"
+                fw={600}
+                px={22}
+                variant="outline"
+                onClick={() => {
+                  modals.open({
+                    title: "Gửi yêu cầu cho đơn không sẵn",
+                    size: "xl",
+                    children: (
+                      <SendDeliveredRequestModal
+                        date={date}
+                        allItems={itemsData || []}
+                        items={
+                          notReadyItems &&
+                          Object.entries(notReadyItems).length > 0
+                            ? Object.entries(notReadyItems).map(
+                                ([itemId, quantity]) => {
+                                  const item = allItems?.[itemId]
+                                  return {
+                                    _id: itemId,
+                                    quantity: quantity,
+                                    storageItems:
+                                      allStorageItems?.filter((si) =>
+                                        item?.variants.includes(si._id)
+                                      ) ?? []
+                                  }
                                 }
-                              }
-                            )
-                          : []
-                      }
-                    />
-                  )
-                })
-              }}
-            >
-              Gửi yêu cầu cho đơn không sẵn
-            </Button>
-          </Group>
+                              )
+                            : []
+                        }
+                      />
+                    )
+                  })
+                }}
+              >
+                Gửi yêu cầu cho đơn không sẵn
+              </Button>
+            </Group>
+          </Can>
         </>
       )}
     </Stack>

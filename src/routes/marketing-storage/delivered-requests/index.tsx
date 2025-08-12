@@ -18,12 +18,12 @@ import {
 } from "@mantine/core"
 import { DatePickerInput } from "@mantine/dates"
 import { format } from "date-fns"
-import { useUsers } from "../../../hooks/useUsers"
 import { IconArrowBackUp, IconCheck, IconEye } from "@tabler/icons-react"
 import { CToast } from "../../../components/common/CToast"
 import { modals } from "@mantine/modals"
 import { DeliveredRequestModal } from "../../../components/delivered-requests/DeliveredRequestModal"
 import { Helmet } from "react-helmet-async"
+import { Can } from "../../../components/common/Can"
 
 export const Route = createFileRoute("/marketing-storage/delivered-requests/")({
   component: RouteComponent
@@ -35,13 +35,6 @@ function RouteComponent() {
   const [limit] = useState(10)
   const [startDate, setStartDate] = useState<Date | null>(null)
   const [endDate, setEndDate] = useState<Date | null>(null)
-  const { getMe } = useUsers()
-
-  const { data: meData } = useQuery({
-    queryKey: ["getMe"],
-    queryFn: getMe,
-    select: (data) => data.data
-  })
 
   const { searchDeliveredRequests, acceptDeliveredRequest, undoAcceptRequest } =
     useDeliveredRequests()
@@ -284,27 +277,27 @@ function RouteComponent() {
                           >
                             Xem chi tiết
                           </Button>
-                          {meData &&
-                          ["admin", "accounting-emp"].includes(meData?.role) &&
-                          !req.accepted ? (
-                            <Button
-                              color="green"
-                              leftSection={<IconCheck />}
-                              variant="light"
-                              onClick={() => handleAcceptRequest(req)}
-                            >
-                              Chấp nhận yêu cầu
-                            </Button>
-                          ) : (
-                            <Button
-                              color="yellow"
-                              variant="light"
-                              leftSection={<IconArrowBackUp />}
-                              onClick={() => handleUndoRequest(req)}
-                            >
-                              Hoàn tác yêu cầu
-                            </Button>
-                          )}
+                          <Can roles={["admin", "accounting-emp"]}>
+                            {!req.accepted ? (
+                              <Button
+                                color="green"
+                                leftSection={<IconCheck />}
+                                variant="light"
+                                onClick={() => handleAcceptRequest(req)}
+                              >
+                                Chấp nhận yêu cầu
+                              </Button>
+                            ) : (
+                              <Button
+                                color="yellow"
+                                variant="light"
+                                leftSection={<IconArrowBackUp />}
+                                onClick={() => handleUndoRequest(req)}
+                              >
+                                Hoàn tác yêu cầu
+                              </Button>
+                            )}
+                          </Can>
                         </Flex>
                       </Table.Td>
                     </Table.Tr>

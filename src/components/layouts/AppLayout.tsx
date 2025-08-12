@@ -11,6 +11,7 @@ import { CToast } from "../common/CToast"
 import { Notifications } from "./Notifications"
 import { Sidebar } from "./Sidebar"
 import { useUIStore } from "../../store/uiStore"
+import { MeContext } from "../../context/MeContext"
 
 export const AppLayout = ({ children }: { children: ReactNode }) => {
   const { accessToken, setUser, clearUser } = useUserStore()
@@ -123,7 +124,7 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
         >
           <Container size="1600">
             <Box w="100%" maw={1600} mx="auto">
-              {children}
+              <MeContext.Provider value={meData}>{children}</MeContext.Provider>
             </Box>
           </Container>
         </main>

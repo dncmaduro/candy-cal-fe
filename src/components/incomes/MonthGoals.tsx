@@ -15,6 +15,7 @@ import { YearPickerInput } from "@mantine/dates"
 import { IconEdit, IconPlus } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
 import { MonthGoalModal } from "./MonthGoalModal"
+import { Can } from "../common/Can"
 
 export const MonthGoals = () => {
   const currentYear = new Date().getFullYear()
@@ -78,23 +79,25 @@ export const MonthGoals = () => {
             clearable
             style={{ width: 120 }}
           />
-          <Button
-            leftSection={<IconPlus size={16} />}
-            color="indigo"
-            radius="xl"
-            size="md"
-            px={18}
-            fw={600}
-            onClick={() => {
-              modals.open({
-                title: <b>Tạo KPI mới</b>,
-                children: <MonthGoalModal refetch={refetch} />,
-                size: "lg"
-              })
-            }}
-          >
-            Tạo KPI mới
-          </Button>
+          <Can roles={["admin", "accounting-emp"]}>
+            <Button
+              leftSection={<IconPlus size={16} />}
+              color="indigo"
+              radius="xl"
+              size="md"
+              px={18}
+              fw={600}
+              onClick={() => {
+                modals.open({
+                  title: <b>Tạo KPI mới</b>,
+                  children: <MonthGoalModal refetch={refetch} />,
+                  size: "lg"
+                })
+              }}
+            >
+              Tạo KPI mới
+            </Button>
+          </Can>
         </Group>
       </Flex>
       <Divider my={0} />
@@ -139,36 +142,38 @@ export const MonthGoals = () => {
                   <Table.Td>{m.shopGoal?.toLocaleString?.() || 0}</Table.Td>
                   <Table.Td>
                     <Group>
-                      <Button
-                        variant="light"
-                        color="indigo"
-                        size="xs"
-                        radius="xl"
-                        leftSection={<IconEdit size={16} />}
-                        onClick={() =>
-                          modals.open({
-                            size: "lg",
-                            title: (
-                              <Text fw={700} className="!font-bold" fz="md">
-                                Chỉnh sửa KPI
-                              </Text>
-                            ),
-                            children: (
-                              <MonthGoalModal
-                                monthGoal={{
-                                  month: m.month,
-                                  year: m.year,
-                                  liveStreamGoal: m.liveStreamGoal,
-                                  shopGoal: m.shopGoal
-                                }}
-                                refetch={refetch}
-                              />
-                            )
-                          })
-                        }
-                      >
-                        Sửa
-                      </Button>
+                      <Can roles={["admin", "accounting-emp"]}>
+                        <Button
+                          variant="light"
+                          color="indigo"
+                          size="xs"
+                          radius="xl"
+                          leftSection={<IconEdit size={16} />}
+                          onClick={() =>
+                            modals.open({
+                              size: "lg",
+                              title: (
+                                <Text fw={700} className="!font-bold" fz="md">
+                                  Chỉnh sửa KPI
+                                </Text>
+                              ),
+                              children: (
+                                <MonthGoalModal
+                                  monthGoal={{
+                                    month: m.month,
+                                    year: m.year,
+                                    liveStreamGoal: m.liveStreamGoal,
+                                    shopGoal: m.shopGoal
+                                  }}
+                                  refetch={refetch}
+                                />
+                              )
+                            })
+                          }
+                        >
+                          Sửa
+                        </Button>
+                      </Can>
                     </Group>
                   </Table.Td>
                 </Table.Tr>

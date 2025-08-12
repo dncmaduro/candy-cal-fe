@@ -20,6 +20,7 @@ import { useMemo, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { modals } from "@mantine/modals"
 import { ReadyComboModal } from "./ReadyComboModal"
+import { Can } from "../common/Can"
 
 const READY_FILTERS = [
   { value: "all", label: "Tất cả trạng thái" },
@@ -119,30 +120,32 @@ export const ReadyCombos = () => {
             allowDeselect={false}
           />
           <Tooltip label="Thêm combo mới" withArrow>
-            <Button
-              color="indigo"
-              leftSection={<IconPlus size={18} />}
-              radius="xl"
-              size="md"
-              px={18}
-              onClick={() =>
-                modals.open({
-                  title: (
-                    <Text fw={700} fz="md">
-                      Thêm combo mới
-                    </Text>
-                  ),
-                  children: <ReadyComboModal refetch={refetch} />,
-                  size: "lg"
-                })
-              }
-              style={{
-                fontWeight: 600,
-                letterSpacing: 0.1
-              }}
-            >
-              Thêm combo
-            </Button>
+            <Can roles={["admin", "order-emp"]}>
+              <Button
+                color="indigo"
+                leftSection={<IconPlus size={18} />}
+                radius="xl"
+                size="md"
+                px={18}
+                onClick={() =>
+                  modals.open({
+                    title: (
+                      <Text fw={700} fz="md">
+                        Thêm combo mới
+                      </Text>
+                    ),
+                    children: <ReadyComboModal refetch={refetch} />,
+                    size: "lg"
+                  })
+                }
+                style={{
+                  fontWeight: 600,
+                  letterSpacing: 0.1
+                }}
+              >
+                Thêm combo
+              </Button>
+            </Can>
           </Tooltip>
         </Flex>
       </Flex>

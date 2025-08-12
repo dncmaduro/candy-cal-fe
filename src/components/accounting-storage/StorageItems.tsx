@@ -23,6 +23,7 @@ import { StorageItemDetailModal } from "./StorageItemDetailModal"
 import { MonthPickerInput } from "@mantine/dates"
 import { format } from "date-fns"
 import { MonthLogsModal } from "./MonthLogsModal"
+import { Can } from "../common/Can"
 
 type ShowMode = "both" | "quantity" | "real"
 
@@ -135,31 +136,33 @@ export const StorageItems = ({ readOnly, activeTab }: Props) => {
             }}
           />
           <Tooltip label="Thêm mặt hàng mới" withArrow>
-            <Button
-              color="indigo"
-              leftSection={<IconPlus size={18} />}
-              radius="xl"
-              hidden={readOnly}
-              size="md"
-              px={18}
-              onClick={() =>
-                modals.open({
-                  size: "lg",
-                  title: (
-                    <Text fw={700} fz="md">
-                      Thêm sản phẩm mới
-                    </Text>
-                  ),
-                  children: <StorageItemModal refetch={refetch} />
-                })
-              }
-              style={{
-                fontWeight: 600,
-                letterSpacing: 0.1
-              }}
-            >
-              Thêm mặt hàng
-            </Button>
+            <Can roles={["admin", "accounting-emp"]}>
+              <Button
+                color="indigo"
+                leftSection={<IconPlus size={18} />}
+                radius="xl"
+                hidden={readOnly}
+                size="md"
+                px={18}
+                onClick={() =>
+                  modals.open({
+                    size: "lg",
+                    title: (
+                      <Text fw={700} fz="md">
+                        Thêm sản phẩm mới
+                      </Text>
+                    ),
+                    children: <StorageItemModal refetch={refetch} />
+                  })
+                }
+                style={{
+                  fontWeight: 600,
+                  letterSpacing: 0.1
+                }}
+              >
+                Thêm mặt hàng
+              </Button>
+            </Can>
           </Tooltip>
         </Flex>
       </Flex>
@@ -283,29 +286,34 @@ export const StorageItems = ({ readOnly, activeTab }: Props) => {
                       >
                         Chi tiết
                       </Button>
-                      <Button
-                        hidden={readOnly}
-                        variant="light"
-                        color="yellow"
-                        leftSection={<IconPencil size={16} />}
-                        size="xs"
-                        radius="xl"
-                        onClick={() =>
-                          modals.open({
-                            size: "lg",
-                            title: (
-                              <Text fw={700} fz="md">
-                                Chỉnh sửa mặt hàng
-                              </Text>
-                            ),
-                            children: (
-                              <StorageItemModal item={item} refetch={refetch} />
-                            )
-                          })
-                        }
-                      >
-                        Chỉnh sửa
-                      </Button>
+                      <Can roles={["admin", "accounting-emp"]}>
+                        <Button
+                          hidden={readOnly}
+                          variant="light"
+                          color="yellow"
+                          leftSection={<IconPencil size={16} />}
+                          size="xs"
+                          radius="xl"
+                          onClick={() =>
+                            modals.open({
+                              size: "lg",
+                              title: (
+                                <Text fw={700} fz="md">
+                                  Chỉnh sửa mặt hàng
+                                </Text>
+                              ),
+                              children: (
+                                <StorageItemModal
+                                  item={item}
+                                  refetch={refetch}
+                                />
+                              )
+                            })
+                          }
+                        >
+                          Chỉnh sửa
+                        </Button>
+                      </Can>
                     </Flex>
                   </Table.Td>
                 </Table.Tr>
