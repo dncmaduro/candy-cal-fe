@@ -24,7 +24,7 @@ export const DailyStatsModal = () => {
 
   const { data, isLoading, error } = useQuery({
     queryKey: [
-      "daily-stats",
+      "getDailyStats",
       date ? new Date(date.getTime()).setHours(0, 0, 0, 0) : null
     ],
     queryFn: async () => {
