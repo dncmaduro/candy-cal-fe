@@ -1192,6 +1192,7 @@ export interface GetDailyStatsResponse {
     affiliateAds: number
     other: number
   }
+  liveIncome: number
 }
 
 export interface GetTopCreatorsRequest {

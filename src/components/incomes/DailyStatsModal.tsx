@@ -1,8 +1,18 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useIncomes } from "../../hooks/useIncomes"
 import { DatePickerInput } from "@mantine/dates"
-import { Flex, Loader, Stack, Table, Text, Paper, Divider } from "@mantine/core"
+import {
+  Flex,
+  Loader,
+  Stack,
+  Table,
+  Text,
+  Paper,
+  Divider,
+  Group
+} from "@mantine/core"
 import { format } from "date-fns"
+import { useQuery } from "@tanstack/react-query"
 
 export const DailyStatsModal = () => {
   const { getDailyStats } = useIncomes()
@@ -11,41 +21,21 @@ export const DailyStatsModal = () => {
     d.setDate(d.getDate() - 1)
     return d
   })
-  const [loading, setLoading] = useState(false)
-  const [data, setData] = useState<{
-    boxes: { box: string; quantity: number }[]
-    totalIncome: number
-    sources?: {
-      ads: number
-      affiliate: number
-      affiliateAds: number
-      other: number
-    }
-  } | null>(null)
-  const [error, setError] = useState<string | null>(null)
 
-  const fetchStats = async (selected: Date | null) => {
-    if (!selected) return
-    setLoading(true)
-    setError(null)
-    try {
-      const iso = new Date(selected.setHours(0, 0, 0, 0)).toISOString()
-      const res = await getDailyStats({ date: iso })
-      setData(res.data)
-    } catch (e: any) {
-      setError("Không lấy được dữ liệu")
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchStats(date)
-  }, [])
-
-  useEffect(() => {
-    fetchStats(date)
-  }, [date])
+  const { data, isLoading, error } = useQuery({
+    queryKey: [
+      "daily-stats",
+      date ? new Date(date.getTime()).setHours(0, 0, 0, 0) : null
+    ],
+    queryFn: async () => {
+      if (!date) return null
+      const iso = new Date(date.getTime()).setHours(0, 0, 0, 0)
+      const res = await getDailyStats({ date: new Date(iso).toISOString() })
+      return res.data
+    },
+    enabled: !!date,
+    staleTime: 60 * 1000
+  })
 
   return (
     <Stack gap={16} p={4}>
@@ -59,24 +49,34 @@ export const DailyStatsModal = () => {
         maxDate={new Date()}
       />
       <Divider my={4} />
-      {loading ? (
+      {isLoading ? (
         <Flex justify="center" align="center" h={120}>
           <Loader />
         </Flex>
       ) : error ? (
         <Text c="red" fz="sm">
-          {error}
+          Không lấy được dữ liệu
         </Text>
       ) : data ? (
         <Stack gap={12}>
-          <Paper withBorder p="sm" radius="md">
-            <Text fw={600} mb={4}>
-              Tổng doanh thu
-            </Text>
-            <Text fz="lg" fw={700} c="indigo">
-              {data.totalIncome.toLocaleString()} VNĐ
-            </Text>
-          </Paper>
+          <Group align="stretch" gap={12} wrap="wrap">
+            <Paper withBorder p="sm" radius="md" style={{ flex: "1 1 200px" }}>
+              <Text fw={600} mb={4}>
+                Tổng doanh thu
+              </Text>
+              <Text fz="lg" fw={700} c="indigo">
+                {data.totalIncome.toLocaleString()} VNĐ
+              </Text>
+            </Paper>
+            <Paper withBorder p="sm" radius="md" style={{ flex: "1 1 200px" }}>
+              <Text fw={600} mb={4}>
+                Doanh thu live
+              </Text>
+              <Text fz="lg" fw={700} c="teal">
+                {data.liveIncome.toLocaleString()} VNĐ
+              </Text>
+            </Paper>
+          </Group>
           {data.sources && (
             <Paper withBorder p="sm" radius="md">
               <Text fw={600} mb={8}>
