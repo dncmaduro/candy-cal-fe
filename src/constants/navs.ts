@@ -53,6 +53,13 @@ export const NAVS = [
     icon: "IconAutomaticGearbox",
     roles: ["admin", "system-emp"],
     beta: true
+  },
+  {
+    to: `${NAVS_URL}/tasks`,
+    label: "Công việc",
+    icon: "IconClipboardList",
+    roles: ["admin"],
+    beta: true
   }
 ]
 

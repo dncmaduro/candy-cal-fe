@@ -1210,3 +1210,178 @@ export interface GetTopCreatorsResponse {
   affiliate: TopCreatorItem[]
   affiliateAds: TopCreatorItem[]
 }
+
+export interface DailyTaskItem {
+  code: string
+  title: string
+  status: "pending" | "done" | "auto" | "expired"
+  completedAt?: Date
+}
+
+export interface GetOwnTasksResponse {
+  data: {
+    date: string
+    tasks: DailyTaskItem[]
+    summary: {
+      total: number
+      done: number
+      auto: number
+      pending: number
+      expired: number
+    }
+  }
+}
+
+export interface MarkTaskAsDoneRequest {
+  code: string
+}
+
+export interface MarkTaskAsDoneResponse {
+  updated: boolean
+}
+
+export interface TaskDefinition {
+  code: string
+  title: string
+  roles: string[]
+  active: boolean
+  order: number
+  autoComplete: boolean
+  type: "manual" | "http"
+  httpConfig?: {
+    endpointKey: string
+    runAt: string
+    successStatus?: number
+    successJsonPath?: string
+    successEquals?: any
+    autoCompleteOnSuccess: boolean
+    maxAttempts: number
+  }
+  createdAt?: Date
+  updatedAt?: Date
+}
+
+export interface GetAllTasksDefinitionsRequest {
+  limit?: number
+  page?: number
+}
+
+export interface GetAllTasksDefinitionsResponse {
+  data: TaskDefinition[]
+  total: number
+}
+
+export interface CreateTaskDefinitionRequest {
+  code: string
+  title: string
+  roles: string[]
+  order?: number
+  autoComplete?: boolean // manual only
+  type?: "manual" | "http"
+  httpConfig?: {
+    endpointKey: string
+    runAt: string
+    successStatus?: number
+    successJsonPath?: string
+    successEquals?: any
+    autoCompleteOnSuccess?: boolean
+    maxAttempts?: number
+  }
+}
+
+export interface CreateTaskDefinitionResponse {
+  data: TaskDefinition
+}
+
+export interface UpdateTaskDefinitionRequest {
+  title?: string
+  roles?: string[]
+  active?: boolean
+  order?: number
+  autoComplete?: boolean
+  type?: "manual" | "http"
+  httpConfig?: {
+    endpointKey?: string
+    runAt?: string
+    successStatus?: number
+    successJsonPath?: string
+    successEquals?: any
+    autoCompleteOnSuccess?: boolean
+    maxAttempts?: number
+  }
+}
+
+export interface UpdateTaskDefinitionResponse {
+  data: TaskDefinition
+}
+
+export interface DeleteTaskDefinitionResponse {
+  deleted: boolean
+}
+
+export interface APIEndpoint {
+  _id: string
+  key: string
+  active: boolean
+  createdAt: Date
+  deleted: boolean
+  method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH"
+  name: string
+  updatedAt: Date
+  url: string
+}
+
+export interface GetAllAPIEndpointsResponse {
+  data: APIEndpoint[]
+}
+
+export interface GenerateTasksRequest {
+  date: Date
+}
+
+export interface GenerateTasksResponse {
+  data: {
+    date: string
+    tasksCreated: number
+  }
+}
+
+export interface GetAllUsersTasksRequest {
+  date: Date
+}
+
+export interface GetAllUsersTasksResponse {
+  data: {
+    date: string
+    items: {
+      userId: string
+      total: number
+      done: number
+    }[]
+  }
+}
+
+export interface GetUserTasksRequest {
+  date: Date
+}
+
+export interface GetUserTasksResponse {
+  data: {
+    date: string
+    tasks: DailyTaskItem[]
+    summary: {
+      total: number
+      done: number
+      auto: number
+      pending: number
+      expired: number
+    }
+  }
+}
+
+export interface SystemLogsOptionsResponse {
+  data: {
+    label: string
+    value: string
+  }[]
+}
