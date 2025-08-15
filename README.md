@@ -1,4 +1,4 @@
-# Candy Cal FE (v3.0.2)
+# Candy Cal FE (v3.1.0)
 
 Ứng dụng frontend quản trị & vận hành bán hàng (MyCandy) xây dựng bằng React + TypeScript + Vite. Hỗ trợ theo dõi doanh thu, KPI, kho, logs, thông báo realtime và quy trình nội bộ (yêu cầu xuất kho, combos sẵn, mục tiêu tháng...).
 
@@ -82,6 +82,14 @@ npm run routes    # Generate router tree
 - Xuất báo cáo nâng cao (PDF / đa định dạng).
 
 ## 7. Changelog
+
+### 3.1.0
+
+- Tasks: thêm tab “Theo người dùng”, bảng tổng hợp và modal chi tiết từng người (API getAllUsersTasks/getUserTasks). Gọi API chi tiết chỉ khi mở modal (modals.open).
+- MyTasksPopover: ẩn nút “Xong” với task HTTP; Việt hoá nhãn/badge; sửa Popover.Target luôn là element hợp lệ.
+- TaskDefinitionModal: typed form với Controller, tách create/update mutations; Select endpoint HTTP với preview; validate giờ HH:MM; size xl.
+- Tasks page: phân trang Mantine + cải thiện UI bảng (Paper, hover highlight), nút “Tạo task theo ngày” với modal GenerateTasks; title modals bóng bẩy hơn.
+- UI: làm tối overlay của tất cả modal (global), tinh chỉnh màu bảng để đỡ “trong suốt”.
 
 ### 3.0.2
 
