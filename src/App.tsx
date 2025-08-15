@@ -14,14 +14,21 @@ import "@mantine/notifications/styles.css"
 import "@mantine/carousel/styles.css"
 import "@mantine/dates/styles.css"
 
-import { createTheme, MantineProvider } from "@mantine/core"
+import { createTheme, MantineProvider, Modal } from "@mantine/core"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
 const router = createRouter({ routeTree, history: createBrowserHistory() })
 
 const theme = createTheme({
   primaryColor: "indigo",
-  luminanceThreshold: 0.5
+  luminanceThreshold: 0.5,
+  components: {
+    Modal: Modal.extend({
+      defaultProps: {
+        overlayProps: { backgroundOpacity: 0.6, blur: 2, color: "black" }
+      }
+    })
+  }
 })
 
 const queryClient = new QueryClient()
@@ -31,7 +38,11 @@ function App() {
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
         <MantineProvider theme={theme}>
-          <ModalsProvider>
+          <ModalsProvider
+            modalProps={{
+              overlayProps: { backgroundOpacity: 0.6, blur: 2, color: "black" }
+            }}
+          >
             <Notifications />
             <RouterProvider router={router} />
           </ModalsProvider>

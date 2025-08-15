@@ -12,6 +12,7 @@ import { Notifications } from "./Notifications"
 import { Sidebar } from "./Sidebar"
 import { useUIStore } from "../../store/uiStore"
 import { MeContext } from "../../context/MeContext"
+import { MyTasksPopover } from "../tasks/MyTasksPopover.tsx"
 
 export const AppLayout = ({ children }: { children: ReactNode }) => {
   const { accessToken, setUser, clearUser } = useUserStore()
@@ -111,6 +112,7 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
             </Badge>
           </Group>
           <Group gap={8} style={{ marginRight: rem(16) }}>
+            <MyTasksPopover />
             <Notifications />
             <UserMenu />
           </Group>

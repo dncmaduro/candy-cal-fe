@@ -1,7 +1,11 @@
 import { useUserStore } from "../store/userStore"
 import { toQueryString } from "../utils/toQuery"
 import { callApi } from "./axios"
-import { GetSystemLogsRequest, GetSystemLogsResponse } from "./models"
+import {
+  GetSystemLogsRequest,
+  GetSystemLogsResponse,
+  SystemLogsOptionsResponse
+} from "./models"
 
 export const useSystemLogs = () => {
   const { accessToken } = useUserStore()
@@ -28,7 +32,7 @@ export const useSystemLogs = () => {
 
   // Options helpers
   const listUsersOptions = async () => {
-    return callApi<never, any>({
+    return callApi<never, SystemLogsOptionsResponse>({
       path: `/v1/systemlogs/options/users`,
       method: "GET",
       token: accessToken
@@ -36,7 +40,7 @@ export const useSystemLogs = () => {
   }
 
   const listTypesOptions = async () => {
-    return callApi<never, any>({
+    return callApi<never, SystemLogsOptionsResponse>({
       path: `/v1/systemlogs/options/types`,
       method: "GET",
       token: accessToken
@@ -44,7 +48,7 @@ export const useSystemLogs = () => {
   }
 
   const listActionsOptions = async () => {
-    return callApi<never, any>({
+    return callApi<never, SystemLogsOptionsResponse>({
       path: `/v1/systemlogs/options/actions`,
       method: "GET",
       token: accessToken
@@ -52,7 +56,7 @@ export const useSystemLogs = () => {
   }
 
   const listEntitiesOptions = async () => {
-    return callApi<never, any>({
+    return callApi<never, SystemLogsOptionsResponse>({
       path: `/v1/systemlogs/options/entities`,
       method: "GET",
       token: accessToken
@@ -61,7 +65,7 @@ export const useSystemLogs = () => {
 
   const listEntityIdsOptions = async (entity: string) => {
     const query = toQueryString({ entity })
-    return callApi<never, any>({
+    return callApi<never, SystemLogsOptionsResponse>({
       path: `/v1/systemlogs/options/entity-ids${query ? `?${query}` : ""}`,
       method: "GET",
       token: accessToken
