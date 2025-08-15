@@ -174,7 +174,10 @@ export const MyTasksPopover = () => {
                   </Table.Tr>
                 ) : tasks.length ? (
                   tasks.map((t, i) => {
-                    const isHttp = typeByCode[t.code] === "http"
+                    const isHttp =
+                      t?.type === "http" ||
+                      Boolean(t?.http) ||
+                      typeByCode[t.code] === "http"
                     return (
                       <Table.Tr
                         key={t.code}
