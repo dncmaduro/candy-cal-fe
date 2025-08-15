@@ -1215,6 +1215,17 @@ export interface DailyTaskItem {
   code: string
   title: string
   status: "pending" | "done" | "auto" | "expired"
+  type?: "manual" | "http"
+  http?: {
+    endpointKey: string
+    method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH"
+    url: string
+    runAt?: string
+    successStatus?: number
+    autoCompleteOnSuccess?: boolean
+    maxAttempts?: number
+    attempts?: number
+  }
   completedAt?: Date
 }
 
