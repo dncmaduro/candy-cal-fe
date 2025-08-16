@@ -1,4 +1,4 @@
-# Candy Cal FE (v3.1.0)
+# Candy Cal FE (v3.1.1)
 
 Ứng dụng frontend quản trị & vận hành bán hàng (MyCandy) xây dựng bằng React + TypeScript + Vite. Hỗ trợ theo dõi doanh thu, KPI, kho, logs, thông báo realtime và quy trình nội bộ (yêu cầu xuất kho, combos sẵn, mục tiêu tháng...).
 
@@ -82,6 +82,11 @@ npm run routes    # Generate router tree
 - Xuất báo cáo nâng cao (PDF / đa định dạng).
 
 ## 7. Changelog
+
+### 3.1.1
+
+- DailyStatsModal: bổ sung bảng “Theo đơn vị vận chuyển” hiển thị số đơn và tỉ lệ theo `shippingProviders` trong GetDailyStatsResponse.
+- Nhỏ: tối ưu tính phần trăm và format số liệu.
 
 ### 3.1.0
 
