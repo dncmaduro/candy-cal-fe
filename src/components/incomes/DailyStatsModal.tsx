@@ -125,6 +125,53 @@ export const DailyStatsModal = () => {
               </Table>
             </Paper>
           )}
+          {/* New: Shipping providers breakdown */}
+          {data.shippingProviders && data.shippingProviders.length > 0 && (
+            <Paper withBorder p="sm" radius="md">
+              <Text fw={600} mb={8}>
+                Theo đơn vị vận chuyển
+              </Text>
+              <Table
+                withColumnBorders
+                withTableBorder
+                striped
+                verticalSpacing="xs"
+                horizontalSpacing="md"
+                miw={300}
+              >
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th style={{ width: 220 }}>Đơn vị</Table.Th>
+                    <Table.Th style={{ width: 120 }}>Số đơn</Table.Th>
+                    <Table.Th style={{ width: 100 }}>Tỉ lệ</Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>
+                  {(() => {
+                    const items = data.shippingProviders!
+                    const total =
+                      items.reduce((s, it) => s + (it?.orders ?? 0), 0) || 1
+                    return items.map((sp) => (
+                      <Table.Tr key={sp.provider}>
+                        <Table.Td>{sp.provider || "-"}</Table.Td>
+                        <Table.Td>
+                          {sp.orders?.toLocaleString?.() ?? sp.orders}
+                        </Table.Td>
+                        <Table.Td>
+                          {Math.round(
+                            (((sp.orders || 0) / total) * 100 +
+                              Number.EPSILON) *
+                              100
+                          ) / 100}
+                          %
+                        </Table.Td>
+                      </Table.Tr>
+                    ))
+                  })()}
+                </Table.Tbody>
+              </Table>
+            </Paper>
+          )}
           <Table
             withTableBorder
             withColumnBorders

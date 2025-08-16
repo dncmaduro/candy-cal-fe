@@ -724,6 +724,7 @@ export interface GetIncomesByDateRangeResponse {
     orderId: string
     customer: string
     province: string
+    shippingProvider: string
     date: Date
     products: {
       creator?: string
@@ -1193,6 +1194,7 @@ export interface GetDailyStatsResponse {
     other: number
   }
   liveIncome: number
+  shippingProviders: { provider: string; orders: number }[]
 }
 
 export interface GetTopCreatorsRequest {

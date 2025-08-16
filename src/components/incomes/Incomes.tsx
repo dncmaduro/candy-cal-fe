@@ -189,6 +189,7 @@ export const Incomes = () => {
     { label: "Khách hàng", key: "customer", width: 140 },
     { label: "Tỉnh thành", key: "province", width: 120 },
     { label: "Mã sản phẩm", key: "code", width: 110 },
+    { label: "Đơn vị vận chuyển", key: "shippingProvider", width: 150 },
     // { label: "Tên sản phẩm", key: "name", width: 160 },
     { label: "Nguồn", key: "source", width: 100 },
     { label: "Số lượng", key: "quantity", width: 80 },
@@ -391,7 +392,7 @@ export const Incomes = () => {
               modals.open({
                 title: <b>Chỉ số ngày</b>,
                 children: <DailyStatsModal />,
-                size: "lg"
+                size: "xl"
               })
             }}
           >
@@ -602,12 +603,18 @@ export const Incomes = () => {
                           >
                             {item.province}
                           </Table.Td>
+                          <Table.Td
+                            rowSpan={productLen}
+                            style={{ verticalAlign: "middle" }}
+                          >
+                            {item.shippingProvider || "-"}
+                          </Table.Td>
                         </>
                       )}
                       <Table.Td>
                         <span>{prod.code}</span>
                       </Table.Td>
-                      <Table.Td miw={140}>
+                      <Table.Td>
                         <Badge
                           color={sourceColors[prod.source]}
                           variant="outline"
