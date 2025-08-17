@@ -1194,6 +1194,7 @@ export interface GetDailyStatsResponse {
     other: number
   }
   liveIncome: number
+  videoIncome: number
   shippingProviders: { provider: string; orders: number }[]
 }
 
