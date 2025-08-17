@@ -59,8 +59,8 @@ export const DailyStatsModal = () => {
         </Text>
       ) : data ? (
         <Stack gap={12}>
-          <Group align="stretch" gap={12} wrap="wrap">
-            <Paper withBorder p="sm" radius="md" style={{ flex: "1 1 200px" }}>
+          <Stack>
+            <Paper withBorder p="sm" radius="md">
               <Text fw={600} mb={4}>
                 Tổng doanh thu
               </Text>
@@ -68,15 +68,62 @@ export const DailyStatsModal = () => {
                 {data.totalIncome.toLocaleString()} VNĐ
               </Text>
             </Paper>
-            <Paper withBorder p="sm" radius="md" style={{ flex: "1 1 200px" }}>
-              <Text fw={600} mb={4}>
-                Doanh thu live
-              </Text>
-              <Text fz="lg" fw={700} c="teal">
-                {data.liveIncome.toLocaleString()} VNĐ
-              </Text>
-            </Paper>
-          </Group>
+            <Group align="stretch" gap={12} wrap="wrap">
+              <Paper
+                withBorder
+                p="sm"
+                radius="md"
+                style={{ flex: "1 1 200px" }}
+              >
+                <Text fw={600} mb={4}>
+                  Doanh thu live
+                </Text>
+                <Text fz="lg" fw={700} c="teal">
+                  {data.liveIncome.toLocaleString()} VNĐ
+                </Text>
+              </Paper>
+              {/* New: Video income card */}
+              {typeof data.videoIncome === "number" && (
+                <Paper
+                  withBorder
+                  p="sm"
+                  radius="md"
+                  style={{ flex: "1 1 200px" }}
+                >
+                  <Text fw={600} mb={4}>
+                    Doanh thu video
+                  </Text>
+                  <Text fz="lg" fw={700} c="grape">
+                    {data.videoIncome.toLocaleString()} VNĐ
+                  </Text>
+                </Paper>
+              )}
+              {/* New: Remaining income (total - live - video) */}
+              {(() => {
+                const video =
+                  typeof data.videoIncome === "number" ? data.videoIncome : 0
+                const rest = Math.max(
+                  0,
+                  data.totalIncome - data.liveIncome - video
+                )
+                return (
+                  <Paper
+                    withBorder
+                    p="sm"
+                    radius="md"
+                    style={{ flex: "1 1 200px" }}
+                  >
+                    <Text fw={600} mb={4}>
+                      Doanh thu còn lại
+                    </Text>
+                    <Text fz="lg" fw={700} c="orange">
+                      {rest.toLocaleString()} VNĐ
+                    </Text>
+                  </Paper>
+                )
+              })()}
+            </Group>
+          </Stack>
           {data.sources && (
             <Paper withBorder p="sm" radius="md">
               <Text fw={600} mb={8}>
