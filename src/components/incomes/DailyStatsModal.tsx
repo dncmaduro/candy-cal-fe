@@ -13,6 +13,7 @@ import {
 } from "@mantine/core"
 import { format } from "date-fns"
 import { useQuery } from "@tanstack/react-query"
+import { fmtCurrency, fmtPercent } from "../../utils/fmt"
 
 export const DailyStatsModal = () => {
   const { getDailyStats } = useIncomes()
@@ -38,9 +39,6 @@ export const DailyStatsModal = () => {
   })
 
   // Helpers and metric rows outside JSX
-  const fmtCurrency = (n: number) => `${n.toLocaleString()} VNĐ`
-  const fmtPercent = (n: number) =>
-    `${Math.round((n + Number.EPSILON) * 100) / 100}%`
 
   const metricsRows: { label: string; value: string }[] = (() => {
     if (!data) return []

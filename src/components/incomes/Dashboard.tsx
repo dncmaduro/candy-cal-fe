@@ -17,6 +17,7 @@ import { useMonthGoals } from "../../hooks/useMonthGoals"
 import { KPIBox } from "./KPIBox"
 import { DailyStatsModal } from "./DailyStatsModal"
 import { TopCreatorsModal } from "./TopCreatorsModal"
+import { fmtPercent } from "../../utils/fmt"
 
 export const Dashboard = () => {
   const [kpiView, setKpiView] = useState<"live" | "shop" | "total">("live")
@@ -328,7 +329,9 @@ export const Dashboard = () => {
             <Group justify="space-between" align="stretch" gap={12}>
               <KPIBox
                 label="Tỉ lệ Ads/Doanh thu Live"
-                value={`${Math.round((adsCostSplitMonthData.percentages.liveAdsToLiveIncome + Number.EPSILON) * 100) / 100}%`}
+                value={fmtPercent(
+                  adsCostSplitMonthData.percentages.liveAdsToLiveIncome
+                )}
                 color={
                   adsCostSplitMonthData.percentages.liveAdsToLiveIncome > 30
                     ? "red"
@@ -339,7 +342,9 @@ export const Dashboard = () => {
               />
               <KPIBox
                 label="Tỉ lệ Ads/Doanh thu Video"
-                value={`${Math.round((adsCostSplitMonthData.percentages.videoAdsToVideoIncome + Number.EPSILON) * 100) / 100}%`}
+                value={fmtPercent(
+                  adsCostSplitMonthData.percentages.videoAdsToVideoIncome
+                )}
                 color={
                   adsCostSplitMonthData.percentages.videoAdsToVideoIncome > 30
                     ? "red"
