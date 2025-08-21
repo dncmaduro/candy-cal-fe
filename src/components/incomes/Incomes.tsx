@@ -16,29 +16,19 @@ import {
   TextInput,
   Select,
   Badge,
-  Stack
+  Paper
 } from "@mantine/core"
 import { DatePickerInput } from "@mantine/dates"
 import { format } from "date-fns"
 import { modals } from "@mantine/modals"
 import { InsertIncomeModal } from "./InsertIncomeModal"
-import {
-  IconBox,
-  IconDownload,
-  IconPlus,
-  IconX,
-  IconStars
-} from "@tabler/icons-react"
+import { IconDownload, IconPlus, IconX } from "@tabler/icons-react"
 import { AffTypeModal } from "./AffTypeModal"
 import { DeleteIncomeModal } from "./DeleteIncomeModal"
 import { useProducts } from "../../hooks/useProducts"
-import { useMonthGoals } from "../../hooks/useMonthGoals"
-import { KPIBox } from "./KPIBox"
 import { PackingRulesBoxTypes } from "../../constants/rules"
 import { ExportXlsxIncomesRequest } from "../../hooks/models"
 import { CToast } from "../common/CToast"
-import { DailyStatsModal } from "./DailyStatsModal"
-import { TopCreatorsModal } from "./TopCreatorsModal"
 import { Can } from "../common/Can"
 
 export const Incomes = () => {
@@ -48,24 +38,14 @@ export const Incomes = () => {
   const [orderId, setOrderId] = useState<string>()
   const [productCode, setProductCode] = useState<string>()
   const [productSource, setProductSource] = useState<string>()
-  const [kpiView, setKpiView] = useState<"live" | "shop" | "total">("live")
   const [startDate, setStartDate] = useState<Date | null>(() => {
     const d = new Date()
     d.setDate(d.getDate() - 30)
     return d
   })
   const [endDate, setEndDate] = useState<Date | null>(new Date())
-  const {
-    getIncomesByDateRange,
-    getKPIPercentageByMonth,
-    getTotalIncomesByMonth,
-    getTotalQuantityByMonth,
-    exportXlsxIncomes
-  } = useIncomes()
+  const { getIncomesByDateRange, exportXlsxIncomes } = useIncomes()
   const { searchProducts } = useProducts()
-  const currentYear = new Date().getFullYear()
-  const currentMonth = new Date().getMonth()
-  const { getGoal } = useMonthGoals()
 
   const {
     data: incomesData,
@@ -100,33 +80,6 @@ export const Incomes = () => {
   const { data: productsData } = useQuery({
     queryKey: ["searchProducts", ""],
     queryFn: () => searchProducts(""),
-    select: (data) => data.data
-  })
-
-  const { data: KPIPercentageData } = useQuery({
-    queryKey: ["getKPIPercentageByMonth", currentMonth, currentYear],
-    queryFn: () =>
-      getKPIPercentageByMonth({ month: currentMonth, year: currentYear }),
-    select: (data) => data.data
-  })
-
-  const { data: totalQuantityData } = useQuery({
-    queryKey: ["getTotalQuantityByMonth", currentMonth, currentYear],
-    queryFn: () =>
-      getTotalQuantityByMonth({ month: currentMonth, year: currentYear }),
-    select: (data) => data.data
-  })
-
-  const { data: totalIncomesData } = useQuery({
-    queryKey: ["getTotalIncomesByMonth", currentMonth, currentYear],
-    queryFn: () =>
-      getTotalIncomesByMonth({ month: currentMonth, year: currentYear }),
-    select: (data) => data.data
-  })
-
-  const { data: monthGoalData } = useQuery({
-    queryKey: ["getGoal", currentMonth, currentYear],
-    queryFn: () => getGoal({ month: currentMonth, year: currentYear }),
     select: (data) => data.data
   })
 
@@ -253,62 +206,6 @@ export const Incomes = () => {
     other: "blue"
   }
 
-  // Derived KPI values based on selected view
-  const goalValue = monthGoalData
-    ? kpiView === "live"
-      ? monthGoalData.liveStreamGoal
-      : kpiView === "shop"
-        ? monthGoalData.shopGoal
-        : (monthGoalData.liveStreamGoal || 0) + (monthGoalData.shopGoal || 0)
-    : undefined
-
-  const incomeValue = totalIncomesData
-    ? kpiView === "live"
-      ? totalIncomesData.totalIncome?.live
-      : kpiView === "shop"
-        ? totalIncomesData.totalIncome?.shop
-        : (totalIncomesData.totalIncome?.live || 0) +
-          (totalIncomesData.totalIncome?.shop || 0)
-    : undefined
-
-  const quantityValue = totalQuantityData
-    ? kpiView === "live"
-      ? totalQuantityData.totalQuantity?.live
-      : kpiView === "shop"
-        ? totalQuantityData.totalQuantity?.shop
-        : (totalQuantityData.totalQuantity?.live || 0) +
-          (totalQuantityData.totalQuantity?.shop || 0)
-    : undefined
-
-  const percentageValue = (() => {
-    if (!monthGoalData) return undefined
-    if (kpiView === "total") {
-      const totalGoal =
-        (monthGoalData.liveStreamGoal || 0) + (monthGoalData.shopGoal || 0)
-      if (!totalGoal) return 0
-      const totalIncome =
-        (totalIncomesData?.totalIncome?.live || 0) +
-        (totalIncomesData?.totalIncome?.shop || 0)
-      return (totalIncome / totalGoal) * 100
-    }
-    const split = KPIPercentageData?.KPIPercentage
-    if (!split) return undefined
-    return split[kpiView]
-  })()
-
-  const percentageDisplay =
-    percentageValue !== undefined && percentageValue !== null
-      ? `${Math.round((percentageValue + Number.EPSILON) * 100) / 100}%`
-      : "..."
-
-  const percentageColor = (() => {
-    if (percentageValue === undefined || percentageValue === null) return "red"
-    if (percentageValue >= 100) return "green"
-    if (percentageValue >= 70) return "yellow"
-    return "red"
-  })()
-
-  // Date helpers (avoid mutating state dates via setHours each call)
   const startOfDayISO = (d: Date) => {
     const dt = new Date(d)
     dt.setHours(0, 0, 0, 0)
@@ -333,42 +230,27 @@ export const Incomes = () => {
         border: "1px solid #ececec"
       }}
     >
+      {/* Header Section */}
       <Flex
         align="center"
         justify="space-between"
         pt={32}
-        pb={8}
+        pb={16}
         px={{ base: 8, md: 28 }}
         direction={{ base: "column", sm: "row" }}
-        gap={8}
+        gap={12}
       >
         <Box>
           <Text fw={700} fz="xl" mb={2}>
-            Doanh thu bán hàng
+            Quản lý doanh thu
           </Text>
           <Text c="dimmed" fz="sm">
-            Xem và lọc danh sách đơn thu nhập theo ngày
+            Quản lý và theo dõi dữ liệu doanh thu bán hàng
           </Text>
         </Box>
-        <Group gap={12} align="center" w={{ base: "100%", sm: "auto" }}>
-          <DatePickerInput
-            value={startDate}
-            onChange={setStartDate}
-            placeholder="Từ ngày"
-            valueFormat="DD/MM/YYYY"
-            size="md"
-            radius="md"
-            clearable
-          />
-          <DatePickerInput
-            value={endDate}
-            onChange={setEndDate}
-            placeholder="Đến ngày"
-            valueFormat="DD/MM/YYYY"
-            size="md"
-            radius="md"
-            clearable
-          />
+
+        {/* Quick Actions */}
+        <Group gap={8} align="center" w={{ base: "100%", sm: "auto" }}>
           <Can roles={["admin", "accounting-emp"]}>
             <Button
               onClick={() => {
@@ -381,39 +263,6 @@ export const Incomes = () => {
               Thêm doanh thu
             </Button>
           </Can>
-          {/* View buttons open for all users */}
-          <Button
-            color="blue"
-            variant="light"
-            size="md"
-            radius="xl"
-            leftSection={<IconBox size={16} />}
-            onClick={() => {
-              modals.open({
-                title: <b>Chỉ số ngày</b>,
-                children: <DailyStatsModal />,
-                size: "xl"
-              })
-            }}
-          >
-            Xem chỉ số ngày
-          </Button>
-          <Button
-            color="grape"
-            variant="light"
-            size="md"
-            radius="xl"
-            leftSection={<IconStars size={16} />}
-            onClick={() => {
-              modals.open({
-                title: <b>Top nhà sáng tạo</b>,
-                children: <TopCreatorsModal />,
-                size: "xl"
-              })
-            }}
-          >
-            Top nhà sáng tạo
-          </Button>
           <Can roles={["admin", "accounting-emp"]}>
             <Button
               leftSection={<IconX size={16} />}
@@ -435,113 +284,96 @@ export const Incomes = () => {
         </Group>
       </Flex>
       <Divider my={0} />
-      <Stack
-        px={{ base: 8, md: 28 }}
-        py={18}
-        gap={18}
-        justify="flex-start"
-        align="flex-start"
-      >
-        <Select
-          label="Chế độ xem"
-          value={kpiView}
-          onChange={(v) => setKpiView((v as any) ?? "live")}
-          data={[
-            { label: "Livestream", value: "live" },
-            { label: "Shop", value: "shop" },
-            { label: "Tổng", value: "total" }
-          ]}
-          size="sm"
-          w={160}
-        />
-        <Group w={"100%"} justify="space-between" align="center">
-          <KPIBox
-            label={`KPI tháng này${kpiView === "total" ? " (Tổng)" : kpiView === "live" ? " (Live)" : " (Shop)"}`}
-            value={goalValue !== undefined ? goalValue.toLocaleString() : "..."}
-            unit="VNĐ"
-            color="indigo"
-          />
-          <KPIBox
-            label={`Doanh thu đã đạt${kpiView === "total" ? " (Tổng)" : kpiView === "live" ? " (Live)" : " (Shop)"}`}
-            value={
-              incomeValue !== undefined ? incomeValue.toLocaleString() : "..."
-            }
-            unit="VNĐ"
-            color="teal"
-          />
-          <KPIBox
-            label={`Tổng số lượng sản phẩm${kpiView === "total" ? " (Tổng)" : kpiView === "live" ? " (Live)" : " (Shop)"}`}
-            value={
-              quantityValue !== undefined
-                ? quantityValue.toLocaleString()
-                : "..."
-            }
-            unit="sp"
-            color="cyan"
-          />
-          <KPIBox
-            label={`Tỉ lệ đạt KPI${kpiView === "total" ? " (Tổng)" : kpiView === "live" ? " (Live)" : " (Shop)"}`}
-            value={percentageDisplay}
-            color={percentageColor}
-          />
+
+      {/* Content */}
+      <Box pt={16} pb={8} px={{ base: 8, md: 28 }}>
+        <Group justify="space-between" align="center" mb={16}>
+          <Text fw={600} fz="lg">
+            Danh sách doanh thu bán hàng
+          </Text>
         </Group>
-      </Stack>
-      <Divider my={0} />
-      <Flex
-        justify={"flex-end"}
-        align={"flex-end"}
-        pt={16}
-        pb={8}
-        gap={8}
-        px={{ base: 8, md: 28 }}
-        direction={{ base: "column", sm: "row" }}
-      >
-        <TextInput
-          label="ID Đơn hàng"
-          value={orderId}
-          size="md"
-          placeholder="Tìm kiếm theo ID đơn hàng"
-          onChange={(e) => setOrderId(e.target.value ?? undefined)}
-        />
-        <Select
-          label="Sản phẩm"
-          data={productCodeOptions}
-          value={productCode}
-          onChange={(val) => setProductCode(val ?? undefined)}
-          size="md"
-          searchable
-          placeholder="Tìm kiếm theo mã sản phẩm"
-          clearable
-        />
-        <Select
-          label="Nguồn sản phẩm"
-          data={sourceOptions}
-          value={productSource}
-          onChange={(val) => setProductSource(val ?? undefined)}
-          size="md"
-          placeholder="Tìm kiếm theo nguồn sản phẩm"
-          clearable
-        />
-        <Button
-          color="green"
-          size="md"
-          leftSection={<IconDownload size={16} />}
-          onClick={() => {
-            exportXlsx({
-              startDate: startDate
-                ? startOfDayISO(startDate)
-                : startOfDayISO(new Date()),
-              endDate: endDate ? endOfDayISO(endDate) : endOfDayISO(new Date()),
-              orderId,
-              productCode,
-              productSource
-            })
-          }}
-          variant="light"
-        >
-          Xuất file Excel
-        </Button>
-      </Flex>
+
+        {/* Date Range and Filters */}
+        <Paper withBorder p="md" radius="md" mb={16}>
+          <Group justify="flex-end" align="end" gap={12} wrap="wrap">
+            <DatePickerInput
+              value={startDate}
+              onChange={setStartDate}
+              label="Từ ngày"
+              placeholder="Chọn ngày bắt đầu"
+              valueFormat="DD/MM/YYYY"
+              size="md"
+              radius="md"
+              clearable
+              style={{ minWidth: 160 }}
+            />
+            <DatePickerInput
+              value={endDate}
+              onChange={setEndDate}
+              label="Đến ngày"
+              placeholder="Chọn ngày kết thúc"
+              valueFormat="DD/MM/YYYY"
+              size="md"
+              radius="md"
+              clearable
+              style={{ minWidth: 160 }}
+            />
+            <TextInput
+              label="ID Đơn hàng"
+              value={orderId}
+              size="md"
+              placeholder="Tìm kiếm theo ID đơn hàng"
+              onChange={(e) => setOrderId(e.target.value ?? undefined)}
+              style={{ minWidth: 180 }}
+            />
+            <Select
+              label="Sản phẩm"
+              data={productCodeOptions}
+              value={productCode}
+              onChange={(val) => setProductCode(val ?? undefined)}
+              size="md"
+              searchable
+              placeholder="Tìm kiếm theo mã sản phẩm"
+              clearable
+              style={{ minWidth: 180 }}
+            />
+            <Select
+              label="Nguồn sản phẩm"
+              data={sourceOptions}
+              value={productSource}
+              onChange={(val) => setProductSource(val ?? undefined)}
+              size="md"
+              placeholder="Tìm kiếm theo nguồn sản phẩm"
+              clearable
+              style={{ minWidth: 160 }}
+            />
+            <Button
+              color="green"
+              size="md"
+              leftSection={<IconDownload size={16} />}
+              onClick={() => {
+                exportXlsx({
+                  startDate: startDate
+                    ? startOfDayISO(startDate)
+                    : startOfDayISO(new Date()),
+                  endDate: endDate
+                    ? endOfDayISO(endDate)
+                    : endOfDayISO(new Date()),
+                  orderId,
+                  productCode,
+                  productSource
+                })
+              }}
+              variant="light"
+              style={{ alignSelf: "end" }}
+            >
+              Xuất Excel
+            </Button>
+          </Group>
+        </Paper>
+      </Box>
+
+      {/* Data Table */}
       <Box px={{ base: 4, md: 28 }} py={20} maw={"100%"}>
         <ScrollArea.Autosize scrollbars="x" offsetScrollbars>
           <Table

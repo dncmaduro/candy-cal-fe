@@ -18,7 +18,11 @@ import {
   GetDailyStatsRequest,
   GetDailyStatsResponse,
   GetTopCreatorsRequest,
-  GetTopCreatorsResponse
+  GetTopCreatorsResponse,
+  GetAdsCostSplitByMonthRequest,
+  GetTotalLiveAndVideoIncomeByMonthRequest,
+  GetTotalLiveAndVideoIncomeByMonthResponse,
+  GetAdsCostSplitByMonthResponse
 } from "./models"
 
 export const useIncomes = () => {
@@ -156,6 +160,28 @@ export const useIncomes = () => {
     })
   }
 
+  const getLiveVideoIncomeByMonth = async (
+    req: GetTotalLiveAndVideoIncomeByMonthRequest
+  ) => {
+    const query = toQueryString(req)
+
+    return callApi<never, GetTotalLiveAndVideoIncomeByMonthResponse>({
+      path: `/v1/incomes/monthly-live-video-income?${query}`,
+      method: "GET",
+      token: accessToken
+    })
+  }
+
+  const getAdsCostSplitByMonth = async (req: GetAdsCostSplitByMonthRequest) => {
+    const query = toQueryString(req)
+
+    return callApi<never, GetAdsCostSplitByMonthResponse>({
+      path: `/v1/incomes/monthly-ads-cost-split?${query}`,
+      method: "GET",
+      token: accessToken
+    })
+  }
+
   return {
     insertIncome,
     deleteIncomeByDate,
@@ -167,6 +193,8 @@ export const useIncomes = () => {
     getKPIPercentageByMonth,
     getDailyStats,
     getTopCreators,
-    exportXlsxIncomes
+    exportXlsxIncomes,
+    getLiveVideoIncomeByMonth,
+    getAdsCostSplitByMonth
   }
 }
