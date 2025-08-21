@@ -37,6 +37,62 @@ export const DailyStatsModal = () => {
     staleTime: 60 * 1000
   })
 
+  // Helpers and metric rows outside JSX
+  const fmtCurrency = (n: number) => `${n.toLocaleString()} VNĐ`
+  const fmtPercent = (n: number) =>
+    `${Math.round((n + Number.EPSILON) * 100) / 100}%`
+
+  const metricsRows: { label: string; value: string }[] = (() => {
+    if (!data) return []
+    const video = typeof data.videoIncome === "number" ? data.videoIncome : 0
+    const rest = Math.max(0, data.totalIncome - data.liveIncome - video)
+
+    const rows: { label: string; value: string }[] = [
+      { label: "Doanh thu live", value: fmtCurrency(data.liveIncome) }
+    ]
+
+    if (typeof data.videoIncome === "number") {
+      rows.push({ label: "Doanh thu video", value: fmtCurrency(video) })
+    }
+
+    rows.push({ label: "Doanh thu còn lại", value: fmtCurrency(rest) })
+
+    if (data.dailyAds) {
+      rows.push(
+        {
+          label: "Chi phí Ads (Live)",
+          value: fmtCurrency(data.dailyAds.liveAdsCost)
+        },
+        {
+          label: "Chi phí Ads (Video)",
+          value: fmtCurrency(data.dailyAds.videoAdsCost)
+        },
+        {
+          label: "Tổng chi Ads",
+          value: fmtCurrency(
+            data.dailyAds.liveAdsCost + data.dailyAds.videoAdsCost
+          )
+        }
+      )
+    }
+
+    if (typeof data.percentages?.liveAdsToLiveIncome === "number") {
+      rows.push({
+        label: "Tỉ lệ Ads live / Doanh thu live",
+        value: fmtPercent(data.percentages.liveAdsToLiveIncome)
+      })
+    }
+
+    if (typeof data.percentages?.videoAdsToVideoIncome === "number") {
+      rows.push({
+        label: "Tỉ lệ Ads video / Doanh thu video",
+        value: fmtPercent(data.percentages.videoAdsToVideoIncome)
+      })
+    }
+
+    return rows
+  })()
+
   return (
     <Stack gap={16} p={4}>
       <DatePickerInput
@@ -59,71 +115,25 @@ export const DailyStatsModal = () => {
         </Text>
       ) : data ? (
         <Stack gap={12}>
-          <Stack>
-            <Paper withBorder p="sm" radius="md">
-              <Text fw={600} mb={4}>
-                Tổng doanh thu
-              </Text>
-              <Text fz="lg" fw={700} c="indigo">
+          {/* Combined metrics box: total (bigger) + all other metrics unified */}
+          <Paper withBorder p="sm" radius="md">
+            <Group justify="space-between" align="center">
+              <Text fw={700}>Tổng doanh thu</Text>
+              <Text fz="xl" fw={900} c="indigo">
                 {data.totalIncome.toLocaleString()} VNĐ
               </Text>
-            </Paper>
-            <Group align="stretch" gap={12} wrap="wrap">
-              <Paper
-                withBorder
-                p="sm"
-                radius="md"
-                style={{ flex: "1 1 200px" }}
-              >
-                <Text fw={600} mb={4}>
-                  Doanh thu live
-                </Text>
-                <Text fz="lg" fw={700} c="teal">
-                  {data.liveIncome.toLocaleString()} VNĐ
-                </Text>
-              </Paper>
-              {/* New: Video income card */}
-              {typeof data.videoIncome === "number" && (
-                <Paper
-                  withBorder
-                  p="sm"
-                  radius="md"
-                  style={{ flex: "1 1 200px" }}
-                >
-                  <Text fw={600} mb={4}>
-                    Doanh thu video
-                  </Text>
-                  <Text fz="lg" fw={700} c="grape">
-                    {data.videoIncome.toLocaleString()} VNĐ
-                  </Text>
-                </Paper>
-              )}
-              {/* New: Remaining income (total - live - video) */}
-              {(() => {
-                const video =
-                  typeof data.videoIncome === "number" ? data.videoIncome : 0
-                const rest = Math.max(
-                  0,
-                  data.totalIncome - data.liveIncome - video
-                )
-                return (
-                  <Paper
-                    withBorder
-                    p="sm"
-                    radius="md"
-                    style={{ flex: "1 1 200px" }}
-                  >
-                    <Text fw={600} mb={4}>
-                      Doanh thu còn lại
-                    </Text>
-                    <Text fz="lg" fw={700} c="orange">
-                      {rest.toLocaleString()} VNĐ
-                    </Text>
-                  </Paper>
-                )
-              })()}
             </Group>
-          </Stack>
+            <Divider my={8} />
+            <Stack gap={8}>
+              {metricsRows.map((r) => (
+                <Group key={r.label} justify="space-between" align="center">
+                  <Text>{r.label}</Text>
+                  <Text fw={700}>{r.value}</Text>
+                </Group>
+              ))}
+            </Stack>
+          </Paper>
+
           {data.sources && (
             <Paper withBorder p="sm" radius="md">
               <Text fw={600} mb={8}>

@@ -5,6 +5,7 @@ import { AppLayout } from "../../../components/layouts/AppLayout"
 import { Tabs, ScrollArea } from "@mantine/core"
 import { NAVS_URL } from "../../../constants/navs"
 import { Incomes } from "../../../components/incomes/Incomes"
+import { Dashboard } from "../../../components/incomes/Dashboard"
 import { Helmet } from "react-helmet-async"
 import { MonthGoals } from "../../../components/incomes/MonthGoals"
 import { PackingRules } from "../../../components/incomes/PackingRules"
@@ -17,7 +18,7 @@ export const Route = createFileRoute("/marketing-storage/incomes/")({
   component: RouteComponent,
   validateSearch: (search: Record<string, unknown>): Subtab => {
     return {
-      tab: String(search.tab ?? "incomes")
+      tab: String(search.tab ?? "dashboard")
     }
   }
 })
@@ -28,6 +29,10 @@ function RouteComponent() {
   const navigate = useNavigate()
 
   const tabOptions = [
+    {
+      label: "Dashboard",
+      value: "dashboard"
+    },
     {
       label: "Báo cáo doanh số",
       value: "incomes"
@@ -43,19 +48,19 @@ function RouteComponent() {
   ]
 
   const handleChange = (value: string | null) => {
-    navigate({ to: `${NAVS_URL}/incomes?tab=${value ?? "incomes"}` })
+    navigate({ to: `${NAVS_URL}/incomes?tab=${value ?? "dashboard"}` })
   }
 
   useEffect(() => {
     if (!tab) {
-      navigate({ to: `${NAVS_URL}/incomes`, search: { tab: "incomes" } })
+      navigate({ to: `${NAVS_URL}/incomes`, search: { tab: "dashboard" } })
     }
   }, [])
 
   return (
     <>
       <Helmet>
-        <title>{`Bán hàng - ${tab === "kpi" ? "KPI Tháng" : tab === "packing-rules" ? "Quy cách đóng hộp" : "Doanh thu"} | MyCandy`}</title>
+        <title>{`Bán hàng - ${tab === "dashboard" ? "Dashboard" : tab === "kpi" ? "KPI Tháng" : tab === "packing-rules" ? "Quy cách đóng hộp" : "Doanh thu"} | MyCandy`}</title>
       </Helmet>
       <AppLayout>
         <Tabs
@@ -74,6 +79,10 @@ function RouteComponent() {
           </Tabs.List>
 
           <ScrollArea.Autosize mah={"95%"} className="panels-scroll-area">
+            <Tabs.Panel value="dashboard">
+              <Dashboard />
+            </Tabs.Panel>
+
             <Tabs.Panel value="incomes">
               <Incomes />
             </Tabs.Panel>

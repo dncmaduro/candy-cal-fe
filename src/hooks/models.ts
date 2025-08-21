@@ -1196,6 +1196,11 @@ export interface GetDailyStatsResponse {
   liveIncome: number
   videoIncome: number
   shippingProviders: { provider: string; orders: number }[]
+  dailyAds?: { liveAdsCost: number; videoAdsCost: number }
+  percentages?: {
+    liveAdsToLiveIncome: number
+    videoAdsToVideoIncome: number
+  }
 }
 
 export interface GetTopCreatorsRequest {
@@ -1398,4 +1403,28 @@ export interface SystemLogsOptionsResponse {
     label: string
     value: string
   }[]
+}
+
+export interface GetTotalLiveAndVideoIncomeByMonthRequest {
+  month: number
+  year: number
+}
+
+export interface GetTotalLiveAndVideoIncomeByMonthResponse {
+  totalIncome: {
+    live: number
+    video: number
+  }
+}
+
+export interface GetAdsCostSplitByMonthRequest {
+  month: number
+  year: number
+}
+
+export interface GetAdsCostSplitByMonthResponse {
+  liveAdsCost: number
+  videoAdsCost: number
+  percentages: { liveAdsToLiveIncome: number; videoAdsToVideoIncome: number }
+  totalIncome: { live: number; video: number }
 }
