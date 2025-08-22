@@ -1,4 +1,4 @@
-# Candy Cal FE (v3.1.1)
+# Candy Cal FE (v3.1.2)
 
 Ứng dụng frontend quản trị & vận hành bán hàng (MyCandy) xây dựng bằng React + TypeScript + Vite. Hỗ trợ theo dõi doanh thu, KPI, kho, logs, thông báo realtime và quy trình nội bộ (yêu cầu xuất kho, combos sẵn, mục tiêu tháng...).
 
@@ -82,6 +82,11 @@ npm run routes    # Generate router tree
 - Xuất báo cáo nâng cao (PDF / đa định dạng).
 
 ## 7. Changelog
+
+### 3.1.2
+
+- Incomes: thêm step thứ 3 cho việc nhập doanh thu quảng cáo (Daily Ads) trong quy trình thêm doanh thu. Flow: Upload file doanh thu → Cập nhật affiliate → Thêm chi phí ads (livestream/video). Date được lưu từ step đầu và truyền qua các step tiếp theo.
+- DailyAdsModal: modal nhập chi phí ads với form validation, hiển thị tổng chi phí và breakdown theo loại (livestream/video). Style nhất quán với AffTypeModal.
 
 ### 3.1.1
 
