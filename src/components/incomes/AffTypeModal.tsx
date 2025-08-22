@@ -19,10 +19,11 @@ type FileStatus = "pending" | "uploading" | "success" | "error"
 
 interface Props {
   resetStep: () => void
+  nextStep: () => void
   refetch: () => void
 }
 
-export const AffTypeModal = ({ resetStep, refetch }: Props) => {
+export const AffTypeModal = ({ resetStep, nextStep, refetch }: Props) => {
   const { updateAffiliateType } = useIncomes()
   const [file, setFile] = useState<FileWithPath | null>(null)
   const [status, setStatus] = useState<FileStatus>("pending")
@@ -137,6 +138,18 @@ export const AffTypeModal = ({ resetStep, refetch }: Props) => {
               : "Cập nhật thất bại. Vui lòng thử lại hoặc liên hệ admin."}
           </Text>
         </Box>
+      )}
+      {status === "success" && (
+        <Group justify="end" w={"100%"} mt="sm">
+          <Button
+            onClick={nextStep}
+            size="md"
+            radius="xl"
+            rightSection={<IconCheck size={16} />}
+          >
+            Thêm doanh thu ads
+          </Button>
+        </Group>
       )}
     </Stack>
   )
