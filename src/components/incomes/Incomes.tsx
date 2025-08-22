@@ -24,6 +24,7 @@ import { modals } from "@mantine/modals"
 import { InsertIncomeModal } from "./InsertIncomeModal"
 import { IconDownload, IconPlus, IconX } from "@tabler/icons-react"
 import { AffTypeModal } from "./AffTypeModal"
+import { DailyAdsModal } from "./DailyAdsModal"
 import { DeleteIncomeModal } from "./DeleteIncomeModal"
 import { useProducts } from "../../hooks/useProducts"
 import { PackingRulesBoxTypes } from "../../constants/rules"
@@ -32,7 +33,8 @@ import { CToast } from "../common/CToast"
 import { Can } from "../common/Can"
 
 export const Incomes = () => {
-  const [step, setStep] = useState<"income" | "aff">()
+  const [step, setStep] = useState<"income" | "aff" | "ads">()
+  const [selectedDate, setSelectedDate] = useState<Date>()
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(10)
   const [orderId, setOrderId] = useState<string>()
@@ -172,11 +174,15 @@ export const Incomes = () => {
         title: <b>Thêm doanh thu</b>,
         children: (
           <InsertIncomeModal
-            nextStep={() => setStep("aff")}
+            nextStep={(date: Date) => {
+              setSelectedDate(date)
+              setStep("aff")
+            }}
             refetch={refetch}
           />
         ),
-        size: "xl"
+        size: "xl",
+        onClose: () => setStep(undefined)
       })
     }
 
@@ -186,14 +192,32 @@ export const Incomes = () => {
         title: <b>Cập nhật trạng thái affiliate</b>,
         children: (
           <AffTypeModal
+            nextStep={() => setStep("ads")}
             resetStep={() => setStep(undefined)}
             refetch={refetch}
           />
         ),
-        size: "xl"
+        size: "xl",
+        onClose: () => setStep(undefined)
       })
     }
-  }, [step])
+
+    if (step === "ads") {
+      modals.closeAll()
+      modals.open({
+        title: <b>Thêm doanh thu quảng cáo</b>,
+        children: (
+          <DailyAdsModal
+            resetStep={() => setStep(undefined)}
+            refetch={refetch}
+            selectedDate={selectedDate!}
+          />
+        ),
+        size: "xl",
+        onClose: () => setStep(undefined)
+      })
+    }
+  }, [step, selectedDate])
 
   useEffect(() => {
     setPage(1)

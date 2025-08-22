@@ -1428,3 +1428,9 @@ export interface GetAdsCostSplitByMonthResponse {
   percentages: { liveAdsToLiveIncome: number; videoAdsToVideoIncome: number }
   totalIncome: { live: number; video: number }
 }
+
+export interface CreateDailyAdsRequest {
+  date: Date
+  liveAdsCost: number
+  videoAdsCost: number
+}

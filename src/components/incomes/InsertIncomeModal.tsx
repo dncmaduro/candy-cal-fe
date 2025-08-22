@@ -39,7 +39,7 @@ const TYPE_MAP: Record<FileKey, InsertIncomeRequest["type"]> = {
 }
 
 interface Props {
-  nextStep: () => void
+  nextStep: (selectedDate: Date) => void
   refetch: () => void
 }
 
@@ -213,7 +213,7 @@ export const InsertIncomeModal = ({ nextStep, refetch }: Props) => {
             rightSection={<IconChevronRight size={16} />}
             size="md"
             radius="xl"
-            onClick={nextStep}
+            onClick={() => nextStep(date!)}
           >
             Cập nhật trạng thái affiliate
           </Button>
