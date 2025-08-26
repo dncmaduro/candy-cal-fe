@@ -1180,26 +1180,50 @@ export interface GetInformationSystemLogsRespomse {
   }[]
 }
 
-export interface GetDailyStatsRequest {
-  date: string
+export interface GetRangeStatsRequest {
+  startDate: string
+  endDate: string
 }
 
-export interface GetDailyStatsResponse {
-  boxes: { box: string; quantity: number }[]
-  totalIncome: number
-  sources: {
-    ads: number
-    affiliate: number
-    affiliateAds: number
-    other: number
+export interface GetRangeStatsResponse {
+  period: { startDate: Date; endDate: Date; days: number }
+  current: {
+    totalIncome: number
+    liveIncome: number
+    videoIncome: number
+    sources: {
+      ads: number
+      affiliate: number
+      affiliateAds: number
+      other: number
+    }
+    boxes: { box: string; quantity: number }[]
+    shippingProviders: { provider: string; orders: number }[]
+    ads: {
+      liveAdsCost: number
+      videoAdsCost: number
+      percentages: {
+        liveAdsToLiveIncome: number
+        videoAdsToVideoIncome: number
+      }
+    }
   }
-  liveIncome: number
-  videoIncome: number
-  shippingProviders: { provider: string; orders: number }[]
-  dailyAds?: { liveAdsCost: number; videoAdsCost: number }
-  percentages?: {
-    liveAdsToLiveIncome: number
-    videoAdsToVideoIncome: number
+  changes?: {
+    totalIncomePct: number
+    liveIncomePct: number
+    videoIncomePct: number
+    sources: {
+      adsPct: number
+      affiliatePct: number
+      affiliateAdsPct: number
+      otherPct: number
+    }
+    ads: {
+      liveAdsCostPct: number
+      videoAdsCostPct: number
+      liveAdsToLiveIncomePctDiff: number
+      videoAdsToVideoIncomePctDiff: number
+    }
   }
 }
 

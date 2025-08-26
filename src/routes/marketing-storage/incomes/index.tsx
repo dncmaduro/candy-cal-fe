@@ -9,6 +9,7 @@ import { Dashboard } from "../../../components/incomes/Dashboard"
 import { Helmet } from "react-helmet-async"
 import { MonthGoals } from "../../../components/incomes/MonthGoals"
 import { PackingRules } from "../../../components/incomes/PackingRules"
+import { RangeStats } from "../../../components/incomes/RangeStats"
 
 type Subtab = {
   tab: string
@@ -30,15 +31,19 @@ function RouteComponent() {
 
   const tabOptions = [
     {
-      label: "Dashboard",
+      label: "Dashboard tháng hiện tại",
       value: "dashboard"
+    },
+    {
+      label: "Chỉ số ngày/tuần/tháng",
+      value: "daily-stats"
     },
     {
       label: "Báo cáo doanh số",
       value: "incomes"
     },
     {
-      label: "KPI",
+      label: "KPI tháng",
       value: "kpi"
     },
     {
@@ -81,6 +86,10 @@ function RouteComponent() {
           <ScrollArea.Autosize mah={"95%"} className="panels-scroll-area">
             <Tabs.Panel value="dashboard">
               <Dashboard />
+            </Tabs.Panel>
+
+            <Tabs.Panel value="daily-stats">
+              <RangeStats />
             </Tabs.Panel>
 
             <Tabs.Panel value="incomes">
