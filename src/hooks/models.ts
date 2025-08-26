@@ -1191,6 +1191,8 @@ export interface GetRangeStatsResponse {
     totalIncome: number
     liveIncome: number
     videoIncome: number
+    ownVideoIncome: number
+    otherVideoIncome: number
     sources: {
       ads: number
       affiliate: number
@@ -1212,6 +1214,8 @@ export interface GetRangeStatsResponse {
     totalIncomePct: number
     liveIncomePct: number
     videoIncomePct: number
+    ownVideoIncomePct: number
+    otherVideoIncomePct: number
     sources: {
       adsPct: number
       affiliatePct: number
