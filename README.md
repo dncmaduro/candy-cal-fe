@@ -83,6 +83,10 @@ npm run routes    # Generate router tree
 
 ## 7. Changelog
 
+### 3.1.3
+
+- UI: Cập nhật giao diện thống kê doanh thu hàng ngày thành giao diện theo khoảng (hỗ trợ xem theo ngày/tuần/tháng) với khả năng so sánh so sánh với giai đoạn trước (hiển thị phần trăm thay đổi).
+
 ### 3.1.2
 
 - Incomes: thêm step thứ 3 cho việc nhập doanh thu quảng cáo (Daily Ads) trong quy trình thêm doanh thu. Flow: Upload file doanh thu → Cập nhật affiliate → Thêm chi phí ads (livestream/video). Date được lưu từ step đầu và truyền qua các step tiếp theo.
