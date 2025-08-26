@@ -12,10 +12,9 @@ import {
   Paper
 } from "@mantine/core"
 import { modals } from "@mantine/modals"
-import { IconBox, IconStars } from "@tabler/icons-react"
+import { IconStars } from "@tabler/icons-react"
 import { useMonthGoals } from "../../hooks/useMonthGoals"
 import { KPIBox } from "./KPIBox"
-import { DailyStatsModal } from "./DailyStatsModal"
 import { TopCreatorsModal } from "./TopCreatorsModal"
 import { fmtPercent } from "../../utils/fmt"
 
@@ -173,22 +172,6 @@ export const Dashboard = () => {
 
         {/* Quick Actions */}
         <Group gap={8} align="center" w={{ base: "100%", sm: "auto" }}>
-          <Button
-            color="blue"
-            variant="light"
-            size="md"
-            radius="xl"
-            leftSection={<IconBox size={16} />}
-            onClick={() => {
-              modals.open({
-                title: <b>Chỉ số ngày</b>,
-                children: <DailyStatsModal />,
-                size: "xl"
-              })
-            }}
-          >
-            Chỉ số ngày
-          </Button>
           <Button
             color="grape"
             variant="light"

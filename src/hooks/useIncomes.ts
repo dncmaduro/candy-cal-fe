@@ -15,8 +15,8 @@ import {
   GetKPIPercentageByMonthRequest,
   GetKPIPercentageByMonthResponse,
   ExportXlsxIncomesRequest,
-  GetDailyStatsRequest,
-  GetDailyStatsResponse,
+  GetRangeStatsRequest,
+  GetRangeStatsResponse,
   GetTopCreatorsRequest,
   GetTopCreatorsResponse,
   GetAdsCostSplitByMonthRequest,
@@ -127,11 +127,11 @@ export const useIncomes = () => {
     })
   }
 
-  const getDailyStats = async (req: GetDailyStatsRequest) => {
+  const getRangeStats = async (req: GetRangeStatsRequest) => {
     const query = toQueryString(req)
 
-    return callApi<never, GetDailyStatsResponse>({
-      path: `/v1/incomes/daily-stats?${query}`,
+    return callApi<never, GetRangeStatsResponse>({
+      path: `/v1/incomes/range-stats?${query}`,
       method: "GET",
       token: accessToken
     })
@@ -191,7 +191,7 @@ export const useIncomes = () => {
     getTotalIncomesByMonth,
     getTotalQuantityByMonth,
     getKPIPercentageByMonth,
-    getDailyStats,
+    getRangeStats,
     getTopCreators,
     exportXlsxIncomes,
     getLiveVideoIncomeByMonth,
