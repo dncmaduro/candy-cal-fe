@@ -9,12 +9,12 @@ import {
   Table,
   Text,
   SegmentedControl,
-  Badge,
-  Tooltip,
-  Stack
+  Badge
 } from "@mantine/core"
 import { useQuery } from "@tanstack/react-query"
 import { useIncomes } from "../../hooks/useIncomes"
+import { CPiechart } from "../common/CPiechart"
+import { TopCreatorItem } from "../../hooks/models"
 
 export const TopCreatorsModal = () => {
   const { getTopCreators } = useIncomes()
@@ -27,7 +27,6 @@ export const TopCreatorsModal = () => {
   const [endDate, setEndDate] = useState<Date | null>(new Date())
   const [view, setView] = useState<"affiliate" | "affiliateAds">("affiliate")
   const [mode, setMode] = useState<"table" | "pie">("table")
-  const [hovered, setHovered] = useState<number | null>(null)
 
   const { data, isLoading } = useQuery({
     queryKey: ["topCreators", startDate, endDate],
@@ -75,39 +74,17 @@ export const TopCreatorsModal = () => {
       ]
     : rows
 
-  // Colors palette (cycled)
-  const colors = [
-    "#6366f1",
-    "#10b981",
-    "#f59e0b",
-    "#ec4899",
-    "#0ea5e9",
-    "#84cc16",
-    "#f43f5e",
-    "#8b5cf6",
-    "#14b8a6",
-    "#fb7185"
-  ]
-  const getColor = (label: string, index: number) =>
-    label === "Khác" ? "#9ca3af" : colors[index % colors.length]
+  const rawRows =
+    (view === "affiliate" ? data?.affiliate : data?.affiliateAds) || []
 
-  const center = 140
-  const radius = 120
+  const chartData = rawRows.map((r: TopCreatorItem) => ({
+    label: r.creator || "—",
+    value: r.totalIncome || 0,
+    percentage: typeof r.percentage === "number" ? r.percentage : undefined,
+    raw: r
+  }))
 
-  const describeArc = (
-    cx: number,
-    cy: number,
-    r: number,
-    start: number,
-    end: number
-  ) => {
-    const startX = cx + r * Math.cos(start)
-    const startY = cy + r * Math.sin(start)
-    const endX = cx + r * Math.cos(end)
-    const endY = cy + r * Math.sin(end)
-    const largeArc = end - start > Math.PI ? 1 : 0
-    return `M ${cx} ${cy} L ${startX} ${startY} A ${r} ${r} 0 ${largeArc} 1 ${endX} ${endY} Z`
-  }
+  const listedTotal = chartData.reduce((a, d) => a + d.value, 0)
 
   return (
     <Box>
@@ -232,193 +209,23 @@ export const TopCreatorsModal = () => {
         </>
       )}
       {mode === "pie" && (
-        <Flex direction={{ base: "column", md: "row" }} gap={24}>
-          <Box>
-            <svg
-              width={center * 2}
-              height={center * 2}
-              viewBox={`0 0 ${center * 2} ${center * 2}`}
-              style={{ maxWidth: 320 }}
-            >
-              {rows.length === 0 && !isLoading && (
-                <text
-                  x="50%"
-                  y="50%"
-                  dominantBaseline="middle"
-                  textAnchor="middle"
-                  fill="#888"
-                  fontSize={14}
-                >
-                  Không có dữ liệu
-                </text>
-              )}
-              {isLoading && (
-                <text
-                  x="50%"
-                  y="50%"
-                  dominantBaseline="middle"
-                  textAnchor="middle"
-                  fill="#555"
-                  fontSize={14}
-                >
-                  Đang tải...
-                </text>
-              )}
-              {!isLoading &&
-                rows.reduce((acc, r) => acc + r.totalIncome, 0) === 0 &&
-                rows.length > 0 && (
-                  <text
-                    x="50%"
-                    y="50%"
-                    dominantBaseline="middle"
-                    textAnchor="middle"
-                    fill="#888"
-                    fontSize={14}
-                  >
-                    Tổng = 0
-                  </text>
-                )}
-              {(() => {
-                let start = -Math.PI / 2
-                const totalForPie = grandTotal || totalIncome
-                return displayRows.map((r, i) => {
-                  const value = r.totalIncome
-                  const angle = totalForPie
-                    ? (value / totalForPie) * Math.PI * 2
-                    : 0
-                  const end = start + angle
-                  const d = describeArc(center, center, radius, start, end)
-                  const mid = (start + end) / 2
-                  const labelX = center + radius * 0.55 * Math.cos(mid)
-                  const labelY = center + radius * 0.55 * Math.sin(mid)
-                  const percent = totalForPie ? (value / totalForPie) * 100 : 0
-                  const g = (
-                    <g
-                      key={i}
-                      onMouseEnter={() => setHovered(i)}
-                      onMouseLeave={() => setHovered(null)}
-                      style={{
-                        cursor: "pointer",
-                        transformOrigin: `${center}px ${center}px`,
-                        transform: hovered === i ? "scale(1.05)" : "scale(1)",
-                        transition: "transform 120ms ease"
-                      }}
-                    >
-                      <Tooltip
-                        label={
-                          <div style={{ fontSize: 12 }}>
-                            <b>{r.creator || "—"}</b>
-                            <div>Doanh thu: {value.toLocaleString()} VNĐ</div>
-                            <div>Tỉ lệ: {percent.toFixed(2)}%</div>
-                            {r.percentage !== undefined && (
-                              <div>Server %: {r.percentage.toFixed(2)}%</div>
-                            )}
-                            {r.creator === "Khác" && sumPercent > 0 && (
-                              <div>
-                                (Ước tính trên tổng ≈{" "}
-                                {Math.round(grandTotal).toLocaleString()} VNĐ)
-                              </div>
-                            )}
-                          </div>
-                        }
-                        withArrow
-                        openDelay={100}
-                        position="right"
-                      >
-                        <path
-                          d={d}
-                          fill={getColor(r.creator, i)}
-                          stroke="#fff"
-                          strokeWidth={1}
-                        />
-                      </Tooltip>
-                      {percent > 4 && (
-                        <text
-                          x={labelX}
-                          y={labelY}
-                          fill="#fff"
-                          fontSize={12}
-                          textAnchor="middle"
-                          dominantBaseline="middle"
-                          style={{ pointerEvents: "none", fontWeight: 600 }}
-                        >
-                          {percent.toFixed(1)}%
-                        </text>
-                      )}
-                    </g>
-                  )
-                  start = end
-                  return g
-                })
-              })()}
-              <circle
-                cx={center}
-                cy={center}
-                r={radius}
-                fill="none"
-                stroke="#ddd"
-                strokeWidth={1}
-                pointerEvents="none"
-              />
-            </svg>
-          </Box>
-          <Stack gap={10} flex={1}>
-            <Text fw={600} fz="sm" c="dimmed">
-              Tổng doanh thu liệt kê: {totalIncome.toLocaleString()} VNĐ
-              {showOthers && refRow?.percentage ? (
-                <>
-                  {" · Ước tính tổng toàn bộ: "}
-                  {Math.round(grandTotal).toLocaleString()} VNĐ
-                </>
-              ) : null}
-            </Text>
-            <Box>
-              {displayRows.map((r, i) => {
-                const totalForPie = grandTotal || totalIncome
-                const percent = totalForPie
-                  ? (r.totalIncome / totalForPie) * 100
-                  : 0
-                return (
-                  <Flex key={i} align="center" gap={8} mb={4}>
-                    <Box
-                      w={14}
-                      h={14}
-                      style={{
-                        background: getColor(r.creator, i),
-                        borderRadius: 4
-                      }}
-                    />
-                    <Text fz={13} fw={500} style={{ flex: 1 }} lineClamp={1}>
-                      {i + 1}. {r.creator || "—"}
-                    </Text>
-                    <Text fz={13} c="dimmed" w={90} ta="right">
-                      {r.totalIncome.toLocaleString()}₫
-                    </Text>
-                    <Text
-                      fz={12}
-                      c={
-                        percent >= 20
-                          ? "green"
-                          : percent >= 10
-                            ? "yellow.7"
-                            : "blue.6"
-                      }
-                      w={60}
-                      ta="right"
-                    >
-                      {percent.toFixed(2)}%
-                    </Text>
-                  </Flex>
-                )
-              })}
-              {!isLoading && rows.length === 0 && (
-                <Text c="dimmed" fz={13}>
-                  Không có dữ liệu
-                </Text>
-              )}
-            </Box>
-          </Stack>
-        </Flex>
+        <CPiechart
+          data={chartData}
+          title={
+            <>
+              Tổng doanh thu liệt kê: {listedTotal.toLocaleString("vi-VN")} VNĐ
+              {/* nếu muốn hiện thêm estimated total, component đã có tooltip ở lát "Khác" */}
+            </>
+          }
+          width={320} // max chiều rộng vùng chart
+          radius={120} // bán kính
+          donut={false} // bật donut
+          enableOthers // tự thêm "Khác" nếu có percentage
+          othersLabel="Khác"
+          showTooltip
+          valueFormatter={(v) => `${v.toLocaleString("vi-VN")}₫`}
+          percentFormatter={(p) => `${p.toFixed(2)}%`}
+        />
       )}
     </Box>
   )
