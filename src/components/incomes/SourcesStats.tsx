@@ -7,47 +7,10 @@ import {
   Badge,
   Box,
   SegmentedControl,
-  Flex,
-  Tooltip
+  Flex
 } from "@mantine/core"
 import { fmtPercent } from "../../utils/fmt"
-
-const COLORS: Record<string, string> = {
-  ads: "#16a34a",
-  affiliate: "#dc2626",
-  affiliateAds: "#7c3aed",
-  other: "#2563eb"
-}
-
-const PALETTE = [
-  "#6366f1",
-  "#10b981",
-  "#f59e0b",
-  "#ec4899",
-  "#0ea5e9",
-  "#84cc16",
-  "#f43f5e",
-  "#8b5cf6",
-  "#14b8a6",
-  "#fb7185"
-]
-const getColor = (key: string, index: number) =>
-  COLORS[key] || PALETTE[index % PALETTE.length]
-
-const describeArc = (
-  cx: number,
-  cy: number,
-  r: number,
-  start: number,
-  end: number
-) => {
-  const startX = cx + r * Math.cos(start)
-  const startY = cy + r * Math.sin(start)
-  const endX = cx + r * Math.cos(end)
-  const endY = cy + r * Math.sin(end)
-  const largeArc = end - start > Math.PI ? 1 : 0
-  return `M ${cx} ${cy} L ${startX} ${startY} A ${r} ${r} 0 ${largeArc} 1 ${endX} ${endY} Z`
-}
+import { CPiechart } from "../common/CPiechart"
 
 export const SourcesStats = ({
   sources,
@@ -57,7 +20,6 @@ export const SourcesStats = ({
   changes?: any
 }) => {
   const [mode, setMode] = useState<"table" | "chart">("table")
-  const [hovered, setHovered] = useState<number | null>(null)
 
   const entries = Object.entries(sources || {})
   const sum = entries.reduce((s, [, v]) => s + v, 0) || 1
@@ -140,128 +102,25 @@ export const SourcesStats = ({
         </Table>
       ) : (
         <Flex gap={24} align="flex-start">
-          {/* SVG pie like TopCreatorsModal */}
-          <Box>
-            <svg width={280} height={280} viewBox="0 0 280 280">
-              {(() => {
-                const center = 140
-                const radius = 110
-                let start = -Math.PI / 2
-                const total = sum
-                return slices.map((s, i) => {
-                  const value = s.value
-                  const angle = total ? (value / total) * Math.PI * 2 : 0
-                  const end = start + angle
-                  const d = describeArc(center, center, radius, start, end)
-                  const mid = (start + end) / 2
-                  const labelX = center + radius * 0.55 * Math.cos(mid)
-                  const labelY = center + radius * 0.55 * Math.sin(mid)
-                  const percent = total ? (value / total) * 100 : 0
-                  const color = getColor(s.key, i)
-                  const transformStyle =
-                    hovered === i
-                      ? {
-                          transformOrigin: `${center}px ${center}px`,
-                          transform: "scale(1.05)"
-                        }
-                      : {}
-                  const g = (
-                    <g
-                      key={s.key}
-                      style={{
-                        cursor: "pointer",
-                        transition: "transform 120ms ease",
-                        ...transformStyle
-                      }}
-                      onMouseEnter={() => setHovered(i)}
-                      onMouseLeave={() => setHovered(null)}
-                    >
-                      <Tooltip
-                        label={
-                          <div style={{ fontSize: 12 }}>
-                            <b>{s.label}</b>
-                            <div>Doanh thu: {s.value.toLocaleString()} VNĐ</div>
-                            <div>Tỉ lệ: {percent.toFixed(2)}%</div>
-                            {typeof s.change === "number" && (
-                              <div>Change: {fmtPercent(s.change)}</div>
-                            )}
-                          </div>
-                        }
-                        withArrow
-                        openDelay={100}
-                        position="right"
-                      >
-                        <path
-                          d={d}
-                          fill={color}
-                          stroke="#fff"
-                          strokeWidth={1}
-                        />
-                      </Tooltip>
-                      {percent >= 10 && (
-                        <text
-                          x={labelX}
-                          y={labelY}
-                          fill="#fff"
-                          fontSize={12}
-                          textAnchor="middle"
-                          dominantBaseline="middle"
-                          style={{ pointerEvents: "none", fontWeight: 600 }}
-                        >
-                          {percent.toFixed(1)}%
-                        </text>
-                      )}
-                    </g>
-                  )
-                  start = end
-                  return g
-                })
-              })()}
-            </svg>
+          <Box style={{ minWidth: 280 }}>
+            <CPiechart
+              data={slices.map((s) => ({ label: s.label, value: s.value }))}
+              width={280}
+              radius={110}
+              donut={false}
+              // palette={slices.map((s, i) => getColor(s.key, i))}
+              showLegend
+              legendItemWidth={90}
+              enableOthers={false}
+              title={
+                <Text fw={600} fz="sm" c="dimmed">
+                  Tổng: {sum.toLocaleString()} VNĐ
+                </Text>
+              }
+              valueFormatter={(v) => v.toLocaleString() + "₫"}
+              percentFormatter={(p) => fmtPercent(p)}
+            />
           </Box>
-
-          {/* Legend */}
-          <div
-            style={{
-              minWidth: 220,
-              display: "flex",
-              flexDirection: "column",
-              gap: 8
-            }}
-          >
-            <Text fw={600} fz="sm" c="dimmed">
-              Tổng: {sum.toLocaleString()} VNĐ
-            </Text>
-            {slices.map((s, i) => (
-              <Group key={s.key} align="center" gap={8}>
-                <Box
-                  style={{
-                    width: 14,
-                    height: 14,
-                    background: getColor(s.key, i),
-                    borderRadius: 4
-                  }}
-                />
-                <Text fz={13} fw={500} style={{ flex: 1 }}>
-                  {s.label}
-                </Text>
-                <Text
-                  fz={13}
-                  c="dimmed"
-                  style={{ width: 90, textAlign: "right" }}
-                >
-                  {s.value.toLocaleString()}₫
-                </Text>
-                <Text
-                  fz={12}
-                  c={s.pct >= 20 ? "green" : s.pct >= 10 ? "yellow" : "blue"}
-                  style={{ width: 60, textAlign: "right" }}
-                >
-                  {s.pct}%
-                </Text>
-              </Group>
-            ))}
-          </div>
         </Flex>
       )}
     </Paper>

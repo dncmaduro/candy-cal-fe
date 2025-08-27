@@ -300,6 +300,7 @@ export const RangeStats = () => {
                     adsCost={current.ads.liveAdsCost}
                     adsCostChangePct={changes?.ads?.liveAdsCostPct}
                     adsSharePctDiff={changes?.ads?.liveAdsToLiveIncomePctDiff}
+                    flex={1}
                   />
                   <LiveAndVideoStats
                     title="Video"
@@ -309,6 +310,7 @@ export const RangeStats = () => {
                     adsSharePctDiff={changes?.ads?.videoAdsToVideoIncomePctDiff}
                     ownVideoIncome={current.ownVideoIncome}
                     otherVideoIncome={current.otherVideoIncome}
+                    flex={2}
                   />
                 </Group>
               </Stack>
