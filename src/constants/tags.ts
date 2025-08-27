@@ -1,5 +1,7 @@
+/** @constant */
 export const RECEIVED_TAG_OPTION = [{ value: "receive", label: "Nhập kho" }]
 
+/** @constant */
 export const DELIVERED_TAG_OPTIONS = [
   { value: "deliver-tiktokshop", label: "Xuất TiktokShop" },
   { value: "deliver-single", label: "Xuất kho lẻ" },

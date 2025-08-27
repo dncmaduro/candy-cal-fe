@@ -1,6 +1,9 @@
+/** @constant */
 export const NAVS_URL = "/marketing-storage"
+/** @constant */
 export const LANDING_NAVS_URL = "/landing"
 
+/** @constant */
 export const NAVS = [
   {
     to: `${NAVS_URL}/storage`,
@@ -63,6 +66,7 @@ export const NAVS = [
   }
 ]
 
+/** @constant */
 export const LANDING_NAVS = [
   {
     to: `${LANDING_NAVS_URL}/landing-page`,

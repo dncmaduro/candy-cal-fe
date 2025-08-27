@@ -22,12 +22,15 @@ import {
   GetAdsCostSplitByMonthRequest,
   GetTotalLiveAndVideoIncomeByMonthRequest,
   GetTotalLiveAndVideoIncomeByMonthResponse,
-  GetAdsCostSplitByMonthResponse
+  GetAdsCostSplitByMonthResponse,
+  InsertIncomeAndUpdateSourceRequest,
+  InsertIncomeAndUpdateSourceResponse
 } from "./models"
 
 export const useIncomes = () => {
   const { accessToken } = useUserStore()
 
+  /** @deprecated */
   const insertIncome = async (file: File, req: InsertIncomeRequest) => {
     const formData = new FormData()
     formData.append("file", file)
@@ -58,6 +61,7 @@ export const useIncomes = () => {
     })
   }
 
+  /** @deprecated */
   const updateAffiliateType = async (file: File) => {
     const formData = new FormData()
     formData.append("file", file)
@@ -182,9 +186,35 @@ export const useIncomes = () => {
     })
   }
 
+  const insertIncomeAndUpdateSource = async (
+    files: File[],
+    req: InsertIncomeAndUpdateSourceRequest
+  ) => {
+    const formData = new FormData()
+    formData.append("files", files[0])
+    formData.append("files", files[1])
+
+    Object.entries(req).forEach(([key, value]) => {
+      if (typeof value !== "undefined" && value !== null)
+        formData.append(key, value as string)
+    })
+
+    return callApi<FormData, InsertIncomeAndUpdateSourceResponse>({
+      path: `/v1/incomes/insert-and-update-source`,
+      data: formData,
+      method: "POST",
+      token: accessToken,
+      headers: {
+        "Content-Type": "multipart/form-data"
+      }
+    })
+  }
+
   return {
+    /** @deprecated */
     insertIncome,
     deleteIncomeByDate,
+    /** @deprecated */
     updateAffiliateType,
     getIncomesByDateRange,
     updateIncomesBox,
@@ -195,6 +225,7 @@ export const useIncomes = () => {
     getTopCreators,
     exportXlsxIncomes,
     getLiveVideoIncomeByMonth,
-    getAdsCostSplitByMonth
+    getAdsCostSplitByMonth,
+    insertIncomeAndUpdateSource
   }
 }
