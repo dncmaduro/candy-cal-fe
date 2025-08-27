@@ -21,10 +21,8 @@ import {
 import { DatePickerInput } from "@mantine/dates"
 import { format } from "date-fns"
 import { modals } from "@mantine/modals"
-import { InsertIncomeModal } from "./InsertIncomeModal"
+import { InsertIncomeModalV2 } from "./InsertIncomeModalV2"
 import { IconDownload, IconPlus, IconX } from "@tabler/icons-react"
-import { AffTypeModal } from "./AffTypeModal"
-import { DailyAdsModal } from "./DailyAdsModal"
 import { DeleteIncomeModal } from "./DeleteIncomeModal"
 import { useProducts } from "../../hooks/useProducts"
 import { PackingRulesBoxTypes } from "../../constants/rules"
@@ -33,8 +31,6 @@ import { CToast } from "../common/CToast"
 import { Can } from "../common/Can"
 
 export const Incomes = () => {
-  const [step, setStep] = useState<"income" | "aff" | "ads">()
-  const [selectedDate, setSelectedDate] = useState<Date>()
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(10)
   const [orderId, setOrderId] = useState<string>()
@@ -167,57 +163,15 @@ export const Incomes = () => {
     }
   ]
 
-  useEffect(() => {
-    if (step === "income") {
-      modals.closeAll()
-      modals.open({
-        title: <b>Thêm doanh thu</b>,
-        children: (
-          <InsertIncomeModal
-            nextStep={(date: Date) => {
-              setSelectedDate(date)
-              setStep("aff")
-            }}
-            refetch={refetch}
-          />
-        ),
-        size: "xl",
-        onClose: () => setStep(undefined)
-      })
-    }
-
-    if (step === "aff") {
-      modals.closeAll()
-      modals.open({
-        title: <b>Cập nhật trạng thái affiliate</b>,
-        children: (
-          <AffTypeModal
-            nextStep={() => setStep("ads")}
-            resetStep={() => setStep(undefined)}
-            refetch={refetch}
-          />
-        ),
-        size: "xl",
-        onClose: () => setStep(undefined)
-      })
-    }
-
-    if (step === "ads") {
-      modals.closeAll()
-      modals.open({
-        title: <b>Thêm doanh thu quảng cáo</b>,
-        children: (
-          <DailyAdsModal
-            resetStep={() => setStep(undefined)}
-            refetch={refetch}
-            selectedDate={selectedDate!}
-          />
-        ),
-        size: "xl",
-        onClose: () => setStep(undefined)
-      })
-    }
-  }, [step, selectedDate])
+  const openIncomeModal = () => {
+    modals.closeAll()
+    modals.open({
+      id: "income-v2",
+      title: <b>Thêm doanh thu theo ngày</b>,
+      children: <InsertIncomeModalV2 refetch={refetch} />,
+      size: "xl"
+    })
+  }
 
   useEffect(() => {
     setPage(1)
@@ -277,11 +231,9 @@ export const Incomes = () => {
         <Group gap={8} align="center" w={{ base: "100%", sm: "auto" }}>
           <Can roles={["admin", "accounting-emp"]}>
             <Button
-              onClick={() => {
-                setStep("income")
-              }}
+              onClick={openIncomeModal}
               size="md"
-              radius={"xl"}
+              radius="xl"
               leftSection={<IconPlus size={16} />}
             >
               Thêm doanh thu

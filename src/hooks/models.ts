@@ -1,9 +1,11 @@
+/** @interface */
 export interface CreateItemRequest {
   name: string
   note?: string
   variants: string[]
 }
 
+/** @interface */
 export interface CreateStorageItemRequest {
   code: string
   name: string
@@ -22,6 +24,7 @@ export interface CreateStorageItemRequest {
   note?: string
 }
 
+/** @interface */
 export interface ItemResponse {
   _id: string
   name: string
@@ -29,6 +32,7 @@ export interface ItemResponse {
   variants: string[]
 }
 
+/** @interface */
 export interface StorageItemResponse {
   _id: string
   name: string
@@ -48,6 +52,7 @@ export interface StorageItemResponse {
   note?: string
 }
 
+/** @interface */
 export interface CreateProductRequest {
   name: string
   items: {
@@ -56,6 +61,7 @@ export interface CreateProductRequest {
   }[]
 }
 
+/** @interface */
 export interface ProductResponse {
   _id: string
   name: string
@@ -65,6 +71,7 @@ export interface ProductResponse {
   }[]
 }
 
+/** @interface */
 export interface CreateComboRequest {
   name: string
   products: {
@@ -73,6 +80,7 @@ export interface CreateComboRequest {
   }[]
 }
 
+/** @interface */
 export interface ComboResponse {
   _id: string
   name: string
@@ -82,6 +90,7 @@ export interface ComboResponse {
   }[]
 }
 
+/** @interface */
 export interface CalCombosRequest {
   products: {
     _id: string
@@ -90,6 +99,7 @@ export interface CalCombosRequest {
   quantity: number
 }
 
+/** @interface */
 export interface CalItemsResponse {
   items: {
     _id: string
@@ -124,6 +134,7 @@ export interface CalItemsResponse {
   total: number
 }
 
+/** @interface */
 export interface CalItemsRequest {
   products: {
     _id: string
@@ -132,38 +143,46 @@ export interface CalItemsRequest {
   }[]
 }
 
+/** @interface */
 export interface CalFileRequest {
   file: Express.Multer.File
 }
 
+/** @interface */
 export interface LoginRequest {
   username: string
   password: string
 }
 
+/** @interface */
 export interface LoginResponse {
   accessToken: string
   refreshToken: string
 }
 
+/** @interface */
 export interface RefreshTokenRequest {
   refreshToken: string
 }
 
+/** @interface */
 export interface RefreshTokenResponse {
   accessToken: string
   refreshToken: string
 }
 
+/** @interface */
 export interface CheckTokenRequest {
   accessToken: string
 }
 
+/** @interface */
 export interface CheckTokenResponse {
   valid: boolean
 }
 
 /** @deprecated */
+/** @interface */
 export interface CreateLogRequest {
   date: Date
   items: {
@@ -196,11 +215,13 @@ export interface CreateLogRequest {
   }[]
 }
 
+/** @interface */
 export interface GetLogsRequest {
   page: number
   limit: number
 }
 
+/** @interface */
 export interface Log {
   date: string
   items: {
@@ -235,16 +256,19 @@ export interface Log {
   updatedAt: string
 }
 
+/** @interface */
 export interface GetLogsResponse {
   data: Log[]
   total: number
 }
 
+/** @interface */
 export interface GetLogsRangeRequest {
   startDate: string
   endDate: string
 }
 
+/** @interface */
 export interface GetLogsRangeResponse {
   startDate: string
   endDate: string
@@ -279,6 +303,7 @@ export interface GetLogsRangeResponse {
   total: number
 }
 
+/** @interface */
 export interface GetMeResponse {
   username: string
   name: string
@@ -287,6 +312,7 @@ export interface GetMeResponse {
   _id: string
 }
 
+/** @interface */
 export interface GetStorageLogsRequest {
   page: number
   limit: number
@@ -297,6 +323,7 @@ export interface GetStorageLogsRequest {
   itemId?: string
 }
 
+/** @interface */
 export interface GetStorageLogsResponse {
   data: {
     _id: string
@@ -313,6 +340,7 @@ export interface GetStorageLogsResponse {
   total: number
 }
 
+/** @interface */
 export interface CreateStorageLogRequest {
   item: {
     _id: string
@@ -324,6 +352,7 @@ export interface CreateStorageLogRequest {
   tag?: string
 }
 
+/** @interface */
 export interface CreateStorageLogResponse {
   item: {
     _id: string
@@ -336,6 +365,7 @@ export interface CreateStorageLogResponse {
   _id: string
 }
 
+/** @interface */
 export interface UpdateStorageLogRequest {
   item: {
     _id: string
@@ -347,6 +377,7 @@ export interface UpdateStorageLogRequest {
   tag?: string
 }
 
+/** @interface */
 export interface UpdateStorageLogResponse {
   item: {
     _id: string
@@ -359,12 +390,14 @@ export interface UpdateStorageLogResponse {
   _id: string
 }
 
+/** @interface */
 export interface GetStorageLogsByMonthRequest {
   year: number
   month: number
   tag?: string
 }
 
+/** @interface */
 export interface GetStorageLogsByMonthResponse {
   items: {
     _id: string
@@ -383,31 +416,38 @@ export interface GetStorageLogsByMonthResponse {
   }[]
 }
 
+/** @interface */
 export interface ChangePasswordRequest {
   oldPassword: string
   newPassword: string
 }
 
+/** @interface */
 export interface ChangePasswordResponse {
   message: string
 }
 
+/** @interface */
 export interface UpdateAvatarRequest {
   avatarUrl: string
 }
 
+/** @interface */
 export interface UpdateAvatarResponse {
   message: string
 }
 
+/** @interface */
 export interface UpdateUserRequest {
   name: string
 }
 
+/** @interface */
 export interface UpdateUserResponse {
   message: string
 }
 
+/** @interface */
 export interface CreateDeliveredRequestRequest {
   items: {
     _id: string
@@ -417,6 +457,7 @@ export interface CreateDeliveredRequestRequest {
   date: Date
 }
 
+/** @interface */
 export interface CreateDeliveredRequestResponse {
   date: Date
   items: {
@@ -434,6 +475,7 @@ export interface CreateDeliveredRequestResponse {
   }[]
 }
 
+/** @interface */
 export interface CreateDeliveredRequestCommentRequest {
   requestId: string
   comment: {
@@ -444,6 +486,7 @@ export interface CreateDeliveredRequestCommentRequest {
   }
 }
 
+/** @interface */
 export interface CreateDeliveredRequestCommentResponse {
   date: Date
   items: {
@@ -461,10 +504,12 @@ export interface CreateDeliveredRequestCommentResponse {
   }[]
 }
 
+/** @interface */
 export interface AcceptDeliveredRequestRequest {
   requestId: string
 }
 
+/** @interface */
 export interface AcceptDeliveredRequestResponse {
   date: Date
   items: {
@@ -482,6 +527,7 @@ export interface AcceptDeliveredRequestResponse {
   }[]
 }
 
+/** @interface */
 export interface SearchDeliveredRequestsRequest {
   startDate?: string
   endDate?: string
@@ -489,6 +535,7 @@ export interface SearchDeliveredRequestsRequest {
   limit?: number
 }
 
+/** @interface */
 export interface SearchDeliveredRequestsResponse {
   requests: {
     _id: string
@@ -510,10 +557,12 @@ export interface SearchDeliveredRequestsResponse {
   total: number
 }
 
+/** @interface */
 export interface GetDeliveredRequestRequest {
   requestId: string
 }
 
+/** @interface */
 export interface GetDeliveredRequestResponse {
   date: Date
   items: {
@@ -531,6 +580,7 @@ export interface GetDeliveredRequestResponse {
   }[]
 }
 
+/** @interface */
 export interface Notification {
   _id: string
   title: string
@@ -541,19 +591,23 @@ export interface Notification {
   link?: string
 }
 
+/** @interface */
 export interface GetNotificationsRequest {
   page: number
 }
 
+/** @interface */
 export interface GetNotificationsResponse {
   notifications: Notification[]
   hasMore: boolean
 }
 
+/** @interface */
 export interface UndoAcceptDeliveredRequestRequest {
   requestId: string
 }
 
+/** @interface */
 export interface CreateReadyComboRequest {
   products: {
     _id: string
@@ -563,6 +617,7 @@ export interface CreateReadyComboRequest {
   note?: string
 }
 
+/** @interface */
 export interface ReadyComboResponse {
   _id: string
   products: {
@@ -573,6 +628,7 @@ export interface ReadyComboResponse {
   note?: string
 }
 
+/** @interface */
 export interface UpdateReadyComboRequest {
   products: {
     _id: string
@@ -582,16 +638,19 @@ export interface UpdateReadyComboRequest {
   note?: string
 }
 
+/** @interface */
 export interface SearchCombosRequest {
   searchText?: string
   isReady?: boolean
 }
 
+/** @interface */
 export interface LandingRequest {
   page: number
   pageSize: number
 }
 
+/** @interface */
 export interface LandingResponse {
   data: {
     _id: string
@@ -607,11 +666,13 @@ export interface LandingResponse {
   pageSize: number
 }
 
+/** @interface */
 export interface GetOrderLogsRequest {
   page: number
   limit: number
 }
 
+/** @interface */
 export interface OrderLogItem {
   _id: string
   quantity: number
@@ -634,21 +695,25 @@ export interface OrderLogItem {
   }[]
 }
 
+/** @interface */
 export interface OrderLogProduct {
   name: string
   quantity: number
 }
 
+/** @interface */
 export interface OrderLogOrder {
   products: OrderLogProduct[]
   quantity: number
 }
 
+/** @interface */
 export interface OrderLogSession {
   items: OrderLogItem[]
   orders: OrderLogOrder[]
 }
 
+/** @interface */
 export interface GetOrderLogsResponse {
   data: {
     morning: OrderLogSession
@@ -659,6 +724,7 @@ export interface GetOrderLogsResponse {
   total: number
 }
 
+/** @interface */
 export interface CreateLogSessionRequest {
   date: Date
   items: OrderLogItem[]
@@ -666,6 +732,7 @@ export interface CreateLogSessionRequest {
   session: "morning" | "afternoon"
 }
 
+/** @interface */
 export interface CreateLogSessionResponse {
   morning: OrderLogSession
   afternoon?: OrderLogSession
@@ -673,12 +740,14 @@ export interface CreateLogSessionResponse {
   updatedAt: string
 }
 
+/** @interface */
 export interface GetOrderLogsByRangeRequest {
   startDate: string
   endDate: string
   session: "morning" | "afternoon" | "all"
 }
 
+/** @interface */
 export interface GetOrderLogsByRangeResponse {
   startDate: string
   endDate: string
@@ -691,23 +760,31 @@ export interface GetOrderLogsByRangeResponse {
   total: number
 }
 
+/** @deprecated */
+/** @interface */
 export interface InsertIncomeRequest {
   type: "affiliate" | "ads" | "other"
   date: Date
 }
 
+/** @deprecated */
+/** @interface */
 export interface InsertIncomeResponse {
   success: true
 }
 
+/** @interface */
 export interface DeleteIncomeByDateRequest {
   date: Date
 }
 
+/** @deprecated */
+/** @interface */
 export interface UpdateAffiliateTypeResponse {
   success: true
 }
 
+/** @interface */
 export interface GetIncomesByDateRangeRequest {
   startDate: string
   endDate: string
@@ -718,6 +795,7 @@ export interface GetIncomesByDateRangeRequest {
   productSource?: string
 }
 
+/** @interface */
 export interface GetIncomesByDateRangeResponse {
   incomes: {
     _id: string
@@ -746,15 +824,18 @@ export interface GetIncomesByDateRangeResponse {
   total: number
 }
 
+/** @interface */
 export interface UpdateIncomesBoxRequest {
   date: Date
 }
 
+/** @interface */
 export interface GetTotalIncomesByMonthRequest {
   month: number
   year: number
 }
 
+/** @interface */
 export interface GetTotalIncomesByMonthResponse {
   totalIncome: {
     live: number
@@ -762,11 +843,13 @@ export interface GetTotalIncomesByMonthResponse {
   }
 }
 
+/** @interface */
 export interface GetTotalQuantityByMonthRequest {
   month: number
   year: number
 }
 
+/** @interface */
 export interface GetTotalQuantityByMonthResponse {
   totalQuantity: {
     live: number
@@ -774,11 +857,13 @@ export interface GetTotalQuantityByMonthResponse {
   }
 }
 
+/** @interface */
 export interface GetKPIPercentageByMonthRequest {
   month: number
   year: number
 }
 
+/** @interface */
 export interface GetKPIPercentageByMonthResponse {
   KPIPercentage: {
     live: number
@@ -786,6 +871,7 @@ export interface GetKPIPercentageByMonthResponse {
   }
 }
 
+/** @interface */
 export interface CreateMonthGoalRequest {
   month: number
   year: number
@@ -793,6 +879,7 @@ export interface CreateMonthGoalRequest {
   shopGoal: number
 }
 
+/** @interface */
 export interface CreateMonthGoalResponse {
   month: number
   year: number
@@ -800,10 +887,12 @@ export interface CreateMonthGoalResponse {
   shopGoal: number
 }
 
+/** @interface */
 export interface GetGoalsRequest {
   year?: number
 }
 
+/** @interface */
 export interface GetGoalsResponse {
   monthGoals: {
     month: number
@@ -817,11 +906,13 @@ export interface GetGoalsResponse {
   total: number
 }
 
+/** @interface */
 export interface GetGoalRequest {
   month: number
   year: number
 }
 
+/** @interface */
 export interface GetGoalResponse {
   month: number
   year: number
@@ -829,6 +920,7 @@ export interface GetGoalResponse {
   shopGoal: number
 }
 
+/** @interface */
 export interface UpdateGoalRequest {
   month: number
   year: number
@@ -836,6 +928,7 @@ export interface UpdateGoalRequest {
   shopGoal: number
 }
 
+/** @interface */
 export interface UpdateGoalResponse {
   month: number
   year: number
@@ -843,11 +936,13 @@ export interface UpdateGoalResponse {
   shopGoal: number
 }
 
+/** @interface */
 export interface DeleteGoalRequest {
   month: number
   year: number
 }
 
+/** @interface */
 export interface CreatePackingRuleRequest {
   productCode: string
   requirements: {
@@ -857,6 +952,7 @@ export interface CreatePackingRuleRequest {
   }[]
 }
 
+/** @interface */
 export interface CreatePackingRuleResponse {
   productCode: string
   requirements: {
@@ -866,6 +962,7 @@ export interface CreatePackingRuleResponse {
   }[]
 }
 
+/** @interface */
 export interface UpdatePackingRuleRequest {
   requirements: {
     minQuantity: number | null
@@ -874,6 +971,7 @@ export interface UpdatePackingRuleRequest {
   }[]
 }
 
+/** @interface */
 export interface UpdatePackingRuleResponse {
   productCode: string
   requirements: {
@@ -883,6 +981,7 @@ export interface UpdatePackingRuleResponse {
   }[]
 }
 
+/** @interface */
 export interface GetPackingRuleResponse {
   productCode: string
   requirements: {
@@ -892,11 +991,13 @@ export interface GetPackingRuleResponse {
   }[]
 }
 
+/** @interface */
 export interface SearchPackingRulesRequest {
   searchText?: string
   packingType?: string
 }
 
+/** @interface */
 export interface SearchPackingRulesResponse {
   rules: {
     productCode: string
@@ -908,6 +1009,7 @@ export interface SearchPackingRulesResponse {
   }[]
 }
 
+/** @interface */
 export interface ExportXlsxIncomesRequest {
   startDate: string
   endDate: string
@@ -916,6 +1018,7 @@ export interface ExportXlsxIncomesRequest {
   productSource?: string
 }
 
+/** @interface */
 export interface CreateSessionLogRequest {
   time: Date
   items: {
@@ -948,11 +1051,13 @@ export interface CreateSessionLogRequest {
   }[]
 }
 
+/** @interface */
 export interface GetSessionLogsRequest {
   page: number
   limit: number
 }
 
+/** @interface */
 export interface GetSessionLogsResponse {
   data: {
     _id: string
@@ -989,6 +1094,7 @@ export interface GetSessionLogsResponse {
   total: number
 }
 
+/** @interface */
 export interface CreateDailyLogRequest {
   date: Date
   items: {
@@ -1021,11 +1127,13 @@ export interface CreateDailyLogRequest {
   }[]
 }
 
+/** @interface */
 export interface GetDailyLogsRequest {
   page: number
   limit: number
 }
 
+/** @interface */
 export interface GetDailyLogsResponse {
   data: {
     _id: string
@@ -1063,10 +1171,12 @@ export interface GetDailyLogsResponse {
   total: number
 }
 
+/** @interface */
 export interface GetDailyLogByDateRequest {
   date: Date
 }
 
+/** @interface */
 export interface GetDailyLogByDateResponse {
   _id: string
   date: Date
@@ -1101,10 +1211,12 @@ export interface GetDailyLogByDateResponse {
   updatedAt: string
 }
 
+/** @interface */
 export interface GetSessionLogByIdRequest {
   id: string
 }
 
+/** @interface */
 export interface GetSessionLogByIdResponse {
   _id: string
   time: Date
@@ -1139,10 +1251,12 @@ export interface GetSessionLogByIdResponse {
   updatedAt: string
 }
 
+/** @interface */
 export interface GetUnviewedCountResponse {
   count: number
 }
 
+/** @interface */
 export interface GetSystemLogsRequest {
   page: number
   limit: number
@@ -1156,6 +1270,7 @@ export interface GetSystemLogsRequest {
   result?: "success" | "failed"
 }
 
+/** @interface */
 export interface GetSystemLogsResponse {
   data: {
     _id: string
@@ -1173,6 +1288,7 @@ export interface GetSystemLogsResponse {
   total: number
 }
 
+/** @interface */
 export interface GetInformationSystemLogsRespomse {
   data: {
     label: string
@@ -1180,11 +1296,13 @@ export interface GetInformationSystemLogsRespomse {
   }[]
 }
 
+/** @interface */
 export interface GetRangeStatsRequest {
   startDate: string
   endDate: string
 }
 
+/** @interface */
 export interface GetRangeStatsResponse {
   period: { startDate: Date; endDate: Date; days: number }
   current: {
@@ -1231,22 +1349,26 @@ export interface GetRangeStatsResponse {
   }
 }
 
+/** @interface */
 export interface GetTopCreatorsRequest {
   startDate: string
   endDate: string
 }
 
+/** @interface */
 export interface TopCreatorItem {
   creator: string
   totalIncome: number
   percentage: number
 }
 
+/** @interface */
 export interface GetTopCreatorsResponse {
   affiliate: TopCreatorItem[]
   affiliateAds: TopCreatorItem[]
 }
 
+/** @interface */
 export interface DailyTaskItem {
   code: string
   title: string
@@ -1265,6 +1387,7 @@ export interface DailyTaskItem {
   completedAt?: Date
 }
 
+/** @interface */
 export interface GetOwnTasksResponse {
   data: {
     date: string
@@ -1279,14 +1402,17 @@ export interface GetOwnTasksResponse {
   }
 }
 
+/** @interface */
 export interface MarkTaskAsDoneRequest {
   code: string
 }
 
+/** @interface */
 export interface MarkTaskAsDoneResponse {
   updated: boolean
 }
 
+/** @interface */
 export interface TaskDefinition {
   code: string
   title: string
@@ -1308,16 +1434,19 @@ export interface TaskDefinition {
   updatedAt?: Date
 }
 
+/** @interface */
 export interface GetAllTasksDefinitionsRequest {
   limit?: number
   page?: number
 }
 
+/** @interface */
 export interface GetAllTasksDefinitionsResponse {
   data: TaskDefinition[]
   total: number
 }
 
+/** @interface */
 export interface CreateTaskDefinitionRequest {
   code: string
   title: string
@@ -1336,10 +1465,12 @@ export interface CreateTaskDefinitionRequest {
   }
 }
 
+/** @interface */
 export interface CreateTaskDefinitionResponse {
   data: TaskDefinition
 }
 
+/** @interface */
 export interface UpdateTaskDefinitionRequest {
   title?: string
   roles?: string[]
@@ -1358,14 +1489,17 @@ export interface UpdateTaskDefinitionRequest {
   }
 }
 
+/** @interface */
 export interface UpdateTaskDefinitionResponse {
   data: TaskDefinition
 }
 
+/** @interface */
 export interface DeleteTaskDefinitionResponse {
   deleted: boolean
 }
 
+/** @interface */
 export interface APIEndpoint {
   _id: string
   key: string
@@ -1378,14 +1512,17 @@ export interface APIEndpoint {
   url: string
 }
 
+/** @interface */
 export interface GetAllAPIEndpointsResponse {
   data: APIEndpoint[]
 }
 
+/** @interface */
 export interface GenerateTasksRequest {
   date: Date
 }
 
+/** @interface */
 export interface GenerateTasksResponse {
   data: {
     date: string
@@ -1393,10 +1530,12 @@ export interface GenerateTasksResponse {
   }
 }
 
+/** @interface */
 export interface GetAllUsersTasksRequest {
   date: Date
 }
 
+/** @interface */
 export interface GetAllUsersTasksResponse {
   data: {
     date: string
@@ -1408,10 +1547,12 @@ export interface GetAllUsersTasksResponse {
   }
 }
 
+/** @interface */
 export interface GetUserTasksRequest {
   date: Date
 }
 
+/** @interface */
 export interface GetUserTasksResponse {
   data: {
     date: string
@@ -1426,6 +1567,7 @@ export interface GetUserTasksResponse {
   }
 }
 
+/** @interface */
 export interface SystemLogsOptionsResponse {
   data: {
     label: string
@@ -1433,11 +1575,13 @@ export interface SystemLogsOptionsResponse {
   }[]
 }
 
+/** @interface */
 export interface GetTotalLiveAndVideoIncomeByMonthRequest {
   month: number
   year: number
 }
 
+/** @interface */
 export interface GetTotalLiveAndVideoIncomeByMonthResponse {
   totalIncome: {
     live: number
@@ -1445,11 +1589,13 @@ export interface GetTotalLiveAndVideoIncomeByMonthResponse {
   }
 }
 
+/** @interface */
 export interface GetAdsCostSplitByMonthRequest {
   month: number
   year: number
 }
 
+/** @interface */
 export interface GetAdsCostSplitByMonthResponse {
   liveAdsCost: number
   videoAdsCost: number
@@ -1457,8 +1603,19 @@ export interface GetAdsCostSplitByMonthResponse {
   totalIncome: { live: number; video: number }
 }
 
+/** @interface */
 export interface CreateDailyAdsRequest {
   date: Date
   liveAdsCost: number
   videoAdsCost: number
+}
+
+/** @interface */
+export interface InsertIncomeAndUpdateSourceRequest {
+  date: Date
+}
+
+/** @interface */
+export interface InsertIncomeAndUpdateSourceResponse {
+  success: true
 }
