@@ -139,10 +139,10 @@ export const Incomes = () => {
     { label: "Mã đơn hàng", key: "orderId", width: 130 },
     { label: "Khách hàng", key: "customer", width: 140 },
     { label: "Tỉnh thành", key: "province", width: 120 },
-    { label: "Mã sản phẩm", key: "code", width: 110 },
     { label: "Đơn vị vận chuyển", key: "shippingProvider", width: 150 },
+    { label: "Mã sản phẩm", key: "code", width: 110 },
     // { label: "Tên sản phẩm", key: "name", width: 160 },
-    { label: "Nguồn", key: "source", width: 100 },
+    { label: "Nguồn", key: "source", width: 140 },
     { label: "Số lượng", key: "quantity", width: 80 },
     { label: "Báo giá", key: "quotation", width: 90 },
     { label: "Giá bán", key: "price", width: 90 },
@@ -360,7 +360,7 @@ export const Incomes = () => {
             horizontalSpacing="md"
             stickyHeader
             className="rounded-xl"
-            miw={1800}
+            miw={2000}
           >
             <Table.Thead>
               <Table.Tr>

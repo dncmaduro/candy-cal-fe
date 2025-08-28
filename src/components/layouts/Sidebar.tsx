@@ -15,7 +15,7 @@ export const Sidebar = ({ meData, collapsed, setCollapsed }: SidebarProps) => {
         "sticky top-0 z-[201] h-screen border-r border-gray-200 bg-white",
         "flex flex-col shadow-[2px_0_18px_0_rgba(120,120,150,0.06)]",
         "transition-[width] duration-200 ease-out",
-        collapsed ? "w-16" : "w-[240px]"
+        collapsed ? "w-16" : "min-w-[240px]"
       ].join(" ")}
     >
       <button
