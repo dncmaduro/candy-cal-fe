@@ -28,8 +28,7 @@ export const NAVS = [
     to: `${NAVS_URL}/logs`,
     label: "Lịch sử kho",
     roles: ["admin", "order-emp", "accounting-emp", "system-emp"],
-    icon: "IconHistory",
-    beta: true
+    icon: "IconHistory"
   },
   {
     to: `${NAVS_URL}/accounting-storage`,
@@ -47,15 +46,13 @@ export const NAVS = [
     to: `${NAVS_URL}/incomes`,
     label: "Doanh thu",
     icon: "IconCoin",
-    roles: ["accounting-emp", "order-emp", "system-emp"],
-    beta: true
+    roles: ["accounting-emp", "order-emp", "system-emp"]
   },
   {
     to: `${NAVS_URL}/system-logs`,
     label: "Lịch sử hệ thống",
     icon: "IconAutomaticGearbox",
-    roles: ["admin", "system-emp"],
-    beta: true
+    roles: ["admin", "system-emp"]
   },
   {
     to: `${NAVS_URL}/tasks`,
