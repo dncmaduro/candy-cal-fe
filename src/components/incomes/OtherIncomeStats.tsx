@@ -8,6 +8,18 @@ import {
 } from "@mantine/core"
 import { fmtCurrency, fmtPercent } from "../../utils/fmt"
 
+/**
+ * OtherIncomeStats - A compact component to display "other income" data
+ * 
+ * This component is designed to be space-efficient while showing essential
+ * information about income from sources other than Live and Video streams.
+ * 
+ * @param otherIncome - The income amount from other sources
+ * @param totalIncome - Total income (used to calculate percentage)
+ * @param otherIncomeChangePct - Optional percentage change from previous period
+ * @param flex - Flex grow value for responsive layout (default: 1)
+ */
+
 type Props = {
   otherIncome: number
   totalIncome: number
