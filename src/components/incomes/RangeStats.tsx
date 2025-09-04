@@ -26,6 +26,7 @@ import { fmtPercent } from "../../utils/fmt"
 import type { GetRangeStatsResponse } from "../../hooks/models"
 import { LiveAndVideoStats } from "./LiveAndVideoStats"
 import { SourcesStats } from "./SourcesStats"
+import { OtherIncomeStats } from "./OtherIncomeStats"
 
 type RangeType = "day" | "week" | "month"
 
@@ -300,7 +301,7 @@ export const RangeStats = () => {
                     adsCost={current.ads.liveAdsCost}
                     adsCostChangePct={changes?.ads?.liveAdsCostPct}
                     adsSharePctDiff={changes?.ads?.liveAdsToLiveIncomePctDiff}
-                    flex={1}
+                    flex={2}
                   />
                   <LiveAndVideoStats
                     title="Video"
@@ -310,7 +311,12 @@ export const RangeStats = () => {
                     adsSharePctDiff={changes?.ads?.videoAdsToVideoIncomePctDiff}
                     ownVideoIncome={current.ownVideoIncome}
                     otherVideoIncome={current.otherVideoIncome}
-                    flex={2}
+                    flex={3}
+                  />
+                  <OtherIncomeStats
+                    otherIncome={current.otherIncome || 0}
+                    totalIncome={current.totalIncome}
+                    flex={1}
                   />
                 </Group>
               </Stack>
