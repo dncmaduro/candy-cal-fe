@@ -1309,6 +1309,7 @@ export interface GetRangeStatsResponse {
     totalIncome: number
     liveIncome: number
     videoIncome: number
+    otherIncome: number
     ownVideoIncome: number
     otherVideoIncome: number
     sources: {
