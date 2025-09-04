@@ -208,7 +208,11 @@ export const CPiechart: React.FC<Props> = ({
   }
 
   return (
-    <Flex direction={orientation === "vertical" ? "column" : "row"} gap={24}>
+    <Flex
+      direction={orientation === "vertical" ? "column" : "row"}
+      align={"center"}
+      gap={24}
+    >
       <Box>
         <svg
           width={svgSize}

@@ -312,6 +312,41 @@ export const RangeStats = () => {
                     otherVideoIncome={current.otherVideoIncome}
                     flex={2}
                   />
+
+                  {/* New: Other income card (thu nhập ngoài livestream & video) */}
+                  <Paper
+                    withBorder
+                    p="md"
+                    radius="md"
+                    style={{ flex: 1, minWidth: 200 }}
+                  >
+                    <Text fw={600}>Khác</Text>
+                    <Group align="center" gap={8} mt={8} wrap="nowrap">
+                      <Text fz="lg" fw={900} c="dark">
+                        {(current.otherIncome ?? 0).toLocaleString()} VNĐ
+                      </Text>
+
+                      {typeof (changes as any)?.otherIncomePct === "number" && (
+                        <Badge
+                          color={
+                            (changes as any).otherIncomePct >= 0
+                              ? "green"
+                              : "red"
+                          }
+                          variant="light"
+                        >
+                          {(changes as any).otherIncomePct >= 0 ? "+" : "-"}
+                          {fmtPercent(
+                            Math.abs((changes as any).otherIncomePct)
+                          )}
+                        </Badge>
+                      )}
+                    </Group>
+
+                    <Text c="dimmed" fz="xs" mt={6}>
+                      Thu nhập ngoài livestream & video
+                    </Text>
+                  </Paper>
                 </Group>
               </Stack>
             </Paper>
