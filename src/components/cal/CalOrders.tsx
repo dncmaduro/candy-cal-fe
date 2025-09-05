@@ -26,7 +26,7 @@ import { modals } from "@mantine/modals"
 import { SendDeliveredRequestModal } from "./SendDeliveredRequestModal"
 import { useReadyCombos } from "../../hooks/useReadyCombos"
 import { isEqual } from "lodash"
-import { Can } from "../common/Can"
+import { useUsers } from "../../hooks/useUsers"
 
 interface Props {
   orders: {
@@ -55,9 +55,16 @@ const normalizeProducts = (products: { _id: string; quantity: number }[]) =>
 export const CalOrders = ({ orders, allCalItems, date }: Props) => {
   const { getAllProducts } = useProducts()
   const { searchItems, searchStorageItems } = useItems()
+  const { getMe } = useUsers()
   const [calRest, setCalRest] = useState<boolean>(false)
   const [viewMode, setViewMode] = useState<"all" | "ready" | "not-ready">("all")
   const { searchCombos } = useReadyCombos()
+
+  const { data: meData } = useQuery({
+    queryKey: ["getMe"],
+    queryFn: getMe,
+    select: (data) => data.data
+  })
 
   const { data: readyCombosData } = useQuery({
     queryKey: ["searchCombos"],
@@ -373,7 +380,7 @@ export const CalOrders = ({ orders, allCalItems, date }: Props) => {
       {date && (
         <>
           <Divider mt={24} mb={20} label={"Gửi yêu cầu xuất kho cho kế toán"} />
-          <Can roles={["admin", "order-emp"]}>
+          {meData?.role && ["admin", "order-emp"].includes(meData.role) && (
             <Group>
               <Button
                 color="indigo"
@@ -458,7 +465,7 @@ export const CalOrders = ({ orders, allCalItems, date }: Props) => {
                 Gửi yêu cầu cho đơn không sẵn
               </Button>
             </Group>
-          </Can>
+          )}
         </>
       )}
     </Stack>
