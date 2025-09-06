@@ -15,6 +15,7 @@ import { Route as IndexImport } from './routes/index'
 import { Route as UserIndexImport } from './routes/user/index'
 import { Route as PostauthIndexImport } from './routes/postauth/index'
 import { Route as MarketingStorageIndexImport } from './routes/marketing-storage/index'
+import { Route as LivestreamIndexImport } from './routes/livestream/index'
 import { Route as LandingIndexImport } from './routes/landing/index'
 import { Route as AccessDeniedIndexImport } from './routes/access-denied/index'
 import { Route as MarketingStorageTasksIndexImport } from './routes/marketing-storage/tasks/index'
@@ -27,6 +28,9 @@ import { Route as MarketingStorageDeliveredRequestsIndexImport } from './routes/
 import { Route as MarketingStorageCalfileIndexImport } from './routes/marketing-storage/calfile/index'
 import { Route as MarketingStorageCalIndexImport } from './routes/marketing-storage/cal/index'
 import { Route as MarketingStorageAccountingStorageIndexImport } from './routes/marketing-storage/accounting-storage/index'
+import { Route as LivestreamPeriodsIndexImport } from './routes/livestream/periods/index'
+import { Route as LivestreamMembersIndexImport } from './routes/livestream/members/index'
+import { Route as LivestreamCalendarIndexImport } from './routes/livestream/calendar/index'
 import { Route as LandingLandingPageIndexImport } from './routes/landing/landing-page/index'
 
 // Create/Update Routes
@@ -52,6 +56,12 @@ const PostauthIndexRoute = PostauthIndexImport.update({
 const MarketingStorageIndexRoute = MarketingStorageIndexImport.update({
   id: '/marketing-storage/',
   path: '/marketing-storage/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const LivestreamIndexRoute = LivestreamIndexImport.update({
+  id: '/livestream/',
+  path: '/livestream/',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -136,6 +146,24 @@ const MarketingStorageAccountingStorageIndexRoute =
     getParentRoute: () => rootRoute,
   } as any)
 
+const LivestreamPeriodsIndexRoute = LivestreamPeriodsIndexImport.update({
+  id: '/livestream/periods/',
+  path: '/livestream/periods/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const LivestreamMembersIndexRoute = LivestreamMembersIndexImport.update({
+  id: '/livestream/members/',
+  path: '/livestream/members/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const LivestreamCalendarIndexRoute = LivestreamCalendarIndexImport.update({
+  id: '/livestream/calendar/',
+  path: '/livestream/calendar/',
+  getParentRoute: () => rootRoute,
+} as any)
+
 const LandingLandingPageIndexRoute = LandingLandingPageIndexImport.update({
   id: '/landing/landing-page/',
   path: '/landing/landing-page/',
@@ -167,6 +195,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LandingIndexImport
       parentRoute: typeof rootRoute
     }
+    '/livestream/': {
+      id: '/livestream/'
+      path: '/livestream'
+      fullPath: '/livestream'
+      preLoaderRoute: typeof LivestreamIndexImport
+      parentRoute: typeof rootRoute
+    }
     '/marketing-storage/': {
       id: '/marketing-storage/'
       path: '/marketing-storage'
@@ -193,6 +228,27 @@ declare module '@tanstack/react-router' {
       path: '/landing/landing-page'
       fullPath: '/landing/landing-page'
       preLoaderRoute: typeof LandingLandingPageIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/livestream/calendar/': {
+      id: '/livestream/calendar/'
+      path: '/livestream/calendar'
+      fullPath: '/livestream/calendar'
+      preLoaderRoute: typeof LivestreamCalendarIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/livestream/members/': {
+      id: '/livestream/members/'
+      path: '/livestream/members'
+      fullPath: '/livestream/members'
+      preLoaderRoute: typeof LivestreamMembersIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/livestream/periods/': {
+      id: '/livestream/periods/'
+      path: '/livestream/periods'
+      fullPath: '/livestream/periods'
+      preLoaderRoute: typeof LivestreamPeriodsIndexImport
       parentRoute: typeof rootRoute
     }
     '/marketing-storage/accounting-storage/': {
@@ -274,10 +330,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/access-denied': typeof AccessDeniedIndexRoute
   '/landing': typeof LandingIndexRoute
+  '/livestream': typeof LivestreamIndexRoute
   '/marketing-storage': typeof MarketingStorageIndexRoute
   '/postauth': typeof PostauthIndexRoute
   '/user': typeof UserIndexRoute
   '/landing/landing-page': typeof LandingLandingPageIndexRoute
+  '/livestream/calendar': typeof LivestreamCalendarIndexRoute
+  '/livestream/members': typeof LivestreamMembersIndexRoute
+  '/livestream/periods': typeof LivestreamPeriodsIndexRoute
   '/marketing-storage/accounting-storage': typeof MarketingStorageAccountingStorageIndexRoute
   '/marketing-storage/cal': typeof MarketingStorageCalIndexRoute
   '/marketing-storage/calfile': typeof MarketingStorageCalfileIndexRoute
@@ -294,10 +354,14 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/access-denied': typeof AccessDeniedIndexRoute
   '/landing': typeof LandingIndexRoute
+  '/livestream': typeof LivestreamIndexRoute
   '/marketing-storage': typeof MarketingStorageIndexRoute
   '/postauth': typeof PostauthIndexRoute
   '/user': typeof UserIndexRoute
   '/landing/landing-page': typeof LandingLandingPageIndexRoute
+  '/livestream/calendar': typeof LivestreamCalendarIndexRoute
+  '/livestream/members': typeof LivestreamMembersIndexRoute
+  '/livestream/periods': typeof LivestreamPeriodsIndexRoute
   '/marketing-storage/accounting-storage': typeof MarketingStorageAccountingStorageIndexRoute
   '/marketing-storage/cal': typeof MarketingStorageCalIndexRoute
   '/marketing-storage/calfile': typeof MarketingStorageCalfileIndexRoute
@@ -315,10 +379,14 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/access-denied/': typeof AccessDeniedIndexRoute
   '/landing/': typeof LandingIndexRoute
+  '/livestream/': typeof LivestreamIndexRoute
   '/marketing-storage/': typeof MarketingStorageIndexRoute
   '/postauth/': typeof PostauthIndexRoute
   '/user/': typeof UserIndexRoute
   '/landing/landing-page/': typeof LandingLandingPageIndexRoute
+  '/livestream/calendar/': typeof LivestreamCalendarIndexRoute
+  '/livestream/members/': typeof LivestreamMembersIndexRoute
+  '/livestream/periods/': typeof LivestreamPeriodsIndexRoute
   '/marketing-storage/accounting-storage/': typeof MarketingStorageAccountingStorageIndexRoute
   '/marketing-storage/cal/': typeof MarketingStorageCalIndexRoute
   '/marketing-storage/calfile/': typeof MarketingStorageCalfileIndexRoute
@@ -337,10 +405,14 @@ export interface FileRouteTypes {
     | '/'
     | '/access-denied'
     | '/landing'
+    | '/livestream'
     | '/marketing-storage'
     | '/postauth'
     | '/user'
     | '/landing/landing-page'
+    | '/livestream/calendar'
+    | '/livestream/members'
+    | '/livestream/periods'
     | '/marketing-storage/accounting-storage'
     | '/marketing-storage/cal'
     | '/marketing-storage/calfile'
@@ -356,10 +428,14 @@ export interface FileRouteTypes {
     | '/'
     | '/access-denied'
     | '/landing'
+    | '/livestream'
     | '/marketing-storage'
     | '/postauth'
     | '/user'
     | '/landing/landing-page'
+    | '/livestream/calendar'
+    | '/livestream/members'
+    | '/livestream/periods'
     | '/marketing-storage/accounting-storage'
     | '/marketing-storage/cal'
     | '/marketing-storage/calfile'
@@ -375,10 +451,14 @@ export interface FileRouteTypes {
     | '/'
     | '/access-denied/'
     | '/landing/'
+    | '/livestream/'
     | '/marketing-storage/'
     | '/postauth/'
     | '/user/'
     | '/landing/landing-page/'
+    | '/livestream/calendar/'
+    | '/livestream/members/'
+    | '/livestream/periods/'
     | '/marketing-storage/accounting-storage/'
     | '/marketing-storage/cal/'
     | '/marketing-storage/calfile/'
@@ -396,10 +476,14 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccessDeniedIndexRoute: typeof AccessDeniedIndexRoute
   LandingIndexRoute: typeof LandingIndexRoute
+  LivestreamIndexRoute: typeof LivestreamIndexRoute
   MarketingStorageIndexRoute: typeof MarketingStorageIndexRoute
   PostauthIndexRoute: typeof PostauthIndexRoute
   UserIndexRoute: typeof UserIndexRoute
   LandingLandingPageIndexRoute: typeof LandingLandingPageIndexRoute
+  LivestreamCalendarIndexRoute: typeof LivestreamCalendarIndexRoute
+  LivestreamMembersIndexRoute: typeof LivestreamMembersIndexRoute
+  LivestreamPeriodsIndexRoute: typeof LivestreamPeriodsIndexRoute
   MarketingStorageAccountingStorageIndexRoute: typeof MarketingStorageAccountingStorageIndexRoute
   MarketingStorageCalIndexRoute: typeof MarketingStorageCalIndexRoute
   MarketingStorageCalfileIndexRoute: typeof MarketingStorageCalfileIndexRoute
@@ -416,10 +500,14 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccessDeniedIndexRoute: AccessDeniedIndexRoute,
   LandingIndexRoute: LandingIndexRoute,
+  LivestreamIndexRoute: LivestreamIndexRoute,
   MarketingStorageIndexRoute: MarketingStorageIndexRoute,
   PostauthIndexRoute: PostauthIndexRoute,
   UserIndexRoute: UserIndexRoute,
   LandingLandingPageIndexRoute: LandingLandingPageIndexRoute,
+  LivestreamCalendarIndexRoute: LivestreamCalendarIndexRoute,
+  LivestreamMembersIndexRoute: LivestreamMembersIndexRoute,
+  LivestreamPeriodsIndexRoute: LivestreamPeriodsIndexRoute,
   MarketingStorageAccountingStorageIndexRoute:
     MarketingStorageAccountingStorageIndexRoute,
   MarketingStorageCalIndexRoute: MarketingStorageCalIndexRoute,
@@ -447,10 +535,14 @@ export const routeTree = rootRoute
         "/",
         "/access-denied/",
         "/landing/",
+        "/livestream/",
         "/marketing-storage/",
         "/postauth/",
         "/user/",
         "/landing/landing-page/",
+        "/livestream/calendar/",
+        "/livestream/members/",
+        "/livestream/periods/",
         "/marketing-storage/accounting-storage/",
         "/marketing-storage/cal/",
         "/marketing-storage/calfile/",
@@ -472,6 +564,9 @@ export const routeTree = rootRoute
     "/landing/": {
       "filePath": "landing/index.tsx"
     },
+    "/livestream/": {
+      "filePath": "livestream/index.tsx"
+    },
     "/marketing-storage/": {
       "filePath": "marketing-storage/index.tsx"
     },
@@ -483,6 +578,15 @@ export const routeTree = rootRoute
     },
     "/landing/landing-page/": {
       "filePath": "landing/landing-page/index.tsx"
+    },
+    "/livestream/calendar/": {
+      "filePath": "livestream/calendar/index.tsx"
+    },
+    "/livestream/members/": {
+      "filePath": "livestream/members/index.tsx"
+    },
+    "/livestream/periods/": {
+      "filePath": "livestream/periods/index.tsx"
     },
     "/marketing-storage/accounting-storage/": {
       "filePath": "marketing-storage/accounting-storage/index.tsx"

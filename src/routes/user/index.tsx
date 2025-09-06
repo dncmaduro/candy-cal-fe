@@ -69,16 +69,15 @@ function RouteComponent() {
     }
   }
 
-  const roleText =
-    meData?.role === "admin"
-      ? "Quản trị viên"
-      : meData?.role === "order-emp"
-        ? "Nhân viên vận đơn"
-        : meData?.role === "system-emp"
-          ? "Nhân viên hệ thống"
-          : meData?.role === "accounting-emp"
-            ? "Nhân viên kế toán"
-            : meData?.role || ""
+  const roleText = meData?.roles?.includes("admin")
+    ? "Quản trị viên"
+    : meData?.roles?.includes("order-emp")
+      ? "Nhân viên vận đơn"
+      : meData?.roles?.includes("system-emp")
+        ? "Nhân viên hệ thống"
+        : meData?.roles?.includes("accounting-emp")
+          ? "Nhân viên kế toán"
+          : meData?.roles?.[0] || ""
 
   return (
     <AppLayout>

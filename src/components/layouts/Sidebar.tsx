@@ -6,9 +6,15 @@ type SidebarProps = {
   meData: any
   collapsed: boolean
   setCollapsed: (c: (prev: boolean) => boolean) => void
+  navs?: typeof NAVS
 }
 
-export const Sidebar = ({ meData, collapsed, setCollapsed }: SidebarProps) => {
+export const Sidebar = ({
+  meData,
+  collapsed,
+  setCollapsed,
+  navs
+}: SidebarProps) => {
   return (
     <nav
       className={[
@@ -31,19 +37,23 @@ export const Sidebar = ({ meData, collapsed, setCollapsed }: SidebarProps) => {
       </button>
 
       <div className="flex flex-1 flex-col gap-3 px-2">
-        {NAVS.filter((n) => {
-          if (!meData || (n as any).deprecated) return false
-          return meData.role === "admin" || n.roles.includes(meData.role)
-        }).map((n) => (
-          <NavButton
-            key={n.to}
-            to={n.to}
-            label={n.label}
-            iconName={n.icon as any}
-            beta={(n as any).beta}
-            collapsed={collapsed}
-          />
-        ))}
+        {navs
+          ?.filter((n) => {
+            if (!meData || (n as any).deprecated) return false
+            return meData.roles.some((role: string) =>
+              [...n.roles, "admin"].includes(role)
+            )
+          })
+          .map((n) => (
+            <NavButton
+              key={n.to}
+              to={n.to}
+              label={n.label}
+              iconName={n.icon as any}
+              beta={(n as any).beta}
+              collapsed={collapsed}
+            />
+          ))}
       </div>
     </nav>
   )

@@ -2,6 +2,8 @@
 export const NAVS_URL = "/marketing-storage"
 /** @constant */
 export const LANDING_NAVS_URL = "/landing"
+/** @constant */
+export const LIVESTREAM_NAVS_URL = "/livestream"
 
 /** @constant */
 export const NAVS = [
@@ -69,5 +71,33 @@ export const LANDING_NAVS = [
     to: `${LANDING_NAVS_URL}/landing-page`,
     label: "Trang chủ",
     roles: ["order-emp", "system-emp"]
+  }
+]
+
+/** @constant */
+export const LIVESTREAM_NAVS = [
+  {
+    to: `${LIVESTREAM_NAVS_URL}/calendar`,
+    label: "Lịch livestream",
+    roles: ["admin", "livestream-leader", "livestream-emp", "system-emp"],
+    icon: "IconCalendar"
+  },
+  {
+    to: `${LIVESTREAM_NAVS_URL}/members`,
+    label: "Nhân sự",
+    roles: ["admin", "livestream-leader", "system-emp"],
+    icon: "IconUsers"
+  },
+  {
+    to: `${LIVESTREAM_NAVS_URL}/periods`,
+    label: "Kỳ livestream",
+    roles: ["admin", "livestream-leader", "system-emp"],
+    icon: "IconClock"
+  },
+  {
+    to: `${LIVESTREAM_NAVS_URL}/reports`,
+    label: "Báo cáo",
+    roles: ["admin", "livestream-leader", "accounting-emp", "system-emp"],
+    icon: "IconReportAnalytics"
   }
 ]
