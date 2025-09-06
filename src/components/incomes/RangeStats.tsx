@@ -156,9 +156,10 @@ export const RangeStats = () => {
     if (rangeType === "day") {
       const s = day ? new Date(day.getTime()) : null
       if (!s) return null
+      console.log(s)
       s.setHours(0, 0, 0, 0)
       const e = new Date(s.getTime())
-      e.setHours(23, 59, 59, 999)
+      e.setHours(7, 0, 0, 0)
       return {
         start: s.toISOString(),
         end: e.toISOString(),
@@ -172,7 +173,7 @@ export const RangeStats = () => {
       const s = startOfWeek(d, { weekStartsOn: 1 })
       const e = endOfWeek(d, { weekStartsOn: 1 })
       s.setHours(0, 0, 0, 0)
-      e.setHours(23, 59, 59, 999)
+      e.setHours(7, 0, 0, 0)
       return {
         start: s.toISOString(),
         end: e.toISOString(),
@@ -186,7 +187,7 @@ export const RangeStats = () => {
       const s = startOfMonth(d)
       const e = endOfMonth(d)
       s.setHours(0, 0, 0, 0)
-      e.setHours(23, 59, 59, 999)
+      e.setHours(7, 0, 0, 0)
       return {
         start: s.toISOString(),
         end: e.toISOString(),
