@@ -1820,3 +1820,17 @@ export interface GetMonthlyTotalsLivestreamResponse {
   totalIncome: number
   totalAds: number
 }
+
+/** @interface */
+export interface GetLivestreamStatsRequest {
+  startDate: string
+  endDate: string
+}
+
+/** @interface */
+export interface GetLivestreamStatsResponse {
+  totalIncome: number
+  totalExpenses: number
+  totalOrders: number
+  incomeByHost: { hostId: string; income: number }[]
+}

@@ -28,6 +28,7 @@ import { Route as MarketingStorageDeliveredRequestsIndexImport } from './routes/
 import { Route as MarketingStorageCalfileIndexImport } from './routes/marketing-storage/calfile/index'
 import { Route as MarketingStorageCalIndexImport } from './routes/marketing-storage/cal/index'
 import { Route as MarketingStorageAccountingStorageIndexImport } from './routes/marketing-storage/accounting-storage/index'
+import { Route as LivestreamStatsIndexImport } from './routes/livestream/stats/index'
 import { Route as LivestreamPeriodsIndexImport } from './routes/livestream/periods/index'
 import { Route as LivestreamMembersIndexImport } from './routes/livestream/members/index'
 import { Route as LivestreamCalendarIndexImport } from './routes/livestream/calendar/index'
@@ -146,6 +147,12 @@ const MarketingStorageAccountingStorageIndexRoute =
     getParentRoute: () => rootRoute,
   } as any)
 
+const LivestreamStatsIndexRoute = LivestreamStatsIndexImport.update({
+  id: '/livestream/stats/',
+  path: '/livestream/stats/',
+  getParentRoute: () => rootRoute,
+} as any)
+
 const LivestreamPeriodsIndexRoute = LivestreamPeriodsIndexImport.update({
   id: '/livestream/periods/',
   path: '/livestream/periods/',
@@ -251,6 +258,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LivestreamPeriodsIndexImport
       parentRoute: typeof rootRoute
     }
+    '/livestream/stats/': {
+      id: '/livestream/stats/'
+      path: '/livestream/stats'
+      fullPath: '/livestream/stats'
+      preLoaderRoute: typeof LivestreamStatsIndexImport
+      parentRoute: typeof rootRoute
+    }
     '/marketing-storage/accounting-storage/': {
       id: '/marketing-storage/accounting-storage/'
       path: '/marketing-storage/accounting-storage'
@@ -338,6 +352,7 @@ export interface FileRoutesByFullPath {
   '/livestream/calendar': typeof LivestreamCalendarIndexRoute
   '/livestream/members': typeof LivestreamMembersIndexRoute
   '/livestream/periods': typeof LivestreamPeriodsIndexRoute
+  '/livestream/stats': typeof LivestreamStatsIndexRoute
   '/marketing-storage/accounting-storage': typeof MarketingStorageAccountingStorageIndexRoute
   '/marketing-storage/cal': typeof MarketingStorageCalIndexRoute
   '/marketing-storage/calfile': typeof MarketingStorageCalfileIndexRoute
@@ -362,6 +377,7 @@ export interface FileRoutesByTo {
   '/livestream/calendar': typeof LivestreamCalendarIndexRoute
   '/livestream/members': typeof LivestreamMembersIndexRoute
   '/livestream/periods': typeof LivestreamPeriodsIndexRoute
+  '/livestream/stats': typeof LivestreamStatsIndexRoute
   '/marketing-storage/accounting-storage': typeof MarketingStorageAccountingStorageIndexRoute
   '/marketing-storage/cal': typeof MarketingStorageCalIndexRoute
   '/marketing-storage/calfile': typeof MarketingStorageCalfileIndexRoute
@@ -387,6 +403,7 @@ export interface FileRoutesById {
   '/livestream/calendar/': typeof LivestreamCalendarIndexRoute
   '/livestream/members/': typeof LivestreamMembersIndexRoute
   '/livestream/periods/': typeof LivestreamPeriodsIndexRoute
+  '/livestream/stats/': typeof LivestreamStatsIndexRoute
   '/marketing-storage/accounting-storage/': typeof MarketingStorageAccountingStorageIndexRoute
   '/marketing-storage/cal/': typeof MarketingStorageCalIndexRoute
   '/marketing-storage/calfile/': typeof MarketingStorageCalfileIndexRoute
@@ -413,6 +430,7 @@ export interface FileRouteTypes {
     | '/livestream/calendar'
     | '/livestream/members'
     | '/livestream/periods'
+    | '/livestream/stats'
     | '/marketing-storage/accounting-storage'
     | '/marketing-storage/cal'
     | '/marketing-storage/calfile'
@@ -436,6 +454,7 @@ export interface FileRouteTypes {
     | '/livestream/calendar'
     | '/livestream/members'
     | '/livestream/periods'
+    | '/livestream/stats'
     | '/marketing-storage/accounting-storage'
     | '/marketing-storage/cal'
     | '/marketing-storage/calfile'
@@ -459,6 +478,7 @@ export interface FileRouteTypes {
     | '/livestream/calendar/'
     | '/livestream/members/'
     | '/livestream/periods/'
+    | '/livestream/stats/'
     | '/marketing-storage/accounting-storage/'
     | '/marketing-storage/cal/'
     | '/marketing-storage/calfile/'
@@ -484,6 +504,7 @@ export interface RootRouteChildren {
   LivestreamCalendarIndexRoute: typeof LivestreamCalendarIndexRoute
   LivestreamMembersIndexRoute: typeof LivestreamMembersIndexRoute
   LivestreamPeriodsIndexRoute: typeof LivestreamPeriodsIndexRoute
+  LivestreamStatsIndexRoute: typeof LivestreamStatsIndexRoute
   MarketingStorageAccountingStorageIndexRoute: typeof MarketingStorageAccountingStorageIndexRoute
   MarketingStorageCalIndexRoute: typeof MarketingStorageCalIndexRoute
   MarketingStorageCalfileIndexRoute: typeof MarketingStorageCalfileIndexRoute
@@ -508,6 +529,7 @@ const rootRouteChildren: RootRouteChildren = {
   LivestreamCalendarIndexRoute: LivestreamCalendarIndexRoute,
   LivestreamMembersIndexRoute: LivestreamMembersIndexRoute,
   LivestreamPeriodsIndexRoute: LivestreamPeriodsIndexRoute,
+  LivestreamStatsIndexRoute: LivestreamStatsIndexRoute,
   MarketingStorageAccountingStorageIndexRoute:
     MarketingStorageAccountingStorageIndexRoute,
   MarketingStorageCalIndexRoute: MarketingStorageCalIndexRoute,
@@ -543,6 +565,7 @@ export const routeTree = rootRoute
         "/livestream/calendar/",
         "/livestream/members/",
         "/livestream/periods/",
+        "/livestream/stats/",
         "/marketing-storage/accounting-storage/",
         "/marketing-storage/cal/",
         "/marketing-storage/calfile/",
@@ -587,6 +610,9 @@ export const routeTree = rootRoute
     },
     "/livestream/periods/": {
       "filePath": "livestream/periods/index.tsx"
+    },
+    "/livestream/stats/": {
+      "filePath": "livestream/stats/index.tsx"
     },
     "/marketing-storage/accounting-storage/": {
       "filePath": "marketing-storage/accounting-storage/index.tsx"
