@@ -574,11 +574,6 @@ export const InlineEditableSnapshotsTable = ({
                       >
                         {formatTimeRange(snapshot.period)}
                       </Badge>
-                      {snapshot.period.noon && (
-                        <Badge color="orange" size="xs" variant="light">
-                          Trưa
-                        </Badge>
-                      )}
                     </Group>
                   )}
                 </Table.Td>
