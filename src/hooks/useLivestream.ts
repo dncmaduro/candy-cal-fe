@@ -14,6 +14,8 @@ import {
   GetDetailLivestreamPeriodResponse,
   GetLivestreamByDateRangeRequest,
   GetLivestreamByDateRangeResponse,
+  GetLivestreamStatsRequest,
+  GetLivestreamStatsResponse,
   GetMonthlyTotalsLivestreamRequest,
   GetMonthlyTotalsLivestreamResponse,
   SearchLivestreamEmployeesRequest,
@@ -198,6 +200,16 @@ export const useLivestream = () => {
     })
   }
 
+  const getLivestreamStats = async (req: GetLivestreamStatsRequest) => {
+    const query = toQueryString(req)
+
+    return callApi<never, GetLivestreamStatsResponse>({
+      method: "GET",
+      path: `/v1/livestreams/stats?${query}`,
+      token: accessToken
+    })
+  }
+
   return {
     createLivestreamEmployee,
     updateLivestreamEmployee,
@@ -214,6 +226,7 @@ export const useLivestream = () => {
     updateLivestreamSnapshot,
     setMetrics,
     getLivestreamsByDateRange,
-    getMonthlyTotalsLivestreams
+    getMonthlyTotalsLivestreams,
+    getLivestreamStats
   }
 }

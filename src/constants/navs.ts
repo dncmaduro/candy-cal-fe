@@ -99,5 +99,11 @@ export const LIVESTREAM_NAVS = [
     label: "Báo cáo",
     roles: ["admin", "livestream-leader", "accounting-emp", "system-emp"],
     icon: "IconReportAnalytics"
+  },
+  {
+    to: `${LIVESTREAM_NAVS_URL}/stats`,
+    label: "Chỉ số",
+    roles: ["admin", "livestream-leader", "accounting-emp", "system-emp"],
+    icon: "IconChartBar"
   }
 ]
