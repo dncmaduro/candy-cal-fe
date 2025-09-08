@@ -13,9 +13,9 @@ import { Sidebar } from "./Sidebar"
 import { useUIStore } from "../../store/uiStore"
 import { MeContext } from "../../context/MeContext"
 import { MyTasksPopover } from "../tasks/MyTasksPopover.tsx"
-import { NAVS } from "../../constants/navs.ts"
+import { LIVESTREAM_NAVS } from "../../constants/navs.ts"
 
-export const AppLayout = ({ children }: { children: ReactNode }) => {
+export const LivestreamLayout = ({ children }: { children: ReactNode }) => {
   const { accessToken, setUser, clearUser } = useUserStore()
   const { checkToken, getNewToken, getMe } = useUsers()
   const navigate = useNavigate()
@@ -71,7 +71,7 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
         meData={meData}
         collapsed={collapsed}
         setCollapsed={setCollapsed}
-        navs={NAVS}
+        navs={LIVESTREAM_NAVS}
       />
       <div
         style={{

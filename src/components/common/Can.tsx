@@ -23,11 +23,11 @@ export const Can = ({
   children
 }: CanProps) => {
   const me = useMe()
-  const userRole = me?.role
+  const userRoles = me?.roles
 
   if (!roles || roles.length === 0) return <>{children}</>
 
-  const has = userRole ? roles.includes(userRole) : false
+  const has = userRoles ? roles.some((role) => userRoles.includes(role)) : false
   const pass = not ? !has : has
 
   if (!pass) return <>{fallback}</>

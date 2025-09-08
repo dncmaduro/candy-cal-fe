@@ -97,7 +97,10 @@ export const LandingLayout = ({ children }: Props) => {
             <Group gap={8}>
               {LANDING_NAVS.filter((n) => {
                 if (!meData) return false
-                return meData.role === "admin" || n.roles.includes(meData.role)
+                return (
+                  meData.roles.includes("admin") ||
+                  n.roles.some((role) => meData.roles.includes(role))
+                )
               }).map((n) => (
                 <NavButton key={n.to} to={n.to} label={n.label} />
               ))}

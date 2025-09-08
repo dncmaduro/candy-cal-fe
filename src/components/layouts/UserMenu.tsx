@@ -3,12 +3,12 @@ import {
   IconAppWindow,
   IconPackages,
   IconPower,
-  IconUser
+  IconUser,
+  IconVideo
 } from "@tabler/icons-react"
 import { useUserStore } from "../../store/userStore"
 import { useUsers } from "../../hooks/useUsers"
 import { useQuery } from "@tanstack/react-query"
-import { useMemo } from "react"
 import { Link } from "@tanstack/react-router"
 
 export const UserMenu = () => {
@@ -21,13 +21,14 @@ export const UserMenu = () => {
     select: (data) => data.data
   })
 
-  const role = useMemo(() => {
-    if (!meData) return "Unknown"
-    if (meData.role === "admin") return "Admin"
-    if (meData.role === "accounting-emp") return "Nhân viên kế toán"
-    if (meData.role === "order-emp") return "Nhân viên vận đơn"
-    return meData.role
-  }, [meData?.role])
+  const ROLES: Record<string, string> = {
+    admin: "Admin",
+    "order-emp": "Nhân viên vận đơn",
+    "accounting-emp": "Nhân viên kế toán",
+    "system-emp": "Nhân viên hệ thống",
+    "livestream-leader": "Trưởng nhóm livestream",
+    "livestream-emp": "Nhân viên livestream"
+  }
 
   const APPS = [
     {
@@ -39,6 +40,11 @@ export const UserMenu = () => {
       to: "/landing",
       label: "Landing Page",
       icon: <IconAppWindow size={18} />
+    },
+    {
+      to: "/livestream",
+      label: "Livestream",
+      icon: <IconVideo size={18} />
     }
   ]
 
@@ -69,7 +75,7 @@ export const UserMenu = () => {
               {meData?.name ?? "Người dùng"}
             </Text>
             <Text size="xs" c="dimmed" lh={1.2}>
-              {role}
+              {meData?.roles.map((r) => ROLES[r]).join(", ")}
             </Text>
           </Box>
         </Group>
@@ -89,7 +95,7 @@ export const UserMenu = () => {
               {meData?.name ?? "Người dùng"}
             </Text>
             <Text size="xs" c="dimmed">
-              {role}
+              {meData?.roles.map((r) => ROLES[r]).join(", ")}
             </Text>
           </Stack>
         </Box>

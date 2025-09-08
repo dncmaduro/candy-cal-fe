@@ -37,14 +37,20 @@ function RouteComponent() {
   if (!accessToken || isLoading || isError) return null
 
   if (
-    meData?.role === "admin" ||
-    meData?.role === "order-emp" ||
-    meData?.role === "system-emp"
+    meData?.roles[0] === "admin" ||
+    meData?.roles[0] === "order-emp" ||
+    meData?.roles[0] === "system-emp"
   ) {
     return <Navigate to="/marketing-storage/storage" />
   }
-  if (meData?.role === "accounting-emp") {
+  if (meData?.roles[0] === "accounting-emp") {
     return <Navigate to="/marketing-storage/accounting-storage" />
+  }
+  if (
+    meData?.roles[0] === "livestream-emp" ||
+    meData?.roles[0] === "livestream-leader"
+  ) {
+    return <Navigate to="/livestream/calendar" />
   }
 
   return (

@@ -30,7 +30,7 @@ export const useAuthGuard = (roles: string[]) => {
       navigate({ to: "/" })
     }
     // Nếu login ok nhưng sai quyền, về home
-    if (roles && meData && !roles.includes(meData.role)) {
+    if (roles && meData && !roles.some((role) => meData.roles.includes(role))) {
       navigate({ to: "/access-denied" })
     }
   }, [accessToken, isError, meData])

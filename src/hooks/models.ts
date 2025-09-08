@@ -307,7 +307,7 @@ export interface GetLogsRangeResponse {
 export interface GetMeResponse {
   username: string
   name: string
-  role: string
+  roles: string[]
   avatarUrl?: string
   _id: string
 }
@@ -1619,4 +1619,204 @@ export interface InsertIncomeAndUpdateSourceRequest {
 /** @interface */
 export interface InsertIncomeAndUpdateSourceResponse {
   success: true
+}
+
+/** @interface */
+export interface CreateLivestreamEmployeeRequest {
+  name: string
+  active?: boolean
+}
+
+/** @interface */
+export interface UpdateLivestreamEmployeeRequest {
+  name?: string
+  active?: boolean
+}
+
+/** @interface */
+export interface SearchLivestreamEmployeesRequest {
+  page: number
+  limit: number
+  active?: boolean
+}
+
+/** @interface */
+export interface SearchLivestreamEmployeesResponse {
+  data: {
+    _id: string
+    name: string
+    active?: boolean
+  }[]
+  total: number
+}
+
+/** @interface */
+export interface GetDetailLivestreamEmployeeRequest {
+  id: string
+}
+
+/** @interface */
+export interface GetDetailLivestreamEmployeeResponse {
+  _id: string
+  name: string
+  active?: boolean
+}
+
+/** @interface */
+export interface DeleteLivestreamEmployeeRequest {
+  id: string
+}
+
+/** @interface */
+export interface CreateLivestreamPeriodRequest {
+  startTime: {
+    hour: number
+    minute: number
+  }
+  endTime: {
+    hour: number
+    minute: number
+  }
+  channel: string
+  noon?: boolean
+}
+
+/** @interface */
+export interface GetAllLivestreamPeriodsResponse {
+  periods: {
+    _id: string
+    startTime: {
+      hour: number
+      minute: number
+    }
+    endTime: {
+      hour: number
+      minute: number
+    }
+    channel: string
+    noon?: boolean
+  }[]
+}
+
+/** @interface */
+export interface GetDetailLivestreamPeriodRequest {
+  id: string
+}
+
+/** @interface */
+export interface GetDetailLivestreamPeriodResponse {
+  _id: string
+  startTime: {
+    hour: number
+    minute: number
+  }
+  endTime: {
+    hour: number
+    minute: number
+  }
+  channel: string
+  noon?: boolean
+}
+
+/** @interface */
+export interface UpdateLivestreamPeriodRequest {
+  startTime?: {
+    hour: number
+    minute: number
+  }
+  endTime?: {
+    hour: number
+    minute: number
+  }
+  channel?: string
+  noon?: boolean
+}
+
+/** @interface */
+export interface DeleteLivestreamPeriodRequest {
+  id: string
+}
+
+/** @interface */
+export interface CreateLivestreamRangeRequest {
+  startDate: Date
+  endDate: Date
+  snapshots?: string[]
+}
+
+/** @interface */
+export interface AddLivestreamSnapshotRequest {
+  period: string
+  host: string
+  assistant: string
+  goal: number
+  income?: number
+  noon?: boolean
+}
+
+/** @interface */
+export interface UpdateLivestreamSnapshotRequest {
+  period?: string
+  host?: string
+  assistant?: string
+  goal?: number
+  income?: number
+  noon?: boolean
+}
+
+/** @interface */
+export interface DeleteLivestreamSnapshotRequest {
+  id: string
+}
+
+/** @interface */
+export interface SetMetricsRequest {
+  totalOrders?: number
+  // totalIncome?: number
+  ads?: number
+}
+
+/** @interface */
+export interface GetLivestreamByDateRangeRequest {
+  startDate: string
+  endDate: string
+}
+
+/** @interface */
+export interface GetLivestreamByDateRangeResponse {
+  livestreams: {
+    _id: string
+    date: string
+    snapshots: {
+      _id: string
+      period: {
+        _id?: string
+        startTime: { hour: number; minute: number }
+        endTime: { hour: number; minute: number }
+        channel: string
+        noon?: boolean
+      }
+      host: string
+      assistant: string
+      goal: number
+      income?: number
+      noon?: boolean
+    }[]
+    totalOrders: number
+    totalIncome: number
+    ads: number
+  }[]
+}
+
+/** @interface */
+export interface GetMonthlyTotalsLivestreamRequest {
+  month: number
+  year: number
+}
+
+/** @interface */
+export interface GetMonthlyTotalsLivestreamResponse {
+  totalOrders: number
+  totalIncome: number
+  totalAds: number
 }
