@@ -16,7 +16,8 @@ import {
   Select,
   Paper,
   NumberInput,
-  Table
+  Table,
+  Tooltip
 } from "@mantine/core"
 import {
   IconEdit,
@@ -225,7 +226,7 @@ function RouteComponent() {
       )
     }
 
-    const colCount = 5
+    const colCount = 8
 
     return (
       <Table
@@ -243,6 +244,21 @@ function RouteComponent() {
             <Table.Th>Tổng doanh thu</Table.Th>
             <Table.Th>Tổng đơn hàng</Table.Th>
             <Table.Th>Chi phí quảng cáo</Table.Th>
+            <Table.Th>
+              <Tooltip label="Doanh thu trung bình trên mỗi đơn hàng">
+                <Text>Doanh thu/đơn</Text>
+              </Tooltip>
+            </Table.Th>
+            <Table.Th>
+              <Tooltip label="Tỷ lệ phần trăm chi phí quảng cáo so với doanh thu">
+                <Text>Chi phí/doanh thu</Text>
+              </Tooltip>
+            </Table.Th>
+            <Table.Th>
+              <Tooltip label="Chi phí quảng cáo trung bình trên mỗi đơn hàng">
+                <Text>Chi phí/đơn</Text>
+              </Tooltip>
+            </Table.Th>
             <Table.Th style={{ width: 120 }}>Hành động</Table.Th>
           </Table.Tr>
         </Table.Thead>
@@ -250,6 +266,22 @@ function RouteComponent() {
           {livestreamData.map((livestream: LivestreamData) => {
             const isExpanded = expandedRows.has(livestream._id)
             const isCurrentDay = isToday(parseISO(livestream.date))
+
+            // Calculate metrics with proper fallbacks
+            const revenuePerOrder =
+              livestream.totalOrders > 0
+                ? Math.round(livestream.totalIncome / livestream.totalOrders)
+                : 0
+
+            const costToRevenueRatio =
+              livestream.totalIncome > 0
+                ? (livestream.ads / livestream.totalIncome) * 100
+                : 0
+
+            const costPerOrder =
+              livestream.totalOrders > 0
+                ? Math.round(livestream.ads / livestream.totalOrders)
+                : 0
 
             return (
               <>
@@ -332,6 +364,61 @@ function RouteComponent() {
                     ) : (
                       <Text c="red">{formatCurrency(livestream.ads)}</Text>
                     )}
+                  </Table.Td>
+                  <Table.Td>
+                    <Tooltip
+                      label={
+                        revenuePerOrder > 0
+                          ? `Trung bình ${formatCurrency(revenuePerOrder)} mỗi đơn`
+                          : "Chưa có đơn hàng"
+                      }
+                      position="top"
+                    >
+                      <Text fw={500} c="blue">
+                        {revenuePerOrder > 0
+                          ? formatCurrency(revenuePerOrder)
+                          : "-"}
+                      </Text>
+                    </Tooltip>
+                  </Table.Td>
+                  <Table.Td>
+                    <Tooltip
+                      label={
+                        costToRevenueRatio > 0
+                          ? `Chi phí chiếm ${costToRevenueRatio.toFixed(1)}% doanh thu`
+                          : "Chưa có chi phí hoặc doanh thu"
+                      }
+                      position="top"
+                    >
+                      <Text
+                        fw={500}
+                        c={
+                          costToRevenueRatio > 50
+                            ? "red"
+                            : costToRevenueRatio > 30
+                              ? "orange"
+                              : "green"
+                        }
+                      >
+                        {costToRevenueRatio > 0
+                          ? `${costToRevenueRatio.toFixed(1)}%`
+                          : "-"}
+                      </Text>
+                    </Tooltip>
+                  </Table.Td>
+                  <Table.Td>
+                    <Tooltip
+                      label={
+                        costPerOrder > 0
+                          ? `Chi phí trung bình ${formatCurrency(costPerOrder)} mỗi đơn`
+                          : "Chưa có chi phí hoặc đơn hàng"
+                      }
+                      position="top"
+                    >
+                      <Text fw={500} c="purple">
+                        {costPerOrder > 0 ? formatCurrency(costPerOrder) : "-"}
+                      </Text>
+                    </Tooltip>
                   </Table.Td>
                   <Table.Td>
                     <Group gap={8}>
