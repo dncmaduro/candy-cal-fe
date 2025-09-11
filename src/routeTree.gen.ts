@@ -31,6 +31,8 @@ import { Route as MarketingStorageAccountingStorageIndexImport } from './routes/
 import { Route as LivestreamStatsIndexImport } from './routes/livestream/stats/index'
 import { Route as LivestreamPeriodsIndexImport } from './routes/livestream/periods/index'
 import { Route as LivestreamMembersIndexImport } from './routes/livestream/members/index'
+import { Route as LivestreamGoalsIndexImport } from './routes/livestream/goals/index'
+import { Route as LivestreamChannelsIndexImport } from './routes/livestream/channels/index'
 import { Route as LivestreamCalendarIndexImport } from './routes/livestream/calendar/index'
 import { Route as LandingLandingPageIndexImport } from './routes/landing/landing-page/index'
 
@@ -165,6 +167,18 @@ const LivestreamMembersIndexRoute = LivestreamMembersIndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const LivestreamGoalsIndexRoute = LivestreamGoalsIndexImport.update({
+  id: '/livestream/goals/',
+  path: '/livestream/goals/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const LivestreamChannelsIndexRoute = LivestreamChannelsIndexImport.update({
+  id: '/livestream/channels/',
+  path: '/livestream/channels/',
+  getParentRoute: () => rootRoute,
+} as any)
+
 const LivestreamCalendarIndexRoute = LivestreamCalendarIndexImport.update({
   id: '/livestream/calendar/',
   path: '/livestream/calendar/',
@@ -242,6 +256,20 @@ declare module '@tanstack/react-router' {
       path: '/livestream/calendar'
       fullPath: '/livestream/calendar'
       preLoaderRoute: typeof LivestreamCalendarIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/livestream/channels/': {
+      id: '/livestream/channels/'
+      path: '/livestream/channels'
+      fullPath: '/livestream/channels'
+      preLoaderRoute: typeof LivestreamChannelsIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/livestream/goals/': {
+      id: '/livestream/goals/'
+      path: '/livestream/goals'
+      fullPath: '/livestream/goals'
+      preLoaderRoute: typeof LivestreamGoalsIndexImport
       parentRoute: typeof rootRoute
     }
     '/livestream/members/': {
@@ -350,6 +378,8 @@ export interface FileRoutesByFullPath {
   '/user': typeof UserIndexRoute
   '/landing/landing-page': typeof LandingLandingPageIndexRoute
   '/livestream/calendar': typeof LivestreamCalendarIndexRoute
+  '/livestream/channels': typeof LivestreamChannelsIndexRoute
+  '/livestream/goals': typeof LivestreamGoalsIndexRoute
   '/livestream/members': typeof LivestreamMembersIndexRoute
   '/livestream/periods': typeof LivestreamPeriodsIndexRoute
   '/livestream/stats': typeof LivestreamStatsIndexRoute
@@ -375,6 +405,8 @@ export interface FileRoutesByTo {
   '/user': typeof UserIndexRoute
   '/landing/landing-page': typeof LandingLandingPageIndexRoute
   '/livestream/calendar': typeof LivestreamCalendarIndexRoute
+  '/livestream/channels': typeof LivestreamChannelsIndexRoute
+  '/livestream/goals': typeof LivestreamGoalsIndexRoute
   '/livestream/members': typeof LivestreamMembersIndexRoute
   '/livestream/periods': typeof LivestreamPeriodsIndexRoute
   '/livestream/stats': typeof LivestreamStatsIndexRoute
@@ -401,6 +433,8 @@ export interface FileRoutesById {
   '/user/': typeof UserIndexRoute
   '/landing/landing-page/': typeof LandingLandingPageIndexRoute
   '/livestream/calendar/': typeof LivestreamCalendarIndexRoute
+  '/livestream/channels/': typeof LivestreamChannelsIndexRoute
+  '/livestream/goals/': typeof LivestreamGoalsIndexRoute
   '/livestream/members/': typeof LivestreamMembersIndexRoute
   '/livestream/periods/': typeof LivestreamPeriodsIndexRoute
   '/livestream/stats/': typeof LivestreamStatsIndexRoute
@@ -428,6 +462,8 @@ export interface FileRouteTypes {
     | '/user'
     | '/landing/landing-page'
     | '/livestream/calendar'
+    | '/livestream/channels'
+    | '/livestream/goals'
     | '/livestream/members'
     | '/livestream/periods'
     | '/livestream/stats'
@@ -452,6 +488,8 @@ export interface FileRouteTypes {
     | '/user'
     | '/landing/landing-page'
     | '/livestream/calendar'
+    | '/livestream/channels'
+    | '/livestream/goals'
     | '/livestream/members'
     | '/livestream/periods'
     | '/livestream/stats'
@@ -476,6 +514,8 @@ export interface FileRouteTypes {
     | '/user/'
     | '/landing/landing-page/'
     | '/livestream/calendar/'
+    | '/livestream/channels/'
+    | '/livestream/goals/'
     | '/livestream/members/'
     | '/livestream/periods/'
     | '/livestream/stats/'
@@ -502,6 +542,8 @@ export interface RootRouteChildren {
   UserIndexRoute: typeof UserIndexRoute
   LandingLandingPageIndexRoute: typeof LandingLandingPageIndexRoute
   LivestreamCalendarIndexRoute: typeof LivestreamCalendarIndexRoute
+  LivestreamChannelsIndexRoute: typeof LivestreamChannelsIndexRoute
+  LivestreamGoalsIndexRoute: typeof LivestreamGoalsIndexRoute
   LivestreamMembersIndexRoute: typeof LivestreamMembersIndexRoute
   LivestreamPeriodsIndexRoute: typeof LivestreamPeriodsIndexRoute
   LivestreamStatsIndexRoute: typeof LivestreamStatsIndexRoute
@@ -527,6 +569,8 @@ const rootRouteChildren: RootRouteChildren = {
   UserIndexRoute: UserIndexRoute,
   LandingLandingPageIndexRoute: LandingLandingPageIndexRoute,
   LivestreamCalendarIndexRoute: LivestreamCalendarIndexRoute,
+  LivestreamChannelsIndexRoute: LivestreamChannelsIndexRoute,
+  LivestreamGoalsIndexRoute: LivestreamGoalsIndexRoute,
   LivestreamMembersIndexRoute: LivestreamMembersIndexRoute,
   LivestreamPeriodsIndexRoute: LivestreamPeriodsIndexRoute,
   LivestreamStatsIndexRoute: LivestreamStatsIndexRoute,
@@ -563,6 +607,8 @@ export const routeTree = rootRoute
         "/user/",
         "/landing/landing-page/",
         "/livestream/calendar/",
+        "/livestream/channels/",
+        "/livestream/goals/",
         "/livestream/members/",
         "/livestream/periods/",
         "/livestream/stats/",
@@ -604,6 +650,12 @@ export const routeTree = rootRoute
     },
     "/livestream/calendar/": {
       "filePath": "livestream/calendar/index.tsx"
+    },
+    "/livestream/channels/": {
+      "filePath": "livestream/channels/index.tsx"
+    },
+    "/livestream/goals/": {
+      "filePath": "livestream/goals/index.tsx"
     },
     "/livestream/members/": {
       "filePath": "livestream/members/index.tsx"

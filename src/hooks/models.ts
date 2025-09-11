@@ -1940,3 +1940,90 @@ export interface CalXlsxShopeeResponse {
   }[]
   total: number
 }
+
+/** @interface */
+export interface CreateLivestreamMonthGoalRequest {
+  month: number
+  year: number
+  channel: string
+  goal: number
+}
+
+/** @interface */
+export interface GetLivestreamMonthGoalsRequest {
+  page: number
+  limit: number
+  channel?: string
+}
+
+/** @interface */
+export interface GetLivestreamMonthGoalsResponse {
+  data: {
+    _id: string
+    month: number
+    year: number
+    channel: string
+    goal: number
+  }[]
+  total: number
+}
+
+/** @interface */
+export interface UpdateLivestreamMonthGoalRequest {
+  goal?: number
+}
+
+/** @interface */
+export interface DeleteLivestreamMonthGoalRequest {
+  id: string
+}
+
+/** @interface */
+export interface CreateLivestreamChannelRequest {
+  name: string
+  username: string
+  link: string
+}
+
+/** @interface */
+export interface SearchLivestreamChannelsRequest {
+  searchText?: string
+  page: number
+  limit: number
+}
+
+/** @interface */
+export interface SearchLivestreamChannelsResponse {
+  data: {
+    _id: string
+    name: string
+    username: string
+    link: string
+  }[]
+  total: number
+}
+
+/** @interface */
+export interface GetLivestreamChannelDetailRequest {
+  id: string
+}
+
+/** @interface */
+export interface GetLivestreamChannelDetailResponse {
+  _id: string
+  name: string
+  username: string
+  link: string
+}
+
+/** @interface */
+export interface UpdateLivestreamChannelRequest {
+  name?: string
+  username?: string
+  link?: string
+}
+
+/** @interface */
+export interface DeleteLivestreamChannelRequest {
+  id: string
+}
