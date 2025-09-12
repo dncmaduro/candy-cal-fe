@@ -17,7 +17,9 @@ export const NAVS = [
     to: `${NAVS_URL}/calfile`,
     label: "Tính đơn vận",
     roles: ["order-emp", "accounting-emp", "system-emp"],
-    icon: "IconCalculator"
+    icon: "IconCalculator",
+    deprecated: true,
+    redirectTo: `${NAVS_URL}/storage`
   },
   {
     to: `${NAVS_URL}/orders-logs`,

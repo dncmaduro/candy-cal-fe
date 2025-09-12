@@ -1,0 +1,425 @@
+import { useEffect, useState } from "react"
+import { useShopeeProducts } from "../../hooks/useShopeeProducts"
+import { useDebouncedValue } from "@mantine/hooks"
+import { useMutation, useQuery } from "@tanstack/react-query"
+import {
+  Box,
+  Button,
+  Divider,
+  Flex,
+  Group,
+  Loader,
+  NumberInput,
+  Pagination,
+  Paper,
+  Table,
+  Text,
+  TextInput,
+  rem,
+  Tooltip,
+  FileInput,
+  ScrollArea
+} from "@mantine/core"
+import {
+  IconPlus,
+  IconSearch,
+  IconDownload,
+  IconUpload,
+  IconTrash,
+  IconEye
+} from "@tabler/icons-react"
+import { modals } from "@mantine/modals"
+import { ShopeeProductItems } from "./ShopeeProductItems"
+import { ShopeeProductModal } from "./ShopeeProductModal"
+import { ShopeeCalResultModal } from "./ShopeeCalResultModal"
+import { Can } from "../common/Can"
+import { CToast } from "../common/CToast"
+import { useCalResultStore } from "../../store/calResultStore"
+import type { CalResult } from "../../store/calResultStore"
+import type { AxiosResponse } from "axios"
+import type { CalXlsxShopeeResponse } from "../../hooks/models"
+
+export const ShopeeProducts = () => {
+  const { searchShopeeProducts, deleteShopeeProduct, calShopeeByXlsx } =
+    useShopeeProducts()
+  const { lastShopeeResult, setLastShopeeResult } = useCalResultStore()
+  const [searchText, setSearchText] = useState<string>("")
+  const [debouncedSearchText] = useDebouncedValue(searchText, 300)
+  const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState(10)
+  const [xlsxFile, setXlsxFile] = useState<File | null>(null)
+
+  const {
+    data: shopeeProductsData,
+    refetch,
+    isLoading
+  } = useQuery({
+    queryKey: ["searchShopeeProducts", debouncedSearchText, page, limit],
+    queryFn: () =>
+      searchShopeeProducts({
+        searchText: debouncedSearchText,
+        page,
+        limit
+      }),
+    select: (data) => data.data
+  })
+
+  const { mutate: deleteMutation } = useMutation({
+    mutationFn: deleteShopeeProduct,
+    onSuccess: () => {
+      CToast.success({ title: "Xóa sản phẩm Shopee thành công" })
+      refetch()
+    },
+    onError: () => {
+      CToast.error({ title: "Có lỗi xảy ra khi xóa sản phẩm" })
+    }
+  })
+
+  const { mutate: calXlsxMutation, isPending: isCalculating } = useMutation({
+    mutationFn: calShopeeByXlsx,
+    onSuccess: (response: AxiosResponse<CalXlsxShopeeResponse>) => {
+      CToast.success({ title: "Tính toán từ file Excel thành công" })
+      // Hiển thị kết quả trong modal
+      const items: CalResult["items"] = Array.isArray(response.data?.items)
+        ? response.data.items
+        : response.data?.items
+          ? [response.data.items]
+          : []
+
+      // Với models mới, orders.products đã là array rồi, không cần convert
+      const orders: CalResult["orders"] = Array.isArray(response.data?.orders)
+        ? response.data.orders
+        : response.data?.orders
+          ? [response.data.orders]
+          : []
+
+      const calResult: CalResult = {
+        items,
+        orders,
+        timestamp: new Date().toISOString()
+      }
+      setLastShopeeResult(calResult)
+
+      modals.open({
+        title: (
+          <Text fw={700} fz="lg">
+            Kết quả tính toán từ file Excel Shopee
+          </Text>
+        ),
+        children: <ShopeeCalResultModal items={items} orders={orders} />,
+        size: "70vw"
+      })
+    },
+    onError: () => {
+      CToast.error({ title: "Có lỗi xảy ra khi tính toán file Excel" })
+    }
+  })
+
+  useEffect(() => {
+    refetch()
+  }, [debouncedSearchText, page, limit])
+
+  useEffect(() => {
+    setPage(1)
+  }, [debouncedSearchText])
+
+  const handleDeleteProduct = (productId: string, productName: string) => {
+    modals.openConfirmModal({
+      title: "Xác nhận xóa sản phẩm",
+      children: (
+        <Text size="sm">
+          Bạn có chắc chắn muốn xóa sản phẩm "{productName}"? Hành động này
+          không thể hoàn tác.
+        </Text>
+      ),
+      labels: { confirm: "Xóa", cancel: "Hủy" },
+      confirmProps: { color: "red" },
+      onConfirm: () => deleteMutation(productId)
+    })
+  }
+
+  const handleCalXlsx = () => {
+    if (xlsxFile) {
+      calXlsxMutation({ file: xlsxFile })
+      setXlsxFile(null)
+    }
+  }
+
+  const handleViewLastResult = () => {
+    if (lastShopeeResult) {
+      modals.open({
+        title: (
+          <Text fw={700} fz="lg">
+            Kết quả tính toán gần nhất
+          </Text>
+        ),
+        children: (
+          <ShopeeCalResultModal
+            items={lastShopeeResult.items}
+            orders={lastShopeeResult.orders}
+            readOnly={true}
+          />
+        ),
+        size: "70vw"
+      })
+    }
+  }
+
+  return (
+    <Box
+      mt={40}
+      mx="auto"
+      px={{ base: 8, md: 0 }}
+      w="100%"
+      style={{
+        background: "rgba(255,255,255,0.97)",
+        borderRadius: rem(20),
+        boxShadow: "0 4px 32px 0 rgba(60,80,180,0.07)",
+        border: "1px solid #ececec"
+      }}
+    >
+      <Flex
+        align="center"
+        justify="space-between"
+        pt={32}
+        pb={8}
+        px={{ base: 8, md: 28 }}
+        direction={{ base: "column", sm: "row" }}
+        gap={8}
+      >
+        <Box>
+          <Text fw={700} fz="xl" mb={2}>
+            Sản phẩm Shopee
+          </Text>
+          <Text c="dimmed" fz="sm">
+            Quản lý, chỉnh sửa và tìm kiếm sản phẩm Shopee
+          </Text>
+        </Box>
+        <Flex gap={12} align="center" w={{ base: "100%", sm: "auto" }}>
+          <TextInput
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            leftSection={<IconSearch size={16} />}
+            placeholder="Tìm kiếm sản phẩm Shopee..."
+            size="md"
+            w={{ base: "100%", sm: 260 }}
+            radius="md"
+            styles={{
+              input: { background: "#f4f6fb", border: "1px solid #ececec" }
+            }}
+          />
+          <Tooltip label="Thêm sản phẩm Shopee mới" withArrow>
+            <Can roles={["admin", "order-emp"]}>
+              <Button
+                color="indigo"
+                leftSection={<IconPlus size={18} />}
+                radius="xl"
+                size="md"
+                px={18}
+                onClick={() =>
+                  modals.open({
+                    title: (
+                      <Text fw={700} fz="md">
+                        Thêm sản phẩm Shopee mới
+                      </Text>
+                    ),
+                    children: <ShopeeProductModal refetch={refetch} />,
+                    size: "lg"
+                  })
+                }
+                style={{
+                  fontWeight: 600,
+                  letterSpacing: 0.1
+                }}
+              >
+                Thêm sản phẩm
+              </Button>
+            </Can>
+          </Tooltip>
+        </Flex>
+      </Flex>
+
+      <Divider my={0} />
+
+      {/* Excel Upload Section */}
+      <Box px={{ base: 8, md: 28 }} py={16}>
+        <Paper withBorder p="md" radius="md" mb={16}>
+          <Group justify="space-between" align="center" mb={12}>
+            <Text fw={600} fz="md">
+              Tính toán từ file Excel Shopee
+            </Text>
+          </Group>
+          <Group align="end" gap={12}>
+            <FileInput
+              label="Chọn file Excel"
+              placeholder="Chọn file Excel để tính toán"
+              accept=".xlsx,.xls"
+              value={xlsxFile}
+              onChange={setXlsxFile}
+              leftSection={<IconUpload size={16} />}
+              style={{ flex: 1, minWidth: 200 }}
+            />
+            <Button
+              color="green"
+              leftSection={<IconDownload size={16} />}
+              onClick={handleCalXlsx}
+              disabled={!xlsxFile}
+              loading={isCalculating}
+              style={{ alignSelf: "end" }}
+            >
+              Tính toán
+            </Button>
+            {lastShopeeResult && (
+              <Tooltip
+                label={`Kết quả từ: ${new Date(lastShopeeResult.timestamp).toLocaleString("vi-VN")}`}
+                withArrow
+              >
+                <Button
+                  variant="light"
+                  color="blue"
+                  leftSection={<IconEye size={16} />}
+                  onClick={handleViewLastResult}
+                  style={{ alignSelf: "end" }}
+                >
+                  Xem kết quả gần nhất
+                </Button>
+              </Tooltip>
+            )}
+          </Group>
+        </Paper>
+      </Box>
+
+      <Box px={{ base: 4, md: 28 }} py={20}>
+        <Group justify="space-between" align="center" mb={16}>
+          <Text fw={600} fz="lg">
+            Danh sách sản phẩm Shopee
+          </Text>
+        </Group>
+
+        <ScrollArea.Autosize scrollbars="x" offsetScrollbars>
+          <Table
+            highlightOnHover
+            striped
+            withColumnBorders
+            withTableBorder
+            verticalSpacing="sm"
+            horizontalSpacing="md"
+            stickyHeader
+            className="rounded-xl"
+            miw={500}
+          >
+            <Table.Thead bg="orange.0">
+              <Table.Tr>
+                <Table.Th style={{ width: 240 }}>Tên sản phẩm Shopee</Table.Th>
+                <Table.Th>Các mặt hàng</Table.Th>
+                <Table.Th style={{ width: 140 }}>Hành động</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+
+            <Table.Tbody>
+              {isLoading ? (
+                <Table.Tr>
+                  <Table.Td colSpan={3}>
+                    <Flex justify="center" align="center" h={60}>
+                      <Loader />
+                    </Flex>
+                  </Table.Td>
+                </Table.Tr>
+              ) : shopeeProductsData && shopeeProductsData.data.length > 0 ? (
+                shopeeProductsData.data.map((product) => (
+                  <Table.Tr key={product._id}>
+                    <Table.Td fw={500} w={"30%"}>
+                      <Flex align={"center"} gap={12}>
+                        <Text>{product.name}</Text>
+                      </Flex>
+                    </Table.Td>
+                    <Table.Td>
+                      <ShopeeProductItems items={product.items} />
+                    </Table.Td>
+                    <Table.Td>
+                      <Group gap={8}>
+                        <Can roles={["admin", "order-emp"]}>
+                          <Button
+                            variant="light"
+                            color="indigo"
+                            size="xs"
+                            radius="xl"
+                            px={14}
+                            onClick={() =>
+                              modals.open({
+                                title: (
+                                  <Text fw={700} fz="md">
+                                    Sửa sản phẩm Shopee
+                                  </Text>
+                                ),
+                                children: (
+                                  <ShopeeProductModal
+                                    product={product}
+                                    refetch={refetch}
+                                  />
+                                ),
+                                size: "lg"
+                              })
+                            }
+                            style={{ fontWeight: 500 }}
+                          >
+                            Chỉnh sửa
+                          </Button>
+                        </Can>
+                        <Can roles={["admin"]}>
+                          <Button
+                            variant="light"
+                            color="red"
+                            size="xs"
+                            radius="xl"
+                            px={14}
+                            onClick={() =>
+                              handleDeleteProduct(product._id, product.name)
+                            }
+                            leftSection={<IconTrash size={14} />}
+                            style={{ fontWeight: 500 }}
+                          >
+                            Xóa
+                          </Button>
+                        </Can>
+                      </Group>
+                    </Table.Td>
+                  </Table.Tr>
+                ))
+              ) : (
+                <Table.Tr>
+                  <Table.Td colSpan={3}>
+                    <Flex justify="center" align="center" h={60}>
+                      <Text c="dimmed">Không có sản phẩm Shopee nào</Text>
+                    </Flex>
+                  </Table.Td>
+                </Table.Tr>
+              )}
+            </Table.Tbody>
+          </Table>
+        </ScrollArea.Autosize>
+
+        <Flex justify="space-between" mt={16} align={"center"}>
+          <Text c="dimmed" mr={8}>
+            Tổng số dòng: {shopeeProductsData?.total || 0}
+          </Text>
+          <Pagination
+            total={Math.ceil((shopeeProductsData?.total || 0) / limit)}
+            value={page}
+            onChange={setPage}
+          />
+          <Group gap={4}>
+            <Text>Số dòng/trang </Text>
+            <NumberInput
+              value={limit}
+              onChange={(val) => setLimit(Number(val))}
+              min={10}
+              max={100}
+              w={120}
+            />
+          </Group>
+        </Flex>
+      </Box>
+    </Box>
+  )
+}

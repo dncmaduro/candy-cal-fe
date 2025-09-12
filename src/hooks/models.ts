@@ -1834,3 +1834,109 @@ export interface GetLivestreamStatsResponse {
   totalOrders: number
   incomeByHost: { hostId: string; income: number }[]
 }
+
+/** @interface */
+export interface CreateShopeeProductRequest {
+  name: string
+  items: {
+    _id: string
+    quantity: number
+  }[]
+}
+
+/** @interface */
+export interface UpdateShopeeProductRequest {
+  name: string
+  items: {
+    _id: string
+    quantity: number
+  }[]
+}
+
+/** @interface */
+export interface DeleteShopeeProductRequest {
+  id: string
+}
+
+/** @interface */
+export interface GetAllShopeeProductsResponse {
+  products: {
+    _id: string
+    name: string
+    items: {
+      _id: string
+      quantity: number
+    }[]
+  }[]
+}
+
+/** @interface */
+export interface GetShopeeProductByIdRequest {
+  id: string
+}
+
+/** @interface */
+export interface GetShopeeProductByIdResponse {
+  _id: string
+  name: string
+  items: {
+    _id: string
+    quantity: number
+  }[]
+}
+
+/** @interface */
+export interface SearchShopeeProductsRequest {
+  searchText?: string
+  page: number
+  limit: number
+}
+
+/** @interface */
+export interface SearchShopeeProductsResponse {
+  data: {
+    _id: string
+    name: string
+    items: {
+      _id: string
+      quantity: number
+    }[]
+  }[]
+  total: number
+}
+
+/** @interface */
+export interface CalXlsxShopeeRequest {
+  file: File
+}
+
+/** @interface */
+export interface CalXlsxShopeeResponse {
+  items: {
+    _id: string
+    name: string
+    quantity: number
+    storageItem: {
+      code: string
+      name: string
+      receivedQuantity: {
+        quantity: number
+        real: number
+      }
+      deliveredQuantity: {
+        quantity: number
+        real: number
+      }
+      restQuantity: {
+        quantity: number
+        real: number
+      }
+      note?: string
+    } | null
+  }[]
+  orders: {
+    products: { sku: string; name?: string; quantity: number }[]
+    quantity: number
+  }[]
+  total: number
+}

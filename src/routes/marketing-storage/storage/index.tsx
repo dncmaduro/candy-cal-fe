@@ -8,6 +8,7 @@ import { useAuthGuard } from "../../../hooks/useAuthGuard"
 import { Items } from "../../../components/storage/Items"
 import { ReadyCombos } from "../../../components/storage/ReadyCombos"
 import { NAVS_URL } from "../../../constants/navs"
+import { ShopeeProducts } from "../../../components/storage/ShopeeProducts"
 
 type StorageTab = {
   tab: string
@@ -33,8 +34,12 @@ function RouteComponent() {
       value: "items"
     },
     {
-      label: "Sản phẩm",
-      value: "products"
+      label: "Sản phẩm (Tiktok Shop)",
+      value: "tiktok-products"
+    },
+    {
+      label: "Sản phẩm (Shopee)",
+      value: "shopee-products"
     },
     {
       label: "Các combo đóng sẵn",
@@ -55,7 +60,7 @@ function RouteComponent() {
   return (
     <>
       <Helmet>
-        <title>{`Kho & Sản phẩm - ${tab === "products" ? "Sản phẩm" : tab === "ready-combos" ? "Combo đóng sẵn" : "Mặt hàng"} | MyCandy`}</title>
+        <title>{`Kho & Sản phẩm - ${tab === "tiktok-products" ? "Sản phẩm (Tiktok Shop)" : tab === "ready-combos" ? "Combo đóng sẵn" : "Mặt hàng"} | MyCandy`}</title>
       </Helmet>
       <AppLayout>
         <Tabs
@@ -78,8 +83,12 @@ function RouteComponent() {
               <Items />
             </Tabs.Panel>
 
-            <Tabs.Panel value="products">
+            <Tabs.Panel value="tiktok-products">
               <Products />
+            </Tabs.Panel>
+
+            <Tabs.Panel value="shopee-products">
+              <ShopeeProducts />
             </Tabs.Panel>
 
             <Tabs.Panel value="ready-combos">

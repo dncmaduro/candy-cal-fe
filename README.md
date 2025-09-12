@@ -1,4 +1,4 @@
-# Candy Cal FE (v3.2.0)
+# Candy Cal FE (v3.3.0)
 
 Ứng dụng frontend quản trị & vận hành bán hàng (MyCandy) xây dựng bằng React + TypeScript + Vite. Hỗ trợ theo dõi doanh thu, KPI, kho, logs, thông báo realtime và quy trình nội bộ (yêu cầu xuất kho, combos sẵn, mục tiêu tháng...).
 
@@ -7,7 +7,7 @@
 - React 18 + TypeScript + Vite 6
 - Mantine UI 7 (core, dates, modals, notifications ...)
 - TanStack Router & React Query
-- Zustand (state client)
+- Zustand (state client + localStorage persistence)
 - Axios wrapper
 - date-fns / dayjs, Socket.io-client
 - TailwindCSS (bổ sung utility)
@@ -41,6 +41,8 @@ src/
 
 - Item, Product, Ready Combo, Packing Rules theo khoảng số lượng.
 - Log nhập/xuất kho: theo ngày, ca (sáng/chiều), tag & trạng thái.
+- **Tính toán từ file Excel**: Upload file Excel để tự động tính toán sản phẩm cần thiết, với chức năng xem lại kết quả gần nhất.
+- **Shopee Products**: Quản lý sản phẩm Shopee với Excel calculator tích hợp và lưu kết quả persistent.
 
 ### Yêu cầu xuất kho
 
@@ -82,6 +84,17 @@ npm run routes    # Generate router tree
 - Xuất báo cáo nâng cao (PDF / đa định dạng).
 
 ## 7. Changelog
+
+### 3.3.0
+
+- **Products & Shopee Integration**: Tích hợp chức năng "Tính toán từ file Excel" vào tab Products, thay thế route `/marketing-storage/calfile/` độc lập. Route cũ giờ redirect tự động về `/marketing-storage/storage`.
+- **Zustand State Management**: Migration từ localStorage trực tiếp sang Zustand store với persist middleware. Centralized state cho tất cả calculation results với automatic localStorage sync.
+- **Enhanced UI**:
+  - Modal kích thước 80vw cho Products, 70vw cho Shopee với full-width content
+  - Tab Orders styling với multi-layer background, shadows và better spacing
+  - Persistent results với timestamp tooltips
+- **Type Safety**: Hoàn toàn loại bỏ `any` types, sử dụng proper TypeScript interfaces cho tất cả calculation results.
+- **Navigation**: Cập nhật navigation structure, deprecated `/calfile` route với redirectTo support.
 
 ### 3.2.0
 
