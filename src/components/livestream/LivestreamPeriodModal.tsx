@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { useLivestream } from "../../hooks/useLivestream"
-import { useMutation } from "@tanstack/react-query"
-import { Stack, TextInput, Button, Group, Switch, Text } from "@mantine/core"
+import { useMutation, useQuery } from "@tanstack/react-query"
+import { Stack, Button, Group, Switch, Text, Select } from "@mantine/core"
 import { TimeInput } from "@mantine/dates"
 import { modals } from "@mantine/modals"
 import { CToast } from "../common/CToast"
@@ -19,7 +19,22 @@ interface Props {
 }
 
 export const LivestreamPeriodModal = ({ period, refetch }: Props) => {
-  const { createLivestreamPeriod, updateLivestreamPeriod } = useLivestream()
+  const {
+    createLivestreamPeriod,
+    updateLivestreamPeriod,
+    searchLivestreamChannels
+  } = useLivestream()
+
+  // Fetch channels for select options
+  const { data: channelOptions } = useQuery({
+    queryKey: ["searchLivestreamChannels", "for-select"],
+    queryFn: () => searchLivestreamChannels({ page: 1, limit: 100 }),
+    select: (data) =>
+      data.data.data.map((channel) => ({
+        label: channel.name,
+        value: channel.name
+      }))
+  })
 
   const formatTimeValue = (hour: number, minute: number) => {
     const h = hour.toString().padStart(2, "0")
@@ -144,14 +159,16 @@ export const LivestreamPeriodModal = ({ period, refetch }: Props) => {
         />
       </Group>
 
-      <TextInput
+      <Select
         label="Kênh"
-        placeholder="Nhập tên kênh livestream"
+        placeholder="Chọn kênh livestream"
         value={channel}
-        onChange={(e) => setChannel(e.target.value)}
+        onChange={(value) => setChannel(value || "")}
+        data={channelOptions || []}
         required
         disabled={isPending}
         size="md"
+        searchable
       />
 
       <Stack gap={8}>

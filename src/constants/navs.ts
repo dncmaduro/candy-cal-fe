@@ -107,5 +107,17 @@ export const LIVESTREAM_NAVS = [
     label: "Chỉ số",
     roles: ["admin", "livestream-leader", "accounting-emp", "system-emp"],
     icon: "IconChartBar"
+  },
+  {
+    to: `${LIVESTREAM_NAVS_URL}/goals`,
+    label: "Mục tiêu",
+    roles: ["admin", "livestream-leader", "accounting-emp", "system-emp"],
+    icon: "IconTarget"
+  },
+  {
+    to: `${LIVESTREAM_NAVS_URL}/channels`,
+    label: "Kênh livestream",
+    roles: ["admin", "livestream-leader", "system-emp"],
+    icon: "IconAt"
   }
 ]

@@ -3,10 +3,14 @@ import { toQueryString } from "../utils/toQuery"
 import { callApi } from "./axios"
 import {
   AddLivestreamSnapshotRequest,
+  CreateLivestreamChannelRequest,
   CreateLivestreamEmployeeRequest,
+  CreateLivestreamMonthGoalRequest,
   CreateLivestreamPeriodRequest,
   CreateLivestreamRangeRequest,
+  DeleteLivestreamChannelRequest,
   DeleteLivestreamEmployeeRequest,
+  DeleteLivestreamMonthGoalRequest,
   DeleteLivestreamPeriodRequest,
   GetAllLivestreamPeriodsResponse,
   GetDetailLivestreamEmployeeRequest,
@@ -14,14 +18,21 @@ import {
   GetDetailLivestreamPeriodResponse,
   GetLivestreamByDateRangeRequest,
   GetLivestreamByDateRangeResponse,
+  GetLivestreamChannelDetailResponse,
+  GetLivestreamMonthGoalsRequest,
+  GetLivestreamMonthGoalsResponse,
   GetLivestreamStatsRequest,
   GetLivestreamStatsResponse,
   GetMonthlyTotalsLivestreamRequest,
   GetMonthlyTotalsLivestreamResponse,
+  SearchLivestreamChannelsRequest,
+  SearchLivestreamChannelsResponse,
   SearchLivestreamEmployeesRequest,
   SearchLivestreamEmployeesResponse,
   SetMetricsRequest,
+  UpdateLivestreamChannelRequest,
   UpdateLivestreamEmployeeRequest,
+  UpdateLivestreamMonthGoalRequest,
   UpdateLivestreamPeriodRequest,
   UpdateLivestreamSnapshotRequest
 } from "./models"
@@ -210,6 +221,104 @@ export const useLivestream = () => {
     })
   }
 
+  const createLivestreamMonthGoal = async (
+    req: CreateLivestreamMonthGoalRequest
+  ) => {
+    return callApi<CreateLivestreamMonthGoalRequest, never>({
+      method: "POST",
+      path: `/v1/livestreams/goals`,
+      data: req,
+      token: accessToken
+    })
+  }
+
+  const getLivestreamMonthGoals = async (
+    req: GetLivestreamMonthGoalsRequest
+  ) => {
+    const query = toQueryString(req)
+
+    return callApi<never, GetLivestreamMonthGoalsResponse>({
+      method: "GET",
+      path: `/v1/livestreams/goals?${query}`,
+      token: accessToken
+    })
+  }
+
+  const updateLivestreamMonthGoal = async (
+    id: string,
+    req: UpdateLivestreamMonthGoalRequest
+  ) => {
+    return callApi<UpdateLivestreamMonthGoalRequest, never>({
+      method: "PUT",
+      path: `/v1/livestreams/goals/${id}`,
+      data: req,
+      token: accessToken
+    })
+  }
+
+  const deleteLivestreamMonthGoal = async (
+    req: DeleteLivestreamMonthGoalRequest
+  ) => {
+    return callApi<never, never>({
+      method: "DELETE",
+      path: `/v1/livestreams/goals/${req.id}`,
+      token: accessToken
+    })
+  }
+
+  const createLivestreamChannel = async (
+    req: CreateLivestreamChannelRequest
+  ) => {
+    return callApi<CreateLivestreamChannelRequest, never>({
+      method: "POST",
+      path: `/v1/livestreams/channels`,
+      data: req,
+      token: accessToken
+    })
+  }
+
+  const searchLivestreamChannels = async (
+    req: SearchLivestreamChannelsRequest
+  ) => {
+    const query = toQueryString(req)
+
+    return callApi<never, SearchLivestreamChannelsResponse>({
+      method: "GET",
+      path: `/v1/livestreams/channels?${query}`,
+      token: accessToken
+    })
+  }
+
+  const getLivestreamChannelDetail = async (id: string) => {
+    return callApi<never, GetLivestreamChannelDetailResponse>({
+      method: "GET",
+      path: `/v1/livestreams/channels/${id}`,
+      token: accessToken
+    })
+  }
+
+  const updateLivestreamChannel = async (
+    id: string,
+    req: UpdateLivestreamChannelRequest
+  ) => {
+    return callApi<UpdateLivestreamChannelRequest, never>({
+      method: "PUT",
+      path: `/v1/livestreams/channels/${id}`,
+      data: req,
+      token: accessToken
+    })
+  }
+
+  const deleteLivestreamChannel = async (
+    req: DeleteLivestreamChannelRequest
+  ) => {
+    return callApi<never, never>({
+      method: "DELETE",
+      path: `/v1/livestreams/channels/${req.id}`,
+      token: accessToken
+    })
+  }
+
   return {
     createLivestreamEmployee,
     updateLivestreamEmployee,
@@ -227,6 +336,15 @@ export const useLivestream = () => {
     setMetrics,
     getLivestreamsByDateRange,
     getMonthlyTotalsLivestreams,
-    getLivestreamStats
+    getLivestreamStats,
+    createLivestreamMonthGoal,
+    getLivestreamMonthGoals,
+    updateLivestreamMonthGoal,
+    deleteLivestreamMonthGoal,
+    createLivestreamChannel,
+    searchLivestreamChannels,
+    getLivestreamChannelDetail,
+    updateLivestreamChannel,
+    deleteLivestreamChannel
   }
 }
