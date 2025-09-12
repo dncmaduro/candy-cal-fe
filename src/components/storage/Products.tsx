@@ -1,29 +1,44 @@
 import { useEffect, useState } from "react"
 import { useProducts } from "../../hooks/useProducts"
 import { useDebouncedValue } from "@mantine/hooks"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useMutation } from "@tanstack/react-query"
 import {
   Box,
   Button,
   Divider,
   Flex,
+  Group,
   Loader,
+  Paper,
   Table,
   Text,
   TextInput,
   rem,
-  Tooltip
+  Tooltip,
+  FileInput
 } from "@mantine/core"
-import { IconPlus, IconSearch } from "@tabler/icons-react"
+import {
+  IconPlus,
+  IconSearch,
+  IconUpload,
+  IconDownload,
+  IconEye
+} from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
 import { ProductItems } from "./ProductItems"
 import { ProductModal } from "./ProductModal"
+import { CalFileResultModal } from "../cal/CalFileResultModal"
 import { Can } from "../common/Can"
+import { CToast } from "../common/CToast"
+import { useCalResultStore } from "../../store/calResultStore"
+import type { ProductsCalResult } from "../../store/calResultStore"
 
 export const Products = () => {
-  const { searchProducts } = useProducts()
+  const { searchProducts, calFile } = useProducts()
+  const { lastProductsResult, setLastProductsResult } = useCalResultStore()
   const [searchText, setSearchText] = useState<string>("")
   const [debouncedSearchText] = useDebouncedValue(searchText, 300)
+  const [xlsxFile, setXlsxFile] = useState<File | null>(null)
 
   const {
     data: productsData,
@@ -34,6 +49,64 @@ export const Products = () => {
     queryFn: () => searchProducts(debouncedSearchText),
     select: (data) => data.data
   })
+
+  const { mutate: calXlsxMutation, isPending: isCalculating } = useMutation({
+    mutationFn: calFile,
+    onSuccess: (response) => {
+      CToast.success({ title: "Tính toán từ file Excel thành công" })
+
+      const calResult: ProductsCalResult = {
+        items: response.data.items || [],
+        orders: response.data.orders || [],
+        timestamp: new Date().toISOString()
+      }
+      setLastProductsResult(calResult)
+
+      modals.open({
+        title: (
+          <Text fw={700} fz="lg">
+            Kết quả tính toán từ file Excel
+          </Text>
+        ),
+        children: (
+          <CalFileResultModal
+            items={calResult.items}
+            orders={calResult.orders}
+          />
+        ),
+        size: "80vw"
+      })
+    },
+    onError: () => {
+      CToast.error({ title: "Có lỗi xảy ra khi tính toán file Excel" })
+    }
+  })
+
+  const handleCalXlsx = () => {
+    if (xlsxFile) {
+      calXlsxMutation(xlsxFile)
+      setXlsxFile(null)
+    }
+  }
+
+  const handleViewLastResult = () => {
+    if (lastProductsResult) {
+      modals.open({
+        title: (
+          <Text fw={700} fz="lg">
+            Kết quả tính toán gần nhất
+          </Text>
+        ),
+        children: (
+          <CalFileResultModal
+            items={lastProductsResult.items}
+            orders={lastProductsResult.orders}
+          />
+        ),
+        size: "80vw"
+      })
+    }
+  }
 
   useEffect(() => {
     refetch()
@@ -115,7 +188,61 @@ export const Products = () => {
 
       <Divider my={0} />
 
+      {/* Excel Upload Section */}
+      <Box px={{ base: 8, md: 28 }} py={16}>
+        <Paper withBorder p="md" radius="md" mb={16}>
+          <Group justify="space-between" align="center" mb={12}>
+            <Text fw={600} fz="md">
+              Tính toán từ file Excel
+            </Text>
+          </Group>
+          <Group align="end" gap={12}>
+            <FileInput
+              label="Chọn file Excel"
+              placeholder="Chọn file Excel để tính toán"
+              accept=".xlsx,.xls"
+              value={xlsxFile}
+              onChange={setXlsxFile}
+              leftSection={<IconUpload size={16} />}
+              style={{ flex: 1, minWidth: 200 }}
+            />
+            <Button
+              color="green"
+              leftSection={<IconDownload size={16} />}
+              onClick={handleCalXlsx}
+              disabled={!xlsxFile}
+              loading={isCalculating}
+              style={{ alignSelf: "end" }}
+            >
+              Tính toán
+            </Button>
+            {lastProductsResult && (
+              <Tooltip
+                label={`Kết quả từ: ${new Date(lastProductsResult.timestamp).toLocaleString("vi-VN")}`}
+                withArrow
+              >
+                <Button
+                  variant="light"
+                  color="blue"
+                  leftSection={<IconEye size={16} />}
+                  onClick={handleViewLastResult}
+                  style={{ alignSelf: "end" }}
+                >
+                  Xem kết quả gần nhất
+                </Button>
+              </Tooltip>
+            )}
+          </Group>
+        </Paper>
+      </Box>
+
       <Box px={{ base: 4, md: 28 }} py={20}>
+        <Group justify="space-between" align="center" mb={16}>
+          <Text fw={600} fz="lg">
+            Danh sách sản phẩm
+          </Text>
+        </Group>
+
         <Table
           highlightOnHover
           striped

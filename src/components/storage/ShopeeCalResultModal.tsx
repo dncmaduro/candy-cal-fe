@@ -1,22 +1,19 @@
-import { useQuery } from "@tanstack/react-query"
-import { useItems } from "../../hooks/useItems"
 import { Box, Button, Collapse, Divider, Stack, Tabs, rem } from "@mantine/core"
-import { ItemResponse } from "../../hooks/models"
-import { CalOrders } from "./CalOrders"
+import { ShopeeCalOrders } from "./ShopeeCalOrders"
 import {
   IconBox,
   IconClipboardList,
   IconCalendarPlus
 } from "@tabler/icons-react"
 import { useDisclosure } from "@mantine/hooks"
-import { SaveLogDiv } from "./SaveLogDiv"
-import { CalItems } from "./CalItems"
+import { ShopeeCalItems } from "./ShopeeCalItems"
 
 interface Props {
   items: {
     _id: string
+    name: string
     quantity: number
-    storageItems: {
+    storageItem: {
       code: string
       name: string
       receivedQuantity: {
@@ -32,11 +29,12 @@ interface Props {
         real: number
       }
       note?: string
-    }[]
+    } | null
   }[]
   orders: {
     products: {
-      name: string
+      sku: string
+      name?: string
       quantity: number
     }[]
     quantity: number
@@ -45,23 +43,13 @@ interface Props {
   date?: Date
 }
 
-export const CalFileResultModal = ({
+export const ShopeeCalResultModal = ({
   items,
   orders,
   readOnly,
   date
 }: Props) => {
-  const { searchItems } = useItems()
   const [saveLogDiv, { toggle }] = useDisclosure(false)
-  const { data: allItems } = useQuery({
-    queryKey: ["searchItems"],
-    queryFn: () => searchItems(""),
-    select: (data) =>
-      data.data.reduce(
-        (acc, item) => ({ ...acc, [item._id]: item }),
-        {} as Record<string, ItemResponse>
-      )
-  })
 
   return (
     <Box
@@ -79,7 +67,7 @@ export const CalFileResultModal = ({
       <Tabs
         defaultValue="items"
         variant="pills"
-        color="indigo"
+        color="orange"
         radius="xl"
         keepMounted={false}
       >
@@ -107,7 +95,7 @@ export const CalFileResultModal = ({
         </Tabs.List>
 
         <Tabs.Panel value="items" className="p-3">
-          <CalItems allItems={allItems} items={items} />
+          <ShopeeCalItems items={items} />
         </Tabs.Panel>
 
         <Tabs.Panel
@@ -115,17 +103,17 @@ export const CalFileResultModal = ({
           className="mx-2 mb-4 rounded-xl border border-gray-100 bg-gray-50/80 p-4 shadow-sm"
         >
           <div className="rounded-lg bg-white p-4 shadow-sm">
-            <CalOrders orders={orders} allCalItems={items} date={date} />
+            <ShopeeCalOrders orders={orders} allCalItems={items} date={date} />
           </div>
         </Tabs.Panel>
       </Tabs>
 
       {!readOnly && (
         <>
-          <Divider mt={24} mb={20} label={"Lưu lịch sử vận đơn"} />
+          <Divider mt={24} mb={20} label={"Lưu lịch sử Shopee"} />
           <Stack gap={16} px={4}>
             <Button
-              color="indigo"
+              color="orange"
               variant="outline"
               size="md"
               radius="xl"
@@ -136,10 +124,11 @@ export const CalFileResultModal = ({
               }}
               leftSection={<IconCalendarPlus size={16} />}
             >
-              Lưu log
+              Lưu log Shopee
             </Button>
             <Collapse in={saveLogDiv}>
-              <SaveLogDiv items={items} orders={orders} />
+              {/* TODO: Implement ShopeeeSaveLogDiv */}
+              <div>Shopee Save Log functionality here</div>
             </Collapse>
           </Stack>
         </>
