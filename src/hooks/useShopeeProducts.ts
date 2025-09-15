@@ -1,4 +1,5 @@
 import { useUserStore } from "../store/userStore"
+import { toQueryString } from "../utils/toQuery"
 import { callApi } from "./axios"
 import {
   CalXlsxShopeeRequest,
@@ -58,10 +59,11 @@ export const useShopeeProducts = () => {
   }
 
   const searchShopeeProducts = async (req: SearchShopeeProductsRequest) => {
+    const query = toQueryString(req)
+
     return callApi<SearchShopeeProductsRequest, SearchShopeeProductsResponse>({
-      path: `/v1/shopeeproducts/search`,
+      path: `/v1/shopeeproducts/search?${query}`,
       method: "GET",
-      data: req,
       token: accessToken
     })
   }
