@@ -812,6 +812,9 @@ export interface GetIncomesByDateRangeResponse {
       quantity: number
       quotation: number
       price: number
+      platformDiscount: number
+      sellerDiscount: number
+      priceAfterDiscount: number
       affiliateAdsPercentage?: number
       affiliateAdsAmount?: number
       standardAffPercentage?: number
@@ -1328,6 +1331,13 @@ export interface GetRangeStatsResponse {
         videoAdsToVideoIncome: number
       }
     }
+    discounts: {
+      totalPlatformDiscount: number
+      totalSellerDiscount: number
+      totalDiscount: number
+      avgDiscountPerOrder: number
+      discountPercentage: number
+    }
   }
   changes?: {
     totalIncomePct: number
@@ -1346,6 +1356,13 @@ export interface GetRangeStatsResponse {
       videoAdsCostPct: number
       liveAdsToLiveIncomePctDiff: number
       videoAdsToVideoIncomePctDiff: number
+    }
+    discounts: {
+      totalPlatformDiscount: number
+      totalSellerDiscount: number
+      totalDiscount: number
+      avgDiscountPerOrder: number
+      discountPercentage: number
     }
   }
 }

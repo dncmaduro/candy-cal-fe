@@ -406,6 +406,219 @@ export const RangeStats = () => {
                 </Paper>
               )}
 
+            {/* Discount Statistics */}
+            {current.discounts && (
+              <Paper withBorder p="lg" radius="lg">
+                <Text fw={600} mb={16}>
+                  Thống kê giảm giá
+                </Text>
+                {/* All 5 boxes in one row */}
+                <Group gap={12} align="stretch" grow>
+                  <Paper
+                    withBorder
+                    p="md"
+                    radius="md"
+                    h={90}
+                    w={200}
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "space-between"
+                    }}
+                  >
+                    <Text fw={500} fz="sm" c="dimmed" mb={4}>
+                      Tổng chiết khấu
+                    </Text>
+                    <Group align="center" gap={8} wrap="nowrap">
+                      <Text fz="lg" fw={700} c="dark">
+                        {current.discounts.totalDiscount.toLocaleString()} VNĐ
+                      </Text>
+                      {typeof changes?.discounts?.totalDiscount ===
+                        "number" && (
+                        <Badge
+                          color={
+                            changes.discounts.totalDiscount >= 0
+                              ? "red"
+                              : "green"
+                          }
+                          variant="light"
+                          size="sm"
+                        >
+                          {changes.discounts.totalDiscount >= 0 ? "+" : "-"}
+                          {Math.abs(
+                            changes.discounts.totalDiscount
+                          ).toLocaleString()}
+                        </Badge>
+                      )}
+                    </Group>
+                  </Paper>
+
+                  <Paper
+                    withBorder
+                    p="md"
+                    radius="md"
+                    h={90}
+                    w={200}
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "space-between"
+                    }}
+                  >
+                    <Text fw={500} fz="sm" c="dimmed" mb={4}>
+                      Chiết khấu platform
+                    </Text>
+                    <Group align="center" gap={8} wrap="nowrap">
+                      <Text fz="lg" fw={700} c="orange">
+                        {current.discounts.totalPlatformDiscount.toLocaleString()}{" "}
+                        VNĐ
+                      </Text>
+                      {typeof changes?.discounts?.totalPlatformDiscount ===
+                        "number" && (
+                        <Badge
+                          color={
+                            changes.discounts.totalPlatformDiscount >= 0
+                              ? "red"
+                              : "green"
+                          }
+                          variant="light"
+                          size="sm"
+                        >
+                          {changes.discounts.totalPlatformDiscount >= 0
+                            ? "+"
+                            : "-"}
+                          {Math.abs(
+                            changes.discounts.totalPlatformDiscount
+                          ).toLocaleString()}
+                        </Badge>
+                      )}
+                    </Group>
+                  </Paper>
+
+                  <Paper
+                    withBorder
+                    p="md"
+                    radius="md"
+                    h={90}
+                    w={200}
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "space-between"
+                    }}
+                  >
+                    <Text fw={500} fz="sm" c="dimmed" mb={4}>
+                      Chiết khấu seller
+                    </Text>
+                    <Group align="center" gap={8} wrap="nowrap">
+                      <Text fz="lg" fw={700} c="blue">
+                        {current.discounts.totalSellerDiscount.toLocaleString()}{" "}
+                        VNĐ
+                      </Text>
+                      {typeof changes?.discounts?.totalSellerDiscount ===
+                        "number" && (
+                        <Badge
+                          color={
+                            changes.discounts.totalSellerDiscount >= 0
+                              ? "red"
+                              : "green"
+                          }
+                          variant="light"
+                          size="sm"
+                        >
+                          {changes.discounts.totalSellerDiscount >= 0
+                            ? "+"
+                            : "-"}
+                          {Math.abs(
+                            changes.discounts.totalSellerDiscount
+                          ).toLocaleString()}
+                        </Badge>
+                      )}
+                    </Group>
+                  </Paper>
+
+                  <Paper
+                    withBorder
+                    p="md"
+                    radius="md"
+                    h={90}
+                    w={200}
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "space-between"
+                    }}
+                  >
+                    <Text fw={500} fz="sm" c="dimmed" mb={4}>
+                      Trung bình mỗi đơn
+                    </Text>
+                    <Group align="center" gap={8} wrap="nowrap">
+                      <Text fz="lg" fw={700} c="dark">
+                        {current.discounts.avgDiscountPerOrder.toLocaleString()}{" "}
+                        VNĐ
+                      </Text>
+                      {typeof changes?.discounts?.avgDiscountPerOrder ===
+                        "number" && (
+                        <Badge
+                          color={
+                            changes.discounts.avgDiscountPerOrder >= 0
+                              ? "red"
+                              : "green"
+                          }
+                          variant="light"
+                          size="sm"
+                        >
+                          {changes.discounts.avgDiscountPerOrder >= 0
+                            ? "+"
+                            : "-"}
+                          {Math.abs(
+                            changes.discounts.avgDiscountPerOrder
+                          ).toLocaleString()}
+                        </Badge>
+                      )}
+                    </Group>
+                  </Paper>
+
+                  <Paper
+                    withBorder
+                    p="md"
+                    radius="md"
+                    h={90}
+                    w={200}
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "space-between"
+                    }}
+                  >
+                    <Text fw={500} fz="sm" c="dimmed" mb={4}>
+                      Tỷ lệ chiết khấu
+                    </Text>
+                    <Group align="center" gap={8} wrap="nowrap">
+                      <Text fz="lg" fw={700} c="grape">
+                        {current.discounts.discountPercentage.toFixed(2)}%
+                      </Text>
+                      {typeof changes?.discounts?.discountPercentage ===
+                        "number" && (
+                        <Badge
+                          color={
+                            changes.discounts.discountPercentage >= 0
+                              ? "red"
+                              : "green"
+                          }
+                          variant="light"
+                          size="sm"
+                        >
+                          {changes.discounts.discountPercentage >= 0 ? "+" : ""}
+                          {changes.discounts.discountPercentage.toFixed(2)}%
+                        </Badge>
+                      )}
+                    </Group>
+                  </Paper>
+                </Group>
+              </Paper>
+            )}
+
             <Table
               withTableBorder
               withColumnBorders

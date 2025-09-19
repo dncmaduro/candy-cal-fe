@@ -146,6 +146,9 @@ export const Incomes = () => {
     { label: "Số lượng", key: "quantity", width: 80 },
     { label: "Báo giá", key: "quotation", width: 90 },
     { label: "Giá bán", key: "price", width: 90 },
+    { label: "Chiết khấu Platform", key: "platformDiscount", width: 120 },
+    { label: "Chiết khấu Seller", key: "sellerDiscount", width: 120 },
+    { label: "Giá sau chiết khấu", key: "priceAfterDiscount", width: 130 },
     { label: "Loại nội dung", key: "content", width: 110 },
     { label: "Quy cách đóng hộp", key: "box", width: 60 },
     { label: "Nhà sáng tạo", key: "creator", width: 90 },
@@ -360,7 +363,7 @@ export const Incomes = () => {
             horizontalSpacing="md"
             stickyHeader
             className="rounded-xl"
-            miw={2000}
+            miw={2400}
           >
             <Table.Thead>
               <Table.Tr>
@@ -434,6 +437,15 @@ export const Incomes = () => {
                       <Table.Td>{prod.quantity}</Table.Td>
                       <Table.Td>{prod.quotation?.toLocaleString()}</Table.Td>
                       <Table.Td>{prod.price?.toLocaleString()}</Table.Td>
+                      <Table.Td>
+                        {prod.platformDiscount?.toLocaleString() || "0"}
+                      </Table.Td>
+                      <Table.Td>
+                        {prod.sellerDiscount?.toLocaleString() || "0"}
+                      </Table.Td>
+                      <Table.Td>
+                        {prod.priceAfterDiscount?.toLocaleString() || "0"}
+                      </Table.Td>
                       <Table.Td>
                         <span
                           style={{
