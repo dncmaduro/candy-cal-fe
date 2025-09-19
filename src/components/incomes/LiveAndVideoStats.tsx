@@ -21,6 +21,7 @@ type Props = {
   adsSharePctDiff?: number
   ownVideoIncome?: number
   otherVideoIncome?: number
+  otherIncome?: number
   flex?: number
 }
 
@@ -32,6 +33,7 @@ export const LiveAndVideoStats = ({
   adsSharePctDiff,
   ownVideoIncome,
   otherVideoIncome,
+  otherIncome,
   flex = 1
 }: Props) => {
   const [mode, setMode] = useState<"table" | "chart">("table")
@@ -40,12 +42,21 @@ export const LiveAndVideoStats = ({
   // helper for video breakdown
   const videoOwn = ownVideoIncome ?? 0
   const videoOther = otherVideoIncome ?? 0
-  const videoTotal = videoOwn + videoOther
+  const otherIncomeValue = otherIncome ?? 0
 
   // small pie parts for video breakdown (used both for drawing and legend)
   const parts: { key: string; value: number; label: string }[] = [
     { key: "own", value: videoOwn, label: "NST bên bán" },
-    { key: "other", value: videoOther, label: "NST liên kết" }
+    { key: "other", value: videoOther, label: "NST liên kết" },
+    ...(title === "Doanh thu Sàn" && otherIncomeValue > 0
+      ? [
+          {
+            key: "otherIncome",
+            value: otherIncomeValue,
+            label: "Doanh thu Khác"
+          }
+        ]
+      : [])
   ]
   return (
     <Paper withBorder p="lg" radius="lg" style={{ flex }}>
@@ -71,8 +82,8 @@ export const LiveAndVideoStats = ({
             <Text fw={700}>{fmtCurrency(income)}</Text>
           </Group>
 
-          {/* If this is Video, show breakdown rows */}
-          {title === "Video" && (
+          {/* If this is Video or Doanh thu Sàn, show breakdown rows */}
+          {(title === "Video" || title === "Doanh thu Sàn") && (
             <>
               <Group justify="space-between">
                 <Text c={"dimmed"}>Doanh số từ nhà sáng tạo (own)</Text>
@@ -88,6 +99,14 @@ export const LiveAndVideoStats = ({
                   {fmtCurrency(videoOther)}
                 </Text>
               </Group>
+              {title === "Doanh thu Sàn" && otherIncomeValue > 0 && (
+                <Group justify="space-between">
+                  <Text c={"dimmed"}>Doanh thu Khác</Text>
+                  <Text c={"dimmed"} fw={700}>
+                    {fmtCurrency(otherIncomeValue)}
+                  </Text>
+                </Group>
+              )}
             </>
           )}
 
@@ -168,8 +187,8 @@ export const LiveAndVideoStats = ({
             </Stack>
           </Group>
 
-          {/* If Video in chart mode, show small pie breakdown using CPiechart */}
-          {title === "Video" && videoTotal > 0 && (
+          {/* If Video or Doanh thu Sàn in chart mode, show small pie breakdown using CPiechart */}
+          {(title === "Video" || title === "Doanh thu Sàn") && income > 0 && (
             <Box w={500}>
               <CPiechart
                 data={parts.map((p) => ({ label: p.label, value: p.value }))}
@@ -183,7 +202,9 @@ export const LiveAndVideoStats = ({
                 pieFontSize={16}
                 title={
                   <Text size="sm" c="black" fw={600}>
-                    Phân bổ doanh số qua Video
+                    {title === "Doanh thu Sàn"
+                      ? "Phân bổ doanh thu Sàn"
+                      : "Phân bổ doanh số qua Video"}
                   </Text>
                 }
               />
