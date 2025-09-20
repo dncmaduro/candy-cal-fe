@@ -331,21 +331,25 @@ export interface GetStorageLogsResponse {
       _id: string
       quantity: number
     }
+    items: {
+      _id: string
+      quantity: number
+    }[]
     note?: string
     status: string
     date: Date
     tag?: string
-    itemId?: string
+    deliveredRequestId?: string
   }[]
   total: number
 }
 
 /** @interface */
 export interface CreateStorageLogRequest {
-  item: {
+  items: {
     _id: string
     quantity: number
-  }
+  }[]
   note?: string
   status: string
   date: Date
@@ -354,10 +358,10 @@ export interface CreateStorageLogRequest {
 
 /** @interface */
 export interface CreateStorageLogResponse {
-  item: {
+  items: {
     _id: string
     quantity: number
-  }
+  }[]
   note?: string
   status: string
   date: Date
@@ -367,10 +371,10 @@ export interface CreateStorageLogResponse {
 
 /** @interface */
 export interface UpdateStorageLogRequest {
-  item: {
+  items: {
     _id: string
     quantity: number
-  }
+  }[]
   note?: string
   status: string
   date: Date
@@ -379,10 +383,10 @@ export interface UpdateStorageLogRequest {
 
 /** @interface */
 export interface UpdateStorageLogResponse {
-  item: {
+  items: {
     _id: string
     quantity: number
-  }
+  }[]
   note?: string
   status: string
   date: Date
