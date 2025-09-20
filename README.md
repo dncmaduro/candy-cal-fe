@@ -1,4 +1,4 @@
-# Candy Cal FE (v3.4.0)
+# Candy Cal FE (v3.4.1) Candy Cal FE (v3.4.0)
 
 Ứng dụng frontend quản trị & vận hành bán hàng (MyCandy) xây dựng bằng React + TypeScript + Vite. Hỗ trợ theo dõi doanh thu, KPI, kho, logs, thông báo realtime và quy trình nội bộ (yêu cầu xuất kho, combos sẵn, mục tiêu tháng...).
 
@@ -84,6 +84,16 @@ npm run routes    # Generate router tree
 - Xuất báo cáo nâng cao (PDF / đa định dạng).
 
 ## 7. Lịch sử cập nhật
+
+### 3.4.1
+
+- **Storage Log cải tiến**:
+  - **Multiple Items**: Hỗ trợ tạo/chỉnh sửa log kho với nhiều mặt hàng cùng lúc sử dụng useFieldArray
+  - **Grouped Table Display**: Hiển thị logs theo kiểu gộp bảng (tương tự Incomes) với rowSpan cho các cột không thay đổi
+  - **Backward Compatibility**: Tương thích với logs cũ (single item) và logs mới (multiple items)
+  - **Enhanced Pagination**: Thêm NumberInput cho phép thay đổi limit từ 1-100 items/page
+  - **Validation Improvements**: Toast notifications chi tiết khi có trường required bị thiếu
+  - **Dynamic Form**: Thêm/xóa items động với validation riêng cho từng item
 
 ### 3.4.0
 
