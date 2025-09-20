@@ -118,13 +118,15 @@ export const MonthGoals = () => {
               <Table.Th style={{ width: 120 }}>Tháng</Table.Th>
               <Table.Th>KPI Live</Table.Th>
               <Table.Th>KPI Shop</Table.Th>
+              <Table.Th>KPI % Ads Live</Table.Th>
+              <Table.Th>KPI % Ads Shop</Table.Th>
               <Table.Th style={{ width: 180 }}></Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
             {isLoading ? (
               <Table.Tr>
-                <Table.Td colSpan={7}>
+                <Table.Td colSpan={6}>
                   <Flex justify="center" align="center" h={60}>
                     <Loader />
                   </Flex>
@@ -140,6 +142,8 @@ export const MonthGoals = () => {
                     {m.liveStreamGoal?.toLocaleString?.() || 0}
                   </Table.Td>
                   <Table.Td>{m.shopGoal?.toLocaleString?.() || 0}</Table.Td>
+                  <Table.Td>{m.liveAdsPercentageGoal || 0}%</Table.Td>
+                  <Table.Td>{m.shopAdsPercentageGoal || 0}%</Table.Td>
                   <Table.Td>
                     <Group>
                       <Can roles={["admin", "accounting-emp"]}>
@@ -163,7 +167,11 @@ export const MonthGoals = () => {
                                     month: m.month,
                                     year: m.year,
                                     liveStreamGoal: m.liveStreamGoal,
-                                    shopGoal: m.shopGoal
+                                    shopGoal: m.shopGoal,
+                                    liveAdsPercentageGoal:
+                                      m.liveAdsPercentageGoal,
+                                    shopAdsPercentageGoal:
+                                      m.shopAdsPercentageGoal
                                   }}
                                   refetch={refetch}
                                 />
@@ -180,7 +188,7 @@ export const MonthGoals = () => {
               ))
             ) : (
               <Table.Tr>
-                <Table.Td colSpan={7}>
+                <Table.Td colSpan={6}>
                   <Flex justify="center" align="center" h={60}>
                     <Text c="dimmed">Không có dữ liệu</Text>
                   </Flex>

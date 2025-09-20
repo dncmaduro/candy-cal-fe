@@ -886,6 +886,8 @@ export interface CreateMonthGoalRequest {
   year: number
   liveStreamGoal: number
   shopGoal: number
+  liveAdsPercentageGoal: number
+  shopAdsPercentageGoal: number
 }
 
 /** @interface */
@@ -894,6 +896,8 @@ export interface CreateMonthGoalResponse {
   year: number
   liveStreamGoal: number
   shopGoal: number
+  liveAdsPercentageGoal: number
+  shopAdsPercentageGoal: number
 }
 
 /** @interface */
@@ -908,6 +912,8 @@ export interface GetGoalsResponse {
     year: number
     liveStreamGoal: number
     shopGoal: number
+    liveAdsPercentageGoal: number
+    shopAdsPercentageGoal: number
     totalIncome: number
     totalQuantity: number
     KPIPercentage: number
@@ -927,6 +933,8 @@ export interface GetGoalResponse {
   year: number
   liveStreamGoal: number
   shopGoal: number
+  liveAdsPercentageGoal: number
+  shopAdsPercentageGoal: number
 }
 
 /** @interface */
@@ -935,6 +943,8 @@ export interface UpdateGoalRequest {
   year: number
   liveStreamGoal: number
   shopGoal: number
+  liveAdsPercentageGoal: number
+  shopAdsPercentageGoal: number
 }
 
 /** @interface */
@@ -943,6 +953,8 @@ export interface UpdateGoalResponse {
   year: number
   liveStreamGoal: number
   shopGoal: number
+  liveAdsPercentageGoal: number
+  shopAdsPercentageGoal: number
 }
 
 /** @interface */

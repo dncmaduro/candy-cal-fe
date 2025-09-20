@@ -14,6 +14,8 @@ interface Props {
     year: number
     liveStreamGoal: number
     shopGoal: number
+    liveAdsPercentageGoal?: number
+    shopAdsPercentageGoal?: number
   }
   refetch: () => void
 }
@@ -27,7 +29,9 @@ export const MonthGoalModal = ({ monthGoal, refetch }: Props) => {
       month: new Date().getMonth(),
       year: new Date().getFullYear(),
       liveStreamGoal: 1_000_000,
-      shopGoal: 1_000_000
+      shopGoal: 1_000_000,
+      liveAdsPercentageGoal: 0,
+      shopAdsPercentageGoal: 0
     }
   })
 
@@ -114,6 +118,36 @@ export const MonthGoalModal = ({ monthGoal, refetch }: Props) => {
               min={0}
               size="md"
               thousandSeparator=","
+              {...field}
+            />
+          )}
+        />
+        <Controller
+          control={control}
+          name="liveAdsPercentageGoal"
+          render={({ field }) => (
+            <NumberInput
+              label="KPI % Ads Live"
+              placeholder="Nhập % Ads Live"
+              min={0}
+              max={100}
+              size="md"
+              suffix="%"
+              {...field}
+            />
+          )}
+        />
+        <Controller
+          control={control}
+          name="shopAdsPercentageGoal"
+          render={({ field }) => (
+            <NumberInput
+              label="KPI % Ads Shop"
+              placeholder="Nhập % Ads Shop"
+              min={0}
+              max={100}
+              size="md"
+              suffix="%"
               {...field}
             />
           )}

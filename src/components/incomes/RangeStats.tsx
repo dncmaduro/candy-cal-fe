@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react"
 import { useIncomes } from "../../hooks/useIncomes"
+import { useMonthGoals } from "../../hooks/useMonthGoals"
 import { DatePickerInput } from "@mantine/dates"
 import {
   Flex,
@@ -136,6 +137,7 @@ const RangeSelector = ({
 
 export const RangeStats = () => {
   const { getRangeStats } = useIncomes()
+  const { getGoal } = useMonthGoals()
 
   const [rangeType, setRangeType] = useState<RangeType>("day")
   const [day, setDay] = useState<Date | null>(() => {
@@ -208,6 +210,22 @@ export const RangeStats = () => {
       return res.data as GetRangeStatsResponse
     },
     enabled: !!range,
+    staleTime: 60 * 1000
+  })
+
+  // Fetch month goal for KPI % ads when in month mode
+  const { data: monthGoalData } = useQuery({
+    queryKey: ["getGoal", range?.start, rangeType],
+    queryFn: async () => {
+      if (rangeType !== "month" || !range?.start) return null
+      const date = new Date(range.start)
+      const res = await getGoal({
+        month: date.getMonth(),
+        year: date.getFullYear()
+      })
+      return res.data
+    },
+    enabled: rangeType === "month" && !!range?.start,
     staleTime: 60 * 1000
   })
 
@@ -300,6 +318,7 @@ export const RangeStats = () => {
                     adsCost={current.ads.liveAdsCost}
                     adsCostChangePct={changes?.ads?.liveAdsCostPct}
                     adsSharePctDiff={changes?.ads?.liveAdsToLiveIncomePctDiff}
+                    kpiAdsPercentage={monthGoalData?.liveAdsPercentageGoal}
                     flex={1}
                   />
                   <LiveAndVideoStats
@@ -313,6 +332,7 @@ export const RangeStats = () => {
                     ownVideoIncome={current.ownVideoIncome}
                     otherVideoIncome={current.otherVideoIncome}
                     otherIncome={current.otherIncome}
+                    kpiAdsPercentage={monthGoalData?.shopAdsPercentageGoal}
                     flex={2}
                   />
                 </Group>
