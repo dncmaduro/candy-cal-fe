@@ -7,11 +7,12 @@ import {
   Group,
   Divider,
   Flex,
-  Text
+  Text,
+  ActionIcon
 } from "@mantine/core"
-import { Controller, useForm } from "react-hook-form"
+import { Controller, useForm, useFieldArray } from "react-hook-form"
 import { DatePickerInput } from "@mantine/dates"
-import { IconCheck } from "@tabler/icons-react"
+import { IconCheck, IconPlus, IconTrash } from "@tabler/icons-react"
 import { useLogs } from "../../hooks/useLogs"
 import {
   DELIVERED_TAG_OPTIONS,
@@ -31,13 +32,18 @@ export const StorageLogModal = ({ itemsList, log, onSuccess }: Props) => {
   const isEdit = Boolean(log)
   const { createStorageLog, updateStorageLog } = useLogs()
 
-  // Edit: lấy log.item, Create: null
-  const defaultItem = isEdit && log.item ? log.item : undefined
+  // Edit: lấy log.items, Create: tạo mảng với 1 item rỗng
+  const defaultItems =
+    isEdit && log.items
+      ? log.items.map((item: any) => ({
+          _id: item._id,
+          quantity: item.quantity
+        }))
+      : [{ _id: "", quantity: 1 }]
 
   const { control, handleSubmit, watch } = useForm({
     defaultValues: {
-      item: defaultItem?._id ?? "",
-      quantity: defaultItem?.quantity ?? 1,
+      items: defaultItems,
       note: log?.note || "",
       status: log?.status || "delivered",
       date: log?.date
@@ -51,6 +57,11 @@ export const StorageLogModal = ({ itemsList, log, onSuccess }: Props) => {
           ),
       tag: log?.tag || ""
     }
+  })
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "items"
   })
 
   const itemOptions = itemsList.map((it) => ({
@@ -93,10 +104,10 @@ export const StorageLogModal = ({ itemsList, log, onSuccess }: Props) => {
 
   const onSubmit = (values: any) => {
     const submitData = {
-      item: {
-        _id: values.item,
-        quantity: values.quantity
-      },
+      items: values.items.map((item: any) => ({
+        _id: item._id,
+        quantity: item.quantity
+      })),
       note: values.note,
       status: values.status,
       date: values.date,
@@ -110,8 +121,66 @@ export const StorageLogModal = ({ itemsList, log, onSuccess }: Props) => {
     }
   }
 
+  const onInvalid = (errors: any) => {
+    // Kiểm tra lỗi các trường cơ bản
+    if (errors.status) {
+      CToast.error({
+        title: "Vui lòng chọn trạng thái",
+        subtitle: "Trạng thái là trường bắt buộc"
+      })
+      return
+    }
+
+    if (errors.date) {
+      CToast.error({
+        title: "Vui lòng chọn ngày",
+        subtitle: "Ngày là trường bắt buộc"
+      })
+      return
+    }
+
+    if (errors.tag) {
+      CToast.error({
+        title: "Vui lòng chọn phân loại",
+        subtitle: "Phân loại là trường bắt buộc"
+      })
+      return
+    }
+
+    // Kiểm tra lỗi items
+    if (errors.items) {
+      const itemErrors = errors.items
+      let errorMessage = ""
+
+      for (let i = 0; i < itemErrors.length; i++) {
+        if (itemErrors[i]?._id) {
+          errorMessage = `Vui lòng chọn mặt hàng cho dòng ${i + 1}`
+          break
+        }
+        if (itemErrors[i]?.quantity) {
+          errorMessage = `Vui lòng nhập số lượng hợp lệ cho dòng ${i + 1}`
+          break
+        }
+      }
+
+      if (errorMessage) {
+        CToast.error({
+          title: "Thông tin mặt hàng chưa đầy đủ",
+          subtitle: errorMessage
+        })
+        return
+      }
+    }
+
+    // Lỗi chung
+    CToast.error({
+      title: "Vui lòng điền đầy đủ thông tin",
+      subtitle: "Có một số trường bắt buộc chưa được điền"
+    })
+  }
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <form onSubmit={handleSubmit(onSubmit, onInvalid)}>
       <Stack
         gap={18}
         pt={2}
@@ -122,6 +191,7 @@ export const StorageLogModal = ({ itemsList, log, onSuccess }: Props) => {
           <Controller
             name="status"
             control={control}
+            rules={{ required: true }}
             render={({ field }) => (
               <Select
                 label="Trạng thái"
@@ -137,6 +207,7 @@ export const StorageLogModal = ({ itemsList, log, onSuccess }: Props) => {
           <Controller
             name="date"
             control={control}
+            rules={{ required: true }}
             render={({ field }) => (
               <DatePickerInput
                 label="Ngày"
@@ -152,6 +223,7 @@ export const StorageLogModal = ({ itemsList, log, onSuccess }: Props) => {
           <Controller
             name="tag"
             control={control}
+            rules={{ required: true }}
             render={({ field }) => (
               <Select
                 label="Phân loại"
@@ -172,45 +244,72 @@ export const StorageLogModal = ({ itemsList, log, onSuccess }: Props) => {
           />
         </Flex>
         <Divider my={0} />
-        <Text fw={600} fz="sm" mb={-4}>
-          Mặt hàng
-        </Text>
-        <Group align="flex-end" gap={8} w="100%">
-          <Controller
-            name="item"
-            control={control}
-            rules={{ required: true }}
-            render={({ field }) => (
-              <Select
-                label="Mặt hàng"
-                data={itemOptions}
-                value={field.value}
-                onChange={field.onChange}
-                required
-                radius="md"
-                searchable
-                w={260}
-                placeholder="Chọn mặt hàng"
+        <Flex justify="space-between" align="center">
+          <Text fw={600} fz="sm">
+            Mặt hàng
+          </Text>
+          <Button
+            size="xs"
+            variant="light"
+            leftSection={<IconPlus size={14} />}
+            onClick={() => append({ _id: "", quantity: 1 })}
+            radius="md"
+          >
+            Thêm mặt hàng
+          </Button>
+        </Flex>
+
+        <Stack gap={12}>
+          {fields.map((field, index) => (
+            <Group key={field.id} align="flex-end" gap={8} w="100%">
+              <Controller
+                name={`items.${index}._id`}
+                control={control}
+                rules={{ required: true }}
+                render={({ field: fieldProps }) => (
+                  <Select
+                    label={index === 0 ? "Mặt hàng" : ""}
+                    data={itemOptions}
+                    value={fieldProps.value}
+                    onChange={fieldProps.onChange}
+                    required
+                    radius="md"
+                    searchable
+                    w={260}
+                    placeholder="Chọn mặt hàng"
+                  />
+                )}
               />
-            )}
-          />
-          <Controller
-            name="quantity"
-            control={control}
-            rules={{ required: true, min: 1 }}
-            render={({ field }) => (
-              <NumberInput
-                label="Số lượng"
-                min={1}
-                radius="md"
-                w={120}
-                value={field.value}
-                onChange={field.onChange}
-                required
+              <Controller
+                name={`items.${index}.quantity`}
+                control={control}
+                rules={{ required: true, min: 1 }}
+                render={({ field: fieldProps }) => (
+                  <NumberInput
+                    label={index === 0 ? "Số lượng" : ""}
+                    min={1}
+                    radius="md"
+                    w={120}
+                    value={fieldProps.value}
+                    onChange={fieldProps.onChange}
+                    required
+                  />
+                )}
               />
-            )}
-          />
-        </Group>
+              {fields.length > 1 && (
+                <ActionIcon
+                  color="red"
+                  variant="light"
+                  onClick={() => remove(index)}
+                  radius="md"
+                  size="lg"
+                >
+                  <IconTrash size={18} />
+                </ActionIcon>
+              )}
+            </Group>
+          ))}
+        </Stack>
         <Controller
           name="note"
           control={control}

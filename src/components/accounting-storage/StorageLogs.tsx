@@ -10,7 +10,8 @@ import {
   Select,
   rem,
   Group,
-  Tooltip
+  Tooltip,
+  NumberInput
 } from "@mantine/core"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useState, useMemo, useEffect } from "react"
@@ -28,6 +29,7 @@ import {
 import { STATUS_OPTIONS } from "../../constants/status"
 import { CToast } from "../common/CToast"
 import { Can } from "../common/Can"
+import { useDebouncedValue } from "@mantine/hooks"
 
 interface Props {
   activeTab: string
@@ -37,7 +39,8 @@ export const StorageLogs = ({ activeTab }: Props) => {
   const TAG_OPTIONS = [...DELIVERED_TAG_OPTIONS, ...RECEIVED_TAG_OPTION]
   const queryClient = useQueryClient()
   const [page, setPage] = useState(1)
-  const [limit] = useState(10)
+  const [limit, setLimit] = useState(10)
+  const [debouncedLimit] = useDebouncedValue(limit, 300)
   const [startDate, setStartDate] = useState<Date | null>(null)
   const [endDate, setEndDate] = useState<Date | null>(null)
   const [itemId, setItemId] = useState<string | null>(null)
@@ -77,7 +80,7 @@ export const StorageLogs = ({ activeTab }: Props) => {
     queryKey: [
       "storageLogs",
       page,
-      limit,
+      debouncedLimit,
       startDate,
       endDate,
       status,
@@ -87,7 +90,7 @@ export const StorageLogs = ({ activeTab }: Props) => {
     queryFn: () =>
       getStorageLogs({
         page,
-        limit,
+        limit: debouncedLimit,
         startDate: startDate
           ? new Date(startDate.setHours(0, 0, 0, 0)).toISOString()
           : undefined,
@@ -152,7 +155,7 @@ export const StorageLogs = ({ activeTab }: Props) => {
 
   useEffect(() => {
     setPage(1)
-  }, [startDate, endDate, status, tag, itemId])
+  }, [startDate, endDate, status, tag, itemId, limit])
 
   return (
     <Box
@@ -272,8 +275,6 @@ export const StorageLogs = ({ activeTab }: Props) => {
 
       <Box px={{ base: 4, md: 28 }} py={20}>
         <Table
-          highlightOnHover
-          striped
           withColumnBorders
           withTableBorder
           verticalSpacing="sm"
@@ -302,72 +303,168 @@ export const StorageLogs = ({ activeTab }: Props) => {
                 </Table.Td>
               </Table.Tr>
             ) : data?.data && data.data.length > 0 ? (
-              data.data.map((log: any) => (
-                <Table.Tr key={log._id}>
-                  <Table.Td>
-                    {format(new Date(log.date), "dd/MM/yyyy")}
-                  </Table.Td>
-                  <Table.Td>
-                    {STATUS_OPTIONS.find((s) => s.value === log.status)
-                      ?.label ?? log.status}
-                  </Table.Td>
-                  <Table.Td>
-                    {itemsMap[log.item?._id]?.name || "Unknown"}
-                  </Table.Td>
-                  <Table.Td>{log.item?.quantity ?? ""}</Table.Td>
-                  <Table.Td>
-                    {TAG_OPTIONS.find((t) => t.value === log.tag)?.label || ""}
-                  </Table.Td>
-                  <Table.Td>
-                    <Group gap={8}>
-                      <Can roles={["admin", "accounting-emp"]}>
-                        <Button
-                          variant="light"
-                          color="yellow"
-                          size="xs"
-                          radius="xl"
-                          leftSection={<IconEdit size={16} />}
-                          onClick={() => openModal(log)}
-                        >
-                          Sửa
-                        </Button>
-                      </Can>
-                      <Can roles={["admin", "accounting-emp"]}>
-                        {log.tag === "deliver-tiktokshop" ? (
-                          <Tooltip label="Xoá log xuất của TiktokShop bằng cách hoàn tác yêu cầu xuất hàng">
+              data.data.map((log) => {
+                // Support both old format (single item) and new format (items array)
+                const logItems = log.item ? [log.item] : log.items
+                const itemsLen = logItems.length
+
+                if (itemsLen === 0) {
+                  // Fallback for logs without items
+                  return (
+                    <Table.Tr key={log._id}>
+                      <Table.Td>
+                        {format(new Date(log.date), "dd/MM/yyyy")}
+                      </Table.Td>
+                      <Table.Td>
+                        {STATUS_OPTIONS.find((s) => s.value === log.status)
+                          ?.label ?? log.status}
+                      </Table.Td>
+                      <Table.Td>-</Table.Td>
+                      <Table.Td>-</Table.Td>
+                      <Table.Td>
+                        {TAG_OPTIONS.find((t) => t.value === log.tag)?.label ||
+                          ""}
+                      </Table.Td>
+                      <Table.Td>
+                        <Group gap={8}>
+                          <Can roles={["admin", "accounting-emp"]}>
                             <Button
                               variant="light"
-                              color="red"
+                              color="yellow"
                               size="xs"
                               radius="xl"
-                              leftSection={<IconTrash size={16} />}
-                              disabled
+                              leftSection={<IconEdit size={16} />}
+                              onClick={() => openModal(log)}
                             >
-                              Xóa
+                              Sửa
                             </Button>
-                          </Tooltip>
-                        ) : (
-                          <Button
-                            variant="light"
-                            color="red"
-                            size="xs"
-                            radius="xl"
-                            leftSection={<IconTrash size={16} />}
-                            onClick={() => remove(log._id)}
-                          >
-                            Xóa
-                          </Button>
-                        )}
-                      </Can>
-                      {log.note && (
-                        <Tooltip label={log.note}>
-                          <IconNote size={16} />
-                        </Tooltip>
-                      )}
-                    </Group>
-                  </Table.Td>
-                </Table.Tr>
-              ))
+                          </Can>
+                          <Can roles={["admin", "accounting-emp"]}>
+                            {log.tag === "deliver-tiktokshop" ? (
+                              <Tooltip label="Xoá log xuất của TiktokShop bằng cách hoàn tác yêu cầu xuất hàng">
+                                <Button
+                                  variant="light"
+                                  color="red"
+                                  size="xs"
+                                  radius="xl"
+                                  leftSection={<IconTrash size={16} />}
+                                  disabled
+                                >
+                                  Xóa
+                                </Button>
+                              </Tooltip>
+                            ) : (
+                              <Button
+                                variant="light"
+                                color="red"
+                                size="xs"
+                                radius="xl"
+                                leftSection={<IconTrash size={16} />}
+                                onClick={() => remove(log._id)}
+                              >
+                                Xóa
+                              </Button>
+                            )}
+                          </Can>
+                          {log.note && (
+                            <Tooltip label={log.note}>
+                              <IconNote size={16} />
+                            </Tooltip>
+                          )}
+                        </Group>
+                      </Table.Td>
+                    </Table.Tr>
+                  )
+                }
+
+                // Render grouped rows for multiple items
+                return logItems.map((item, idx: number) => (
+                  <Table.Tr key={`${log._id}_${item._id || idx}`}>
+                    {idx === 0 && (
+                      <>
+                        <Table.Td
+                          rowSpan={itemsLen}
+                          style={{ verticalAlign: "middle" }}
+                        >
+                          {format(new Date(log.date), "dd/MM/yyyy")}
+                        </Table.Td>
+                        <Table.Td
+                          rowSpan={itemsLen}
+                          style={{ verticalAlign: "middle" }}
+                        >
+                          {STATUS_OPTIONS.find((s) => s.value === log.status)
+                            ?.label ?? log.status}
+                        </Table.Td>
+                      </>
+                    )}
+                    <Table.Td>{itemsMap[item._id]?.name || "Unknown"}</Table.Td>
+                    <Table.Td>{item.quantity ?? ""}</Table.Td>
+                    {idx === 0 && (
+                      <>
+                        <Table.Td
+                          rowSpan={itemsLen}
+                          style={{ verticalAlign: "middle" }}
+                          className="border-l border-gray-200"
+                        >
+                          {TAG_OPTIONS.find((t) => t.value === log.tag)
+                            ?.label || ""}
+                        </Table.Td>
+                        <Table.Td
+                          rowSpan={itemsLen}
+                          style={{ verticalAlign: "middle" }}
+                        >
+                          <Group gap={8}>
+                            <Can roles={["admin", "accounting-emp"]}>
+                              <Button
+                                variant="light"
+                                color="yellow"
+                                size="xs"
+                                radius="xl"
+                                leftSection={<IconEdit size={16} />}
+                                onClick={() => openModal(log)}
+                              >
+                                Sửa
+                              </Button>
+                            </Can>
+                            <Can roles={["admin", "accounting-emp"]}>
+                              {log.tag === "deliver-tiktokshop" ? (
+                                <Tooltip label="Xoá log xuất của TiktokShop bằng cách hoàn tác yêu cầu xuất hàng">
+                                  <Button
+                                    variant="light"
+                                    color="red"
+                                    size="xs"
+                                    radius="xl"
+                                    leftSection={<IconTrash size={16} />}
+                                    disabled
+                                  >
+                                    Xóa
+                                  </Button>
+                                </Tooltip>
+                              ) : (
+                                <Button
+                                  variant="light"
+                                  color="red"
+                                  size="xs"
+                                  radius="xl"
+                                  leftSection={<IconTrash size={16} />}
+                                  onClick={() => remove(log._id)}
+                                >
+                                  Xóa
+                                </Button>
+                              )}
+                            </Can>
+                            {log.note && (
+                              <Tooltip label={log.note}>
+                                <IconNote size={16} />
+                              </Tooltip>
+                            )}
+                          </Group>
+                        </Table.Td>
+                      </>
+                    )}
+                  </Table.Tr>
+                ))
+              })
             ) : (
               <Table.Tr>
                 <Table.Td colSpan={colCount}>
@@ -380,12 +477,25 @@ export const StorageLogs = ({ activeTab }: Props) => {
           </Table.Tbody>
         </Table>
 
-        <Flex justify="center" mt={16}>
+        <Flex justify="space-between" mt={16} align="center">
+          <Text c="dimmed" mr={8}>
+            Tổng số dòng: {data?.total}
+          </Text>
           <Pagination
             total={Math.ceil((data?.total ?? 1) / limit)}
             value={page}
             onChange={setPage}
           />
+          <Group gap={4}>
+            <Text>Số dòng/trang </Text>
+            <NumberInput
+              value={limit}
+              onChange={(val) => setLimit(Number(val))}
+              min={1}
+              max={100}
+              w={120}
+            />
+          </Group>
         </Flex>
       </Box>
     </Box>
