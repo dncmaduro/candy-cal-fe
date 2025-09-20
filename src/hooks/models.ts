@@ -9,6 +9,7 @@ export interface CreateItemRequest {
 export interface CreateStorageItemRequest {
   code: string
   name: string
+  quantityPerBox: number
   receivedQuantity: {
     quantity: number
     real: number
@@ -36,6 +37,7 @@ export interface ItemResponse {
 export interface StorageItemResponse {
   _id: string
   name: string
+  quantityPerBox: number
   receivedQuantity: {
     quantity: number
     real: number

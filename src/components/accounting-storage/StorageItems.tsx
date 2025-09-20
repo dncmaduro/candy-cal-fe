@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { useItems } from "../../hooks/useItems"
+import { StorageItemResponse } from "../../hooks/models"
 import {
   Box,
   Button,
@@ -12,7 +13,10 @@ import {
   Tooltip,
   rem,
   Group,
-  Select
+  Select,
+  Badge,
+  Stack,
+  Pagination
 } from "@mantine/core"
 import { modals } from "@mantine/modals"
 import { useEffect, useState } from "react"
@@ -44,19 +48,25 @@ export const StorageItems = ({ readOnly, activeTab }: Props) => {
   const [debouncedSearchText] = useDebouncedValue(searchText, 300)
   const [showMode, setShowMode] = useState<ShowMode>("both")
   const [month, setMonth] = useState<Date | null>(new Date())
+  const [page, setPage] = useState(1)
+  const limit = 10
 
-  const {
-    data: itemsData,
-    refetch,
-    isLoading
-  } = useQuery({
+  const { data, refetch, isLoading } = useQuery({
     queryKey: ["searchStorageItems", debouncedSearchText, activeTab],
-    queryFn: () => searchStorageItems(debouncedSearchText),
-    select: (data) => data.data
+    queryFn: () => searchStorageItems(debouncedSearchText)
   })
+
+  // Client-side pagination
+  const allItemsData = data?.data || []
+  const totalPages = Math.ceil(allItemsData.length / limit)
+  const itemsData = allItemsData.slice((page - 1) * limit, page * limit)
 
   useEffect(() => {
     refetch()
+  }, [debouncedSearchText])
+
+  useEffect(() => {
+    setPage(1)
   }, [debouncedSearchText])
 
   // Render group columns
@@ -89,7 +99,17 @@ export const StorageItems = ({ readOnly, activeTab }: Props) => {
   }
 
   // Tính số cột để colspan empty/loading
-  const colCount = 2 + 3 * (showMode === "both" ? 2 : 1) + 2
+  const colCount = 2 + 3 * (showMode === "both" ? 2 : 1) + 1 + 2
+
+  // Tính số thùng và lẻ
+  const calculateBoxes = (quantity: number, quantityPerBox: number) => {
+    if (!quantity || !quantityPerBox || quantityPerBox <= 0) {
+      return { boxes: 0, remainder: 0 }
+    }
+    const boxes = Math.floor(quantity / quantityPerBox)
+    const remainder = quantity % quantityPerBox
+    return { boxes, remainder }
+  }
 
   return (
     <Box
@@ -234,6 +254,9 @@ export const StorageItems = ({ readOnly, activeTab }: Props) => {
               <Table.Th colSpan={showMode === "both" ? 2 : 1}>
                 Số lượng tồn kho
               </Table.Th>
+              <Table.Th rowSpan={2} style={{ minWidth: 120 }}>
+                Số thùng (tồn kho)
+              </Table.Th>
               <Table.Th rowSpan={2} className="border-[1px] border-[#dee2e6]" />
             </Table.Tr>
             {/* Header 2 */}
@@ -254,70 +277,101 @@ export const StorageItems = ({ readOnly, activeTab }: Props) => {
                 </Table.Td>
               </Table.Tr>
             ) : itemsData && itemsData.length > 0 ? (
-              itemsData.map((item) => (
-                <Table.Tr key={item._id}>
-                  <Table.Td fw={500}>{item.name}</Table.Td>
-                  <Table.Td>{item.code}</Table.Td>
-                  {/* Số lượng nhập kho */}
-                  {renderDataGroup(item.receivedQuantity)}
-                  {/* Số lượng xuất kho */}
-                  {renderDataGroup(item.deliveredQuantity)}
-                  {/* Số lượng tồn kho */}
-                  {renderDataGroup(item.restQuantity)}
-                  <Table.Td>
-                    <Flex justify="flex-end" gap={4}>
-                      <Button
-                        variant="light"
-                        color="indigo"
-                        size="xs"
-                        radius="xl"
-                        leftSection={<IconSearch size={16} />}
-                        onClick={() => {
-                          modals.open({
-                            size: "lg",
-                            title: (
-                              <Text fw={700} fz="md">
-                                Chi tiết mặt hàng
-                              </Text>
-                            ),
-                            children: <StorageItemDetailModal item={item} />
-                          })
-                        }}
-                      >
-                        Chi tiết
-                      </Button>
-                      <Can roles={["admin", "accounting-emp"]}>
+              itemsData.map((item: StorageItemResponse) => {
+                const restQuantity =
+                  showMode === "real"
+                    ? (item.restQuantity?.real ?? 0)
+                    : (item.restQuantity?.quantity ?? 0)
+                const { boxes, remainder } = calculateBoxes(
+                  restQuantity,
+                  item.quantityPerBox ?? 1
+                )
+
+                return (
+                  <Table.Tr key={item._id}>
+                    <Table.Td fw={500}>
+                      <Stack gap={4}>
+                        <Text>{item.name}</Text>
+                        <Badge variant="light" color="blue" size="xs">
+                          {item.quantityPerBox ?? 1}/hộp
+                        </Badge>
+                      </Stack>
+                    </Table.Td>
+                    <Table.Td>{item.code}</Table.Td>
+                    {/* Số lượng nhập kho */}
+                    {renderDataGroup(item.receivedQuantity)}
+                    {/* Số lượng xuất kho */}
+                    {renderDataGroup(item.deliveredQuantity)}
+                    {/* Số lượng tồn kho */}
+                    {renderDataGroup(item.restQuantity)}
+                    {/* Số thùng */}
+                    <Table.Td>
+                      <Stack gap={2}>
+                        <Text fz="sm" fw={500}>
+                          {boxes} thùng
+                        </Text>
+                        {remainder > 0 && (
+                          <Text fz="xs" c="dimmed">
+                            + {remainder} lẻ
+                          </Text>
+                        )}
+                      </Stack>
+                    </Table.Td>
+                    <Table.Td>
+                      <Flex justify="flex-end" gap={4}>
                         <Button
-                          hidden={readOnly}
                           variant="light"
-                          color="yellow"
-                          leftSection={<IconPencil size={16} />}
+                          color="indigo"
                           size="xs"
                           radius="xl"
-                          onClick={() =>
+                          leftSection={<IconSearch size={16} />}
+                          onClick={() => {
                             modals.open({
                               size: "lg",
                               title: (
                                 <Text fw={700} fz="md">
-                                  Chỉnh sửa mặt hàng
+                                  Chi tiết mặt hàng
                                 </Text>
                               ),
-                              children: (
-                                <StorageItemModal
-                                  item={item}
-                                  refetch={refetch}
-                                />
-                              )
+                              children: <StorageItemDetailModal item={item} />
                             })
-                          }
+                          }}
                         >
-                          Chỉnh sửa
+                          Chi tiết
                         </Button>
-                      </Can>
-                    </Flex>
-                  </Table.Td>
-                </Table.Tr>
-              ))
+                        <Can roles={["admin", "accounting-emp"]}>
+                          <Button
+                            hidden={readOnly}
+                            variant="light"
+                            color="yellow"
+                            leftSection={<IconPencil size={16} />}
+                            size="xs"
+                            radius="xl"
+                            onClick={() =>
+                              modals.open({
+                                size: "lg",
+                                title: (
+                                  <Text fw={700} fz="md">
+                                    Chỉnh sửa mặt hàng
+                                  </Text>
+                                ),
+                                children: (
+                                  <StorageItemModal
+                                    item={item}
+                                    refetch={refetch}
+                                  />
+                                )
+                              })
+                            }
+                          >
+                            Chỉnh sửa
+                          </Button>
+                        </Can>
+                      </Flex>
+                    </Table.Td>
+                  </Table.Tr>
+                )
+              })
             ) : (
               <Table.Tr>
                 <Table.Td colSpan={colCount}>
@@ -329,6 +383,17 @@ export const StorageItems = ({ readOnly, activeTab }: Props) => {
             )}
           </Table.Tbody>
         </Table>
+
+        <Flex justify="space-between" mt={8} align={"center"}>
+          <Text c="dimmed" mr={8}>
+            Tổng số mặt hàng: {allItemsData.length}
+          </Text>
+          <Pagination total={totalPages} value={page} onChange={setPage} />
+          <Text c="dimmed" ml={8}>
+            Hiển thị {Math.min(limit, allItemsData.length)} /{" "}
+            {allItemsData.length}
+          </Text>
+        </Flex>
       </Box>
     </Box>
   )
