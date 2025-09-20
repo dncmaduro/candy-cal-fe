@@ -31,12 +31,14 @@ export const StorageItemModal = ({ item, refetch }: Props) => {
           ...item,
           receivedQuantity: item.receivedQuantity ?? { quantity: 0, real: 0 },
           deliveredQuantity: item.deliveredQuantity ?? { quantity: 0, real: 0 },
-          restQuantity: item.restQuantity ?? { quantity: 0, real: 0 }
+          restQuantity: item.restQuantity ?? { quantity: 0, real: 0 },
+          quantityPerBox: item.quantityPerBox ?? 1
         }
       : {
           name: "",
           code: "",
           note: "",
+          quantityPerBox: 1,
           receivedQuantity: { quantity: 0, real: 0 },
           deliveredQuantity: { quantity: 0, real: 0 },
           restQuantity: { quantity: 0, real: 0 }
@@ -135,6 +137,20 @@ export const StorageItemModal = ({ item, refetch }: Props) => {
           control={control}
           render={({ field }) => (
             <TextInput label="Mã mặt hàng" radius="md" size="md" {...field} />
+          )}
+        />
+        <Controller
+          name="quantityPerBox"
+          control={control}
+          render={({ field }) => (
+            <NumberInput
+              label="Số lượng trên 1 hộp"
+              min={1}
+              radius="md"
+              size="md"
+              hideControls
+              {...field}
+            />
           )}
         />
 
