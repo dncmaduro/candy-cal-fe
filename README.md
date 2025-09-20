@@ -1,4 +1,4 @@
-# Candy Cal FE (v3.4.1) Candy Cal FE (v3.4.0)
+# Candy Cal FE (v3.4.1)
 
 Ứng dụng frontend quản trị & vận hành bán hàng (MyCandy) xây dựng bằng React + TypeScript + Vite. Hỗ trợ theo dõi doanh thu, KPI, kho, logs, thông báo realtime và quy trình nội bộ (yêu cầu xuất kho, combos sẵn, mục tiêu tháng...).
 
