@@ -13,7 +13,8 @@ import {
   Group,
   Box,
   Select,
-  Badge
+  Badge,
+  SegmentedControl
 } from "@mantine/core"
 import {
   format,
@@ -29,6 +30,7 @@ import { LiveAndVideoStats } from "./LiveAndVideoStats"
 import { SourcesStats } from "./SourcesStats"
 
 type RangeType = "day" | "week" | "month"
+type DiscountMode = "beforeDiscount" | "afterDiscount"
 
 // Range selector UI
 const RangeSelector = ({
@@ -140,6 +142,7 @@ export const RangeStats = () => {
   const { getGoal } = useMonthGoals()
 
   const [rangeType, setRangeType] = useState<RangeType>("day")
+  const [mode, setMode] = useState<DiscountMode>("afterDiscount")
   const [day, setDay] = useState<Date | null>(() => {
     const d = new Date()
     d.setDate(d.getDate() - 1)
@@ -153,6 +156,9 @@ export const RangeStats = () => {
   const [monthValue, setMonthValue] = useState<string>(() =>
     new Date().toISOString()
   )
+
+  // derived objects for the selected discount mode (before/after)
+  // (we access current via (current as any)[mode] inline below)
 
   const range = useMemo(() => {
     if (rangeType === "day") {
@@ -264,16 +270,28 @@ export const RangeStats = () => {
           </Text>
         </Box>
 
-        <RangeSelector
-          rangeType={rangeType}
-          onChangeRangeType={setRangeType}
-          day={day}
-          setDay={setDay}
-          weekDate={weekDate}
-          setWeekDate={setWeekDate}
-          monthValue={monthValue}
-          setMonthValue={setMonthValue}
-        />
+        <Group align="flex-end" gap={12}>
+          <RangeSelector
+            rangeType={rangeType}
+            onChangeRangeType={setRangeType}
+            day={day}
+            setDay={setDay}
+            weekDate={weekDate}
+            setWeekDate={setWeekDate}
+            monthValue={monthValue}
+            setMonthValue={setMonthValue}
+          />
+
+          <SegmentedControl
+            value={mode}
+            onChange={(v) => setMode(v as DiscountMode)}
+            data={[
+              { label: "Sau chiết khấu", value: "afterDiscount" },
+              { label: "Trước chiết khấu", value: "beforeDiscount" }
+            ]}
+            size="sm"
+          />
+        </Group>
       </Flex>
 
       <Divider my={0} />
@@ -295,15 +313,22 @@ export const RangeStats = () => {
                 <Text fw={700}>Tổng doanh thu</Text>
                 <Group align="center" gap={8}>
                   <Text fz="xl" fw={900} c="indigo">
-                    {current.totalIncome.toLocaleString()} VNĐ
+                    {(current as any)[mode].totalIncome.toLocaleString()} VNĐ
                   </Text>
-                  {typeof changes?.totalIncomePct === "number" && (
+                  {typeof (changes as any)?.[mode]?.totalIncomePct ===
+                    "number" && (
                     <Badge
-                      color={changes.totalIncomePct >= 0 ? "green" : "red"}
+                      color={
+                        (changes as any)[mode].totalIncomePct >= 0
+                          ? "green"
+                          : "red"
+                      }
                       variant="light"
                     >
-                      {changes.totalIncomePct >= 0 ? "+" : "-"}
-                      {fmtPercent(Math.abs(changes.totalIncomePct))}
+                      {(changes as any)[mode].totalIncomePct >= 0 ? "+" : "-"}
+                      {fmtPercent(
+                        Math.abs((changes as any)[mode].totalIncomePct)
+                      )}
                     </Badge>
                   )}
                 </Group>
@@ -314,7 +339,7 @@ export const RangeStats = () => {
                 <Group gap={12} align="stretch">
                   <LiveAndVideoStats
                     title="Livestream"
-                    income={current.liveIncome}
+                    income={(current as any)[mode].liveIncome}
                     adsCost={current.ads.liveAdsCost}
                     adsCostChangePct={changes?.ads?.liveAdsCostPct}
                     adsSharePctDiff={changes?.ads?.liveAdsToLiveIncomePctDiff}
@@ -324,14 +349,15 @@ export const RangeStats = () => {
                   <LiveAndVideoStats
                     title="Doanh thu Sàn"
                     income={
-                      (current.videoIncome || 0) + (current.otherIncome || 0)
+                      ((current as any)[mode].videoIncome || 0) +
+                      ((current as any)[mode].otherIncome || 0)
                     }
                     adsCost={current.ads.videoAdsCost}
                     adsCostChangePct={changes?.ads?.videoAdsCostPct}
                     adsSharePctDiff={changes?.ads?.videoAdsToVideoIncomePctDiff}
-                    ownVideoIncome={current.ownVideoIncome}
-                    otherVideoIncome={current.otherVideoIncome}
-                    otherIncome={current.otherIncome}
+                    ownVideoIncome={(current as any)[mode].ownVideoIncome}
+                    otherVideoIncome={(current as any)[mode].otherVideoIncome}
+                    otherIncome={(current as any)[mode].otherIncome}
                     kpiAdsPercentage={monthGoalData?.shopAdsPercentageGoal}
                     flex={2}
                   />
@@ -339,10 +365,10 @@ export const RangeStats = () => {
               </Stack>
             </Paper>
 
-            {current.sources && (
+            {(current as any)[mode].sources && (
               <SourcesStats
-                sources={current.sources}
-                changes={changes?.sources}
+                sources={(current as any)[mode].sources}
+                changes={(changes as any)?.[mode]?.sources}
               />
             )}
 
@@ -421,21 +447,25 @@ export const RangeStats = () => {
                       <Text fz="lg" fw={700} c="dark">
                         {current.discounts.totalDiscount.toLocaleString()} VNĐ
                       </Text>
-                      {typeof changes?.discounts?.totalDiscount ===
+                      {typeof (changes as any)?.discounts?.totalDiscountPct ===
                         "number" && (
                         <Badge
                           color={
-                            changes.discounts.totalDiscount >= 0
+                            (changes as any).discounts.totalDiscountPct >= 0
                               ? "red"
                               : "green"
                           }
                           variant="light"
                           size="sm"
                         >
-                          {changes.discounts.totalDiscount >= 0 ? "+" : "-"}
-                          {Math.abs(
-                            changes.discounts.totalDiscount
-                          ).toLocaleString()}
+                          {(changes as any).discounts.totalDiscountPct >= 0
+                            ? "+"
+                            : "-"}
+                          {fmtPercent(
+                            Math.abs(
+                              (changes as any).discounts.totalDiscountPct
+                            )
+                          )}
                         </Badge>
                       )}
                     </Group>
@@ -461,23 +491,28 @@ export const RangeStats = () => {
                         {current.discounts.totalPlatformDiscount.toLocaleString()}{" "}
                         VNĐ
                       </Text>
-                      {typeof changes?.discounts?.totalPlatformDiscount ===
-                        "number" && (
+                      {typeof (changes as any)?.discounts
+                        ?.totalPlatformDiscountPct === "number" && (
                         <Badge
                           color={
-                            changes.discounts.totalPlatformDiscount >= 0
+                            (changes as any).discounts
+                              .totalPlatformDiscountPct >= 0
                               ? "red"
                               : "green"
                           }
                           variant="light"
                           size="sm"
                         >
-                          {changes.discounts.totalPlatformDiscount >= 0
+                          {(changes as any).discounts
+                            .totalPlatformDiscountPct >= 0
                             ? "+"
                             : "-"}
-                          {Math.abs(
-                            changes.discounts.totalPlatformDiscount
-                          ).toLocaleString()}
+                          {fmtPercent(
+                            Math.abs(
+                              (changes as any).discounts
+                                .totalPlatformDiscountPct
+                            )
+                          )}
                         </Badge>
                       )}
                     </Group>
@@ -503,23 +538,27 @@ export const RangeStats = () => {
                         {current.discounts.totalSellerDiscount.toLocaleString()}{" "}
                         VNĐ
                       </Text>
-                      {typeof changes?.discounts?.totalSellerDiscount ===
-                        "number" && (
+                      {typeof (changes as any)?.discounts
+                        ?.totalSellerDiscountPct === "number" && (
                         <Badge
                           color={
-                            changes.discounts.totalSellerDiscount >= 0
+                            (changes as any).discounts.totalSellerDiscountPct >=
+                            0
                               ? "red"
                               : "green"
                           }
                           variant="light"
                           size="sm"
                         >
-                          {changes.discounts.totalSellerDiscount >= 0
+                          {(changes as any).discounts.totalSellerDiscountPct >=
+                          0
                             ? "+"
                             : "-"}
-                          {Math.abs(
-                            changes.discounts.totalSellerDiscount
-                          ).toLocaleString()}
+                          {fmtPercent(
+                            Math.abs(
+                              (changes as any).discounts.totalSellerDiscountPct
+                            )
+                          )}
                         </Badge>
                       )}
                     </Group>
@@ -545,23 +584,27 @@ export const RangeStats = () => {
                         {current.discounts.avgDiscountPerOrder.toLocaleString()}{" "}
                         VNĐ
                       </Text>
-                      {typeof changes?.discounts?.avgDiscountPerOrder ===
-                        "number" && (
+                      {typeof (changes as any)?.discounts
+                        ?.avgDiscountPerOrderPct === "number" && (
                         <Badge
                           color={
-                            changes.discounts.avgDiscountPerOrder >= 0
+                            (changes as any).discounts.avgDiscountPerOrderPct >=
+                            0
                               ? "red"
                               : "green"
                           }
                           variant="light"
                           size="sm"
                         >
-                          {changes.discounts.avgDiscountPerOrder >= 0
+                          {(changes as any).discounts.avgDiscountPerOrderPct >=
+                          0
                             ? "+"
                             : "-"}
-                          {Math.abs(
-                            changes.discounts.avgDiscountPerOrder
-                          ).toLocaleString()}
+                          {fmtPercent(
+                            Math.abs(
+                              (changes as any).discounts.avgDiscountPerOrderPct
+                            )
+                          )}
                         </Badge>
                       )}
                     </Group>
@@ -586,19 +629,26 @@ export const RangeStats = () => {
                       <Text fz="lg" fw={700} c="grape">
                         {current.discounts.discountPercentage.toFixed(2)}%
                       </Text>
-                      {typeof changes?.discounts?.discountPercentage ===
-                        "number" && (
+                      {typeof (changes as any)?.discounts
+                        ?.discountPercentageDiff === "number" && (
                         <Badge
                           color={
-                            changes.discounts.discountPercentage >= 0
+                            (changes as any).discounts.discountPercentageDiff >=
+                            0
                               ? "red"
                               : "green"
                           }
                           variant="light"
                           size="sm"
                         >
-                          {changes.discounts.discountPercentage >= 0 ? "+" : ""}
-                          {changes.discounts.discountPercentage.toFixed(2)}%
+                          {(changes as any).discounts.discountPercentageDiff >=
+                          0
+                            ? "+"
+                            : "-"}
+                          {Math.abs(
+                            (changes as any).discounts.discountPercentageDiff
+                          ).toFixed(2)}
+                          %
                         </Badge>
                       )}
                     </Group>
@@ -622,8 +672,8 @@ export const RangeStats = () => {
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
-                {current.boxes.length ? (
-                  current.boxes.map((b) => (
+                {(current as any).boxes.length ? (
+                  (current as any).boxes.map((b: any) => (
                     <Table.Tr key={b.box}>
                       <Table.Td>{b.box || "-"}</Table.Td>
                       <Table.Td>{b.quantity}</Table.Td>
