@@ -914,9 +914,17 @@ export interface GetGoalsResponse {
     shopGoal: number
     liveAdsPercentageGoal: number
     shopAdsPercentageGoal: number
-    totalIncome: number
-    totalQuantity: number
-    KPIPercentage: number
+    totalIncome: {
+      beforeDiscount: { live: number; shop: number }
+      afterDiscount: { live: number; shop: number }
+    }
+    totalQuantity: { live: number; shop: number }
+    KPIPercentage: {
+      beforeDiscount: { live: number; shop: number }
+      afterDiscount: { live: number; shop: number }
+    }
+    adsPercentage: { live: number; shop: number }
+    adsGoalComparison: { live: number; shop: number }
   }[]
   total: number
 }
@@ -1327,17 +1335,33 @@ export interface GetRangeStatsRequest {
 export interface GetRangeStatsResponse {
   period: { startDate: Date; endDate: Date; days: number }
   current: {
-    totalIncome: number
-    liveIncome: number
-    videoIncome: number
-    otherIncome: number
-    ownVideoIncome: number
-    otherVideoIncome: number
-    sources: {
-      ads: number
-      affiliate: number
-      affiliateAds: number
-      other: number
+    beforeDiscount: {
+      totalIncome: number
+      liveIncome: number
+      videoIncome: number
+      ownVideoIncome: number
+      otherVideoIncome: number
+      otherIncome: number
+      sources: {
+        ads: number
+        affiliate: number
+        affiliateAds: number
+        other: number
+      }
+    }
+    afterDiscount: {
+      totalIncome: number
+      liveIncome: number
+      videoIncome: number
+      ownVideoIncome: number
+      otherVideoIncome: number
+      otherIncome: number
+      sources: {
+        ads: number
+        affiliate: number
+        affiliateAds: number
+        other: number
+      }
     }
     boxes: { box: string; quantity: number }[]
     shippingProviders: { provider: string; orders: number }[]
@@ -1358,16 +1382,31 @@ export interface GetRangeStatsResponse {
     }
   }
   changes?: {
-    totalIncomePct: number
-    liveIncomePct: number
-    videoIncomePct: number
-    ownVideoIncomePct: number
-    otherVideoIncomePct: number
-    sources: {
-      adsPct: number
-      affiliatePct: number
-      affiliateAdsPct: number
-      otherPct: number
+    beforeDiscount: {
+      totalIncomePct: number
+      liveIncomePct: number
+      videoIncomePct: number
+      ownVideoIncomePct: number
+      otherVideoIncomePct: number
+      sources: {
+        adsPct: number
+        affiliatePct: number
+        affiliateAdsPct: number
+        otherPct: number
+      }
+    }
+    afterDiscount: {
+      totalIncomePct: number
+      liveIncomePct: number
+      videoIncomePct: number
+      ownVideoIncomePct: number
+      otherVideoIncomePct: number
+      sources: {
+        adsPct: number
+        affiliatePct: number
+        affiliateAdsPct: number
+        otherPct: number
+      }
     }
     ads: {
       liveAdsCostPct: number
@@ -1376,11 +1415,11 @@ export interface GetRangeStatsResponse {
       videoAdsToVideoIncomePctDiff: number
     }
     discounts: {
-      totalPlatformDiscount: number
-      totalSellerDiscount: number
-      totalDiscount: number
-      avgDiscountPerOrder: number
-      discountPercentage: number
+      totalPlatformDiscountPct: number
+      totalSellerDiscountPct: number
+      totalDiscountPct: number
+      avgDiscountPerOrderPct: number
+      discountPercentageDiff: number
     }
   }
 }

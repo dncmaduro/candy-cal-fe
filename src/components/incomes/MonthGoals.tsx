@@ -9,7 +9,8 @@ import {
   Text,
   Group,
   Divider,
-  Button
+  Button,
+  SegmentedControl
 } from "@mantine/core"
 import { YearPickerInput } from "@mantine/dates"
 import { IconEdit, IconPlus } from "@tabler/icons-react"
@@ -19,6 +20,8 @@ import { Can } from "../common/Can"
 
 export const MonthGoals = () => {
   const currentYear = new Date().getFullYear()
+  type DiscountMode = "beforeDiscount" | "afterDiscount"
+  const [mode, setMode] = useState<DiscountMode>("afterDiscount")
   const [year, setYear] = useState<Date | null>(new Date())
   const { getGoals } = useMonthGoals()
 
@@ -67,7 +70,7 @@ export const MonthGoals = () => {
             Xem KPI từng tháng trong năm
           </Text>
         </Box>
-        <Group align="flex-end">
+        <Group align="flex-end" gap={12}>
           <YearPickerInput
             label="Năm"
             value={year}
@@ -78,6 +81,15 @@ export const MonthGoals = () => {
             radius="md"
             clearable
             style={{ width: 120 }}
+          />
+          <SegmentedControl
+            value={mode}
+            onChange={(v) => setMode(v as DiscountMode)}
+            data={[
+              { label: "Sau giảm giá", value: "afterDiscount" },
+              { label: "Trước giảm giá", value: "beforeDiscount" }
+            ]}
+            size="md"
           />
           <Can roles={["admin", "accounting-emp"]}>
             <Button
@@ -120,13 +132,15 @@ export const MonthGoals = () => {
               <Table.Th>KPI Shop</Table.Th>
               <Table.Th>KPI % Ads Live</Table.Th>
               <Table.Th>KPI % Ads Shop</Table.Th>
-              <Table.Th style={{ width: 180 }}></Table.Th>
+              <Table.Th>Tổng doanh thu</Table.Th>
+              <Table.Th>KPI % (Live/Shop)</Table.Th>
+              <Table.Th style={{ width: 140 }}></Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
             {isLoading ? (
               <Table.Tr>
-                <Table.Td colSpan={6}>
+                <Table.Td colSpan={8}>
                   <Flex justify="center" align="center" h={60}>
                     <Loader />
                   </Flex>
@@ -144,6 +158,15 @@ export const MonthGoals = () => {
                   <Table.Td>{m.shopGoal?.toLocaleString?.() || 0}</Table.Td>
                   <Table.Td>{m.liveAdsPercentageGoal || 0}%</Table.Td>
                   <Table.Td>{m.shopAdsPercentageGoal || 0}%</Table.Td>
+                  <Table.Td>
+                    {(
+                      ((m.totalIncome as any)?.[mode]?.live || 0) +
+                      ((m.totalIncome as any)?.[mode]?.shop || 0)
+                    ).toLocaleString?.() || 0} VNĐ
+                  </Table.Td>
+                  <Table.Td>
+                    {((m.KPIPercentage as any)?.[mode]?.live ?? 0)}% / {((m.KPIPercentage as any)?.[mode]?.shop ?? 0)}%
+                  </Table.Td>
                   <Table.Td>
                     <Group>
                       <Can roles={["admin", "accounting-emp"]}>
@@ -188,7 +211,7 @@ export const MonthGoals = () => {
               ))
             ) : (
               <Table.Tr>
-                <Table.Td colSpan={6}>
+                <Table.Td colSpan={8}>
                   <Flex justify="center" align="center" h={60}>
                     <Text c="dimmed">Không có dữ liệu</Text>
                   </Flex>
