@@ -10,7 +10,8 @@ import {
   Box,
   Loader,
   Tooltip,
-  NumberInput
+  NumberInput,
+  Alert
 } from "@mantine/core"
 import { Dropzone, FileWithPath } from "@mantine/dropzone"
 import { DatePickerInput } from "@mantine/dates"
@@ -213,6 +214,12 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
       <Text size="xl" fw={700}>
         Thêm doanh thu theo ngày
       </Text>
+      <Alert title="Lưu ý" color="yellow" variant="light">
+        <Text size="sm">
+          Sau khi tải file lên, hệ thống sẽ chạy ngầm việc thêm doanh thu, vui lòng chờ thông báo của hệ thống và kiểm tra. 
+          Trong thời gian đó, bạn vẫn có thể đóng cửa sổ này và làm việc khác.
+        </Text>
+      </Alert>
 
       {!insertIncomesCompleted ? (
         <>
