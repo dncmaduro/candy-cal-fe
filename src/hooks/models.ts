@@ -847,8 +847,8 @@ export interface GetTotalIncomesByMonthRequest {
 /** @interface */
 export interface GetTotalIncomesByMonthResponse {
   totalIncome: {
-    live: number
-    shop: number
+    beforeDiscount: { live: number; shop: number }
+    afterDiscount: { live: number; shop: number }
   }
 }
 
@@ -1659,8 +1659,8 @@ export interface GetTotalLiveAndVideoIncomeByMonthRequest {
 /** @interface */
 export interface GetTotalLiveAndVideoIncomeByMonthResponse {
   totalIncome: {
-    live: number
-    video: number
+    beforeDiscount: { live: number; video: number }
+    afterDiscount: { live: number; video: number }
   }
 }
 

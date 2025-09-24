@@ -17,9 +17,12 @@ import { useMonthGoals } from "../../hooks/useMonthGoals"
 import { KPIBox } from "./KPIBox"
 import { TopCreatorsModal } from "./TopCreatorsModal"
 import { fmtPercent } from "../../utils/fmt"
+import { SegmentedControl } from "@mantine/core"
 
 export const Dashboard = () => {
   const [kpiView, setKpiView] = useState<"live" | "shop" | "total">("live")
+  type DiscountMode = "beforeDiscount" | "afterDiscount"
+  const [mode, setMode] = useState<DiscountMode>("afterDiscount")
 
   const {
     getKPIPercentageByMonth,
@@ -74,6 +77,15 @@ export const Dashboard = () => {
     select: (data) => data.data
   })
 
+  // helper: pick mode-specific part if response has beforeDiscount/afterDiscount
+  const pickMode = <T,>(obj: any, mode: "beforeDiscount" | "afterDiscount"): T | undefined => {
+    if (!obj) return undefined
+    if (typeof obj === "object" && "beforeDiscount" in obj && "afterDiscount" in obj) {
+      return obj[mode] as T
+    }
+    return obj as T
+  }
+
   // Derived KPI values based on selected view
   const goalValue = monthGoalData
     ? kpiView === "live"
@@ -83,13 +95,18 @@ export const Dashboard = () => {
         : (monthGoalData.liveStreamGoal || 0) + (monthGoalData.shopGoal || 0)
     : undefined
 
-  const incomeValue = totalIncomesData
+  // derive total incomes for selected mode if backend returns nested shapes
+  const totalIncomesSelected = pickMode<{ live: number; shop: number }>(
+    totalIncomesData?.totalIncome,
+    mode
+  )
+
+  const incomeValue = totalIncomesSelected
     ? kpiView === "live"
-      ? totalIncomesData.totalIncome?.live
+      ? totalIncomesSelected.live
       : kpiView === "shop"
-        ? totalIncomesData.totalIncome?.shop
-        : (totalIncomesData.totalIncome?.live || 0) +
-          (totalIncomesData.totalIncome?.shop || 0)
+        ? totalIncomesSelected.shop
+        : (totalIncomesSelected.live || 0) + (totalIncomesSelected.shop || 0)
     : undefined
 
   const quantityValue = totalQuantityData
@@ -107,14 +124,12 @@ export const Dashboard = () => {
       const totalGoal =
         (monthGoalData.liveStreamGoal || 0) + (monthGoalData.shopGoal || 0)
       if (!totalGoal) return 0
-      const totalIncome =
-        (totalIncomesData?.totalIncome?.live || 0) +
-        (totalIncomesData?.totalIncome?.shop || 0)
+      const totalIncome = (totalIncomesSelected?.live || 0) + (totalIncomesSelected?.shop || 0)
       return (totalIncome / totalGoal) * 100
     }
-    const split = KPIPercentageData?.KPIPercentage
-    if (!split) return undefined
-    return split[kpiView]
+    const splitSelected = pickMode<{ live: number; shop: number }>(KPIPercentageData?.KPIPercentage, mode)
+    if (!splitSelected) return undefined
+    return splitSelected[kpiView]
   })()
 
   const percentageDisplay =
@@ -129,11 +144,18 @@ export const Dashboard = () => {
     return "red"
   })()
 
-  const monthlyLiveIncome = liveVideoIncomeMonthData?.totalIncome?.live
-  const monthlyVideoIncome = liveVideoIncomeMonthData?.totalIncome?.video
+  const liveVideoSelected = pickMode<{ live: number; video: number }>(
+    liveVideoIncomeMonthData?.totalIncome,
+    mode
+  )
 
-  const monthlyLiveAdsCost = adsCostSplitMonthData?.liveAdsCost
-  const monthlyVideoAdsCost = adsCostSplitMonthData?.videoAdsCost
+  // Only use the selected mode values — the backend now nests live/video under beforeDiscount/afterDiscount
+  const monthlyLiveIncome = liveVideoSelected?.live
+  const monthlyVideoIncome = liveVideoSelected?.video
+
+  const adsCostSelected = pickMode<{ liveAdsCost: number; videoAdsCost: number }>(adsCostSplitMonthData, mode)
+  const monthlyLiveAdsCost = adsCostSelected?.liveAdsCost
+  const monthlyVideoAdsCost = adsCostSelected?.videoAdsCost
 
   const fmtVnd = (n?: number) =>
     typeof n === "number" ? n.toLocaleString() : "..."
@@ -188,6 +210,15 @@ export const Dashboard = () => {
           >
             Top creator
           </Button>
+          <SegmentedControl
+            value={mode}
+            onChange={(v) => setMode(v as DiscountMode)}
+            data={[
+              { label: "Sau chiết khấu", value: "afterDiscount" },
+              { label: "Trước chiết khấu", value: "beforeDiscount" }
+            ]}
+            size="sm"
+          />
         </Group>
       </Flex>
 
