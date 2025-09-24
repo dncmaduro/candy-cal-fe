@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "routes": "npx @tanstack/router-cli generate"
+    "routes": "npx @tanstack/router-cli generate",
+    "up:staging": "docker buildx build --platform linux/amd64 -f Dockerfile.staging -t gunnyrealer9/candy-cal-fe:staging $(grep -E '^VITE_' .env.staging | sed 's/^/--build-arg /') --push ."
   },
   "dependencies": {
     "@mantine/carousel": "^7.17.2",
