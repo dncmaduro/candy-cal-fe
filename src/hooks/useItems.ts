@@ -2,10 +2,13 @@ import {
   CreateItemRequest,
   CreateStorageItemRequest,
   ItemResponse,
-  StorageItemResponse
+  SearchStorageItemsRequest,
+  SearchStorageItemResponse,
+  RestoreStorageItemRequest
 } from "./models"
 import { callApi } from "./axios"
 import { useUserStore } from "../store/userStore"
+import { toQueryString } from "../utils/toQuery"
 
 export const useItems = () => {
   const { accessToken } = useUserStore()
@@ -20,7 +23,7 @@ export const useItems = () => {
   }
 
   const createStorageItem = async (item: CreateStorageItemRequest) => {
-    return callApi<CreateStorageItemRequest, StorageItemResponse>({
+    return callApi<CreateStorageItemRequest, never>({
       path: `/v1/storageitems`,
       method: "POST",
       data: item,
@@ -37,8 +40,8 @@ export const useItems = () => {
     })
   }
 
-  const updateStorageItem = async (item: StorageItemResponse) => {
-    return callApi<StorageItemResponse, StorageItemResponse>({
+  const updateStorageItem = async (item: SearchStorageItemResponse) => {
+    return callApi<SearchStorageItemResponse, SearchStorageItemResponse>({
       path: `/v1/storageitems`,
       method: "PUT",
       data: item,
@@ -55,7 +58,7 @@ export const useItems = () => {
   }
 
   const getAllStorageItems = async () => {
-    return callApi<never, StorageItemResponse[]>({
+    return callApi<never, SearchStorageItemResponse[]>({
       path: `/v1/storageitems`,
       method: "GET",
       token: accessToken
@@ -71,7 +74,7 @@ export const useItems = () => {
   }
 
   const getStorageItem = async (id: string) => {
-    return callApi<never, StorageItemResponse>({
+    return callApi<never, SearchStorageItemResponse>({
       path: `/v1/storageitems/item?id=${id}`,
       method: "GET",
       token: accessToken
@@ -86,9 +89,11 @@ export const useItems = () => {
     })
   }
 
-  const searchStorageItems = async (searchText: string) => {
-    return callApi<never, StorageItemResponse[]>({
-      path: `/v1/storageitems/search?searchText=${searchText}`,
+  const searchStorageItems = async (req: SearchStorageItemsRequest) => {
+    const query = toQueryString(req)
+
+    return callApi<never, SearchStorageItemResponse[]>({
+      path: `/v1/storageitems/search?${query}`,
       method: "GET",
       token: accessToken
     })
@@ -110,6 +115,14 @@ export const useItems = () => {
     })
   }
 
+  const restoreStorageItem = async (req: RestoreStorageItemRequest) => {
+    return callApi<RestoreStorageItemRequest, never>({
+      path: `/v1/storageitems/${req.id}/restore`,
+      method: "POST",
+      token: accessToken
+    })
+  }
+
   return {
     createItem,
     createStorageItem,
@@ -122,6 +135,7 @@ export const useItems = () => {
     searchItems,
     searchStorageItems,
     deleteItem,
-    deleteStorageItem
+    deleteStorageItem,
+    restoreStorageItem
   }
 }

@@ -34,7 +34,13 @@ export interface ItemResponse {
 }
 
 /** @interface */
-export interface StorageItemResponse {
+export interface SearchStorageItemsRequest {
+  searchText?: string
+  deleted: boolean
+}
+
+/** @interface */
+export interface SearchStorageItemResponse {
   _id: string
   name: string
   quantityPerBox: number
@@ -50,8 +56,14 @@ export interface StorageItemResponse {
     quantity: number
     real: number
   }
+  deletedAt?: string
   code: string
   note?: string
+}
+
+/** @interface */
+export interface RestoreStorageItemRequest {
+  id: string
 }
 
 /** @interface */

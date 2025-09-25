@@ -17,7 +17,7 @@ import { IconPlus, IconSearch, IconEdit } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
 import { useQuery } from "@tanstack/react-query"
 import { ItemModal } from "./ItemModal"
-import { StorageItemResponse } from "../../hooks/models"
+import { SearchStorageItemResponse } from "../../hooks/models"
 import { Can } from "../common/Can"
 
 export const Items = () => {
@@ -37,14 +37,14 @@ export const Items = () => {
 
   const { data: storageItemsData } = useQuery({
     queryKey: ["searchStorageItems"],
-    queryFn: () => searchStorageItems(""),
+    queryFn: () => searchStorageItems({ searchText: "", deleted: false }),
     select: (data) => {
       return data.data.reduce(
         (acc, item) => {
           acc[item._id] = item
           return acc
         },
-        {} as Record<string, StorageItemResponse>
+        {} as Record<string, SearchStorageItemResponse>
       )
     }
   })

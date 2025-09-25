@@ -24,7 +24,7 @@ export const ItemModal = ({ item, refetch }: Props) => {
 
   const { data: storageItems, isLoading } = useQuery({
     queryKey: ["storageItems"],
-    queryFn: () => searchStorageItems(""),
+    queryFn: () => searchStorageItems({ searchText: "", deleted: false }),
     select: (data) =>
       data.data.map((item) => ({
         value: item._id,

@@ -35,7 +35,7 @@ export const ShopeeProductModal = ({ product, refetch }: Props) => {
 
   const { data: itemsData } = useQuery({
     queryKey: ["searchStorageItems"],
-    queryFn: () => searchStorageItems(""),
+    queryFn: () => searchStorageItems({ searchText: "", deleted: false }),
     select: (data) => data.data
   })
 
