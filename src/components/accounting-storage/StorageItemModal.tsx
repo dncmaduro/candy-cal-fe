@@ -1,7 +1,7 @@
 import { Controller, useForm } from "react-hook-form"
 import {
   CreateStorageItemRequest,
-  StorageItemResponse
+  SearchStorageItemResponse
 } from "../../hooks/models"
 import {
   Button,
@@ -16,11 +16,11 @@ import { useItems } from "../../hooks/useItems"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { modals } from "@mantine/modals"
 import { CToast } from "../common/CToast"
-import { IconCheck, IconTrash } from "@tabler/icons-react"
+import { IconCheck, IconTrash, IconRestore } from "@tabler/icons-react"
 import { useUsers } from "../../hooks/useUsers"
 
 interface Props {
-  item?: StorageItemResponse
+  item?: SearchStorageItemResponse
   refetch: () => void
 }
 
@@ -45,7 +45,12 @@ export const StorageItemModal = ({ item, refetch }: Props) => {
         }
   })
 
-  const { createStorageItem, updateStorageItem, deleteStorageItem } = useItems()
+  const {
+    createStorageItem,
+    updateStorageItem,
+    deleteStorageItem,
+    restoreStorageItem
+  } = useItems()
   const { getMe } = useUsers()
   const { data: meData } = useQuery({
     queryKey: ["getMe"],
@@ -94,6 +99,23 @@ export const StorageItemModal = ({ item, refetch }: Props) => {
       modals.closeAll()
       CToast.success({
         title: "Xoá sản phẩm thành công"
+      })
+      refetch()
+    },
+    onError: () => {
+      CToast.error({
+        title: "Có lỗi xảy ra"
+      })
+    }
+  })
+
+  const { mutate: restore, isPending: restoring } = useMutation({
+    mutationKey: ["restoreStorageItem"],
+    mutationFn: restoreStorageItem,
+    onSuccess: () => {
+      modals.closeAll()
+      CToast.success({
+        title: "Khôi phục sản phẩm thành công"
       })
       refetch()
     },
@@ -283,18 +305,33 @@ export const StorageItemModal = ({ item, refetch }: Props) => {
         />
 
         <Group mt={6} justify="flex-end">
-          <Button
-            variant="outline"
-            color="red"
-            radius="xl"
-            size="md"
-            onClick={() => item?._id && remove(item?._id)}
-            loading={removing}
-            leftSection={<IconTrash size={18} />}
-            fw={600}
-          >
-            Xoá
-          </Button>
+          {item?.deletedAt ? (
+            <Button
+              variant="outline"
+              color="green"
+              radius="xl"
+              size="md"
+              onClick={() => item?._id && restore({ id: item._id })}
+              loading={restoring}
+              leftSection={<IconRestore size={18} />}
+              fw={600}
+            >
+              Khôi phục
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              color="red"
+              radius="xl"
+              size="md"
+              onClick={() => item?._id && remove(item?._id)}
+              loading={removing}
+              leftSection={<IconTrash size={18} />}
+              fw={600}
+            >
+              Xoá
+            </Button>
+          )}
           <Button
             type="submit"
             loading={creating || updating}

@@ -160,7 +160,7 @@ export const CalOrders = ({ orders, allCalItems, date }: Props) => {
   // Fetch các mặt hàng (item) và item trong kho
   const { data: allStorageItems } = useQuery({
     queryKey: ["searchStorageItems"],
-    queryFn: () => searchStorageItems(""),
+    queryFn: () => searchStorageItems({ searchText: "", deleted: false }),
     select: (data) => data.data
   })
 

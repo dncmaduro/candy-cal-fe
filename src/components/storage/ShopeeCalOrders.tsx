@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query"
 import { useShopeeProducts } from "../../hooks/useShopeeProducts"
 import {
   SearchShopeeProductsResponse,
-  StorageItemResponse
+  SearchStorageItemResponse
 } from "../../hooks/models"
 import {
   Box,
@@ -95,14 +95,14 @@ export const ShopeeCalOrders = ({ orders, allCalItems }: Props) => {
   // Fetch các mặt hàng kho (storage items)
   const { data: storageItemsData } = useQuery({
     queryKey: ["searchStorageItems"],
-    queryFn: () => searchStorageItems(""),
+    queryFn: () => searchStorageItems({ searchText: "", deleted: false }),
     select: (data) => data.data
   })
 
   const allStorageItems = useMemo(() => {
     return storageItemsData?.reduce(
       (acc, item) => ({ ...acc, [item._id]: item }),
-      {} as Record<string, StorageItemResponse>
+      {} as Record<string, SearchStorageItemResponse>
     )
   }, [storageItemsData])
 

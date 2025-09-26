@@ -1,8 +1,9 @@
-import { StorageItemResponse } from "../../hooks/models"
-import { Box, Stack, Text, Table, Divider } from "@mantine/core"
+import { SearchStorageItemResponse } from "../../hooks/models"
+import { Box, Stack, Text, Table, Divider, Badge } from "@mantine/core"
+import { format } from "date-fns"
 
 interface Props {
-  item: StorageItemResponse
+  item: SearchStorageItemResponse
 }
 
 export const StorageItemDetailModal = ({ item }: Props) => {
@@ -16,6 +17,20 @@ export const StorageItemDetailModal = ({ item }: Props) => {
           <Text fz="sm">
             <b>Mã hàng:</b> {item.code}
           </Text>
+          {item.deletedAt && (
+            <>
+              <Text fz="sm" c="red" mt={4}>
+                <b>Trạng thái:</b>{" "}
+                <Badge variant="light" color="red" size="sm">
+                  Đã xóa
+                </Badge>
+              </Text>
+              <Text fz="sm" c="red">
+                <b>Ngày xóa:</b>{" "}
+                {format(new Date(item.deletedAt), "dd/MM/yyyy HH:mm")}
+              </Text>
+            </>
+          )}
         </Stack>
 
         <Divider mt={6} mb={8} />

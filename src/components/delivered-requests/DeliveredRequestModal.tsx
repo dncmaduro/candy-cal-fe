@@ -17,7 +17,7 @@ import { format } from "date-fns"
 import { vi } from "date-fns/locale"
 import { IconCheck } from "@tabler/icons-react"
 import { useState } from "react"
-import { StorageItemResponse } from "../../hooks/models"
+import { SearchStorageItemResponse } from "../../hooks/models"
 
 interface Props {
   request: {
@@ -46,7 +46,7 @@ export const DeliveredRequestModal = ({ request, acceptRequest }: Props) => {
 
   const { data: itemsData } = useQuery({
     queryKey: ["searchStorageItems"],
-    queryFn: () => searchStorageItems(""),
+    queryFn: () => searchStorageItems({ searchText: "", deleted: true }),
     select: (data) => data.data
   })
 
@@ -56,7 +56,7 @@ export const DeliveredRequestModal = ({ request, acceptRequest }: Props) => {
       acc[item._id] = item
       return acc
     },
-    {} as Record<string, StorageItemResponse>
+    {} as Record<string, SearchStorageItemResponse>
   )
 
   return (
