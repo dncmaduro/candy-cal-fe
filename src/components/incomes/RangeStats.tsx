@@ -318,11 +318,9 @@ export const RangeStats = () => {
                         (current[mode].videoIncome || 0) +
                         (current[mode].otherIncome || 0)
                       }
-                      adsCost={current.ads.videoAdsCost}
-                      adsCostChangePct={changes?.ads?.videoAdsCostPct}
-                      adsSharePctDiff={
-                        changes?.ads?.videoAdsToVideoIncomePctDiff
-                      }
+                      adsCost={current.ads.shopAdsCost}
+                      adsCostChangePct={changes?.ads?.shopAdsCostPct}
+                      adsSharePctDiff={changes?.ads?.shopAdsToShopIncomePctDiff}
                       ownVideoIncome={current[mode].ownVideoIncome}
                       otherVideoIncome={current[mode].otherVideoIncome}
                       otherIncome={current[mode].otherIncome}

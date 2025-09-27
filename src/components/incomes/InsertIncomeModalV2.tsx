@@ -48,7 +48,7 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
   })
   const [insertIncomesCompleted, setInsertIncomesCompleted] = useState(false)
   const [liveAdsCost, setLiveAdsCost] = useState<number>(0)
-  const [videoAdsCost, setVideoAdsCost] = useState<number>(0)
+  const [shopAdsCost, setShopAdsCost] = useState<number>(0)
 
   const { mutateAsync: insertAndUpdate, isPending: insertingIncomes } =
     useMutation({
@@ -112,7 +112,7 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
   }
 
   const handleSubmitAdsCost = async () => {
-    if (liveAdsCost < 0 || videoAdsCost < 0) {
+    if (liveAdsCost < 0 || shopAdsCost < 0) {
       CToast.error({ title: "Chi phí ads không thể âm" })
       return
     }
@@ -120,7 +120,7 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
     await createAds({
       date: date!,
       liveAdsCost,
-      videoAdsCost
+      shopAdsCost
     })
   }
 
@@ -204,10 +204,10 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
     })
     setInsertIncomesCompleted(false)
     setLiveAdsCost(0)
-    setVideoAdsCost(0)
+    setShopAdsCost(0)
   }
 
-  const totalCost = liveAdsCost + videoAdsCost
+  const totalCost = liveAdsCost + shopAdsCost
 
   return (
     <Stack gap="md" p="sm">
@@ -216,8 +216,9 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
       </Text>
       <Alert title="Lưu ý" color="yellow" variant="light">
         <Text size="sm">
-          Sau khi tải file lên, hệ thống sẽ chạy ngầm việc thêm doanh thu, vui lòng chờ thông báo của hệ thống và kiểm tra. 
-          Trong thời gian đó, bạn vẫn có thể đóng cửa sổ này và làm việc khác.
+          Sau khi tải file lên, hệ thống sẽ chạy ngầm việc thêm doanh thu, vui
+          lòng chờ thông báo của hệ thống và kiểm tra. Trong thời gian đó, bạn
+          vẫn có thể đóng cửa sổ này và làm việc khác.
         </Text>
       </Alert>
 
@@ -281,8 +282,8 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
               <NumberInput
                 label="Chi phí Ads Video (VNĐ)"
                 placeholder="Nhập chi phí ads video"
-                value={videoAdsCost}
-                onChange={(val) => setVideoAdsCost(Number(val) || 0)}
+                value={shopAdsCost}
+                onChange={(val) => setShopAdsCost(Number(val) || 0)}
                 min={0}
                 thousandSeparator=","
                 size="md"
@@ -298,7 +299,7 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
                 </Text>
                 <Text c="dimmed" fz="sm">
                   Livestream: {liveAdsCost.toLocaleString()} VNĐ | Video:{" "}
-                  {videoAdsCost.toLocaleString()} VNĐ
+                  {shopAdsCost.toLocaleString()} VNĐ
                 </Text>
               </Box>
             </Stack>

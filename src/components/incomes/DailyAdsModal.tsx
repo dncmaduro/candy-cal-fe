@@ -22,7 +22,7 @@ interface Props {
 
 export const DailyAdsModal = ({ resetStep, refetch, selectedDate }: Props) => {
   const [liveAdsCost, setLiveAdsCost] = useState<number>(0)
-  const [videoAdsCost, setVideoAdsCost] = useState<number>(0)
+  const [shopAdsCost, setShopAdsCost] = useState<number>(0)
   const { createDailyAds } = useDailyAds()
 
   const { mutateAsync: createAds, isPending: submitting } = useMutation({
@@ -38,7 +38,7 @@ export const DailyAdsModal = ({ resetStep, refetch, selectedDate }: Props) => {
   })
 
   const handleSubmit = async () => {
-    if (liveAdsCost < 0 || videoAdsCost < 0) {
+    if (liveAdsCost < 0 || shopAdsCost < 0) {
       CToast.error({ title: "Chi phí ads không thể âm" })
       return
     }
@@ -46,11 +46,11 @@ export const DailyAdsModal = ({ resetStep, refetch, selectedDate }: Props) => {
     await createAds({
       date: selectedDate,
       liveAdsCost,
-      videoAdsCost
+      shopAdsCost
     })
   }
 
-  const totalCost = liveAdsCost + videoAdsCost
+  const totalCost = liveAdsCost + shopAdsCost
 
   return (
     <Stack gap="md" p="sm" align="center">
@@ -79,8 +79,8 @@ export const DailyAdsModal = ({ resetStep, refetch, selectedDate }: Props) => {
           <NumberInput
             label="Chi phí Ads Video (VNĐ)"
             placeholder="Nhập chi phí ads video"
-            value={videoAdsCost}
-            onChange={(val) => setVideoAdsCost(Number(val) || 0)}
+            value={shopAdsCost}
+            onChange={(val) => setShopAdsCost(Number(val) || 0)}
             min={0}
             thousandSeparator=","
             size="md"
@@ -95,7 +95,7 @@ export const DailyAdsModal = ({ resetStep, refetch, selectedDate }: Props) => {
             </Text>
             <Text c="dimmed" fz="sm">
               Livestream: {liveAdsCost.toLocaleString()} VNĐ | Video:{" "}
-              {videoAdsCost.toLocaleString()} VNĐ
+              {shopAdsCost.toLocaleString()} VNĐ
             </Text>
           </Box>
         </Stack>
