@@ -20,8 +20,8 @@ import {
   GetTopCreatorsRequest,
   GetTopCreatorsResponse,
   GetAdsCostSplitByMonthRequest,
-  GetTotalLiveAndVideoIncomeByMonthRequest,
-  GetTotalLiveAndVideoIncomeByMonthResponse,
+  GetTotalLiveAndShopIncomeByMonthRequest,
+  GetTotalLiveAndShopIncomeByMonthResponse,
   GetAdsCostSplitByMonthResponse,
   InsertIncomeAndUpdateSourceRequest,
   InsertIncomeAndUpdateSourceResponse
@@ -164,13 +164,13 @@ export const useIncomes = () => {
     })
   }
 
-  const getLiveVideoIncomeByMonth = async (
-    req: GetTotalLiveAndVideoIncomeByMonthRequest
+  const getLiveShopIncomeByMonth = async (
+    req: GetTotalLiveAndShopIncomeByMonthRequest
   ) => {
     const query = toQueryString(req)
 
-    return callApi<never, GetTotalLiveAndVideoIncomeByMonthResponse>({
-      path: `/v1/incomes/monthly-live-video-income?${query}`,
+    return callApi<never, GetTotalLiveAndShopIncomeByMonthResponse>({
+      path: `/v1/incomes/monthly-live-shop-income?${query}`,
       method: "GET",
       token: accessToken
     })
@@ -224,7 +224,7 @@ export const useIncomes = () => {
     getRangeStats,
     getTopCreators,
     exportXlsxIncomes,
-    getLiveVideoIncomeByMonth,
+    getLiveShopIncomeByMonth,
     getAdsCostSplitByMonth,
     insertIncomeAndUpdateSource
   }

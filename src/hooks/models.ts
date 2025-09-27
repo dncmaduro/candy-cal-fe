@@ -1663,16 +1663,16 @@ export interface SystemLogsOptionsResponse {
 }
 
 /** @interface */
-export interface GetTotalLiveAndVideoIncomeByMonthRequest {
+export interface GetTotalLiveAndShopIncomeByMonthRequest {
   month: number
   year: number
 }
 
 /** @interface */
-export interface GetTotalLiveAndVideoIncomeByMonthResponse {
+export interface GetTotalLiveAndShopIncomeByMonthResponse {
   totalIncome: {
-    beforeDiscount: { live: number; video: number }
-    afterDiscount: { live: number; video: number }
+    beforeDiscount: { live: number; shop: number }
+    afterDiscount: { live: number; shop: number }
   }
 }
 
@@ -1685,9 +1685,9 @@ export interface GetAdsCostSplitByMonthRequest {
 /** @interface */
 export interface GetAdsCostSplitByMonthResponse {
   liveAdsCost: number
-  videoAdsCost: number
-  percentages: { liveAdsToLiveIncome: number; videoAdsToVideoIncome: number }
-  totalIncome: { live: number; video: number }
+  shopAdsCost: number
+  percentages: { liveAdsToLiveIncome: number; shopAdsToShopIncome: number }
+  totalIncome: { live: number; shop: number }
 }
 
 /** @interface */

@@ -7,12 +7,24 @@ import {
   Text,
   Group,
   Button,
-  Select,
   Stack,
-  Paper
+  Paper,
+  Divider
 } from "@mantine/core"
 import { modals } from "@mantine/modals"
-import { IconStars } from "@tabler/icons-react"
+import {
+  IconStars,
+  IconVideo,
+  IconShoppingBag,
+  IconSum,
+  IconChartBar,
+  IconCalendar,
+  IconTarget,
+  IconDeviceDesktop,
+  IconBuilding,
+  IconAnalyze,
+  IconTrophy
+} from "@tabler/icons-react"
 import { useMonthGoals } from "../../hooks/useMonthGoals"
 import { KPIBox } from "./KPIBox"
 import { TopCreatorsModal } from "./TopCreatorsModal"
@@ -28,7 +40,7 @@ export const Dashboard = () => {
     getKPIPercentageByMonth,
     getTotalIncomesByMonth,
     getTotalQuantityByMonth,
-    getLiveVideoIncomeByMonth,
+    getLiveShopIncomeByMonth,
     getAdsCostSplitByMonth
   } = useIncomes()
 
@@ -58,9 +70,9 @@ export const Dashboard = () => {
   })
 
   const { data: liveVideoIncomeMonthData } = useQuery({
-    queryKey: ["getLiveVideoIncomeByMonth", currentMonth, currentYear],
+    queryKey: ["getLiveShopIncomeByMonth", currentMonth, currentYear],
     queryFn: () =>
-      getLiveVideoIncomeByMonth({ month: currentMonth, year: currentYear }),
+      getLiveShopIncomeByMonth({ month: currentMonth, year: currentYear }),
     select: (data) => data.data
   })
 
@@ -78,9 +90,16 @@ export const Dashboard = () => {
   })
 
   // helper: pick mode-specific part if response has beforeDiscount/afterDiscount
-  const pickMode = <T,>(obj: any, mode: "beforeDiscount" | "afterDiscount"): T | undefined => {
+  const pickMode = <T,>(
+    obj: any,
+    mode: "beforeDiscount" | "afterDiscount"
+  ): T | undefined => {
     if (!obj) return undefined
-    if (typeof obj === "object" && "beforeDiscount" in obj && "afterDiscount" in obj) {
+    if (
+      typeof obj === "object" &&
+      "beforeDiscount" in obj &&
+      "afterDiscount" in obj
+    ) {
       return obj[mode] as T
     }
     return obj as T
@@ -124,10 +143,14 @@ export const Dashboard = () => {
       const totalGoal =
         (monthGoalData.liveStreamGoal || 0) + (monthGoalData.shopGoal || 0)
       if (!totalGoal) return 0
-      const totalIncome = (totalIncomesSelected?.live || 0) + (totalIncomesSelected?.shop || 0)
+      const totalIncome =
+        (totalIncomesSelected?.live || 0) + (totalIncomesSelected?.shop || 0)
       return (totalIncome / totalGoal) * 100
     }
-    const splitSelected = pickMode<{ live: number; shop: number }>(KPIPercentageData?.KPIPercentage, mode)
+    const splitSelected = pickMode<{ live: number; shop: number }>(
+      KPIPercentageData?.KPIPercentage,
+      mode
+    )
     if (!splitSelected) return undefined
     return splitSelected[kpiView]
   })()
@@ -144,21 +167,41 @@ export const Dashboard = () => {
     return "red"
   })()
 
-  const liveVideoSelected = pickMode<{ live: number; video: number }>(
+  const liveVideoSelected = pickMode<{ live: number; shop: number }>(
     liveVideoIncomeMonthData?.totalIncome,
     mode
   )
 
+  // For ads ratio calculation, always use beforeDiscount values
+  const liveVideoBeforeDiscount = pickMode<{ live: number; shop: number }>(
+    liveVideoIncomeMonthData?.totalIncome,
+    "beforeDiscount"
+  )
+
   // Only use the selected mode values — the backend now nests live/video under beforeDiscount/afterDiscount
   const monthlyLiveIncome = liveVideoSelected?.live
-  const monthlyVideoIncome = liveVideoSelected?.video
+  const monthlyShopIncome = liveVideoSelected?.shop
+  const monthlyLiveIncomeBeforeDiscount = liveVideoBeforeDiscount?.live
+  const monthlyShopIncomeBeforeDiscount = liveVideoBeforeDiscount?.shop
 
-  const adsCostSelected = pickMode<{ liveAdsCost: number; videoAdsCost: number }>(adsCostSplitMonthData, mode)
+  const adsCostSelected = pickMode<{
+    liveAdsCost: number
+    shopAdsCost: number
+  }>(adsCostSplitMonthData, mode)
   const monthlyLiveAdsCost = adsCostSelected?.liveAdsCost
-  const monthlyVideoAdsCost = adsCostSelected?.videoAdsCost
+  const monthlyShopAdsCost = adsCostSelected?.shopAdsCost
 
   const fmtVnd = (n?: number) =>
     typeof n === "number" ? n.toLocaleString() : "..."
+
+  // Calculate ads ratio based on beforeDiscount revenue
+  const calculateAdsRatio = (
+    adsCost: number,
+    revenueBeforeDiscount: number
+  ) => {
+    if (!revenueBeforeDiscount || revenueBeforeDiscount <= 0) return 0
+    return (adsCost / revenueBeforeDiscount) * 100
+  }
 
   return (
     <Box
@@ -174,73 +217,117 @@ export const Dashboard = () => {
       }}
     >
       {/* Header Section */}
-      <Flex
-        align="center"
-        justify="space-between"
-        pt={32}
-        pb={16}
-        px={{ base: 8, md: 28 }}
-        direction={{ base: "column", sm: "row" }}
-        gap={12}
+      <Box
+        style={{
+          background:
+            "linear-gradient(135deg, rgba(79, 172, 254, 0.1) 0%, rgba(0, 242, 254, 0.05) 100%)",
+          borderRadius: "16px 16px 0 0",
+          borderBottom: "1px solid rgba(79, 172, 254, 0.15)"
+        }}
       >
-        <Box>
-          <Text fw={700} fz="xl" mb={2}>
-            Dashboard Doanh Thu
-          </Text>
-          <Text c="dimmed" fz="sm">
-            Tổng quan số liệu và hiệu suất KPI
-          </Text>
-        </Box>
+        <Flex
+          align="center"
+          justify="space-between"
+          pt={32}
+          pb={20}
+          px={{ base: 16, md: 32 }}
+          direction={{ base: "column", sm: "row" }}
+          gap={16}
+        >
+          <Box>
+            <Flex align="center" gap="sm" mb={8}>
+              <IconChartBar size={28} color="#1971c2" />
+              <Text
+                fw={700}
+                fz="xxl"
+                variant="gradient"
+                gradient={{ from: "blue.6", to: "cyan.5", deg: 45 }}
+              >
+                Dashboard Analytics
+              </Text>
+            </Flex>
+            <Text c="blue.6" fz="md" fw={500}>
+              Tổng quan hiệu suất kinh doanh theo thời gian thực
+            </Text>
+          </Box>
 
-        {/* Quick Actions */}
-        <Group gap={8} align="center" w={{ base: "100%", sm: "auto" }}>
-          <Button
-            color="grape"
-            variant="light"
-            size="md"
-            radius="xl"
-            leftSection={<IconStars size={16} />}
-            onClick={() => {
-              modals.open({
-                title: <b>Top nhà sáng tạo</b>,
-                children: <TopCreatorsModal />,
-                size: "xl"
-              })
-            }}
-          >
-            Top creator
-          </Button>
-          <SegmentedControl
-            value={mode}
-            onChange={(v) => setMode(v as DiscountMode)}
-            data={[
-              { label: "Sau chiết khấu", value: "afterDiscount" },
-              { label: "Trước chiết khấu", value: "beforeDiscount" }
-            ]}
-            size="sm"
-          />
-        </Group>
-      </Flex>
+          {/* Quick Actions */}
+          <Group gap="md" align="center" w={{ base: "100%", sm: "auto" }}>
+            <Button
+              color="grape"
+              variant="gradient"
+              gradient={{ from: "grape.5", to: "pink.5", deg: 45 }}
+              size="md"
+              radius="xl"
+              leftSection={<IconStars size={18} />}
+              onClick={() => {
+                modals.open({
+                  title: (
+                    <Flex align="center" gap="xs">
+                      <IconTrophy size={20} />
+                      <b>Top nhà sáng tạo</b>
+                    </Flex>
+                  ),
+                  children: <TopCreatorsModal />,
+                  size: "xl"
+                })
+              }}
+              style={{
+                boxShadow: "0 4px 12px rgba(190, 24, 93, 0.25)",
+                transition: "all 0.2s ease"
+              }}
+            >
+              Top creator
+            </Button>
+            <Box
+              style={{
+                padding: "4px",
+                background: "rgba(255, 255, 255, 0.8)",
+                borderRadius: "12px",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
+              }}
+            >
+              <SegmentedControl
+                value={mode}
+                onChange={(v) => setMode(v as DiscountMode)}
+                data={[
+                  { label: "Sau CK", value: "afterDiscount" },
+                  { label: "Trước CK", value: "beforeDiscount" }
+                ]}
+                size="sm"
+                color="blue"
+              />
+            </Box>
+          </Group>
+        </Flex>
+      </Box>
 
       {/* Dashboard Content */}
-      <Box pt={16} pb={32} px={{ base: 8, md: 28 }} w="100%">
-        <Group justify="space-between" align="center" mb={16}>
-          <Text fw={600} fz="lg">
-            Số liệu theo tháng (tháng hiện tại)
+      <Box pt={20} pb={40} px={{ base: 16, md: 32 }} w="100%">
+        <Flex align="center" mb={24} gap="md">
+          <IconCalendar size={24} color="#364fc7" />
+          <Text
+            fw={700}
+            fz="xl"
+            variant="gradient"
+            gradient={{ from: "blue.7", to: "indigo.6", deg: 45 }}
+          >
+            Số liệu tháng hiện tại
           </Text>
-          <Select
-            value={kpiView}
-            onChange={(v) => setKpiView((v as any) ?? "live")}
-            data={[
-              { label: "Livestream", value: "live" },
-              { label: "Shop", value: "shop" },
-              { label: "Tổng", value: "total" }
-            ]}
-            size="sm"
-            w={140}
-            radius="md"
-          />
-        </Group>
+          <Text
+            fz="sm"
+            c="dimmed"
+            px="sm"
+            py="xs"
+            bg="rgba(59, 130, 246, 0.1)"
+            style={{ borderRadius: "20px" }}
+          >
+            {new Date().toLocaleDateString("vi-VN", {
+              month: "long",
+              year: "numeric"
+            })}
+          </Text>
+        </Flex>
 
         {/* KPI Performance Section */}
         <Paper
@@ -248,18 +335,68 @@ export const Dashboard = () => {
           p="lg"
           withBorder
           radius="lg"
-          mb={16}
-          bg="rgba(59, 130, 246, 0.02)"
+          mb={20}
+          style={{
+            background:
+              "linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0.02) 100%)",
+            borderColor: "rgba(59, 130, 246, 0.15)"
+          }}
         >
-          <Text fw={600} mb={12} c="blue.7">
-            Hiệu suất KPI -{" "}
-            {kpiView === "total"
-              ? "Tổng hợp"
-              : kpiView === "live"
-                ? "Livestream"
-                : "Shop"}
-          </Text>
-          <Group w={"100%"} justify="space-between" align="stretch" gap={12}>
+          <Flex justify="space-between" align="center" mb={16}>
+            <Box style={{ flex: 1 }}>
+              <Flex align="center" gap="xs" mb={4}>
+                <IconTarget size={20} color="#1971c2" />
+                <Text fw={700} c="blue.8" fz="xl">
+                  Hiệu suất KPI
+                </Text>
+              </Flex>
+              <Text fz="sm" c="blue.6" mt={4}>
+                {kpiView === "total"
+                  ? "Tổng hợp toàn bộ kênh bán hàng"
+                  : kpiView === "live"
+                    ? "Chỉ số từ kênh Livestream"
+                    : "Chỉ số từ kênh Sàn thương mại"}
+              </Text>
+            </Box>
+            <Box style={{ flexShrink: 0 }}>
+              <SegmentedControl
+                value={kpiView}
+                onChange={(v) => setKpiView(v as "live" | "shop" | "total")}
+                data={[
+                  {
+                    label: (
+                      <Flex align="center" gap="xs">
+                        <IconDeviceDesktop size={14} />
+                        <span>Live</span>
+                      </Flex>
+                    ),
+                    value: "live"
+                  },
+                  {
+                    label: (
+                      <Flex align="center" gap="xs">
+                        <IconBuilding size={14} />
+                        <span>Sàn</span>
+                      </Flex>
+                    ),
+                    value: "shop"
+                  },
+                  {
+                    label: (
+                      <Flex align="center" gap="xs">
+                        <IconSum size={14} />
+                        <span>Tổng</span>
+                      </Flex>
+                    ),
+                    value: "total"
+                  }
+                ]}
+                size="sm"
+                style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}
+              />
+            </Box>
+          </Flex>
+          <Group justify="space-between" align="stretch" gap={12}>
             <KPIBox
               label="Mục tiêu KPI"
               value={
@@ -294,107 +431,283 @@ export const Dashboard = () => {
           </Group>
         </Paper>
 
-        {/* Revenue & Costs Breakdown */}
-        <Paper withBorder p="lg" radius="lg" mb={16}>
-          <Text fw={600} mb={12} c="gray.7">
-            Chi tiết doanh thu & chi phí
-          </Text>
-          <Stack gap={16}>
-            {/* Revenue Row */}
-            <Group justify="space-between" align="stretch" gap={12}>
-              <KPIBox
-                label="Doanh thu Livestream"
-                value={fmtVnd(monthlyLiveIncome)}
-                unit="VNĐ"
-                color="teal"
-              />
-              <KPIBox
-                label="Doanh thu Video"
-                value={fmtVnd(monthlyVideoIncome)}
-                unit="VNĐ"
-                color="grape"
-              />
-            </Group>
+        {/* Revenue & Costs Analysis */}
+        <Paper
+          withBorder
+          p="lg"
+          radius="lg"
+          bg="rgba(16, 185, 129, 0.02)"
+          style={{
+            background:
+              "linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(16, 185, 129, 0.01) 100%)"
+          }}
+        >
+          <Flex justify="space-between" align="center" mb={20}>
+            <Flex align="center" gap="sm">
+              <IconAnalyze size={20} color="#0ca678" />
+              <Text fw={700} fz="lg" c="teal.8">
+                Phân tích chi tiết theo kênh
+              </Text>
+            </Flex>
+            <Text fz="xs" c="dimmed" fw={500}>
+              Doanh thu tính theo {mode === "afterDiscount" ? "sau" : "trước"}{" "}
+              chiết khấu
+            </Text>
+          </Flex>
 
-            {/* Costs Row */}
-            <Group justify="space-between" align="stretch" gap={12}>
-              <KPIBox
-                label="Chi phí Ads Live"
-                value={fmtVnd(monthlyLiveAdsCost)}
-                unit="VNĐ"
-                color="red"
+          <Stack gap={24}>
+            {/* Livestream Section */}
+            <Box
+              p="md"
+              style={{
+                backgroundColor: "rgba(25, 113, 194, 0.05)",
+                borderRadius: "12px",
+                border: "1px solid rgba(25, 113, 194, 0.1)"
+              }}
+            >
+              <Flex align="center" justify="space-between" mb={16}>
+                <Flex align="center" gap={10}>
+                  <Box
+                    p={8}
+                    style={{
+                      backgroundColor: "#1971c2",
+                      borderRadius: "8px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center"
+                    }}
+                  >
+                    <IconVideo size={16} color="white" />
+                  </Box>
+                  <Text fw={700} c="blue.8" fz="lg">
+                    Livestream
+                  </Text>
+                </Flex>
+                <Text fz="xs" c="blue.6" fw={500}>
+                  Kênh trực tiếp
+                </Text>
+              </Flex>
+              <Group justify="space-between" align="stretch" gap={12}>
+                <KPIBox
+                  label="Doanh thu"
+                  value={fmtVnd(monthlyLiveIncome)}
+                  unit="VNĐ"
+                  color="blue"
+                />
+                <KPIBox
+                  label="Chi phí Ads"
+                  value={fmtVnd(monthlyLiveAdsCost)}
+                  unit="VNĐ"
+                  color="orange"
+                />
+                <KPIBox
+                  label="Lợi nhuận (sau ads)"
+                  value={fmtVnd(
+                    (monthlyLiveIncome || 0) - (monthlyLiveAdsCost || 0)
+                  )}
+                  unit="VNĐ"
+                  color={
+                    (monthlyLiveIncome || 0) - (monthlyLiveAdsCost || 0) > 0
+                      ? "green"
+                      : "red"
+                  }
+                />
+                <KPIBox
+                  label="Tỉ lệ Ads/Doanh thu"
+                  value={fmtPercent(
+                    calculateAdsRatio(
+                      monthlyLiveAdsCost || 0,
+                      monthlyLiveIncomeBeforeDiscount || 0
+                    )
+                  )}
+                  color="indigo"
+                />
+              </Group>
+            </Box>
+
+            <Divider size="xs" color="gray.2" style={{ margin: "8px 0" }} />
+
+            {/* Shop Section */}
+            <Box
+              p="md"
+              style={{
+                backgroundColor: "rgba(174, 62, 201, 0.05)",
+                borderRadius: "12px",
+                border: "1px solid rgba(174, 62, 201, 0.1)"
+              }}
+            >
+              <Flex align="center" justify="space-between" mb={16}>
+                <Flex align="center" gap={10}>
+                  <Box
+                    p={8}
+                    style={{
+                      backgroundColor: "#ae3ec9",
+                      borderRadius: "8px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center"
+                    }}
+                  >
+                    <IconShoppingBag size={16} color="white" />
+                  </Box>
+                  <Text fw={700} c="grape.8" fz="lg">
+                    Sàn thương mại
+                  </Text>
+                </Flex>
+                <Text fz="xs" c="grape.6" fw={500}>
+                  Marketplace
+                </Text>
+              </Flex>
+              <Group justify="space-between" align="stretch" gap={12}>
+                <KPIBox
+                  label="Doanh thu"
+                  value={fmtVnd(monthlyShopIncome)}
+                  unit="VNĐ"
+                  color="violet"
+                />
+                <KPIBox
+                  label="Chi phí Ads"
+                  value={fmtVnd(monthlyShopAdsCost)}
+                  unit="VNĐ"
+                  color="orange"
+                />
+                <KPIBox
+                  label="Lợi nhuận (sau ads)"
+                  value={fmtVnd(
+                    (monthlyShopIncome || 0) - (monthlyShopAdsCost || 0)
+                  )}
+                  unit="VNĐ"
+                  color={
+                    (monthlyShopIncome || 0) - (monthlyShopAdsCost || 0) > 0
+                      ? "green"
+                      : "red"
+                  }
+                />
+                <KPIBox
+                  label="Tỉ lệ Ads/Doanh thu"
+                  value={fmtPercent(
+                    calculateAdsRatio(
+                      monthlyShopAdsCost || 0,
+                      monthlyShopIncomeBeforeDiscount || 0
+                    )
+                  )}
+                  color="grape"
+                />
+              </Group>
+            </Box>
+
+            <Divider
+              size="md"
+              color="gray.3"
+              label="Tổng hợp"
+              labelPosition="center"
+              style={{ margin: "16px 0" }}
+            />
+
+            {/* Total Section */}
+            <Box
+              p="md"
+              style={{
+                backgroundColor: "rgba(73, 80, 87, 0.05)",
+                borderRadius: "12px",
+                border: "2px solid rgba(73, 80, 87, 0.15)",
+                position: "relative"
+              }}
+            >
+              <Box
+                style={{
+                  position: "absolute",
+                  top: -1,
+                  left: -1,
+                  right: -1,
+                  height: "4px",
+                  background:
+                    "linear-gradient(90deg, #1971c2 0%, #ae3ec9 100%)",
+                  borderRadius: "12px 12px 0 0"
+                }}
               />
-              <KPIBox
-                label="Chi phí Ads Video"
-                value={fmtVnd(monthlyVideoAdsCost)}
-                unit="VNĐ"
-                color="pink"
-              />
-            </Group>
+              <Flex align="center" justify="space-between" mb={16}>
+                <Flex align="center" gap={10}>
+                  <Box
+                    p={8}
+                    style={{
+                      backgroundColor: "#495057",
+                      borderRadius: "8px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center"
+                    }}
+                  >
+                    <IconSum size={16} color="white" />
+                  </Box>
+                  <Text fw={700} c="dark.8" fz="lg">
+                    Tổng hợp
+                  </Text>
+                </Flex>
+                <Text
+                  fz="xs"
+                  c="dark.5"
+                  fw={600}
+                  style={{
+                    background: "linear-gradient(45deg, #1971c2, #ae3ec9)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent"
+                  }}
+                >
+                  Tổng cộng 2 kênh
+                </Text>
+              </Flex>
+              <Group justify="space-between" align="stretch" gap={12}>
+                <KPIBox
+                  label="Tổng doanh thu"
+                  value={fmtVnd(
+                    (monthlyLiveIncome || 0) + (monthlyShopIncome || 0)
+                  )}
+                  unit="VNĐ"
+                  color="teal"
+                />
+                <KPIBox
+                  label="Tổng chi phí Ads"
+                  value={fmtVnd(
+                    (monthlyLiveAdsCost || 0) + (monthlyShopAdsCost || 0)
+                  )}
+                  unit="VNĐ"
+                  color="orange"
+                />
+                <KPIBox
+                  label="Tổng lợi nhuận (sau ads)"
+                  value={fmtVnd(
+                    (monthlyLiveIncome || 0) +
+                      (monthlyShopIncome || 0) -
+                      (monthlyLiveAdsCost || 0) -
+                      (monthlyShopAdsCost || 0)
+                  )}
+                  unit="VNĐ"
+                  color={
+                    (monthlyLiveIncome || 0) +
+                      (monthlyShopIncome || 0) -
+                      (monthlyLiveAdsCost || 0) -
+                      (monthlyShopAdsCost || 0) >
+                    0
+                      ? "green"
+                      : "red"
+                  }
+                />
+                <KPIBox
+                  label="Tỉ lệ Ads/Doanh thu tổng"
+                  value={fmtPercent(
+                    calculateAdsRatio(
+                      (monthlyLiveAdsCost || 0) + (monthlyShopAdsCost || 0),
+                      (monthlyLiveIncomeBeforeDiscount || 0) +
+                        (monthlyShopIncomeBeforeDiscount || 0)
+                    )
+                  )}
+                  color="dark"
+                />
+              </Group>
+            </Box>
           </Stack>
         </Paper>
-
-        {/* Ads Performance Ratios */}
-        {adsCostSplitMonthData?.percentages && (
-          <Paper withBorder p="lg" radius="lg" bg="rgba(16, 185, 129, 0.02)">
-            <Text fw={600} mb={12} c="teal.7">
-              Hiệu suất quảng cáo
-            </Text>
-            <Group justify="space-between" align="stretch" gap={12}>
-              <KPIBox
-                label="Tỉ lệ Ads/Doanh thu Live"
-                value={fmtPercent(
-                  adsCostSplitMonthData.percentages.liveAdsToLiveIncome
-                )}
-                color={
-                  adsCostSplitMonthData.percentages.liveAdsToLiveIncome > 30
-                    ? "red"
-                    : adsCostSplitMonthData.percentages.liveAdsToLiveIncome > 20
-                      ? "yellow"
-                      : "green"
-                }
-              />
-              <KPIBox
-                label="Tỉ lệ Ads/Doanh thu Video"
-                value={fmtPercent(
-                  adsCostSplitMonthData.percentages.videoAdsToVideoIncome
-                )}
-                color={
-                  adsCostSplitMonthData.percentages.videoAdsToVideoIncome > 30
-                    ? "red"
-                    : adsCostSplitMonthData.percentages.videoAdsToVideoIncome >
-                        20
-                      ? "yellow"
-                      : "green"
-                }
-              />
-              <KPIBox
-                label="Lợi nhuận Live (sau ads)"
-                value={fmtVnd(
-                  (monthlyLiveIncome || 0) - (monthlyLiveAdsCost || 0)
-                )}
-                unit="VNĐ"
-                color={
-                  (monthlyLiveIncome || 0) - (monthlyLiveAdsCost || 0) > 0
-                    ? "green"
-                    : "red"
-                }
-              />
-              <KPIBox
-                label="Lợi nhuận Video (sau ads)"
-                value={fmtVnd(
-                  (monthlyVideoIncome || 0) - (monthlyVideoAdsCost || 0)
-                )}
-                unit="VNĐ"
-                color={
-                  (monthlyVideoIncome || 0) - (monthlyVideoAdsCost || 0) > 0
-                    ? "green"
-                    : "red"
-                }
-              />
-            </Group>
-          </Paper>
-        )}
       </Box>
     </Box>
   )
