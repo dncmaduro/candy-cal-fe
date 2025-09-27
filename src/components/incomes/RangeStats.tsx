@@ -11,7 +11,6 @@ import {
   Paper,
   Divider,
   Group,
-  Box,
   Select,
   Badge,
   SegmentedControl
@@ -28,6 +27,8 @@ import { fmtPercent } from "../../utils/fmt"
 import type { GetRangeStatsResponse } from "../../hooks/models"
 import { LiveAndVideoStats } from "./LiveAndVideoStats"
 import { SourcesStats } from "./SourcesStats"
+import { CDashboardLayout } from "../common/CDashboardLayout"
+import { IconCalendarStats } from "@tabler/icons-react"
 
 type RangeType = "day" | "week" | "month"
 type DiscountMode = "beforeDiscount" | "afterDiscount"
@@ -239,38 +240,12 @@ export const RangeStats = () => {
   const changes = data?.changes
 
   return (
-    <Box
-      mt={40}
-      mx="auto"
-      px={{ base: 8, md: 0 }}
-      w="100%"
-      style={{
-        background: "rgba(255,255,255,0.97)",
-        borderRadius: 20,
-        boxShadow: "0 4px 32px 0 rgba(60,80,180,0.07)",
-        border: "1px solid #ececec"
-      }}
-    >
-      {/* Header Section - match Incomes.tsx layout */}
-      <Flex
-        align="center"
-        justify="space-between"
-        pt={32}
-        pb={16}
-        px={{ base: 8, md: 28 }}
-        direction={{ base: "column", sm: "row" }}
-        gap={12}
-      >
-        <Box>
-          <Text fw={700} fz="xl" mb={2}>
-            Thống kê theo khoảng
-          </Text>
-          <Text c="dimmed" fz="sm">
-            Xem thống kê doanh thu theo khoảng thời gian (ngày/tuần/tháng)
-          </Text>
-        </Box>
-
-        <Group align="flex-end" gap={12}>
+    <CDashboardLayout
+      icon={<IconCalendarStats size={28} color="#1971c2" />}
+      title="Thống kê theo khoảng"
+      subheader="Xem thống kê doanh thu theo khoảng thời gian (ngày/tuần/tháng)"
+      rightHeader={
+        <>
           <RangeSelector
             rangeType={rangeType}
             onChangeRangeType={setRangeType}
@@ -281,425 +256,424 @@ export const RangeStats = () => {
             monthValue={monthValue}
             setMonthValue={setMonthValue}
           />
-
           <SegmentedControl
             value={mode}
             onChange={(v) => setMode(v as DiscountMode)}
             data={[
-              { label: "Sau chiết khấu", value: "afterDiscount" },
-              { label: "Trước chiết khấu", value: "beforeDiscount" }
+              { label: "Sau CK", value: "afterDiscount" },
+              { label: "Trước CK", value: "beforeDiscount" }
             ]}
             size="sm"
           />
-        </Group>
-      </Flex>
+        </>
+      }
+      content={
+        <>
+          {isLoading ? (
+            <Flex justify="center" align="center" h={160}>
+              <Loader />
+            </Flex>
+          ) : error ? (
+            <Text c="red" fz="sm">
+              Không lấy được dữ liệu
+            </Text>
+          ) : current ? (
+            <Stack gap={12}>
+              <Paper withBorder p="lg" radius="lg">
+                <Group justify="space-between" align="center">
+                  <Text fw={700}>Tổng doanh thu</Text>
+                  <Group align="center" gap={8}>
+                    <Text fz="xl" fw={900} c="indigo">
+                      {current[mode].totalIncome.toLocaleString()} VNĐ
+                    </Text>
+                    {typeof changes?.[mode]?.totalIncomePct === "number" && (
+                      <Badge
+                        color={
+                          changes[mode].totalIncomePct >= 0 ? "green" : "red"
+                        }
+                        variant="light"
+                      >
+                        {changes[mode].totalIncomePct >= 0 ? "+" : "-"}
+                        {fmtPercent(Math.abs(changes[mode].totalIncomePct))}
+                      </Badge>
+                    )}
+                  </Group>
+                </Group>
+                <Divider my={12} />
 
-      <Divider my={0} />
-
-      {/* Content - use same inner paddings as Incomes */}
-      <Box pt={16} pb={8} px={{ base: 8, md: 28 }}>
-        {isLoading ? (
-          <Flex justify="center" align="center" h={160}>
-            <Loader />
-          </Flex>
-        ) : error ? (
-          <Text c="red" fz="sm">
-            Không lấy được dữ liệu
-          </Text>
-        ) : current ? (
-          <Stack gap={12}>
-            <Paper withBorder p="lg" radius="lg">
-              <Group justify="space-between" align="center">
-                <Text fw={700}>Tổng doanh thu</Text>
-                <Group align="center" gap={8}>
-                  <Text fz="xl" fw={900} c="indigo">
-                    {(current as any)[mode].totalIncome.toLocaleString()} VNĐ
-                  </Text>
-                  {typeof (changes as any)?.[mode]?.totalIncomePct ===
-                    "number" && (
-                    <Badge
-                      color={
-                        (changes as any)[mode].totalIncomePct >= 0
-                          ? "green"
-                          : "red"
+                <Stack gap={10}>
+                  <Group gap={12} align="stretch">
+                    <LiveAndVideoStats
+                      title="Livestream"
+                      income={current[mode].liveIncome}
+                      adsCost={current.ads.liveAdsCost}
+                      adsCostChangePct={changes?.ads?.liveAdsCostPct}
+                      adsSharePctDiff={changes?.ads?.liveAdsToLiveIncomePctDiff}
+                      kpiAdsPercentage={monthGoalData?.liveAdsPercentageGoal}
+                      flex={1}
+                    />
+                    <LiveAndVideoStats
+                      title="Doanh thu Sàn"
+                      income={
+                        (current[mode].videoIncome || 0) +
+                        (current[mode].otherIncome || 0)
                       }
-                      variant="light"
+                      adsCost={current.ads.videoAdsCost}
+                      adsCostChangePct={changes?.ads?.videoAdsCostPct}
+                      adsSharePctDiff={
+                        changes?.ads?.videoAdsToVideoIncomePctDiff
+                      }
+                      ownVideoIncome={current[mode].ownVideoIncome}
+                      otherVideoIncome={current[mode].otherVideoIncome}
+                      otherIncome={current[mode].otherIncome}
+                      kpiAdsPercentage={monthGoalData?.shopAdsPercentageGoal}
+                      flex={2}
+                    />
+                  </Group>
+                </Stack>
+              </Paper>
+
+              {current[mode].sources && (
+                <SourcesStats
+                  sources={current[mode].sources}
+                  changes={changes?.[mode]?.sources}
+                />
+              )}
+
+              {current.shippingProviders &&
+                current.shippingProviders.length > 0 && (
+                  <Paper withBorder p="lg" radius="lg">
+                    <Text fw={600} mb={8}>
+                      Theo đơn vị vận chuyển
+                    </Text>
+                    <Table
+                      withColumnBorders
+                      withTableBorder
+                      striped
+                      verticalSpacing="xs"
+                      horizontalSpacing="md"
+                      miw={300}
                     >
-                      {(changes as any)[mode].totalIncomePct >= 0 ? "+" : "-"}
-                      {fmtPercent(
-                        Math.abs((changes as any)[mode].totalIncomePct)
-                      )}
-                    </Badge>
-                  )}
-                </Group>
-              </Group>
-              <Divider my={12} />
+                      <Table.Thead>
+                        <Table.Tr>
+                          <Table.Th style={{ width: 220 }}>Đơn vị</Table.Th>
+                          <Table.Th style={{ width: 120 }}>Số đơn</Table.Th>
+                          <Table.Th style={{ width: 100 }}>Tỉ lệ</Table.Th>
+                        </Table.Tr>
+                      </Table.Thead>
+                      <Table.Tbody>
+                        {(() => {
+                          const items = current.shippingProviders
+                          const total =
+                            items.reduce((s, it) => s + (it?.orders ?? 0), 0) ||
+                            1
+                          return items.map((sp) => (
+                            <Table.Tr key={sp.provider}>
+                              <Table.Td>{sp.provider || "-"}</Table.Td>
+                              <Table.Td>
+                                {sp.orders?.toLocaleString?.() ?? sp.orders}
+                              </Table.Td>
+                              <Table.Td>
+                                {Math.round(
+                                  (((sp.orders || 0) / total) * 100 +
+                                    Number.EPSILON) *
+                                    100
+                                ) / 100}
+                                %
+                              </Table.Td>
+                            </Table.Tr>
+                          ))
+                        })()}
+                      </Table.Tbody>
+                    </Table>
+                  </Paper>
+                )}
 
-              <Stack gap={10}>
-                <Group gap={12} align="stretch">
-                  <LiveAndVideoStats
-                    title="Livestream"
-                    income={(current as any)[mode].liveIncome}
-                    adsCost={current.ads.liveAdsCost}
-                    adsCostChangePct={changes?.ads?.liveAdsCostPct}
-                    adsSharePctDiff={changes?.ads?.liveAdsToLiveIncomePctDiff}
-                    kpiAdsPercentage={monthGoalData?.liveAdsPercentageGoal}
-                    flex={1}
-                  />
-                  <LiveAndVideoStats
-                    title="Doanh thu Sàn"
-                    income={
-                      ((current as any)[mode].videoIncome || 0) +
-                      ((current as any)[mode].otherIncome || 0)
-                    }
-                    adsCost={current.ads.videoAdsCost}
-                    adsCostChangePct={changes?.ads?.videoAdsCostPct}
-                    adsSharePctDiff={changes?.ads?.videoAdsToVideoIncomePctDiff}
-                    ownVideoIncome={(current as any)[mode].ownVideoIncome}
-                    otherVideoIncome={(current as any)[mode].otherVideoIncome}
-                    otherIncome={(current as any)[mode].otherIncome}
-                    kpiAdsPercentage={monthGoalData?.shopAdsPercentageGoal}
-                    flex={2}
-                  />
-                </Group>
-              </Stack>
-            </Paper>
-
-            {(current as any)[mode].sources && (
-              <SourcesStats
-                sources={(current as any)[mode].sources}
-                changes={(changes as any)?.[mode]?.sources}
-              />
-            )}
-
-            {current.shippingProviders &&
-              current.shippingProviders.length > 0 && (
+              {/* Discount Statistics */}
+              {current.discounts && (
                 <Paper withBorder p="lg" radius="lg">
-                  <Text fw={600} mb={8}>
-                    Theo đơn vị vận chuyển
+                  <Text fw={600} mb={16}>
+                    Thống kê giảm giá
                   </Text>
-                  <Table
-                    withColumnBorders
-                    withTableBorder
-                    striped
-                    verticalSpacing="xs"
-                    horizontalSpacing="md"
-                    miw={300}
-                  >
-                    <Table.Thead>
-                      <Table.Tr>
-                        <Table.Th style={{ width: 220 }}>Đơn vị</Table.Th>
-                        <Table.Th style={{ width: 120 }}>Số đơn</Table.Th>
-                        <Table.Th style={{ width: 100 }}>Tỉ lệ</Table.Th>
-                      </Table.Tr>
-                    </Table.Thead>
-                    <Table.Tbody>
-                      {(() => {
-                        const items = current.shippingProviders
-                        const total =
-                          items.reduce((s, it) => s + (it?.orders ?? 0), 0) || 1
-                        return items.map((sp) => (
-                          <Table.Tr key={sp.provider}>
-                            <Table.Td>{sp.provider || "-"}</Table.Td>
-                            <Table.Td>
-                              {sp.orders?.toLocaleString?.() ?? sp.orders}
-                            </Table.Td>
-                            <Table.Td>
-                              {Math.round(
-                                (((sp.orders || 0) / total) * 100 +
-                                  Number.EPSILON) *
-                                  100
-                              ) / 100}
-                              %
-                            </Table.Td>
-                          </Table.Tr>
-                        ))
-                      })()}
-                    </Table.Tbody>
-                  </Table>
+                  {/* All 5 boxes in one row */}
+                  <Group gap={12} align="stretch" grow>
+                    <Paper
+                      withBorder
+                      p="md"
+                      radius="md"
+                      h={90}
+                      w={200}
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "space-between"
+                      }}
+                    >
+                      <Text fw={500} fz="sm" c="dimmed" mb={4}>
+                        Tổng chiết khấu
+                      </Text>
+                      <Group align="center" gap={8} wrap="nowrap">
+                        <Text fz="lg" fw={700} c="dark">
+                          {current.discounts.totalDiscount.toLocaleString()} VNĐ
+                        </Text>
+                        {typeof (changes as any)?.discounts
+                          ?.totalDiscountPct === "number" && (
+                          <Badge
+                            color={
+                              (changes as any).discounts.totalDiscountPct >= 0
+                                ? "red"
+                                : "green"
+                            }
+                            variant="light"
+                            size="sm"
+                          >
+                            {(changes as any).discounts.totalDiscountPct >= 0
+                              ? "+"
+                              : "-"}
+                            {fmtPercent(
+                              Math.abs(
+                                (changes as any).discounts.totalDiscountPct
+                              )
+                            )}
+                          </Badge>
+                        )}
+                      </Group>
+                    </Paper>
+
+                    <Paper
+                      withBorder
+                      p="md"
+                      radius="md"
+                      h={90}
+                      w={200}
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "space-between"
+                      }}
+                    >
+                      <Text fw={500} fz="sm" c="dimmed" mb={4}>
+                        Chiết khấu platform
+                      </Text>
+                      <Group align="center" gap={8} wrap="nowrap">
+                        <Text fz="lg" fw={700} c="orange">
+                          {current.discounts.totalPlatformDiscount.toLocaleString()}{" "}
+                          VNĐ
+                        </Text>
+                        {typeof (changes as any)?.discounts
+                          ?.totalPlatformDiscountPct === "number" && (
+                          <Badge
+                            color={
+                              (changes as any).discounts
+                                .totalPlatformDiscountPct >= 0
+                                ? "red"
+                                : "green"
+                            }
+                            variant="light"
+                            size="sm"
+                          >
+                            {(changes as any).discounts
+                              .totalPlatformDiscountPct >= 0
+                              ? "+"
+                              : "-"}
+                            {fmtPercent(
+                              Math.abs(
+                                (changes as any).discounts
+                                  .totalPlatformDiscountPct
+                              )
+                            )}
+                          </Badge>
+                        )}
+                      </Group>
+                    </Paper>
+
+                    <Paper
+                      withBorder
+                      p="md"
+                      radius="md"
+                      h={90}
+                      w={200}
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "space-between"
+                      }}
+                    >
+                      <Text fw={500} fz="sm" c="dimmed" mb={4}>
+                        Chiết khấu seller
+                      </Text>
+                      <Group align="center" gap={8} wrap="nowrap">
+                        <Text fz="lg" fw={700} c="blue">
+                          {current.discounts.totalSellerDiscount.toLocaleString()}{" "}
+                          VNĐ
+                        </Text>
+                        {typeof (changes as any)?.discounts
+                          ?.totalSellerDiscountPct === "number" && (
+                          <Badge
+                            color={
+                              (changes as any).discounts
+                                .totalSellerDiscountPct >= 0
+                                ? "red"
+                                : "green"
+                            }
+                            variant="light"
+                            size="sm"
+                          >
+                            {(changes as any).discounts
+                              .totalSellerDiscountPct >= 0
+                              ? "+"
+                              : "-"}
+                            {fmtPercent(
+                              Math.abs(
+                                (changes as any).discounts
+                                  .totalSellerDiscountPct
+                              )
+                            )}
+                          </Badge>
+                        )}
+                      </Group>
+                    </Paper>
+
+                    <Paper
+                      withBorder
+                      p="md"
+                      radius="md"
+                      h={90}
+                      w={200}
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "space-between"
+                      }}
+                    >
+                      <Text fw={500} fz="sm" c="dimmed" mb={4}>
+                        Trung bình mỗi đơn
+                      </Text>
+                      <Group align="center" gap={8} wrap="nowrap">
+                        <Text fz="lg" fw={700} c="dark">
+                          {current.discounts.avgDiscountPerOrder.toLocaleString()}{" "}
+                          VNĐ
+                        </Text>
+                        {typeof (changes as any)?.discounts
+                          ?.avgDiscountPerOrderPct === "number" && (
+                          <Badge
+                            color={
+                              (changes as any).discounts
+                                .avgDiscountPerOrderPct >= 0
+                                ? "red"
+                                : "green"
+                            }
+                            variant="light"
+                            size="sm"
+                          >
+                            {(changes as any).discounts
+                              .avgDiscountPerOrderPct >= 0
+                              ? "+"
+                              : "-"}
+                            {fmtPercent(
+                              Math.abs(
+                                (changes as any).discounts
+                                  .avgDiscountPerOrderPct
+                              )
+                            )}
+                          </Badge>
+                        )}
+                      </Group>
+                    </Paper>
+
+                    <Paper
+                      withBorder
+                      p="md"
+                      radius="md"
+                      h={90}
+                      w={200}
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "space-between"
+                      }}
+                    >
+                      <Text fw={500} fz="sm" c="dimmed" mb={4}>
+                        Tỷ lệ chiết khấu
+                      </Text>
+                      <Group align="center" gap={8} wrap="nowrap">
+                        <Text fz="lg" fw={700} c="grape">
+                          {current.discounts.discountPercentage.toFixed(2)}%
+                        </Text>
+                        {typeof (changes as any)?.discounts
+                          ?.discountPercentageDiff === "number" && (
+                          <Badge
+                            color={
+                              (changes as any).discounts
+                                .discountPercentageDiff >= 0
+                                ? "red"
+                                : "green"
+                            }
+                            variant="light"
+                            size="sm"
+                          >
+                            {(changes as any).discounts
+                              .discountPercentageDiff >= 0
+                              ? "+"
+                              : "-"}
+                            {Math.abs(
+                              (changes as any).discounts.discountPercentageDiff
+                            ).toFixed(2)}
+                            %
+                          </Badge>
+                        )}
+                      </Group>
+                    </Paper>
+                  </Group>
                 </Paper>
               )}
 
-            {/* Discount Statistics */}
-            {current.discounts && (
-              <Paper withBorder p="lg" radius="lg">
-                <Text fw={600} mb={16}>
-                  Thống kê giảm giá
-                </Text>
-                {/* All 5 boxes in one row */}
-                <Group gap={12} align="stretch" grow>
-                  <Paper
-                    withBorder
-                    p="md"
-                    radius="md"
-                    h={90}
-                    w={200}
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "space-between"
-                    }}
-                  >
-                    <Text fw={500} fz="sm" c="dimmed" mb={4}>
-                      Tổng chiết khấu
-                    </Text>
-                    <Group align="center" gap={8} wrap="nowrap">
-                      <Text fz="lg" fw={700} c="dark">
-                        {current.discounts.totalDiscount.toLocaleString()} VNĐ
-                      </Text>
-                      {typeof (changes as any)?.discounts?.totalDiscountPct ===
-                        "number" && (
-                        <Badge
-                          color={
-                            (changes as any).discounts.totalDiscountPct >= 0
-                              ? "red"
-                              : "green"
-                          }
-                          variant="light"
-                          size="sm"
-                        >
-                          {(changes as any).discounts.totalDiscountPct >= 0
-                            ? "+"
-                            : "-"}
-                          {fmtPercent(
-                            Math.abs(
-                              (changes as any).discounts.totalDiscountPct
-                            )
-                          )}
-                        </Badge>
-                      )}
-                    </Group>
-                  </Paper>
-
-                  <Paper
-                    withBorder
-                    p="md"
-                    radius="md"
-                    h={90}
-                    w={200}
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "space-between"
-                    }}
-                  >
-                    <Text fw={500} fz="sm" c="dimmed" mb={4}>
-                      Chiết khấu platform
-                    </Text>
-                    <Group align="center" gap={8} wrap="nowrap">
-                      <Text fz="lg" fw={700} c="orange">
-                        {current.discounts.totalPlatformDiscount.toLocaleString()}{" "}
-                        VNĐ
-                      </Text>
-                      {typeof (changes as any)?.discounts
-                        ?.totalPlatformDiscountPct === "number" && (
-                        <Badge
-                          color={
-                            (changes as any).discounts
-                              .totalPlatformDiscountPct >= 0
-                              ? "red"
-                              : "green"
-                          }
-                          variant="light"
-                          size="sm"
-                        >
-                          {(changes as any).discounts
-                            .totalPlatformDiscountPct >= 0
-                            ? "+"
-                            : "-"}
-                          {fmtPercent(
-                            Math.abs(
-                              (changes as any).discounts
-                                .totalPlatformDiscountPct
-                            )
-                          )}
-                        </Badge>
-                      )}
-                    </Group>
-                  </Paper>
-
-                  <Paper
-                    withBorder
-                    p="md"
-                    radius="md"
-                    h={90}
-                    w={200}
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "space-between"
-                    }}
-                  >
-                    <Text fw={500} fz="sm" c="dimmed" mb={4}>
-                      Chiết khấu seller
-                    </Text>
-                    <Group align="center" gap={8} wrap="nowrap">
-                      <Text fz="lg" fw={700} c="blue">
-                        {current.discounts.totalSellerDiscount.toLocaleString()}{" "}
-                        VNĐ
-                      </Text>
-                      {typeof (changes as any)?.discounts
-                        ?.totalSellerDiscountPct === "number" && (
-                        <Badge
-                          color={
-                            (changes as any).discounts.totalSellerDiscountPct >=
-                            0
-                              ? "red"
-                              : "green"
-                          }
-                          variant="light"
-                          size="sm"
-                        >
-                          {(changes as any).discounts.totalSellerDiscountPct >=
-                          0
-                            ? "+"
-                            : "-"}
-                          {fmtPercent(
-                            Math.abs(
-                              (changes as any).discounts.totalSellerDiscountPct
-                            )
-                          )}
-                        </Badge>
-                      )}
-                    </Group>
-                  </Paper>
-
-                  <Paper
-                    withBorder
-                    p="md"
-                    radius="md"
-                    h={90}
-                    w={200}
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "space-between"
-                    }}
-                  >
-                    <Text fw={500} fz="sm" c="dimmed" mb={4}>
-                      Trung bình mỗi đơn
-                    </Text>
-                    <Group align="center" gap={8} wrap="nowrap">
-                      <Text fz="lg" fw={700} c="dark">
-                        {current.discounts.avgDiscountPerOrder.toLocaleString()}{" "}
-                        VNĐ
-                      </Text>
-                      {typeof (changes as any)?.discounts
-                        ?.avgDiscountPerOrderPct === "number" && (
-                        <Badge
-                          color={
-                            (changes as any).discounts.avgDiscountPerOrderPct >=
-                            0
-                              ? "red"
-                              : "green"
-                          }
-                          variant="light"
-                          size="sm"
-                        >
-                          {(changes as any).discounts.avgDiscountPerOrderPct >=
-                          0
-                            ? "+"
-                            : "-"}
-                          {fmtPercent(
-                            Math.abs(
-                              (changes as any).discounts.avgDiscountPerOrderPct
-                            )
-                          )}
-                        </Badge>
-                      )}
-                    </Group>
-                  </Paper>
-
-                  <Paper
-                    withBorder
-                    p="md"
-                    radius="md"
-                    h={90}
-                    w={200}
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "space-between"
-                    }}
-                  >
-                    <Text fw={500} fz="sm" c="dimmed" mb={4}>
-                      Tỷ lệ chiết khấu
-                    </Text>
-                    <Group align="center" gap={8} wrap="nowrap">
-                      <Text fz="lg" fw={700} c="grape">
-                        {current.discounts.discountPercentage.toFixed(2)}%
-                      </Text>
-                      {typeof (changes as any)?.discounts
-                        ?.discountPercentageDiff === "number" && (
-                        <Badge
-                          color={
-                            (changes as any).discounts.discountPercentageDiff >=
-                            0
-                              ? "red"
-                              : "green"
-                          }
-                          variant="light"
-                          size="sm"
-                        >
-                          {(changes as any).discounts.discountPercentageDiff >=
-                          0
-                            ? "+"
-                            : "-"}
-                          {Math.abs(
-                            (changes as any).discounts.discountPercentageDiff
-                          ).toFixed(2)}
-                          %
-                        </Badge>
-                      )}
-                    </Group>
-                  </Paper>
-                </Group>
-              </Paper>
-            )}
-
-            <Table
-              withTableBorder
-              withColumnBorders
-              striped
-              verticalSpacing="xs"
-              horizontalSpacing="md"
-              miw={300}
-            >
-              <Table.Thead>
-                <Table.Tr>
-                  <Table.Th style={{ width: 200 }}>Quy cách đóng hộp</Table.Th>
-                  <Table.Th style={{ width: 100 }}>Số lượng</Table.Th>
-                </Table.Tr>
-              </Table.Thead>
-              <Table.Tbody>
-                {(current as any).boxes.length ? (
-                  (current as any).boxes.map((b: any) => (
-                    <Table.Tr key={b.box}>
-                      <Table.Td>{b.box || "-"}</Table.Td>
-                      <Table.Td>{b.quantity}</Table.Td>
-                    </Table.Tr>
-                  ))
-                ) : (
+              <Table
+                withTableBorder
+                withColumnBorders
+                striped
+                verticalSpacing="xs"
+                horizontalSpacing="md"
+                miw={300}
+              >
+                <Table.Thead>
                   <Table.Tr>
-                    <Table.Td colSpan={2}>
-                      <Text c="dimmed" ta="center">
-                        Không có dữ liệu
-                      </Text>
-                    </Table.Td>
+                    <Table.Th style={{ width: 200 }}>
+                      Quy cách đóng hộp
+                    </Table.Th>
+                    <Table.Th style={{ width: 100 }}>Số lượng</Table.Th>
                   </Table.Tr>
-                )}
-              </Table.Tbody>
-            </Table>
-            <Text c="dimmed" fz="xs">
-              Cập nhật: {format(new Date(), "dd/MM/yyyy HH:mm:ss")}
+                </Table.Thead>
+                <Table.Tbody>
+                  {(current as any).boxes.length ? (
+                    (current as any).boxes.map((b: any) => (
+                      <Table.Tr key={b.box}>
+                        <Table.Td>{b.box || "-"}</Table.Td>
+                        <Table.Td>{b.quantity}</Table.Td>
+                      </Table.Tr>
+                    ))
+                  ) : (
+                    <Table.Tr>
+                      <Table.Td colSpan={2}>
+                        <Text c="dimmed" ta="center">
+                          Không có dữ liệu
+                        </Text>
+                      </Table.Td>
+                    </Table.Tr>
+                  )}
+                </Table.Tbody>
+              </Table>
+              <Text c="dimmed" fz="xs">
+                Cập nhật: {format(new Date(), "dd/MM/yyyy HH:mm:ss")}
+              </Text>
+            </Stack>
+          ) : (
+            <Text c="dimmed" fz="sm">
+              Chọn khoảng để xem thống kê
             </Text>
-          </Stack>
-        ) : (
-          <Text c="dimmed" fz="sm">
-            Chọn khoảng để xem thống kê
-          </Text>
-        )}
-      </Box>
-    </Box>
+          )}
+        </>
+      }
+    />
   )
 }
