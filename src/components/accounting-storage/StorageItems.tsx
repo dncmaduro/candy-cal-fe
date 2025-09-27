@@ -12,7 +12,7 @@ import {
   Group,
   Select,
   Pagination,
-  Checkbox
+  Switch
 } from "@mantine/core"
 import { modals } from "@mantine/modals"
 import { useEffect, useState } from "react"
@@ -168,30 +168,19 @@ export const StorageItems = ({ readOnly, activeTab }: Props) => {
         <Box
           p={12}
           style={{
-            backgroundColor: showDeleted
-              ? "rgba(255, 0, 0, 0.1)"
-              : "rgba(0, 128, 0, 0.1)",
+            backgroundColor: "rgba(255, 0, 0, 0.1)",
             borderRadius: rem(8),
             border: `1px solid ${showDeleted ? "rgba(255, 0, 0, 0.2)" : "rgba(0, 128, 0, 0.2)"}`,
             transition: "all 0.2s ease"
           }}
         >
-          <Checkbox
-            label={
-              showDeleted
-                ? "Hiển thị mặt hàng đã xóa"
-                : "Hiển thị mặt hàng hoạt động"
-            }
+          <Switch
+            label="Hiển thị mặt hàng đã xóa"
             checked={showDeleted}
             onChange={(event) => setShowDeleted(event.currentTarget.checked)}
-            color={showDeleted ? "red" : "green"}
+            color="red"
             size="md"
-            styles={{
-              label: {
-                fontWeight: 500,
-                color: showDeleted ? "#dc2626" : "#16a34a"
-              }
-            }}
+            className="text-red-500"
           />
         </Box>
 
