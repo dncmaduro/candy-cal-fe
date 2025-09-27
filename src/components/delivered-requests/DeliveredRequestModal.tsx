@@ -46,7 +46,7 @@ export const DeliveredRequestModal = ({ request, acceptRequest }: Props) => {
 
   const { data: itemsData } = useQuery({
     queryKey: ["searchStorageItems"],
-    queryFn: () => searchStorageItems({ searchText: "", deleted: true }),
+    queryFn: () => searchStorageItems({ searchText: "", deleted: false }),
     select: (data) => data.data
   })
 

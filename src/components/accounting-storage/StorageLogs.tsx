@@ -62,7 +62,7 @@ export const StorageLogs = ({ activeTab }: Props) => {
       tag,
       itemId
     ],
-    queryFn: () => searchStorageItems({ searchText: "", deleted: true }),
+    queryFn: () => searchStorageItems({ searchText: "", deleted: false }),
     select: (data) => data.data
   })
 
