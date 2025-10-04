@@ -48,7 +48,7 @@ export const ReadyComboModal = ({ combo, refetch }: Props) => {
   const { searchProducts } = useProducts()
   const { data: productsData } = useQuery({
     queryKey: ["searchProducts"],
-    queryFn: () => searchProducts(""),
+    queryFn: () => searchProducts({ searchText: "", deleted: false }),
     select: (data) =>
       data.data.map((item) => ({
         value: item._id,

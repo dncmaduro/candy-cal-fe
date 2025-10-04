@@ -77,7 +77,7 @@ export const Incomes = () => {
 
   const { data: productsData } = useQuery({
     queryKey: ["searchProducts", ""],
-    queryFn: () => searchProducts(""),
+    queryFn: () => searchProducts({ searchText: "", deleted: false }),
     select: (data) => data.data
   })
 

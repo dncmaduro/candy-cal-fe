@@ -83,6 +83,13 @@ export interface ProductResponse {
     _id: string
     quantity: number
   }[]
+  deletedAt?: string
+}
+
+/** @interface */
+export interface SearchProductsRequest {
+  searchText?: string
+  deleted?: boolean
 }
 
 /** @interface */

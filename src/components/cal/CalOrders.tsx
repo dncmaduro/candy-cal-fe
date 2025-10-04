@@ -1,7 +1,7 @@
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useMutation } from "@tanstack/react-query"
 import { useProducts } from "../../hooks/useProducts"
 import {
-  ItemResponse,
+  SearchStorageItemResponse,
   ProductResponse,
   ReadyComboResponse
 } from "../../hooks/models"
@@ -22,11 +22,11 @@ import {
 } from "@mantine/core"
 import { useEffect, useMemo, useState } from "react"
 import { useItems } from "../../hooks/useItems"
-import { modals } from "@mantine/modals"
-import { SendDeliveredRequestModal } from "./SendDeliveredRequestModal"
 import { useReadyCombos } from "../../hooks/useReadyCombos"
 import { isEqual } from "lodash"
 import { useUsers } from "../../hooks/useUsers"
+import { useDeliveredRequests } from "../../hooks/useDeliveredRequests"
+import { CToast } from "../common/CToast"
 
 interface Props {
   orders: {
@@ -54,8 +54,9 @@ const normalizeProducts = (products: { _id: string; quantity: number }[]) =>
 
 export const CalOrders = ({ orders, allCalItems, date }: Props) => {
   const { getAllProducts } = useProducts()
-  const { searchItems, searchStorageItems } = useItems()
+  const { searchStorageItems } = useItems()
   const { getMe } = useUsers()
+  const { createDeliveredRequest } = useDeliveredRequests()
   const [calRest, setCalRest] = useState<boolean>(false)
   const [viewMode, setViewMode] = useState<"all" | "ready" | "not-ready">("all")
   const { searchCombos } = useReadyCombos()
@@ -164,18 +165,15 @@ export const CalOrders = ({ orders, allCalItems, date }: Props) => {
     select: (data) => data.data
   })
 
-  const { data: itemsData } = useQuery({
-    queryKey: ["searchItems"],
-    queryFn: () => searchItems(""),
-    select: (data) => data.data
-  })
-
-  const allItems = useMemo(() => {
-    return itemsData?.reduce(
-      (acc, item) => ({ ...acc, [item._id]: item }),
-      {} as Record<string, ItemResponse>
-    )
-  }, [itemsData])
+  // Map storage items by id for quick lookup
+  const allStorageItemsMap = useMemo(() => {
+    return allStorageItems
+      ? allStorageItems.reduce(
+          (acc, si) => ({ ...acc, [si._id]: si }),
+          {} as Record<string, SearchStorageItemResponse>
+        )
+      : {}
+  }, [allStorageItems])
 
   // Quản lý state đơn được chọn (để tính mặt hàng cần dùng)
   const [chosenOrders, setChosenOrders] = useState<boolean[]>(
@@ -236,9 +234,16 @@ export const CalOrders = ({ orders, allCalItems, date }: Props) => {
     return filteredOrders.reduce((acc, order) => acc + order.quantity, 0)
   }, [filteredOrders])
 
+  const { mutate: sendRequest, isPending } = useMutation({
+    mutationFn: createDeliveredRequest,
+    onSuccess: () =>
+      CToast.success({ title: "Gửi yêu cầu xuất kho thành công" }),
+    onError: () => CToast.error({ title: "Gửi yêu cầu xuất kho thất bại" })
+  })
+
   return (
     <Stack>
-      <Group justify="space-between" align="center" mb={-10} mt={10} mx={4}>
+      <Group align="center" mb={-10} mt={10} mx={4}>
         <Select
           data={VIEW_MODES}
           value={viewMode}
@@ -246,6 +251,18 @@ export const CalOrders = ({ orders, allCalItems, date }: Props) => {
           size="sm"
           w={260}
           allowDeselect={false}
+        />
+        <Checkbox
+          label="Chọn tất cả"
+          size="sm"
+          checked={chosenOrders.length > 0 && chosenOrders.every(Boolean)}
+          indeterminate={
+            chosenOrders.some(Boolean) && !chosenOrders.every(Boolean)
+          }
+          onChange={(e) => {
+            const checked = e.currentTarget.checked
+            setChosenOrders(filteredOrders.map(() => checked))
+          }}
         />
       </Group>
 
@@ -353,19 +370,32 @@ export const CalOrders = ({ orders, allCalItems, date }: Props) => {
               </Title>
               <Stack gap={6}>
                 {chosenItems && Object.entries(chosenItems).length > 0 ? (
-                  Object.entries(chosenItems).map(([itemId, quantity]) => (
-                    <Text key={itemId} fz="sm" fw={500}>
-                      {allItems?.[itemId]?.name || (
-                        <Text span c="red">
-                          ?
+                  Object.entries(chosenItems).map(([itemId, quantity]) => {
+                    const si = allStorageItemsMap?.[itemId]
+                    return (
+                      <Text key={itemId} fz="sm" fw={500}>
+                        {si ? (
+                          si.deletedAt ? (
+                            <Text span c="red" fw={500}>
+                              {si.name}
+                            </Text>
+                          ) : (
+                            <Text span fw={500}>
+                              {si.name}
+                            </Text>
+                          )
+                        ) : (
+                          <Text span c="red">
+                            ?
+                          </Text>
+                        )}
+                        :{" "}
+                        <Text span c="indigo.7">
+                          {quantity}
                         </Text>
-                      )}
-                      :{" "}
-                      <Text span c="indigo.7">
-                        {quantity}
                       </Text>
-                    </Text>
-                  ))
+                    )
+                  })
                 ) : (
                   <Text c="dimmed" fz="sm">
                     Không có mặt hàng nào
@@ -393,38 +423,20 @@ export const CalOrders = ({ orders, allCalItems, date }: Props) => {
                   px={22}
                   className="flex-1"
                   variant="light"
-                  disabled={!chosenOrders.some((e) => e) || !chosenItems}
+                  disabled={
+                    !chosenOrders.some((e) => e) || !chosenItems || isPending
+                  }
+                  loading={isPending}
                   onClick={() => {
-                    modals.open({
-                      title: "Gửi yêu cầu xuất kho",
-                      size: "xl",
-                      children: (
-                        <SendDeliveredRequestModal
-                          date={date}
-                          allItems={itemsData || []}
-                          items={
-                            chosenItems
-                              ? Object.entries(chosenItems).map(
-                                  ([itemId, quantity]) => {
-                                    const item = allItems?.[itemId]
-                                    return {
-                                      _id: itemId,
-                                      quantity: quantity,
-                                      storageItems:
-                                        allStorageItems?.filter((si) =>
-                                          item?.variants.includes(si._id)
-                                        ) ?? []
-                                    }
-                                  }
-                                )
-                              : []
-                          }
-                        />
-                      )
-                    })
+                    if (!date || !chosenItems) return
+                    const body = Object.entries(chosenItems)
+                      .filter(([itemId]) => !!allStorageItemsMap[itemId])
+                      .map(([itemId, quantity]) => ({ _id: itemId, quantity }))
+                    if (body.length === 0) return
+                    sendRequest({ items: body, date })
                   }}
                 >
-                  Gửi yêu cầu xuất kho ({chosenOrders.length} đơn)
+                  Gửi yêu cầu xuất kho cho các đơn đã chọn
                 </Button>
                 <Button
                   color="indigo"
@@ -434,35 +446,18 @@ export const CalOrders = ({ orders, allCalItems, date }: Props) => {
                   fw={600}
                   px={22}
                   variant="outline"
+                  loading={isPending}
+                  disabled={
+                    isPending ||
+                    !(notReadyItems && Object.entries(notReadyItems).length > 0)
+                  }
                   onClick={() => {
-                    modals.open({
-                      title: "Gửi yêu cầu cho đơn không sẵn",
-                      size: "xl",
-                      children: (
-                        <SendDeliveredRequestModal
-                          date={date}
-                          allItems={itemsData || []}
-                          items={
-                            notReadyItems &&
-                            Object.entries(notReadyItems).length > 0
-                              ? Object.entries(notReadyItems).map(
-                                  ([itemId, quantity]) => {
-                                    const item = allItems?.[itemId]
-                                    return {
-                                      _id: itemId,
-                                      quantity: quantity,
-                                      storageItems:
-                                        allStorageItems?.filter((si) =>
-                                          item?.variants.includes(si._id)
-                                        ) ?? []
-                                    }
-                                  }
-                                )
-                              : []
-                          }
-                        />
-                      )
-                    })
+                    if (!date || !notReadyItems) return
+                    const body = Object.entries(notReadyItems)
+                      .filter(([itemId]) => !!allStorageItemsMap[itemId])
+                      .map(([itemId, quantity]) => ({ _id: itemId, quantity }))
+                    if (body.length === 0) return
+                    sendRequest({ items: body, date })
                   }}
                 >
                   Gửi yêu cầu cho đơn không sẵn
