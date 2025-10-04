@@ -44,7 +44,7 @@ export const ReadyCombos = () => {
 
   const { data: productsData } = useQuery({
     queryKey: ["products"],
-    queryFn: () => searchProducts(""),
+    queryFn: () => searchProducts({ searchText: "", deleted: false }),
     select: (data) => data.data
   })
 

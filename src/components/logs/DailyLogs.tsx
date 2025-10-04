@@ -144,7 +144,7 @@ export const DailyLogs = () => {
                                   date={new Date(log.date)}
                                 />
                               ),
-                              size: "xl"
+                              size: "80vw"
                             })
                           }
                         >

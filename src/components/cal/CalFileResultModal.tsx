@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { useItems } from "../../hooks/useItems"
 import { Box, Button, Collapse, Divider, Stack, Tabs, rem } from "@mantine/core"
-import { ItemResponse } from "../../hooks/models"
+import { SearchStorageItemResponse } from "../../hooks/models"
 import { CalOrders } from "./CalOrders"
 import {
   IconBox,
@@ -51,15 +51,21 @@ export const CalFileResultModal = ({
   readOnly,
   date
 }: Props) => {
-  const { searchItems } = useItems()
+  const { searchStorageItems } = useItems()
   const [saveLogDiv, { toggle }] = useDisclosure(false)
   const { data: allItems } = useQuery({
-    queryKey: ["searchItems"],
-    queryFn: () => searchItems(""),
+    queryKey: ["searchStorageItems", "all"],
+    queryFn: async () => {
+      const [activeRes, deletedRes] = await Promise.all([
+        searchStorageItems({ searchText: "", deleted: false }),
+        searchStorageItems({ searchText: "", deleted: true })
+      ])
+      return [...activeRes.data, ...deletedRes.data]
+    },
     select: (data) =>
-      data.data.reduce(
+      data.reduce(
         (acc, item) => ({ ...acc, [item._id]: item }),
-        {} as Record<string, ItemResponse>
+        {} as Record<string, SearchStorageItemResponse>
       )
   })
 

@@ -1,4 +1,4 @@
-# Candy Cal FE (v3.4.1)
+# Candy Cal FE (v3.5.0)
 
 Ứng dụng frontend quản trị & vận hành bán hàng (MyCandy) xây dựng bằng React + TypeScript + Vite. Hỗ trợ theo dõi doanh thu, KPI, kho, logs, thông báo realtime và quy trình nội bộ (yêu cầu xuất kho, combos sẵn, mục tiêu tháng...).
 
@@ -46,7 +46,7 @@ src/
 
 ### Yêu cầu xuất kho
 
-- Tạo yêu cầu từ danh sách đơn / đơn chưa đóng sẵn, kế toán duyệt / hoàn tác.
+- Gửi yêu cầu trực tiếp từ Cal Orders (bỏ modal phân bổ), tổng hợp theo storageItems; kế toán duyệt / hoàn tác.
 
 ### Logs & Nhật ký
 
@@ -84,6 +84,18 @@ npm run routes    # Generate router tree
 - Xuất báo cáo nâng cao (PDF / đa định dạng).
 
 ## 7. Lịch sử cập nhật
+
+### 3.5.0
+
+- Cal từ Excel & Cal Orders:
+  - Dùng trực tiếp storageItems thay cho items trong toàn bộ flow tính toán
+  - Tìm kiếm storageItems có cả deleted=true/false; hiển thị tên màu đỏ cho item đã xóa
+  - CalFileResultModal: build map storageItems theo \_id, CalItems hiển thị màu đỏ khi deleted
+  - CalOrders: bỏ SendDeliveredRequestModal; gửi yêu cầu xuất kho trực tiếp qua API createDeliveredRequest với tổng hợp theo storageItemId + quantity
+  - Thêm checkbox “Chọn tất cả” để chọn/bỏ chọn toàn bộ đơn theo bộ lọc hiện tại; trạng thái indeterminate khi chọn một phần
+  - Loading/disabled và toast khi gửi yêu cầu
+- Dọn dẹp:
+  - Loại bỏ phụ thuộc searchItems trong các màn Cal; chuẩn hóa sang searchStorageItems
 
 ### 3.4.1
 
