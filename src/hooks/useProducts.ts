@@ -4,8 +4,10 @@ import {
   CalItemsRequest,
   CalItemsResponse,
   CreateProductRequest,
-  ProductResponse
+  ProductResponse,
+  SearchProductsRequest
 } from "./models"
+import { toQueryString } from "../utils/toQuery"
 
 export const useProducts = () => {
   const { accessToken } = useUserStore()
@@ -36,10 +38,28 @@ export const useProducts = () => {
     })
   }
 
-  const searchProducts = async (searchText: string) => {
+  const searchProducts = async (req: SearchProductsRequest) => {
+    const query = toQueryString(req)
+
     return callApi<never, ProductResponse[]>({
-      path: `/v1/products/search?searchText=${searchText}`,
+      path: `/v1/products/search?${query}`,
       method: "GET",
+      token: accessToken
+    })
+  }
+
+  const deleteProduct = async (id: string) => {
+    return callApi<never, never>({
+      path: `/v1/products/${id}`,
+      method: "DELETE",
+      token: accessToken
+    })
+  }
+
+  const restoreProduct = async (req: { id: string }) => {
+    return callApi<{ id: string }, never>({
+      path: `/v1/products/${req.id}/restore`,
+      method: "PATCH",
       token: accessToken
     })
   }
@@ -83,6 +103,8 @@ export const useProducts = () => {
     getProduct,
     getAllProducts,
     calProducts,
-    calFile
+    calFile,
+    deleteProduct,
+    restoreProduct
   }
 }
