@@ -30,10 +30,6 @@ function RouteComponent() {
 
   const tabOptions = [
     {
-      label: "Mặt hàng",
-      value: "items"
-    },
-    {
       label: "Sản phẩm (Tiktok Shop)",
       value: "tiktok-products"
     },
