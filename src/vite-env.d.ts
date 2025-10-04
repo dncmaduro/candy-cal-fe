@@ -7,6 +7,7 @@ interface ImportMetaEnv {
   readonly CLOUDINARY_UPLOAD_PRESET: string
   readonly CLOUDINARY_CLOUD_NAME: string
   readonly CLOUDINARY_API_KEY: string
+  readonly NEW_ITEMS_DATE: string
 }
 
 interface ImportMeta {

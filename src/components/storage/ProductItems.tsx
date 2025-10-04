@@ -1,6 +1,6 @@
-import { useQuery } from "@tanstack/react-query"
+import { useQueries } from "@tanstack/react-query"
 import { useItems } from "../../hooks/useItems"
-import { Badge, Loader, Stack } from "@mantine/core"
+import { Badge, Stack } from "@mantine/core"
 import { useMemo } from "react"
 
 interface Props {
@@ -11,33 +11,39 @@ interface Props {
 }
 
 export const ProductItems = ({ items }: Props) => {
-  const { searchStorageItems } = useItems()
+  const { getItem } = useItems()
 
-  const { data: storageItemsData, isLoading } = useQuery({
-    queryKey: ["searchStorageItems"],
-    queryFn: () => searchStorageItems({ searchText: "", deleted: false }),
-    select: (data) => data.data
+  const queries = items.map((item) => ({
+    queryKey: ["getItem", item._id],
+    queryFn: () => getItem(item._id)
+  }))
+
+  const itemsData = useQueries({
+    queries,
+    combine: (response) => {
+      return {
+        data: response.map((result) => result.data),
+        pending: response.some((result) => result.isPending)
+      }
+    }
   })
 
-  const ids = useMemo(
-    () => (storageItemsData || []).map((item) => item._id),
-    [items]
-  )
-
-  if (isLoading) return <Loader size="xs" />
+  const convertedItems = useMemo(() => {
+    return itemsData.data.map((item) => {
+      return {
+        ...item?.data,
+        quantity: items.find((it) => it._id === item?.data._id)?.quantity
+      }
+    })
+  }, [itemsData, items])
 
   return (
     <Stack gap={4}>
-      {items.map(({ _id, quantity }) => {
-        const item = storageItemsData?.find((item) => item._id === _id)
-        return (
-          ids.includes(_id) && (
-            <Badge key={_id} color="blue" variant="light">
-              {item?.name} - SL: {quantity}
-            </Badge>
-          )
-        )
-      })}
+      {convertedItems.map((item) => (
+        <Badge key={item._id} className="!normal-case">
+          {item.name} ({item.quantity})
+        </Badge>
+      ))}
     </Stack>
   )
 }

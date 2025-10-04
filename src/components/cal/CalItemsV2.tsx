@@ -1,8 +1,8 @@
 import { ScrollArea, Table, Text } from "@mantine/core"
-import { ItemResponse } from "../../hooks/models"
+import { SearchStorageItemResponse } from "../../hooks/models"
 
 interface Props {
-  allItems?: Record<string, ItemResponse>
+  allItems?: Record<string, SearchStorageItemResponse>
   items: {
     _id: string
     quantity: number
@@ -26,7 +26,7 @@ interface Props {
   }[]
 }
 
-export const CalItems = ({ allItems, items }: Props) => {
+export const CalItemsV2 = ({ allItems, items }: Props) => {
   return (
     <ScrollArea.Autosize mah={500}>
       <Table
@@ -48,8 +48,18 @@ export const CalItems = ({ allItems, items }: Props) => {
           {allItems &&
             items.map((item) => (
               <Table.Tr key={item._id}>
-                <Table.Td fw={500}>
-                  {allItems[item._id]?.name ?? <Text c="dimmed">?</Text>}
+                <Table.Td>
+                  {allItems[item._id] ? (
+                    allItems[item._id].deletedAt ? (
+                      <Text c="red" fw={500}>
+                        {allItems[item._id].name}
+                      </Text>
+                    ) : (
+                      <Text fw={500}>{allItems[item._id].name}</Text>
+                    )
+                  ) : (
+                    <Text c="dimmed">?</Text>
+                  )}
                 </Table.Td>
                 <Table.Td>{item.quantity}</Table.Td>
               </Table.Tr>

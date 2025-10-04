@@ -4,15 +4,15 @@ import { AppLayout } from "../../../components/layouts/AppLayout"
 import { ScrollArea, Tabs } from "@mantine/core"
 import { Helmet } from "react-helmet-async"
 import { NAVS_URL } from "../../../constants/navs"
-import { SessionLogsV2 } from "../../../components/logs/SessionLogsV2"
+import { SessionLogs } from "../../../components/logs/SessionLogs"
 import { useEffect } from "react"
-import { DailyLogsV2 } from "../../../components/logs/DailyLogsV2"
+import { DailyLogs } from "../../../components/logs/DailyLogs"
 
 type LogsTab = {
   tab: string
 }
 
-export const Route = createFileRoute("/marketing-storage/logs/")({
+export const Route = createFileRoute("/marketing-storage/old-logs/")({
   component: RouteComponent,
   validateSearch: (search: Record<string, unknown>): LogsTab => {
     return {
@@ -39,19 +39,19 @@ function RouteComponent() {
   ]
 
   const handleChange = (value: string | null) => {
-    navigate({ to: `${NAVS_URL}/logs?tab=${value ?? "session-logs"}` })
+    navigate({ to: `${NAVS_URL}/old-logs?tab=${value ?? "session-logs"}` })
   }
 
   useEffect(() => {
     if (!tab) {
-      navigate({ to: `${NAVS_URL}/logs`, search: { tab: "session-logs" } })
+      navigate({ to: `${NAVS_URL}/old-logs`, search: { tab: "session-logs" } })
     }
   }, [])
 
   return (
     <>
       <Helmet>
-        <title>Lịch sử kho | MyCandy</title>
+        <title>Lịch sử kho (bản cũ) | MyCandy</title>
       </Helmet>
       <AppLayout>
         <Tabs
@@ -71,11 +71,11 @@ function RouteComponent() {
 
           <ScrollArea.Autosize mah={"95%"}>
             <Tabs.Panel value="session-logs">
-              <SessionLogsV2 />
+              <SessionLogs />
             </Tabs.Panel>
 
             <Tabs.Panel value="daily-logs">
-              <DailyLogsV2 />
+              <DailyLogs />
             </Tabs.Panel>
           </ScrollArea.Autosize>
         </Tabs>

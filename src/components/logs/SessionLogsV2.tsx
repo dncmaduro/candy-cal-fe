@@ -14,12 +14,14 @@ import {
   Table,
   Text
 } from "@mantine/core"
-import { IconListDetails } from "@tabler/icons-react"
+import { IconHistory, IconListDetails } from "@tabler/icons-react"
 import { format } from "date-fns"
 import { modals } from "@mantine/modals"
-import { CalFileResultModal } from "../cal/CalFileResultModal"
+import { CalFileResultModalV2 } from "../cal/CalFileResultModalV2"
+import { Link } from "@tanstack/react-router"
+import { NAVS_URL } from "../../constants/navs"
 
-export const SessionLogs = () => {
+export const SessionLogsV2 = () => {
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(10)
 
@@ -32,7 +34,7 @@ export const SessionLogs = () => {
     queryFn: () => getSessionLogs({ page, limit }),
     select: (data) => {
       const newData = data.data.data.filter(
-        (log) => new Date(log.time) < newVersionDate
+        (log) => new Date(log.time) >= newVersionDate
       )
       return { data: newData, total: newData.length }
     },
@@ -65,12 +67,23 @@ export const SessionLogs = () => {
       >
         <Box>
           <Text fw={700} fz="xl" mb={2}>
-            Nhật ký kho theo ca (bản cũ)
+            Nhật ký kho theo ca
           </Text>
           <Text c="dimmed" fz="sm">
             Quản lý các log nhập xuất kho, điều chỉnh số lượng theo ca
           </Text>
         </Box>
+        <Button
+          component={Link}
+          to={`${NAVS_URL}/old-logs`}
+          variant="outline"
+          leftSection={<IconHistory size={16} />}
+          size="md"
+          radius={"xl"}
+          color="orange"
+        >
+          Xem lại log cũ
+        </Button>
       </Flex>
       <Divider my={0} />
       <Box px={{ base: 4, md: 28 }} py={20}>
@@ -129,7 +142,7 @@ export const SessionLogs = () => {
                               </b>
                             ),
                             children: (
-                              <CalFileResultModal
+                              <CalFileResultModalV2
                                 items={log.items}
                                 orders={log.orders}
                                 readOnly
