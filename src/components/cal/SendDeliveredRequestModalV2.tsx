@@ -13,7 +13,6 @@ import { useState, useMemo } from "react"
 import { useMutation } from "@tanstack/react-query"
 import { CToast } from "../common/CToast"
 import { useDeliveredRequests } from "../../hooks/useDeliveredRequests"
-import { ItemResponse } from "../../hooks/models"
 
 interface StorageItemInput {
   [storageKey: string]: number // use composite key: `${itemId}__${storageItemId}`
@@ -42,11 +41,10 @@ interface Props {
       _id: string
     }[]
   }[]
-  allItems: ItemResponse[]
   date: Date
 }
 
-export const SendDeliveredRequestModal = ({ items, allItems, date }: Props) => {
+export const SendDeliveredRequestModalV2 = ({ items, date }: Props) => {
   const { createDeliveredRequest } = useDeliveredRequests()
 
   const [quantities, setQuantities] = useState<StorageItemInput>({})
@@ -117,7 +115,7 @@ export const SendDeliveredRequestModal = ({ items, allItems, date }: Props) => {
               }}
             >
               <Text fw={600} fz="md" mb={4}>
-                {allItems.find((ai) => ai._id === item._id)?.name ?? item._id}{" "}
+                {item.storageItems[0]?.name ?? item._id}{" "}
                 <Text span c="dimmed" fz="sm">
                   (Cần: {item.quantity})
                 </Text>

@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query"
 import { useItems } from "../../hooks/useItems"
 import { Box, Button, Collapse, Divider, Stack, Tabs, rem } from "@mantine/core"
-import { ItemResponse } from "../../hooks/models"
-import { CalOrders } from "./CalOrders"
+import { SearchStorageItemResponse } from "../../hooks/models"
+import { CalOrdersV2 } from "./CalOrdersV2"
 import {
   IconBox,
   IconClipboardList,
@@ -10,7 +10,7 @@ import {
 } from "@tabler/icons-react"
 import { useDisclosure } from "@mantine/hooks"
 import { SaveLogDiv } from "./SaveLogDiv"
-import { CalItems } from "./CalItems"
+import { CalItemsV2 } from "./CalItemsV2"
 
 interface Props {
   items: {
@@ -45,21 +45,27 @@ interface Props {
   date?: Date
 }
 
-export const CalFileResultModal = ({
+export const CalFileResultModalV2 = ({
   items,
   orders,
   readOnly,
   date
 }: Props) => {
-  const { searchItems } = useItems()
+  const { searchStorageItems } = useItems()
   const [saveLogDiv, { toggle }] = useDisclosure(false)
   const { data: allItems } = useQuery({
-    queryKey: ["searchItems"],
-    queryFn: () => searchItems(""),
+    queryKey: ["searchStorageItems", "all"],
+    queryFn: async () => {
+      const [activeRes, deletedRes] = await Promise.all([
+        searchStorageItems({ searchText: "", deleted: false }),
+        searchStorageItems({ searchText: "", deleted: true })
+      ])
+      return [...activeRes.data, ...deletedRes.data]
+    },
     select: (data) =>
-      data.data.reduce(
+      data.reduce(
         (acc, item) => ({ ...acc, [item._id]: item }),
-        {} as Record<string, ItemResponse>
+        {} as Record<string, SearchStorageItemResponse>
       )
   })
 
@@ -107,7 +113,7 @@ export const CalFileResultModal = ({
         </Tabs.List>
 
         <Tabs.Panel value="items" className="p-3">
-          <CalItems allItems={allItems} items={items} />
+          <CalItemsV2 allItems={allItems} items={items} />
         </Tabs.Panel>
 
         <Tabs.Panel
@@ -115,7 +121,7 @@ export const CalFileResultModal = ({
           className="mx-2 mb-4 rounded-xl border border-gray-100 bg-gray-50/80 p-4 shadow-sm"
         >
           <div className="rounded-lg bg-white p-4 shadow-sm">
-            <CalOrders orders={orders} allCalItems={items} date={date} />
+            <CalOrdersV2 orders={orders} allCalItems={items} date={date} />
           </div>
         </Tabs.Panel>
       </Tabs>
