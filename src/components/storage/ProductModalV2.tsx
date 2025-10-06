@@ -24,7 +24,7 @@ interface Props {
   refetch: () => void
 }
 
-export const ProductModal = ({ product, refetch }: Props) => {
+export const ProductModalV2 = ({ product, refetch }: Props) => {
   const { handleSubmit, control } = useForm<CreateProductRequest>({
     defaultValues: product ?? {
       name: "",
@@ -38,11 +38,11 @@ export const ProductModal = ({ product, refetch }: Props) => {
   })
 
   const { createProduct, updateProduct } = useProducts()
-  const { searchItems } = useItems()
+  const { searchStorageItems } = useItems()
 
   const { data: itemsData } = useQuery({
-    queryKey: ["searchItems"],
-    queryFn: () => searchItems(""),
+    queryKey: ["searchStorageItems"],
+    queryFn: () => searchStorageItems({ searchText: "", deleted: false }),
     select: (data) =>
       data.data.map((item) => ({
         value: item._id,
