@@ -1,14 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { AppLayout } from "../../../components/layouts/AppLayout"
 import { ScrollArea, Tabs } from "@mantine/core"
-import { Products } from "../../../components/storage/Products"
 import { useEffect } from "react"
 import { Helmet } from "react-helmet-async"
 import { useAuthGuard } from "../../../hooks/useAuthGuard"
-import { Items } from "../../../components/storage/Items"
 import { ReadyCombos } from "../../../components/storage/ReadyCombos"
 import { NAVS_URL } from "../../../constants/navs"
 import { ShopeeProducts } from "../../../components/storage/ShopeeProducts"
+import { ProductsV2 } from "../../../components/storage/ProductsV2"
 
 type StorageTab = {
   tab: string
@@ -18,7 +17,7 @@ export const Route = createFileRoute("/marketing-storage/storage/")({
   component: RouteComponent,
   validateSearch: (search: Record<string, unknown>): StorageTab => {
     return {
-      tab: String(search.tab ?? "items")
+      tab: String(search.tab ?? "tiktok-products")
     }
   }
 })
@@ -44,12 +43,15 @@ function RouteComponent() {
   ]
 
   const handleChange = (value: string | null) => {
-    navigate({ to: `${NAVS_URL}/storage?tab=${value ?? "items"}` })
+    navigate({ to: `${NAVS_URL}/storage?tab=${value ?? "tiktok-products"}` })
   }
 
   useEffect(() => {
     if (!tab) {
-      navigate({ to: `${NAVS_URL}/storage`, search: { tab: "items" } })
+      navigate({
+        to: `${NAVS_URL}/storage`,
+        search: { tab: "tiktok-products" }
+      })
     }
   }, [])
 
@@ -75,12 +77,8 @@ function RouteComponent() {
           </Tabs.List>
 
           <ScrollArea.Autosize mah={"95%"}>
-            <Tabs.Panel value="items">
-              <Items />
-            </Tabs.Panel>
-
             <Tabs.Panel value="tiktok-products">
-              <Products />
+              <ProductsV2 />
             </Tabs.Panel>
 
             <Tabs.Panel value="shopee-products">
