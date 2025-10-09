@@ -27,6 +27,9 @@ export const TopCreatorsModal = () => {
   const [endDate, setEndDate] = useState<Date | null>(new Date())
   const [view, setView] = useState<"affiliate" | "affiliateAds">("affiliate")
   const [mode, setMode] = useState<"table" | "pie">("table")
+  const [discountMode, setDiscountMode] = useState<
+    "beforeDiscount" | "afterDiscount"
+  >("afterDiscount")
 
   const { data, isLoading } = useQuery({
     queryKey: ["topCreators", startDate, endDate],
@@ -38,21 +41,30 @@ export const TopCreatorsModal = () => {
     select: (d) => d.data
   })
 
-  const rows =
-    (view === "affiliate" ? data?.affiliate : data?.affiliateAds) || []
+  // safely extract arrays based on new shape
+  const affiliateData = data?.affiliate?.[discountMode] || []
+  const affiliateAdsData = data?.affiliateAds?.[discountMode] || []
 
-  const totalIncome = rows.reduce((acc, r) => acc + (r.totalIncome || 0), 0)
+  const rows: TopCreatorItem[] =
+    (view === "affiliate" ? affiliateData : affiliateAdsData) || []
 
-  // Derive "others" (Khác) from percentages if available
-  const sumPercent = rows.reduce(
-    (acc, r) => acc + (r.percentage !== undefined ? r.percentage : 0),
-    0
-  )
-  const refRow = rows.find((r) => (r.percentage || 0) > 0)
+  const totalIncome = Array.isArray(rows)
+    ? rows.reduce((acc, r) => acc + (r.totalIncome || 0), 0)
+    : 0
+
+  const sumPercent = Array.isArray(rows)
+    ? rows.reduce(
+        (acc, r) => acc + (r.percentage !== undefined ? r.percentage : 0),
+        0
+      )
+    : 0
+  const refRow = Array.isArray(rows)
+    ? rows.find((r) => (r.percentage || 0) > 0)
+    : undefined
   const grandTotal =
     refRow && refRow.percentage && refRow.percentage > 0
       ? refRow.totalIncome / (refRow.percentage / 100)
-      : totalIncome // fallback -> only listed sum known
+      : totalIncome
   const othersPercentRaw = sumPercent > 0 ? Math.max(100 - sumPercent, 0) : 0
   const othersIncome = Math.max(grandTotal - totalIncome, 0)
   const othersPercent =
@@ -74,16 +86,12 @@ export const TopCreatorsModal = () => {
       ]
     : rows
 
-  const rawRows =
-    (view === "affiliate" ? data?.affiliate : data?.affiliateAds) || []
-
-  const chartData = rawRows.map((r: TopCreatorItem) => ({
+  const chartData = rows.map((r: TopCreatorItem) => ({
     label: r.creator || "—",
     value: r.totalIncome || 0,
     percentage: typeof r.percentage === "number" ? r.percentage : undefined,
     raw: r
   }))
-
   const listedTotal = chartData.reduce((a, d) => a + d.value, 0)
 
   return (
@@ -122,6 +130,17 @@ export const TopCreatorsModal = () => {
           ]}
           radius="xl"
           size="sm"
+        />
+        <SegmentedControl
+          value={discountMode}
+          onChange={(val) => setDiscountMode(val as any)}
+          data={[
+            { label: "Sau CK", value: "afterDiscount" },
+            { label: "Trước CK", value: "beforeDiscount" }
+          ]}
+          radius="xl"
+          size="sm"
+          color="blue"
         />
       </Group>
       {mode === "table" && (
@@ -214,13 +233,12 @@ export const TopCreatorsModal = () => {
           title={
             <>
               Tổng doanh thu liệt kê: {listedTotal.toLocaleString("vi-VN")} VNĐ
-              {/* nếu muốn hiện thêm estimated total, component đã có tooltip ở lát "Khác" */}
             </>
           }
-          width={320} // max chiều rộng vùng chart
-          radius={120} // bán kính
-          donut={false} // bật donut
-          enableOthers // tự thêm "Khác" nếu có percentage
+          width={320}
+          radius={120}
+          donut={false}
+          enableOthers
           othersLabel="Khác"
           showTooltip
           valueFormatter={(v) => `${v.toLocaleString("vi-VN")}₫`}
