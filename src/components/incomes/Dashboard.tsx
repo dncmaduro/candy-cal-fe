@@ -227,7 +227,7 @@ export const Dashboard = () => {
                   </Flex>
                 ),
                 children: <TopCreatorsModal />,
-                size: "xl"
+                size: "60vw"
               })
             }}
             style={{

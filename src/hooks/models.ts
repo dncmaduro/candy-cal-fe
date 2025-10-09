@@ -1451,8 +1451,14 @@ export interface TopCreatorItem {
 
 /** @interface */
 export interface GetTopCreatorsResponse {
-  affiliate: TopCreatorItem[]
-  affiliateAds: TopCreatorItem[]
+  affiliate: {
+    beforeDiscount: TopCreatorItem[]
+    afterDiscount: TopCreatorItem[]
+  }
+  affiliateAds: {
+    beforeDiscount: TopCreatorItem[]
+    afterDiscount: TopCreatorItem[]
+  }
 }
 
 /** @interface */
