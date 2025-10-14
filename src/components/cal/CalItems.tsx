@@ -1,8 +1,8 @@
 import { ScrollArea, Table, Text } from "@mantine/core"
-import { ItemResponse } from "../../hooks/models"
+import { SearchStorageItemResponse } from "../../hooks/models"
 
 interface Props {
-  allItems?: Record<string, ItemResponse>
+  allItems?: Record<string, SearchStorageItemResponse>
   items: {
     _id: string
     quantity: number
