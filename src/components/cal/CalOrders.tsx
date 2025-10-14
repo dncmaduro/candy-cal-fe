@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query"
 import { useProducts } from "../../hooks/useProducts"
 import {
-  ItemResponse,
   ProductResponse,
-  ReadyComboResponse
+  ReadyComboResponse,
+  SearchStorageItemResponse
 } from "../../hooks/models"
 import {
   Box,
@@ -54,7 +54,7 @@ const normalizeProducts = (products: { _id: string; quantity: number }[]) =>
 
 export const CalOrders = ({ orders, allCalItems, date }: Props) => {
   const { getAllProducts } = useProducts()
-  const { searchItems, searchStorageItems } = useItems()
+  const { searchStorageItems } = useItems()
   const { getMe } = useUsers()
   const [calRest, setCalRest] = useState<boolean>(false)
   const [viewMode, setViewMode] = useState<"all" | "ready" | "not-ready">("all")
@@ -139,16 +139,17 @@ export const CalOrders = ({ orders, allCalItems, date }: Props) => {
       .filter((order) => order.products.length > 0)
   }, [orders, allProductsByName, normalizedCombos])
 
-  // Tính các item cần dùng cho notReadyOrders
+  // Tính các storage item cần dùng cho notReadyOrders (product.items now point to storageItems directly)
   const notReadyItems = useMemo(() => {
     if (!notReadyOrders.length || !allProductsByName) return {}
     return notReadyOrders.reduce(
       (acc, order) => {
         order.products.forEach((p) => {
           const product = allProductsByName[p.name]
-          product?.items.forEach((item) => {
-            acc[item._id] =
-              (acc[item._id] || 0) + item.quantity * p.quantity * order.quantity
+          product?.items.forEach((si) => {
+            // si._id is storageItemId now
+            acc[si._id] =
+              (acc[si._id] || 0) + si.quantity * p.quantity * order.quantity
           })
         })
         return acc
@@ -157,27 +158,21 @@ export const CalOrders = ({ orders, allCalItems, date }: Props) => {
     )
   }, [notReadyOrders, allProductsByName])
 
-  // Fetch các mặt hàng (item) và item trong kho
+  // Fetch item trong kho
   const { data: allStorageItems } = useQuery({
     queryKey: ["searchStorageItems"],
     queryFn: () => searchStorageItems({ searchText: "", deleted: false }),
     select: (data) => data.data
   })
 
-  const { data: itemsData } = useQuery({
-    queryKey: ["searchItems"],
-    queryFn: () => searchItems(""),
-    select: (data) => data.data
-  })
-
-  const allItems = useMemo(() => {
-    return itemsData?.reduce(
-      (acc, item) => ({ ...acc, [item._id]: item }),
-      {} as Record<string, ItemResponse>
+  const allStorageItemsMap = useMemo(() => {
+    return (allStorageItems || []).reduce(
+      (acc, si) => ({ ...acc, [si._id]: si }),
+      {} as Record<string, SearchStorageItemResponse>
     )
-  }, [itemsData])
+  }, [allStorageItems])
 
-  // Quản lý state đơn được chọn (để tính mặt hàng cần dùng)
+  // Quản lý state đơn được chọn
   const [chosenOrders, setChosenOrders] = useState<boolean[]>(
     orders.map(() => false)
   )
@@ -194,7 +189,7 @@ export const CalOrders = ({ orders, allCalItems, date }: Props) => {
     })
   }
 
-  // Tính các item cần dùng cho chosenOrders
+  // Tính các storage item cần dùng cho chosenOrders
   const [chosenItems, setChosenItems] = useState<Record<string, number>>()
 
   useEffect(() => {
@@ -204,10 +199,10 @@ export const CalOrders = ({ orders, allCalItems, date }: Props) => {
           const order = filteredOrders[index]
           order.products.forEach((p) => {
             const product = allProductsByName[p.name]
-            product.items.forEach((item) => {
-              acc[item._id] =
-                (acc[item._id] || 0) +
-                item.quantity * p.quantity * order.quantity
+            product.items.forEach((si) => {
+              // si._id is storageItemId now
+              acc[si._id] =
+                (acc[si._id] || 0) + si.quantity * p.quantity * order.quantity
             })
           })
         }
@@ -353,19 +348,21 @@ export const CalOrders = ({ orders, allCalItems, date }: Props) => {
               </Title>
               <Stack gap={6}>
                 {chosenItems && Object.entries(chosenItems).length > 0 ? (
-                  Object.entries(chosenItems).map(([itemId, quantity]) => (
-                    <Text key={itemId} fz="sm" fw={500}>
-                      {allItems?.[itemId]?.name || (
-                        <Text span c="red">
-                          ?
+                  Object.entries(chosenItems).map(
+                    ([storageItemId, quantity]) => (
+                      <Text key={storageItemId} fz="sm" fw={500}>
+                        {allStorageItemsMap?.[storageItemId]?.name || (
+                          <Text span c="red">
+                            ?
+                          </Text>
+                        )}
+                        :{" "}
+                        <Text span c="indigo.7">
+                          {quantity}
                         </Text>
-                      )}
-                      :{" "}
-                      <Text span c="indigo.7">
-                        {quantity}
                       </Text>
-                    </Text>
-                  ))
+                    )
+                  )
                 ) : (
                   <Text c="dimmed" fz="sm">
                     Không có mặt hàng nào
@@ -401,19 +398,17 @@ export const CalOrders = ({ orders, allCalItems, date }: Props) => {
                       children: (
                         <SendDeliveredRequestModal
                           date={date}
-                          allItems={itemsData || []}
                           items={
                             chosenItems
                               ? Object.entries(chosenItems).map(
-                                  ([itemId, quantity]) => {
-                                    const item = allItems?.[itemId]
+                                  ([storageItemId, quantity]) => {
+                                    const si = allStorageItems?.find(
+                                      (s) => s._id === storageItemId
+                                    )
                                     return {
-                                      _id: itemId,
-                                      quantity: quantity,
-                                      storageItems:
-                                        allStorageItems?.filter((si) =>
-                                          item?.variants.includes(si._id)
-                                        ) ?? []
+                                      _id: storageItemId,
+                                      quantity,
+                                      storageItems: si ? [si] : []
                                     }
                                   }
                                 )
@@ -441,20 +436,18 @@ export const CalOrders = ({ orders, allCalItems, date }: Props) => {
                       children: (
                         <SendDeliveredRequestModal
                           date={date}
-                          allItems={itemsData || []}
                           items={
                             notReadyItems &&
                             Object.entries(notReadyItems).length > 0
                               ? Object.entries(notReadyItems).map(
-                                  ([itemId, quantity]) => {
-                                    const item = allItems?.[itemId]
+                                  ([storageItemId, quantity]) => {
+                                    const si = allStorageItems?.find(
+                                      (s) => s._id === storageItemId
+                                    )
                                     return {
-                                      _id: itemId,
-                                      quantity: quantity,
-                                      storageItems:
-                                        allStorageItems?.filter((si) =>
-                                          item?.variants.includes(si._id)
-                                        ) ?? []
+                                      _id: storageItemId,
+                                      quantity,
+                                      storageItems: si ? [si] : []
                                     }
                                   }
                                 )
