@@ -1706,8 +1706,6 @@ export interface GetAdsCostSplitByMonthResponse {
 /** @interface */
 export interface CreateDailyAdsRequest {
   date: Date
-  liveAdsCost: number
-  shopAdsCost: number
 }
 
 /** @interface */
