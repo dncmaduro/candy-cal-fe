@@ -992,51 +992,52 @@ export interface DeleteGoalRequest {
 
 /** @interface */
 export interface CreatePackingRuleRequest {
-  productCode: string
-  requirements: {
+  products: {
+    productCode: string
     minQuantity: number | null
     maxQuantity: number | null
-    packingType: string
   }[]
+  packingType: string
 }
 
 /** @interface */
 export interface CreatePackingRuleResponse {
-  productCode: string
-  requirements: {
+  products: {
+    productCode: string
     minQuantity: number | null
     maxQuantity: number | null
-    packingType: string
   }[]
+  packingType: string
 }
 
 /** @interface */
 export interface UpdatePackingRuleRequest {
-  requirements: {
+  products: {
+    productCode: string
     minQuantity: number | null
     maxQuantity: number | null
-    packingType: string
   }[]
+  packingType: string
 }
 
 /** @interface */
 export interface UpdatePackingRuleResponse {
-  productCode: string
-  requirements: {
+  products: {
+    productCode: string
     minQuantity: number | null
     maxQuantity: number | null
-    packingType: string
   }[]
+  packingType: string
 }
 
 /** @interface */
 export interface GetPackingRuleResponse {
-  productCode: string
-  requirements: {
+  products: {
+    productCode: string
     minQuantity: number | null
     maxQuantity: number | null
-    packingType: string
   }[]
+  packingType: string
 }
 
 /** @interface */
@@ -1048,12 +1049,12 @@ export interface SearchPackingRulesRequest {
 /** @interface */
 export interface SearchPackingRulesResponse {
   rules: {
-    productCode: string
-    requirements: {
+    products: {
+      productCode: string
       minQuantity: number | null
       maxQuantity: number | null
-      packingType: string
     }[]
+    packingType: string
   }[]
 }
 
