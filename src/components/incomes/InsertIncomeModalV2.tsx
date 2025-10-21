@@ -10,8 +10,8 @@ import {
   Box,
   Loader,
   Tooltip,
-  NumberInput,
-  Alert
+  Alert,
+  SimpleGrid
 } from "@mantine/core"
 import { Dropzone, FileWithPath } from "@mantine/dropzone"
 import { DatePickerInput } from "@mantine/dates"
@@ -34,6 +34,15 @@ const LABELS = {
   sourceSplit: "File tách nguồn"
 }
 
+const ADS_FILE_LABELS = {
+  yesterdayLiveAdsCostFileBefore4pm: "Hôm qua Live Ads (trước 4pm)",
+  yesterdayShopAdsCostFileBefore4pm: "Hôm qua Shop Ads (trước 4pm)",
+  yesterdayLiveAdsCostFile: "Hôm qua Live Ads (cả ngày)",
+  yesterdayShopAdsCostFile: "Hôm qua Shop Ads (cả ngày)",
+  todayLiveAdsCostFileBefore4pm: "Hôm nay Live Ads (trước 4pm)",
+  todayShopAdsCostFileBefore4pm: "Hôm nay Shop Ads (trước 4pm)"
+}
+
 interface Props {
   refetch: () => void
 }
@@ -47,8 +56,14 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
     sourceSplit: { file: null, status: "pending" }
   })
   const [insertIncomesCompleted, setInsertIncomesCompleted] = useState(false)
-  const [liveAdsCost, setLiveAdsCost] = useState<number>(0)
-  const [shopAdsCost, setShopAdsCost] = useState<number>(0)
+  const [adsFiles, setAdsFiles] = useState<Record<string, FileState>>({
+    yesterdayLiveAdsCostFileBefore4pm: { file: null, status: "pending" },
+    yesterdayShopAdsCostFileBefore4pm: { file: null, status: "pending" },
+    yesterdayLiveAdsCostFile: { file: null, status: "pending" },
+    yesterdayShopAdsCostFile: { file: null, status: "pending" },
+    todayLiveAdsCostFileBefore4pm: { file: null, status: "pending" },
+    todayShopAdsCostFileBefore4pm: { file: null, status: "pending" }
+  })
 
   const { mutateAsync: insertAndUpdate, isPending: insertingIncomes } =
     useMutation({
@@ -82,7 +97,13 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
     })
 
   const { mutateAsync: createAds, isPending: submittingAds } = useMutation({
-    mutationFn: async (req: CreateDailyAdsRequest) => createDailyAds(req),
+    mutationFn: async ({
+      files: fileList,
+      req
+    }: {
+      files: File[]
+      req: CreateDailyAdsRequest
+    }) => createDailyAds(fileList, req),
     onSuccess: () => {
       CToast.success({ title: "Thêm doanh thu ads thành công!" })
       modals.closeAll()
@@ -112,15 +133,23 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
   }
 
   const handleSubmitAdsCost = async () => {
-    if (liveAdsCost < 0 || shopAdsCost < 0) {
-      CToast.error({ title: "Chi phí ads không thể âm" })
+    const adsFileValues = Object.values(adsFiles)
+    const allAdsFilesUploaded = adsFileValues.every(
+      (fileState) => fileState.file !== null
+    )
+
+    if (!allAdsFilesUploaded) {
+      CToast.error({ title: "Vui lòng tải lên đủ 6 file ads" })
       return
     }
 
+    const fileList = Object.keys(ADS_FILE_LABELS)
+      .map((key) => adsFiles[key].file!)
+      .filter(Boolean)
+
     await createAds({
-      date: date!,
-      liveAdsCost,
-      shopAdsCost
+      files: fileList,
+      req: { date: date! }
     })
   }
 
@@ -196,18 +225,79 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
     )
   }
 
+  const renderAdsDropzone = (key: string, label: string) => {
+    const { file, status } = adsFiles[key]
+    return (
+      <Paper key={key} p="md" radius="lg" shadow="sm" withBorder>
+        <Stack gap={6}>
+          <Text fw={600} size="sm">
+            {label}
+          </Text>
+          <Dropzone
+            onDrop={(filesArr) =>
+              setAdsFiles((prev) => ({
+                ...prev,
+                [key]: { file: filesArr[0], status: "pending" }
+              }))
+            }
+            maxFiles={1}
+            accept={[".xlsx", ".xls", ".csv"]}
+            className="flex min-h-[80px] items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 transition-colors hover:border-blue-400"
+            disabled={!!file || submittingAds}
+          >
+            {file ? (
+              <Group justify="space-between" w="100%">
+                <Tooltip label={file.name}>
+                  <Text size="xs" truncate>
+                    {file.name}
+                  </Text>
+                </Tooltip>
+                <Group gap={0}>
+                  {getStatusIcon(status)}
+                  {status === "pending" && (
+                    <CloseButton
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setAdsFiles((prev) => ({
+                          ...prev,
+                          [key]: { file: null, status: "pending" }
+                        }))
+                      }}
+                    />
+                  )}
+                </Group>
+              </Group>
+            ) : (
+              <Text size="xs" c="gray.6">
+                Click để chọn file
+              </Text>
+            )}
+          </Dropzone>
+          <Text size="xs" c="gray.5">
+            .xlsx, .xls, .csv
+          </Text>
+        </Stack>
+      </Paper>
+    )
+  }
+
   const resetData = () => {
     setDate(null)
     setFiles({
       totalIncome: { file: null, status: "pending" },
       sourceSplit: { file: null, status: "pending" }
     })
+    setAdsFiles({
+      yesterdayLiveAdsCostFileBefore4pm: { file: null, status: "pending" },
+      yesterdayShopAdsCostFileBefore4pm: { file: null, status: "pending" },
+      yesterdayLiveAdsCostFile: { file: null, status: "pending" },
+      yesterdayShopAdsCostFile: { file: null, status: "pending" },
+      todayLiveAdsCostFileBefore4pm: { file: null, status: "pending" },
+      todayShopAdsCostFileBefore4pm: { file: null, status: "pending" }
+    })
     setInsertIncomesCompleted(false)
-    setLiveAdsCost(0)
-    setShopAdsCost(0)
   }
-
-  const totalCost = liveAdsCost + shopAdsCost
 
   return (
     <Stack gap="md" p="sm">
@@ -257,53 +347,19 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
       ) : (
         <>
           <Text size="lg" fw={600} mb={2}>
-            Thêm chi phí quảng cáo
+            Tải lên file chi phí quảng cáo
           </Text>
 
           <Text mb={16} c="dimmed" ta="center">
-            Nhập chi phí quảng cáo cho ngày{" "}
+            Tải lên 6 file chi phí quảng cáo cho ngày{" "}
             <strong>{date?.toLocaleDateString("vi-VN")}</strong>
           </Text>
 
-          <Paper p="md" radius="lg" shadow="sm" withBorder w={"100%"}>
-            <Stack gap={16}>
-              <NumberInput
-                label="Chi phí Ads Livestream (VNĐ)"
-                placeholder="Nhập chi phí ads livestream"
-                value={liveAdsCost}
-                onChange={(val) => setLiveAdsCost(Number(val) || 0)}
-                min={0}
-                thousandSeparator=","
-                size="md"
-                required
-                disabled={submittingAds}
-              />
-
-              <NumberInput
-                label="Chi phí Ads Video (VNĐ)"
-                placeholder="Nhập chi phí ads video"
-                value={shopAdsCost}
-                onChange={(val) => setShopAdsCost(Number(val) || 0)}
-                min={0}
-                thousandSeparator=","
-                size="md"
-                required
-                disabled={submittingAds}
-              />
-
-              <Divider />
-
-              <Box>
-                <Text fw={600} fz="lg">
-                  Tổng chi phí ads: {totalCost.toLocaleString()} VNĐ
-                </Text>
-                <Text c="dimmed" fz="sm">
-                  Livestream: {liveAdsCost.toLocaleString()} VNĐ | Video:{" "}
-                  {shopAdsCost.toLocaleString()} VNĐ
-                </Text>
-              </Box>
-            </Stack>
-          </Paper>
+          <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
+            {Object.entries(ADS_FILE_LABELS).map(([key, label]) =>
+              renderAdsDropzone(key, label)
+            )}
+          </SimpleGrid>
 
           <Group justify="end" mt="md">
             <Button
@@ -318,7 +374,10 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
             <Button
               onClick={handleSubmitAdsCost}
               loading={submittingAds}
-              disabled={totalCost === 0 || submittingAds}
+              disabled={
+                !Object.values(adsFiles).every((f) => f.file !== null) ||
+                submittingAds
+              }
               size="md"
               radius="xl"
             >
