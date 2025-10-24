@@ -4,8 +4,7 @@ import { modals } from "@mantine/modals"
 import { CToast } from "../common/CToast"
 import {
   CreatePackingRuleRequest,
-  GetPackingRuleResponse,
-  UpdatePackingRuleRequest
+  GetPackingRuleResponse
 } from "../../hooks/models"
 import { useProducts } from "../../hooks/useProducts"
 import { Controller, useFieldArray, useForm } from "react-hook-form"
@@ -18,7 +17,7 @@ import {
   Divider,
   Text,
   ActionIcon,
-  Box
+  Paper
 } from "@mantine/core"
 import { PackingRulesBoxTypes } from "../../constants/rules"
 import { IconPlus, IconTrash } from "@tabler/icons-react"
@@ -26,6 +25,144 @@ import { IconPlus, IconTrash } from "@tabler/icons-react"
 interface Props {
   rule?: GetPackingRuleResponse
   refetch: () => void
+}
+
+type FormData = CreatePackingRuleRequest
+
+// Separate component for each product to avoid hooks in loops
+const ProductSection = ({
+  productIndex,
+  control,
+  errors,
+  isSubmitted,
+  getValues,
+  trigger,
+  productsData,
+  isEdit,
+  removeProduct,
+  canRemove
+}: {
+  productIndex: number
+  control: any
+  errors: any
+  isSubmitted: boolean
+  getValues: any
+  trigger: any
+  productsData: any
+  isEdit: boolean
+  removeProduct: (index: number) => void
+  canRemove: boolean
+  creating: boolean
+  updating: boolean
+}) => {
+  return (
+    <Paper p="md" withBorder style={{ background: "#f9fafb" }}>
+      <Group justify="space-between" mb="sm">
+        <Text fw={600} size="sm">
+          Sản phẩm #{productIndex + 1}
+        </Text>
+        {canRemove && (
+          <ActionIcon
+            color="red"
+            variant="subtle"
+            onClick={() => removeProduct(productIndex)}
+            size="sm"
+          >
+            <IconTrash size={16} />
+          </ActionIcon>
+        )}
+      </Group>
+
+      <Group align="flex-end" wrap="nowrap">
+        <Controller
+          control={control}
+          name={`products.${productIndex}.productCode`}
+          rules={{ required: true }}
+          render={({ field }) => (
+            <Select
+              label="Mã sản phẩm"
+              placeholder="Chọn sản phẩm"
+              required
+              data={productsData || []}
+              disabled={isEdit}
+              size="sm"
+              style={{ flex: 1 }}
+              {...field}
+              value={field.value ?? undefined}
+              onChange={field.onChange}
+            />
+          )}
+        />
+
+        <Controller
+          name={`products.${productIndex}.minQuantity` as const}
+          control={control}
+          rules={{
+            required: "Bắt buộc",
+            min: { value: 1, message: ">= 1" }
+          }}
+          render={({ field }) => (
+            <NumberInput
+              label="Số lượng tối thiểu"
+              min={1}
+              placeholder="Min"
+              w={140}
+              size="sm"
+              {...field}
+              value={field.value ?? undefined}
+              onChange={(value) => {
+                field.onChange(value)
+                trigger(`products.${productIndex}.maxQuantity`)
+              }}
+              error={
+                isSubmitted && errors.products?.[productIndex]?.minQuantity
+                  ? errors.products[productIndex].minQuantity?.message
+                  : undefined
+              }
+            />
+          )}
+        />
+
+        <Controller
+          name={`products.${productIndex}.maxQuantity` as const}
+          control={control}
+          rules={{
+            validate: (maxValue) => {
+              const minValue = getValues(`products.${productIndex}.minQuantity`)
+              if (
+                minValue != null &&
+                maxValue != null &&
+                Number(maxValue) < Number(minValue)
+              ) {
+                return ">= min"
+              }
+              return true
+            }
+          }}
+          render={({ field }) => (
+            <NumberInput
+              label="Số lượng tối đa"
+              min={1}
+              placeholder="Max"
+              w={140}
+              size="sm"
+              {...field}
+              value={field.value ?? undefined}
+              onChange={(value) => {
+                field.onChange(value)
+                trigger(`products.${productIndex}.minQuantity`)
+              }}
+              error={
+                isSubmitted && errors.products?.[productIndex]?.maxQuantity
+                  ? errors.products[productIndex].maxQuantity?.message
+                  : undefined
+              }
+            />
+          )}
+        />
+      </Group>
+    </Paper>
+  )
 }
 
 export const PackingRuleModal = ({ rule, refetch }: Props) => {
@@ -44,28 +181,37 @@ export const PackingRuleModal = ({ rule, refetch }: Props) => {
 
   const isEdit = !!rule
 
+  // Convert rule from API format to form format
+  const defaultValues: FormData = rule
+    ? rule
+    : {
+        products: [
+          {
+            productCode: "",
+            minQuantity: null,
+            maxQuantity: null
+          }
+        ],
+        packingType: ""
+      }
+
   const {
     control,
     handleSubmit,
     getValues,
     formState: { errors, isSubmitted },
     trigger
-  } = useForm<CreatePackingRuleRequest>({
-    defaultValues: rule ?? {
-      productCode: "",
-      requirements: [
-        {
-          packingType: "",
-          minQuantity: 0,
-          maxQuantity: 0
-        }
-      ]
-    }
+  } = useForm<FormData>({
+    defaultValues
   })
 
-  const { append, fields, remove } = useFieldArray({
+  const {
+    fields: productFields,
+    append: appendProduct,
+    remove: removeProduct
+  } = useFieldArray({
     control,
-    name: "requirements"
+    name: "products"
   })
 
   const { mutate: create, isPending: creating } = useMutation({
@@ -86,7 +232,7 @@ export const PackingRuleModal = ({ rule, refetch }: Props) => {
       req
     }: {
       productCode: string
-      req: UpdatePackingRuleRequest
+      req: CreatePackingRuleRequest
     }) => updateRule(productCode, req),
     onSuccess: () => {
       modals.closeAll()
@@ -98,17 +244,16 @@ export const PackingRuleModal = ({ rule, refetch }: Props) => {
     }
   })
 
-  const onSubmit = (values: CreatePackingRuleRequest) => {
+  const onSubmit = (values: FormData) => {
     if (isEdit) {
+      // When editing, use the first product code as identifier
+      const primaryProductCode = rule!.products[0].productCode
       update({
-        productCode: rule!.productCode,
-        req: { requirements: values.requirements }
+        productCode: primaryProductCode,
+        req: values
       })
     } else {
-      create({
-        productCode: values.productCode,
-        requirements: values.requirements
-      })
+      create(values)
     }
   }
 
@@ -119,167 +264,65 @@ export const PackingRuleModal = ({ rule, refetch }: Props) => {
           {isEdit ? "Chỉnh sửa quy tắc đóng hàng" : "Tạo quy tắc đóng hàng mới"}
         </Text>
         <Divider my={2} />
+
         <Controller
           control={control}
-          name="productCode"
+          name="packingType"
           rules={{ required: true }}
           render={({ field }) => (
             <Select
-              label="Chọn sản phẩm"
-              placeholder="Chọn sản phẩm"
+              label="Loại hộp đóng"
+              placeholder="Chọn loại hộp"
               required
-              data={productsData || []}
-              disabled={isEdit}
+              data={PackingRulesBoxTypes}
               size="md"
+              mb="md"
               {...field}
               value={field.value ?? undefined}
               onChange={field.onChange}
             />
           )}
         />
-        <Divider label="Các quy cách đóng" labelPosition="center" my={0} />
-        <Stack gap={10} w="100%">
-          {fields.map((field, index) => (
-            <Group
-              key={field.id}
-              align="flex-start"
-              gap={10}
-              className="rounded-lg bg-[#f7f8fa] px-3 py-2"
-              wrap="wrap"
-            >
-              <Controller
-                name={`requirements.${index}.packingType`}
-                control={control}
-                rules={{ required: true }}
-                render={({ field }) => (
-                  <Select
-                    label={index === 0 ? "Loại đóng" : undefined}
-                    data={PackingRulesBoxTypes}
-                    required
-                    w={160}
-                    size="sm"
-                    {...field}
-                    value={field.value ?? undefined}
-                    onChange={field.onChange}
-                  />
-                )}
-              />
-              <Controller
-                name={`requirements.${index}.minQuantity`}
-                control={control}
-                rules={{
-                  required: "Bắt buộc nhập",
-                  min: { value: 1, message: "Tối thiểu phải >= 1" },
-                  validate: (minValue) => {
-                    if (index === 0) return true
-                    const prevMax = getValues(
-                      `requirements.${index - 1}.maxQuantity`
-                    )
-                    if (prevMax == null || prevMax === 0) return true
-                    if (minValue == null || minValue < 1)
-                      return "Tối thiểu phải >= 1"
-                    return Number(minValue) > Number(prevMax)
-                      ? true
-                      : `Tối thiểu phải lớn hơn tối đa của dòng trước (${prevMax})`
-                  }
-                }}
-                render={({ field }) => (
-                  <NumberInput
-                    label={index === 0 ? "Tối thiểu" : undefined}
-                    min={1}
-                    placeholder="Số lượng"
-                    w={120}
-                    size="sm"
-                    {...field}
-                    value={field.value ?? undefined}
-                    onChange={(value) => {
-                      field.onChange(value)
-                      trigger(`requirements.${index}.maxQuantity`)
-                      if (index < getValues("requirements").length - 1) {
-                        trigger(`requirements.${index + 1}.minQuantity`)
-                      }
-                    }}
-                    error={
-                      isSubmitted
-                        ? errors.requirements?.[index]?.minQuantity?.message
-                        : undefined
-                    }
-                  />
-                )}
-              />
-              <Controller
-                name={`requirements.${index}.maxQuantity`}
-                control={control}
-                rules={{
-                  validate: (maxValue) => {
-                    const minValue = getValues(
-                      `requirements.${index}.minQuantity`
-                    )
-                    if (
-                      minValue != null &&
-                      maxValue != null &&
-                      Number(maxValue) < Number(minValue)
-                    ) {
-                      return "Tối đa phải >= tối thiểu"
-                    }
-                    return true
-                  }
-                }}
-                render={({ field }) => (
-                  <NumberInput
-                    label={index === 0 ? "Tối đa" : undefined}
-                    min={1}
-                    placeholder="Số lượng"
-                    w={120}
-                    size="sm"
-                    {...field}
-                    value={field.value ?? undefined}
-                    onChange={(value) => {
-                      field.onChange(value)
-                      trigger(`requirements.${index}.minQuantity`)
-                      if (index < getValues("requirements").length - 1) {
-                        trigger(`requirements.${index + 1}.minQuantity`)
-                      }
-                    }}
-                    error={
-                      isSubmitted
-                        ? errors.requirements?.[index]?.maxQuantity?.message
-                        : undefined
-                    }
-                  />
-                )}
-              />
-              <ActionIcon
-                color="red"
-                variant="subtle"
-                onClick={() => remove(index)}
-                size="md"
-                title="Xóa quy cách"
-                disabled={fields.length === 1}
-                mt={index === 0 ? 21 : 0}
-              >
-                <IconTrash size={17} />
-              </ActionIcon>
-            </Group>
-          ))}
-          <Box>
-            <Button
-              radius="xl"
-              size="sm"
-              mt={2}
-              leftSection={<IconPlus size={16} />}
-              variant="light"
-              color="indigo"
-              onClick={() =>
-                append({ packingType: "", minQuantity: 0, maxQuantity: 0 })
-              }
-              loading={creating || updating}
-              style={{ fontWeight: 600 }}
-            >
-              Thêm quy cách
-            </Button>
-          </Box>
-        </Stack>
+
+        <Divider label="Danh sách sản phẩm" labelPosition="center" my="sm" />
+
+        {productFields.map((productField, productIndex) => (
+          <ProductSection
+            key={productField.id}
+            productIndex={productIndex}
+            control={control}
+            errors={errors}
+            isSubmitted={isSubmitted}
+            getValues={getValues}
+            trigger={trigger}
+            productsData={productsData}
+            isEdit={isEdit}
+            removeProduct={removeProduct}
+            canRemove={productFields.length > 1}
+            creating={creating}
+            updating={updating}
+          />
+        ))}
+
+        <Button
+          radius="md"
+          size="sm"
+          leftSection={<IconPlus size={16} />}
+          variant="outline"
+          color="indigo"
+          onClick={() =>
+            appendProduct({
+              productCode: "",
+              minQuantity: null,
+              maxQuantity: null
+            })
+          }
+          loading={creating || updating}
+          style={{ fontWeight: 600 }}
+        >
+          Thêm sản phẩm
+        </Button>
+
         <Divider my={6} />
         <Button
           type="submit"
@@ -289,7 +332,7 @@ export const PackingRuleModal = ({ rule, refetch }: Props) => {
           size="md"
           loading={creating || updating}
         >
-          {isEdit ? "Lưu thay đổi" : "Tạo quy tắc"}
+          Lưu
         </Button>
       </Stack>
     </form>

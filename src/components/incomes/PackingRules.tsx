@@ -122,9 +122,8 @@ export const PackingRules = () => {
             <Table.Thead>
               <Table.Tr>
                 <Table.Th style={{ width: 180 }}>Mã sản phẩm</Table.Th>
+                <Table.Th style={{ width: 220 }}>Số lượng (Min / Max)</Table.Th>
                 <Table.Th style={{ width: 150 }}>Loại hộp</Table.Th>
-                <Table.Th style={{ width: 120 }}>Số lượng tối thiểu</Table.Th>
-                <Table.Th style={{ width: 120 }}>Số lượng tối đa</Table.Th>
                 <Table.Th style={{ width: 100 }}></Table.Th>
               </Table.Tr>
             </Table.Thead>
@@ -138,62 +137,76 @@ export const PackingRules = () => {
                   </Table.Td>
                 </Table.Tr>
               ) : rulesData.rules.length > 0 ? (
-                rulesData.rules.map((rule) => {
-                  const reqs = rule.requirements
-                  return reqs.map((req, idx) => (
-                    <Table.Tr key={rule.productCode + "-" + idx}>
-                      {idx === 0 && (
+                rulesData.rules.flatMap((rule, ruleIdx) => {
+                  const packingTypeLabel = PackingRulesBoxTypes.find(
+                    (r) => r.value === rule.packingType
+                  )?.label
+
+                  return rule.products.map((product, productIdx) => (
+                    <Table.Tr
+                      key={`rule-${ruleIdx}-${productIdx}-${product.productCode}`}
+                    >
+                      <Table.Td style={{ fontWeight: 600 }}>
+                        {product.productCode}
+                      </Table.Td>
+
+                      <Table.Td>
+                        {`Min: ${product.minQuantity != null ? product.minQuantity : "-"} / Max: ${product.maxQuantity != null ? product.maxQuantity : "-"}`}
+                      </Table.Td>
+
+                      {productIdx === 0 && (
                         <Table.Td
-                          rowSpan={reqs.length}
-                          style={{ verticalAlign: "middle", fontWeight: 600 }}
+                          rowSpan={rule.products.length}
+                          style={{
+                            verticalAlign: "middle",
+                            border: "1px solid #ececec"
+                          }}
                         >
-                          {rule.productCode}
+                          {packingTypeLabel}
                         </Table.Td>
                       )}
-                      {/* Nếu không phải row đầu thì để trống cho cột mã sản phẩm */}
-                      {idx !== 0 && null}
-                      <Table.Td>
-                        {
-                          PackingRulesBoxTypes.find(
-                            (r) => r.value === req.packingType
-                          )?.label
-                        }
-                      </Table.Td>
-                      <Table.Td>
-                        {req.minQuantity != null ? req.minQuantity : "-"}
-                      </Table.Td>
-                      <Table.Td>
-                        {req.maxQuantity != null ? req.maxQuantity : "-"}
-                      </Table.Td>
-                      <Table.Td>
-                        <Can roles={["admin", "accounting-emp"]}>
-                          <Button
-                            variant="light"
-                            color="indigo"
-                            size="xs"
-                            radius="xl"
-                            onClick={() =>
-                              modals.open({
-                                size: "lg",
-                                title: (
-                                  <Text fw={700} className="!font-bold" fz="md">
-                                    Chỉnh sửa quy tắc đóng hàng
-                                  </Text>
-                                ),
-                                children: (
-                                  <PackingRuleModal
-                                    rule={rule}
-                                    refetch={refetch}
-                                  />
-                                )
-                              })
-                            }
-                            style={{ fontWeight: 500 }}
-                          >
-                            Chỉnh sửa
-                          </Button>
-                        </Can>
-                      </Table.Td>
+
+                      {productIdx === 0 && (
+                        <Table.Td
+                          rowSpan={rule.products.length}
+                          style={{
+                            verticalAlign: "middle",
+                            border: "1px solid #ececec"
+                          }}
+                        >
+                          <Can roles={["admin", "accounting-emp"]}>
+                            <Button
+                              variant="light"
+                              color="indigo"
+                              size="xs"
+                              radius="xl"
+                              onClick={() =>
+                                modals.open({
+                                  size: "lg",
+                                  title: (
+                                    <Text
+                                      fw={700}
+                                      className="!font-bold"
+                                      fz="md"
+                                    >
+                                      Chỉnh sửa quy tắc đóng hàng
+                                    </Text>
+                                  ),
+                                  children: (
+                                    <PackingRuleModal
+                                      rule={rule}
+                                      refetch={refetch}
+                                    />
+                                  )
+                                })
+                              }
+                              style={{ fontWeight: 500 }}
+                            >
+                              Chỉnh sửa
+                            </Button>
+                          </Can>
+                        </Table.Td>
+                      )}
                     </Table.Tr>
                   ))
                 })
