@@ -13,11 +13,19 @@
 import { Route as rootRoute } from './routes/__root'
 import { Route as IndexImport } from './routes/index'
 import { Route as UserIndexImport } from './routes/user/index'
+import { Route as SalesIndexImport } from './routes/sales/index'
 import { Route as PostauthIndexImport } from './routes/postauth/index'
 import { Route as MarketingStorageIndexImport } from './routes/marketing-storage/index'
 import { Route as LivestreamIndexImport } from './routes/livestream/index'
 import { Route as LandingIndexImport } from './routes/landing/index'
 import { Route as AccessDeniedIndexImport } from './routes/access-denied/index'
+import { Route as SalesPriceIndexImport } from './routes/sales/price/index'
+import { Route as SalesOrdersIndexImport } from './routes/sales/orders/index'
+import { Route as SalesMessagesIndexImport } from './routes/sales/messages/index'
+import { Route as SalesItemsIndexImport } from './routes/sales/items/index'
+import { Route as SalesFunnelIndexImport } from './routes/sales/funnel/index'
+import { Route as SalesDashboardIndexImport } from './routes/sales/dashboard/index'
+import { Route as SalesChannelsIndexImport } from './routes/sales/channels/index'
 import { Route as MarketingStorageTasksIndexImport } from './routes/marketing-storage/tasks/index'
 import { Route as MarketingStorageSystemLogsIndexImport } from './routes/marketing-storage/system-logs/index'
 import { Route as MarketingStorageStorageIndexImport } from './routes/marketing-storage/storage/index'
@@ -36,6 +44,7 @@ import { Route as LivestreamGoalsIndexImport } from './routes/livestream/goals/i
 import { Route as LivestreamChannelsIndexImport } from './routes/livestream/channels/index'
 import { Route as LivestreamCalendarIndexImport } from './routes/livestream/calendar/index'
 import { Route as LandingLandingPageIndexImport } from './routes/landing/landing-page/index'
+import { Route as SalesMessagesConversationIdImport } from './routes/sales/messages/$conversationId'
 
 // Create/Update Routes
 
@@ -48,6 +57,12 @@ const IndexRoute = IndexImport.update({
 const UserIndexRoute = UserIndexImport.update({
   id: '/user/',
   path: '/user/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const SalesIndexRoute = SalesIndexImport.update({
+  id: '/sales/',
+  path: '/sales/',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -78,6 +93,48 @@ const LandingIndexRoute = LandingIndexImport.update({
 const AccessDeniedIndexRoute = AccessDeniedIndexImport.update({
   id: '/access-denied/',
   path: '/access-denied/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const SalesPriceIndexRoute = SalesPriceIndexImport.update({
+  id: '/sales/price/',
+  path: '/sales/price/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const SalesOrdersIndexRoute = SalesOrdersIndexImport.update({
+  id: '/sales/orders/',
+  path: '/sales/orders/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const SalesMessagesIndexRoute = SalesMessagesIndexImport.update({
+  id: '/sales/messages/',
+  path: '/sales/messages/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const SalesItemsIndexRoute = SalesItemsIndexImport.update({
+  id: '/sales/items/',
+  path: '/sales/items/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const SalesFunnelIndexRoute = SalesFunnelIndexImport.update({
+  id: '/sales/funnel/',
+  path: '/sales/funnel/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const SalesDashboardIndexRoute = SalesDashboardIndexImport.update({
+  id: '/sales/dashboard/',
+  path: '/sales/dashboard/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const SalesChannelsIndexRoute = SalesChannelsIndexImport.update({
+  id: '/sales/channels/',
+  path: '/sales/channels/',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -199,6 +256,13 @@ const LandingLandingPageIndexRoute = LandingLandingPageIndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const SalesMessagesConversationIdRoute =
+  SalesMessagesConversationIdImport.update({
+    id: '/sales/messages/$conversationId',
+    path: '/sales/messages/$conversationId',
+    getParentRoute: () => rootRoute,
+  } as any)
+
 // Populate the FileRoutesByPath interface
 
 declare module '@tanstack/react-router' {
@@ -245,11 +309,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PostauthIndexImport
       parentRoute: typeof rootRoute
     }
+    '/sales/': {
+      id: '/sales/'
+      path: '/sales'
+      fullPath: '/sales'
+      preLoaderRoute: typeof SalesIndexImport
+      parentRoute: typeof rootRoute
+    }
     '/user/': {
       id: '/user/'
       path: '/user'
       fullPath: '/user'
       preLoaderRoute: typeof UserIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/sales/messages/$conversationId': {
+      id: '/sales/messages/$conversationId'
+      path: '/sales/messages/$conversationId'
+      fullPath: '/sales/messages/$conversationId'
+      preLoaderRoute: typeof SalesMessagesConversationIdImport
       parentRoute: typeof rootRoute
     }
     '/landing/landing-page/': {
@@ -378,6 +456,55 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MarketingStorageTasksIndexImport
       parentRoute: typeof rootRoute
     }
+    '/sales/channels/': {
+      id: '/sales/channels/'
+      path: '/sales/channels'
+      fullPath: '/sales/channels'
+      preLoaderRoute: typeof SalesChannelsIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/sales/dashboard/': {
+      id: '/sales/dashboard/'
+      path: '/sales/dashboard'
+      fullPath: '/sales/dashboard'
+      preLoaderRoute: typeof SalesDashboardIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/sales/funnel/': {
+      id: '/sales/funnel/'
+      path: '/sales/funnel'
+      fullPath: '/sales/funnel'
+      preLoaderRoute: typeof SalesFunnelIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/sales/items/': {
+      id: '/sales/items/'
+      path: '/sales/items'
+      fullPath: '/sales/items'
+      preLoaderRoute: typeof SalesItemsIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/sales/messages/': {
+      id: '/sales/messages/'
+      path: '/sales/messages'
+      fullPath: '/sales/messages'
+      preLoaderRoute: typeof SalesMessagesIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/sales/orders/': {
+      id: '/sales/orders/'
+      path: '/sales/orders'
+      fullPath: '/sales/orders'
+      preLoaderRoute: typeof SalesOrdersIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/sales/price/': {
+      id: '/sales/price/'
+      path: '/sales/price'
+      fullPath: '/sales/price'
+      preLoaderRoute: typeof SalesPriceIndexImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -390,7 +517,9 @@ export interface FileRoutesByFullPath {
   '/livestream': typeof LivestreamIndexRoute
   '/marketing-storage': typeof MarketingStorageIndexRoute
   '/postauth': typeof PostauthIndexRoute
+  '/sales': typeof SalesIndexRoute
   '/user': typeof UserIndexRoute
+  '/sales/messages/$conversationId': typeof SalesMessagesConversationIdRoute
   '/landing/landing-page': typeof LandingLandingPageIndexRoute
   '/livestream/calendar': typeof LivestreamCalendarIndexRoute
   '/livestream/channels': typeof LivestreamChannelsIndexRoute
@@ -409,6 +538,13 @@ export interface FileRoutesByFullPath {
   '/marketing-storage/storage': typeof MarketingStorageStorageIndexRoute
   '/marketing-storage/system-logs': typeof MarketingStorageSystemLogsIndexRoute
   '/marketing-storage/tasks': typeof MarketingStorageTasksIndexRoute
+  '/sales/channels': typeof SalesChannelsIndexRoute
+  '/sales/dashboard': typeof SalesDashboardIndexRoute
+  '/sales/funnel': typeof SalesFunnelIndexRoute
+  '/sales/items': typeof SalesItemsIndexRoute
+  '/sales/messages': typeof SalesMessagesIndexRoute
+  '/sales/orders': typeof SalesOrdersIndexRoute
+  '/sales/price': typeof SalesPriceIndexRoute
 }
 
 export interface FileRoutesByTo {
@@ -418,7 +554,9 @@ export interface FileRoutesByTo {
   '/livestream': typeof LivestreamIndexRoute
   '/marketing-storage': typeof MarketingStorageIndexRoute
   '/postauth': typeof PostauthIndexRoute
+  '/sales': typeof SalesIndexRoute
   '/user': typeof UserIndexRoute
+  '/sales/messages/$conversationId': typeof SalesMessagesConversationIdRoute
   '/landing/landing-page': typeof LandingLandingPageIndexRoute
   '/livestream/calendar': typeof LivestreamCalendarIndexRoute
   '/livestream/channels': typeof LivestreamChannelsIndexRoute
@@ -437,6 +575,13 @@ export interface FileRoutesByTo {
   '/marketing-storage/storage': typeof MarketingStorageStorageIndexRoute
   '/marketing-storage/system-logs': typeof MarketingStorageSystemLogsIndexRoute
   '/marketing-storage/tasks': typeof MarketingStorageTasksIndexRoute
+  '/sales/channels': typeof SalesChannelsIndexRoute
+  '/sales/dashboard': typeof SalesDashboardIndexRoute
+  '/sales/funnel': typeof SalesFunnelIndexRoute
+  '/sales/items': typeof SalesItemsIndexRoute
+  '/sales/messages': typeof SalesMessagesIndexRoute
+  '/sales/orders': typeof SalesOrdersIndexRoute
+  '/sales/price': typeof SalesPriceIndexRoute
 }
 
 export interface FileRoutesById {
@@ -447,7 +592,9 @@ export interface FileRoutesById {
   '/livestream/': typeof LivestreamIndexRoute
   '/marketing-storage/': typeof MarketingStorageIndexRoute
   '/postauth/': typeof PostauthIndexRoute
+  '/sales/': typeof SalesIndexRoute
   '/user/': typeof UserIndexRoute
+  '/sales/messages/$conversationId': typeof SalesMessagesConversationIdRoute
   '/landing/landing-page/': typeof LandingLandingPageIndexRoute
   '/livestream/calendar/': typeof LivestreamCalendarIndexRoute
   '/livestream/channels/': typeof LivestreamChannelsIndexRoute
@@ -466,6 +613,13 @@ export interface FileRoutesById {
   '/marketing-storage/storage/': typeof MarketingStorageStorageIndexRoute
   '/marketing-storage/system-logs/': typeof MarketingStorageSystemLogsIndexRoute
   '/marketing-storage/tasks/': typeof MarketingStorageTasksIndexRoute
+  '/sales/channels/': typeof SalesChannelsIndexRoute
+  '/sales/dashboard/': typeof SalesDashboardIndexRoute
+  '/sales/funnel/': typeof SalesFunnelIndexRoute
+  '/sales/items/': typeof SalesItemsIndexRoute
+  '/sales/messages/': typeof SalesMessagesIndexRoute
+  '/sales/orders/': typeof SalesOrdersIndexRoute
+  '/sales/price/': typeof SalesPriceIndexRoute
 }
 
 export interface FileRouteTypes {
@@ -477,7 +631,9 @@ export interface FileRouteTypes {
     | '/livestream'
     | '/marketing-storage'
     | '/postauth'
+    | '/sales'
     | '/user'
+    | '/sales/messages/$conversationId'
     | '/landing/landing-page'
     | '/livestream/calendar'
     | '/livestream/channels'
@@ -496,6 +652,13 @@ export interface FileRouteTypes {
     | '/marketing-storage/storage'
     | '/marketing-storage/system-logs'
     | '/marketing-storage/tasks'
+    | '/sales/channels'
+    | '/sales/dashboard'
+    | '/sales/funnel'
+    | '/sales/items'
+    | '/sales/messages'
+    | '/sales/orders'
+    | '/sales/price'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -504,7 +667,9 @@ export interface FileRouteTypes {
     | '/livestream'
     | '/marketing-storage'
     | '/postauth'
+    | '/sales'
     | '/user'
+    | '/sales/messages/$conversationId'
     | '/landing/landing-page'
     | '/livestream/calendar'
     | '/livestream/channels'
@@ -523,6 +688,13 @@ export interface FileRouteTypes {
     | '/marketing-storage/storage'
     | '/marketing-storage/system-logs'
     | '/marketing-storage/tasks'
+    | '/sales/channels'
+    | '/sales/dashboard'
+    | '/sales/funnel'
+    | '/sales/items'
+    | '/sales/messages'
+    | '/sales/orders'
+    | '/sales/price'
   id:
     | '__root__'
     | '/'
@@ -531,7 +703,9 @@ export interface FileRouteTypes {
     | '/livestream/'
     | '/marketing-storage/'
     | '/postauth/'
+    | '/sales/'
     | '/user/'
+    | '/sales/messages/$conversationId'
     | '/landing/landing-page/'
     | '/livestream/calendar/'
     | '/livestream/channels/'
@@ -550,6 +724,13 @@ export interface FileRouteTypes {
     | '/marketing-storage/storage/'
     | '/marketing-storage/system-logs/'
     | '/marketing-storage/tasks/'
+    | '/sales/channels/'
+    | '/sales/dashboard/'
+    | '/sales/funnel/'
+    | '/sales/items/'
+    | '/sales/messages/'
+    | '/sales/orders/'
+    | '/sales/price/'
   fileRoutesById: FileRoutesById
 }
 
@@ -560,7 +741,9 @@ export interface RootRouteChildren {
   LivestreamIndexRoute: typeof LivestreamIndexRoute
   MarketingStorageIndexRoute: typeof MarketingStorageIndexRoute
   PostauthIndexRoute: typeof PostauthIndexRoute
+  SalesIndexRoute: typeof SalesIndexRoute
   UserIndexRoute: typeof UserIndexRoute
+  SalesMessagesConversationIdRoute: typeof SalesMessagesConversationIdRoute
   LandingLandingPageIndexRoute: typeof LandingLandingPageIndexRoute
   LivestreamCalendarIndexRoute: typeof LivestreamCalendarIndexRoute
   LivestreamChannelsIndexRoute: typeof LivestreamChannelsIndexRoute
@@ -579,6 +762,13 @@ export interface RootRouteChildren {
   MarketingStorageStorageIndexRoute: typeof MarketingStorageStorageIndexRoute
   MarketingStorageSystemLogsIndexRoute: typeof MarketingStorageSystemLogsIndexRoute
   MarketingStorageTasksIndexRoute: typeof MarketingStorageTasksIndexRoute
+  SalesChannelsIndexRoute: typeof SalesChannelsIndexRoute
+  SalesDashboardIndexRoute: typeof SalesDashboardIndexRoute
+  SalesFunnelIndexRoute: typeof SalesFunnelIndexRoute
+  SalesItemsIndexRoute: typeof SalesItemsIndexRoute
+  SalesMessagesIndexRoute: typeof SalesMessagesIndexRoute
+  SalesOrdersIndexRoute: typeof SalesOrdersIndexRoute
+  SalesPriceIndexRoute: typeof SalesPriceIndexRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -588,7 +778,9 @@ const rootRouteChildren: RootRouteChildren = {
   LivestreamIndexRoute: LivestreamIndexRoute,
   MarketingStorageIndexRoute: MarketingStorageIndexRoute,
   PostauthIndexRoute: PostauthIndexRoute,
+  SalesIndexRoute: SalesIndexRoute,
   UserIndexRoute: UserIndexRoute,
+  SalesMessagesConversationIdRoute: SalesMessagesConversationIdRoute,
   LandingLandingPageIndexRoute: LandingLandingPageIndexRoute,
   LivestreamCalendarIndexRoute: LivestreamCalendarIndexRoute,
   LivestreamChannelsIndexRoute: LivestreamChannelsIndexRoute,
@@ -609,6 +801,13 @@ const rootRouteChildren: RootRouteChildren = {
   MarketingStorageStorageIndexRoute: MarketingStorageStorageIndexRoute,
   MarketingStorageSystemLogsIndexRoute: MarketingStorageSystemLogsIndexRoute,
   MarketingStorageTasksIndexRoute: MarketingStorageTasksIndexRoute,
+  SalesChannelsIndexRoute: SalesChannelsIndexRoute,
+  SalesDashboardIndexRoute: SalesDashboardIndexRoute,
+  SalesFunnelIndexRoute: SalesFunnelIndexRoute,
+  SalesItemsIndexRoute: SalesItemsIndexRoute,
+  SalesMessagesIndexRoute: SalesMessagesIndexRoute,
+  SalesOrdersIndexRoute: SalesOrdersIndexRoute,
+  SalesPriceIndexRoute: SalesPriceIndexRoute,
 }
 
 export const routeTree = rootRoute
@@ -627,7 +826,9 @@ export const routeTree = rootRoute
         "/livestream/",
         "/marketing-storage/",
         "/postauth/",
+        "/sales/",
         "/user/",
+        "/sales/messages/$conversationId",
         "/landing/landing-page/",
         "/livestream/calendar/",
         "/livestream/channels/",
@@ -645,7 +846,14 @@ export const routeTree = rootRoute
         "/marketing-storage/orders-logs/",
         "/marketing-storage/storage/",
         "/marketing-storage/system-logs/",
-        "/marketing-storage/tasks/"
+        "/marketing-storage/tasks/",
+        "/sales/channels/",
+        "/sales/dashboard/",
+        "/sales/funnel/",
+        "/sales/items/",
+        "/sales/messages/",
+        "/sales/orders/",
+        "/sales/price/"
       ]
     },
     "/": {
@@ -666,8 +874,14 @@ export const routeTree = rootRoute
     "/postauth/": {
       "filePath": "postauth/index.tsx"
     },
+    "/sales/": {
+      "filePath": "sales/index.tsx"
+    },
     "/user/": {
       "filePath": "user/index.tsx"
+    },
+    "/sales/messages/$conversationId": {
+      "filePath": "sales/messages/$conversationId.tsx"
     },
     "/landing/landing-page/": {
       "filePath": "landing/landing-page/index.tsx"
@@ -722,6 +936,27 @@ export const routeTree = rootRoute
     },
     "/marketing-storage/tasks/": {
       "filePath": "marketing-storage/tasks/index.tsx"
+    },
+    "/sales/channels/": {
+      "filePath": "sales/channels/index.tsx"
+    },
+    "/sales/dashboard/": {
+      "filePath": "sales/dashboard/index.tsx"
+    },
+    "/sales/funnel/": {
+      "filePath": "sales/funnel/index.tsx"
+    },
+    "/sales/items/": {
+      "filePath": "sales/items/index.tsx"
+    },
+    "/sales/messages/": {
+      "filePath": "sales/messages/index.tsx"
+    },
+    "/sales/orders/": {
+      "filePath": "sales/orders/index.tsx"
+    },
+    "/sales/price/": {
+      "filePath": "sales/price/index.tsx"
     }
   }
 }

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router"
-import { LivestreamLayout } from "../../../components/layouts/LivestreamLayout"
+import { SalesLayout } from "../../../components/layouts/SalesLayout"
 import { useSalesChannels } from "../../../hooks/useSalesChannels"
 import { useQuery, useMutation } from "@tanstack/react-query"
 import { Box, Button, rem, Text, ActionIcon } from "@mantine/core"
@@ -16,7 +16,7 @@ import { format } from "date-fns"
 
 type SalesChannel = SearchSalesChannelResponse["data"][0]
 
-export const Route = createFileRoute("/livestream/channels/")({
+export const Route = createFileRoute("/sales/channels/")({
   component: RouteComponent
 })
 
@@ -133,8 +133,10 @@ function RouteComponent() {
     }
   ]
 
+  console.log(channels)
+
   return (
-    <LivestreamLayout>
+    <SalesLayout>
       <Box
         mt={40}
         mx="auto"
@@ -186,6 +188,6 @@ function RouteComponent() {
           />
         </Box>
       </Box>
-    </LivestreamLayout>
+    </SalesLayout>
   )
 }

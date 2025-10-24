@@ -4,6 +4,8 @@ export const NAVS_URL = "/marketing-storage"
 export const LANDING_NAVS_URL = "/landing"
 /** @constant */
 export const LIVESTREAM_NAVS_URL = "/livestream"
+/** @constant */
+export const SALES_NAVS_URL = "/sales"
 
 /** @constant */
 export const NAVS = [
@@ -119,5 +121,39 @@ export const LIVESTREAM_NAVS = [
     label: "Kênh livestream",
     roles: ["admin", "livestream-leader", "system-emp"],
     icon: "IconAt"
+  }
+]
+
+/** @constant */
+export const SALES_NAVS = [
+  {
+    to: `${SALES_NAVS_URL}/funnel`,
+    label: "Funnel khách",
+    roles: ["admin", "sales-emp", "system-emp"],
+    icon: "IconChartFunnel"
+  },
+  {
+    to: `${SALES_NAVS_URL}/orders`,
+    label: "Đơn hàng",
+    roles: ["admin", "sales-emp", "system-emp"],
+    icon: "IconClipboardList"
+  },
+  {
+    to: `${SALES_NAVS_URL}/channels`,
+    label: "Kênh bán hàng",
+    roles: ["admin", "sales-emp", "system-emp"],
+    icon: "IconAt"
+  },
+  {
+    to: `${SALES_NAVS_URL}/items`,
+    label: "Mặt hàng",
+    roles: ["admin", "sales-emp", "system-emp"],
+    icon: "IconPackage"
+  },
+  {
+    to: `${SALES_NAVS_URL}/dashboard`,
+    label: "Chỉ số",
+    roles: ["admin", "sales-emp", "system-emp"],
+    icon: "IconChartBar"
   }
 ]
