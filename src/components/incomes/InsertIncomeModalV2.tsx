@@ -7,11 +7,9 @@ import {
   Text,
   Paper,
   CloseButton,
-  Box,
   Loader,
   Tooltip,
-  Alert,
-  SimpleGrid
+  Alert
 } from "@mantine/core"
 import { Dropzone, FileWithPath } from "@mantine/dropzone"
 import { DatePickerInput } from "@mantine/dates"
@@ -19,8 +17,6 @@ import { IconCheck, IconX } from "@tabler/icons-react"
 import { useMutation } from "@tanstack/react-query"
 import { useIncomes } from "../../hooks/useIncomes"
 import { CToast } from "../common/CToast"
-import { CreateDailyAdsRequest } from "../../hooks/models"
-import { useDailyAds } from "../../hooks/useDailyAds"
 import { modals } from "@mantine/modals"
 
 type FileStatus = "pending" | "uploading" | "success" | "error"
@@ -34,35 +30,16 @@ const LABELS = {
   sourceSplit: "File tách nguồn"
 }
 
-const ADS_FILE_LABELS = {
-  yesterdayLiveAdsCostFileBefore4pm: "Hôm qua Live Ads (trước 4pm)",
-  yesterdayShopAdsCostFileBefore4pm: "Hôm qua Shop Ads (trước 4pm)",
-  yesterdayLiveAdsCostFile: "Hôm qua Live Ads (cả ngày)",
-  yesterdayShopAdsCostFile: "Hôm qua Shop Ads (cả ngày)",
-  todayLiveAdsCostFileBefore4pm: "Hôm nay Live Ads (trước 4pm)",
-  todayShopAdsCostFileBefore4pm: "Hôm nay Shop Ads (trước 4pm)"
-}
-
 interface Props {
   refetch: () => void
 }
 
 export const InsertIncomeModalV2 = ({ refetch }: Props) => {
   const { insertIncomeAndUpdateSource } = useIncomes()
-  const { createDailyAds } = useDailyAds()
   const [date, setDate] = useState<Date | null>(null)
   const [files, setFiles] = useState<Record<keyof typeof LABELS, FileState>>({
     totalIncome: { file: null, status: "pending" },
     sourceSplit: { file: null, status: "pending" }
-  })
-  const [insertIncomesCompleted, setInsertIncomesCompleted] = useState(false)
-  const [adsFiles, setAdsFiles] = useState<Record<string, FileState>>({
-    yesterdayLiveAdsCostFileBefore4pm: { file: null, status: "pending" },
-    yesterdayShopAdsCostFileBefore4pm: { file: null, status: "pending" },
-    yesterdayLiveAdsCostFile: { file: null, status: "pending" },
-    yesterdayShopAdsCostFile: { file: null, status: "pending" },
-    todayLiveAdsCostFileBefore4pm: { file: null, status: "pending" },
-    todayShopAdsCostFileBefore4pm: { file: null, status: "pending" }
   })
 
   const { mutateAsync: insertAndUpdate, isPending: insertingIncomes } =
@@ -80,8 +57,8 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
           totalIncome: { ...prev.totalIncome, status: "success" },
           sourceSplit: { ...prev.sourceSplit, status: "success" }
         }))
-        setInsertIncomesCompleted(true)
         CToast.success({ title: "Đã gửi files thành công" })
+        modals.closeAll()
       },
       onError: () => {
         setFiles((prev) => ({
@@ -95,24 +72,6 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
         refetch()
       }
     })
-
-  const { mutateAsync: createAds, isPending: submittingAds } = useMutation({
-    mutationFn: async ({
-      files: fileList,
-      req
-    }: {
-      files: File[]
-      req: CreateDailyAdsRequest
-    }) => createDailyAds(fileList, req),
-    onSuccess: () => {
-      CToast.success({ title: "Thêm doanh thu ads thành công!" })
-      modals.closeAll()
-      refetch()
-    },
-    onError: () => {
-      CToast.error({ title: "Có lỗi xảy ra khi thêm doanh thu ads" })
-    }
-  })
 
   const handleInsertIncomes = async () => {
     if (!date || !files.totalIncome.file || !files.sourceSplit.file) {
@@ -132,35 +91,13 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
     })
   }
 
-  const handleSubmitAdsCost = async () => {
-    const adsFileValues = Object.values(adsFiles)
-    const allAdsFilesUploaded = adsFileValues.every(
-      (fileState) => fileState.file !== null
-    )
-
-    if (!allAdsFilesUploaded) {
-      CToast.error({ title: "Vui lòng tải lên đủ 6 file ads" })
-      return
-    }
-
-    const fileList = Object.keys(ADS_FILE_LABELS)
-      .map((key) => adsFiles[key].file!)
-      .filter(Boolean)
-
-    await createAds({
-      files: fileList,
-      req: { date: date! }
-    })
-  }
-
   const disabledInsertIncomes =
     !date ||
     !files.totalIncome.file ||
     !files.sourceSplit.file ||
-    insertingIncomes ||
-    insertIncomesCompleted
+    insertingIncomes
 
-  const disableDropzone = insertingIncomes || insertIncomesCompleted
+  const disableDropzone = insertingIncomes
 
   const handleRemove = (key: keyof typeof LABELS) => {
     setFiles((prev) => ({ ...prev, [key]: { file: null, status: "pending" } }))
@@ -225,80 +162,6 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
     )
   }
 
-  const renderAdsDropzone = (key: string, label: string) => {
-    const { file, status } = adsFiles[key]
-    return (
-      <Paper key={key} p="md" radius="lg" shadow="sm" withBorder>
-        <Stack gap={6}>
-          <Text fw={600} size="sm">
-            {label}
-          </Text>
-          <Dropzone
-            onDrop={(filesArr) =>
-              setAdsFiles((prev) => ({
-                ...prev,
-                [key]: { file: filesArr[0], status: "pending" }
-              }))
-            }
-            maxFiles={1}
-            accept={[".xlsx", ".xls", ".csv"]}
-            className="flex min-h-[80px] items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 transition-colors hover:border-blue-400"
-            disabled={!!file || submittingAds}
-          >
-            {file ? (
-              <Group justify="space-between" w="100%">
-                <Tooltip label={file.name}>
-                  <Text size="xs" truncate>
-                    {file.name}
-                  </Text>
-                </Tooltip>
-                <Group gap={0}>
-                  {getStatusIcon(status)}
-                  {status === "pending" && (
-                    <CloseButton
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setAdsFiles((prev) => ({
-                          ...prev,
-                          [key]: { file: null, status: "pending" }
-                        }))
-                      }}
-                    />
-                  )}
-                </Group>
-              </Group>
-            ) : (
-              <Text size="xs" c="gray.6">
-                Click để chọn file
-              </Text>
-            )}
-          </Dropzone>
-          <Text size="xs" c="gray.5">
-            .xlsx, .xls, .csv
-          </Text>
-        </Stack>
-      </Paper>
-    )
-  }
-
-  const resetData = () => {
-    setDate(null)
-    setFiles({
-      totalIncome: { file: null, status: "pending" },
-      sourceSplit: { file: null, status: "pending" }
-    })
-    setAdsFiles({
-      yesterdayLiveAdsCostFileBefore4pm: { file: null, status: "pending" },
-      yesterdayShopAdsCostFileBefore4pm: { file: null, status: "pending" },
-      yesterdayLiveAdsCostFile: { file: null, status: "pending" },
-      yesterdayShopAdsCostFile: { file: null, status: "pending" },
-      todayLiveAdsCostFileBefore4pm: { file: null, status: "pending" },
-      todayShopAdsCostFileBefore4pm: { file: null, status: "pending" }
-    })
-    setInsertIncomesCompleted(false)
-  }
-
   return (
     <Stack gap="md" p="sm">
       <Text size="xl" fw={700}>
@@ -312,88 +175,35 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
         </Text>
       </Alert>
 
-      {!insertIncomesCompleted ? (
-        <>
-          <DatePickerInput
-            label="Chọn ngày"
-            size="md"
-            placeholder="Chọn ngày"
-            value={date}
-            onChange={setDate}
-            maxDate={new Date()}
-            withAsterisk
-            className="max-w-[210px]"
-            disabled={insertingIncomes}
-          />
+      <DatePickerInput
+        label="Chọn ngày"
+        size="md"
+        placeholder="Chọn ngày"
+        value={date}
+        onChange={setDate}
+        maxDate={new Date()}
+        withAsterisk
+        className="max-w-[210px]"
+        disabled={insertingIncomes}
+      />
 
-          <Stack align="start" justify="center" gap="sm">
-            {renderDropzone("totalIncome")}
-            <Divider orientation="vertical" />
-            {renderDropzone("sourceSplit")}
-          </Stack>
+      <Stack align="start" justify="center" gap="sm">
+        {renderDropzone("totalIncome")}
+        <Divider orientation="vertical" />
+        {renderDropzone("sourceSplit")}
+      </Stack>
 
-          <Group justify="end" mt="md">
-            <Button
-              onClick={handleInsertIncomes}
-              disabled={disabledInsertIncomes}
-              loading={insertingIncomes}
-              size="md"
-              radius="xl"
-            >
-              {insertingIncomes ? "Đang gửi..." : "Gửi files"}
-            </Button>
-          </Group>
-        </>
-      ) : (
-        <>
-          <Text size="lg" fw={600} mb={2}>
-            Tải lên file chi phí quảng cáo
-          </Text>
-
-          <Text mb={16} c="dimmed" ta="center">
-            Tải lên 6 file chi phí quảng cáo cho ngày{" "}
-            <strong>{date?.toLocaleDateString("vi-VN")}</strong>
-          </Text>
-
-          <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
-            {Object.entries(ADS_FILE_LABELS).map(([key, label]) =>
-              renderAdsDropzone(key, label)
-            )}
-          </SimpleGrid>
-
-          <Group justify="end" mt="md">
-            <Button
-              variant="outline"
-              onClick={resetData}
-              size="md"
-              radius="xl"
-              disabled={submittingAds}
-            >
-              Nhập lại từ đầu
-            </Button>
-            <Button
-              onClick={handleSubmitAdsCost}
-              loading={submittingAds}
-              disabled={
-                !Object.values(adsFiles).every((f) => f.file !== null) ||
-                submittingAds
-              }
-              size="md"
-              radius="xl"
-            >
-              Thêm doanh thu ads
-            </Button>
-          </Group>
-        </>
-      )}
-
-      {insertIncomesCompleted && (
-        <Box pt={4}>
-          <Text size="sm" c="teal" fw={500}>
-            Thêm doanh thu đã hoàn thành, bây giờ hãy thêm chi phí quảng cáo
-          </Text>
-        </Box>
-      )}
+      <Group justify="end" mt="md">
+        <Button
+          onClick={handleInsertIncomes}
+          disabled={disabledInsertIncomes}
+          loading={insertingIncomes}
+          size="md"
+          radius="xl"
+        >
+          {insertingIncomes ? "Đang gửi..." : "Gửi files"}
+        </Button>
+      </Group>
     </Stack>
   )
 }
