@@ -22,6 +22,7 @@ import { DatePickerInput } from "@mantine/dates"
 import { format } from "date-fns"
 import { modals } from "@mantine/modals"
 import { InsertIncomeModalV2 } from "./InsertIncomeModalV2"
+import { DailyAdsModal } from "./DailyAdsModal"
 import { IconDownload, IconPlus, IconX } from "@tabler/icons-react"
 import { DeleteIncomeModal } from "./DeleteIncomeModal"
 import { useProducts } from "../../hooks/useProducts"
@@ -240,6 +241,23 @@ export const Incomes = () => {
               leftSection={<IconPlus size={16} />}
             >
               Thêm doanh thu
+            </Button>
+          </Can>
+          <Can roles={["admin", "accounting-emp"]}>
+            <Button
+              onClick={() =>
+                modals.open({
+                  title: <b>Thêm chi phí quảng cáo</b>,
+                  children: <DailyAdsModal refetch={refetch} />,
+                  size: "xl"
+                })
+              }
+              size="md"
+              radius="xl"
+              leftSection={<IconPlus size={16} />}
+              color="teal"
+            >
+              Thêm chi phí ads
             </Button>
           </Can>
           <Can roles={["admin", "accounting-emp"]}>
