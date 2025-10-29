@@ -43,8 +43,21 @@ export const Incomes = () => {
     return d
   })
   const [endDate, setEndDate] = useState<Date | null>(new Date())
-  const { getIncomesByDateRange, exportXlsxIncomes } = useIncomes()
+  const { getIncomesByDateRange, exportXlsxIncomes, getRangeStats } =
+    useIncomes()
   const { searchProducts } = useProducts()
+
+  const startOfDayISO = (d: Date) => {
+    const dt = new Date(d)
+    dt.setHours(0, 0, 0, 0)
+    return dt.toISOString()
+  }
+
+  const endOfDayISO = (d: Date) => {
+    const dt = new Date(d)
+    dt.setHours(23, 59, 59, 999)
+    return dt.toISOString()
+  }
 
   const {
     data: incomesData,
@@ -80,6 +93,19 @@ export const Incomes = () => {
     queryKey: ["searchProducts", ""],
     queryFn: () => searchProducts({ searchText: "", deleted: false }),
     select: (data) => data.data
+  })
+
+  const { data: rangeStatsData } = useQuery({
+    queryKey: ["getRangeStats", startDate, endDate],
+    queryFn: () =>
+      getRangeStats({
+        startDate: startDate
+          ? startOfDayISO(startDate)
+          : startOfDayISO(new Date()),
+        endDate: endDate ? endOfDayISO(endDate) : endOfDayISO(new Date())
+      }),
+    select: (data) => data.data,
+    enabled: !!startDate && !!endDate
   })
 
   const { mutate: exportXlsx } = useMutation({
@@ -186,17 +212,6 @@ export const Incomes = () => {
     affiliate: "red",
     "affiliate-ads": "violet",
     other: "blue"
-  }
-
-  const startOfDayISO = (d: Date) => {
-    const dt = new Date(d)
-    dt.setHours(0, 0, 0, 0)
-    return dt.toISOString()
-  }
-  const endOfDayISO = (d: Date) => {
-    const dt = new Date(d)
-    dt.setHours(23, 59, 59, 999)
-    return dt.toISOString()
   }
 
   return (
@@ -368,6 +383,38 @@ export const Incomes = () => {
             </Button>
           </Group>
         </Paper>
+
+        {/* Stats Display */}
+        {rangeStatsData && (
+          <Paper withBorder p="lg" radius="md" mb={16} bg="blue.0">
+            <Group justify="space-around" align="center" gap="xl" wrap="wrap">
+              <Box style={{ textAlign: "center" }}>
+                <Text size="sm" c="dimmed" mb={4}>
+                  Tổng doanh thu (trước CK)
+                </Text>
+                <Text size="xl" fw={700} c="blue.7">
+                  {(
+                    rangeStatsData.current?.beforeDiscount?.totalIncome ?? 0
+                  ).toLocaleString()}{" "}
+                  VNĐ
+                </Text>
+              </Box>
+              <Divider orientation="vertical" />
+              <Box style={{ textAlign: "center" }}>
+                <Text size="sm" c="dimmed" mb={4}>
+                  Tổng chi phí Ads
+                </Text>
+                <Text size="xl" fw={700} c="orange.7">
+                  {(
+                    (rangeStatsData.current?.ads?.liveAdsCost ?? 0) +
+                    (rangeStatsData.current?.ads?.shopAdsCost ?? 0)
+                  ).toLocaleString()}{" "}
+                  VNĐ
+                </Text>
+              </Box>
+            </Group>
+          </Paper>
+        )}
       </Box>
 
       {/* Data Table */}
