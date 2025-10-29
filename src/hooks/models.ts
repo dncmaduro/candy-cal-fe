@@ -1710,6 +1710,24 @@ export interface CreateDailyAdsRequest {
 }
 
 /** @interface */
+export interface CreateDailyAdsWithSavedAdsCostRequest {
+  date: Date
+}
+
+/** @interface */
+export interface GetPreviousDailyAdsBefore4pmRequest {
+  date: Date
+}
+
+/** @interface */
+export interface GetPreviousDailyAdsBefore4pmResponse {
+  date: string
+  before4pmLiveAdsCost: number
+  before4pmShopAdsCost: number
+  totalBefore4pmCost: number
+}
+
+/** @interface */
 export interface InsertIncomeAndUpdateSourceRequest {
   date: Date
 }
