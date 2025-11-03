@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router"
-import { LivestreamLayout } from "../../../components/layouts/LivestreamLayout"
+import { SalesLayout } from "../../../components/layouts/SalesLayout"
+import { useSalesChannels } from "../../../hooks/useSalesChannels"
 import { useQuery, useMutation } from "@tanstack/react-query"
 import { Box, Button, rem, Text, ActionIcon } from "@mantine/core"
 import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react"
@@ -7,36 +8,29 @@ import { modals } from "@mantine/modals"
 import { Can } from "../../../components/common/Can"
 import { CToast } from "../../../components/common/CToast"
 import { useState } from "react"
-import { LivestreamChannelModal } from "../../../components/livestream/LivestreamChannelModal"
+import type { SearchSalesChannelResponse } from "../../../hooks/models"
+import { SalesChannelModal } from "../../../components/sales/SalesChannelModal"
 import { CDataTable } from "../../../components/common/CDataTable"
 import { ColumnDef } from "@tanstack/react-table"
 import { format } from "date-fns"
-import { useLivestream } from "../../../hooks/useLivestream"
 
-type LivestreamChannel = {
-  _id: string
-  name: string
-  username: string
-  link: string
-  createdAt?: string
-  updatedAt?: string
-}
+type SalesChannel = SearchSalesChannelResponse["data"][0]
 
-export const Route = createFileRoute("/livestream/channels/")({
+export const Route = createFileRoute("/sales/channels/")({
   component: RouteComponent
 })
 
 function RouteComponent() {
-  const { searchLivestreamChannels, deleteLivestreamChannel } = useLivestream()
+  const { searchSalesChannels, deleteSalesChannel } = useSalesChannels()
 
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(10)
   const [searchText, setSearchText] = useState("")
 
   const { data: channelsData, refetch } = useQuery({
-    queryKey: ["searchLivestreamChannels", page, limit, searchText],
+    queryKey: ["searchSalesChannels", page, limit, searchText],
     queryFn: () =>
-      searchLivestreamChannels({
+      searchSalesChannels({
         page,
         limit,
         searchText: searchText || undefined
@@ -45,9 +39,9 @@ function RouteComponent() {
   })
 
   const { mutate: deleteChannel } = useMutation({
-    mutationFn: deleteLivestreamChannel,
+    mutationFn: deleteSalesChannel,
     onSuccess: () => {
-      CToast.success({ title: "Xóa kênh livestream thành công" })
+      CToast.success({ title: "Xóa kênh bán hàng thành công" })
       refetch()
     },
     onError: () => {
@@ -55,58 +49,40 @@ function RouteComponent() {
     }
   })
 
-  const openChannelModal = (channel?: LivestreamChannel) => {
+  const openChannelModal = (channel?: SalesChannel) => {
     modals.open({
       title: (
-        <b>
-          {channel ? "Chỉnh sửa kênh livestream" : "Tạo kênh livestream mới"}
-        </b>
+        <b>{channel ? "Chỉnh sửa kênh bán hàng" : "Tạo kênh bán hàng mới"}</b>
       ),
-      children: <LivestreamChannelModal channel={channel} refetch={refetch} />,
+      children: <SalesChannelModal channel={channel} refetch={refetch} />,
       size: "lg"
     })
   }
 
-  const confirmDelete = (channel: LivestreamChannel) => {
+  const confirmDelete = (channel: SalesChannel) => {
     modals.openConfirmModal({
       title: "Xác nhận xóa",
       children: (
         <Text size="sm">
-          Bạn có chắc chắn muốn xóa kênh <strong>{channel.name}</strong>?
+          Bạn có chắc chắn muốn xóa kênh <strong>{channel.channelName}</strong>?
         </Text>
       ),
       labels: { confirm: "Xóa", cancel: "Hủy" },
       confirmProps: { color: "red" },
-      onConfirm: () => deleteChannel({ id: channel._id })
+      onConfirm: () => deleteChannel(channel._id)
     })
   }
 
   const channels = channelsData?.data || []
   const total = channelsData?.total || 0
 
-  const columns: ColumnDef<LivestreamChannel>[] = [
+  const columns: ColumnDef<SalesChannel>[] = [
     {
-      accessorKey: "name",
+      accessorKey: "channelName",
       header: "Tên kênh",
       cell: ({ row }) => (
         <Text fw={600} size="sm">
-          {row.original.name}
-        </Text>
-      )
-    },
-    {
-      accessorKey: "username",
-      header: "Username",
-      cell: ({ row }) => <Text size="sm">{row.original.username}</Text>
-    },
-    {
-      accessorKey: "link",
-      header: "Link",
-      cell: ({ row }) => (
-        <Text size="sm" c="blue" className="max-w-xs truncate">
-          <a href={row.original.link} target="_blank" rel="noopener noreferrer">
-            {row.original.link}
-          </a>
+          {row.original.channelName}
         </Text>
       )
     },
@@ -115,9 +91,7 @@ function RouteComponent() {
       header: "Ngày tạo",
       cell: ({ row }) => (
         <Text size="sm" c="dimmed">
-          {row.original.createdAt
-            ? format(new Date(row.original.createdAt), "dd/MM/yyyy HH:mm")
-            : "-"}
+          {format(new Date(row.original.createdAt), "dd/MM/yyyy HH:mm")}
         </Text>
       )
     },
@@ -126,9 +100,7 @@ function RouteComponent() {
       header: "Cập nhật",
       cell: ({ row }) => (
         <Text size="sm" c="dimmed">
-          {row.original.updatedAt
-            ? format(new Date(row.original.updatedAt), "dd/MM/yyyy HH:mm")
-            : "-"}
+          {format(new Date(row.original.updatedAt), "dd/MM/yyyy HH:mm")}
         </Text>
       )
     },
@@ -136,7 +108,7 @@ function RouteComponent() {
       id: "actions",
       header: "Thao tác",
       cell: ({ row }) => (
-        <Can roles={["admin", "sales-leader"]}>
+        <Can roles={["admin", "sale-leader"]}>
           <div className="flex gap-2">
             <ActionIcon
               variant="light"
@@ -161,8 +133,10 @@ function RouteComponent() {
     }
   ]
 
+  console.log(channels)
+
   return (
-    <LivestreamLayout>
+    <SalesLayout>
       <Box
         mt={40}
         mx="auto"
@@ -178,10 +152,10 @@ function RouteComponent() {
         {/* Header Section */}
         <Box pt={32} pb={16} px={{ base: 8, md: 28 }}>
           <Text fw={700} fz="xl" mb={2}>
-            Quản lý kênh livestream
+            Quản lý kênh bán hàng
           </Text>
           <Text c="dimmed" fz="sm">
-            Quản lý thông tin các kênh livestream
+            Quản lý thông tin các kênh bán hàng
           </Text>
         </Box>
 
@@ -200,7 +174,7 @@ function RouteComponent() {
             initialPageSize={limit}
             pageSizeOptions={[10, 20, 50, 100]}
             extraActions={
-              <Can roles={["admin", "sales-leader"]}>
+              <Can roles={["admin", "sale-leader"]}>
                 <Button
                   onClick={() => openChannelModal()}
                   leftSection={<IconPlus size={16} />}
@@ -214,6 +188,6 @@ function RouteComponent() {
           />
         </Box>
       </Box>
-    </LivestreamLayout>
+    </SalesLayout>
   )
 }

@@ -1,5 +1,6 @@
 import { getFromCookies } from "../store/cookies"
 import { useUserStore } from "../store/userStore"
+import { toQueryString } from "../utils/toQuery"
 import { callApi } from "./axios"
 import {
   ChangePasswordRequest,
@@ -9,6 +10,8 @@ import {
   GetMeResponse,
   LoginRequest,
   LoginResponse,
+  PublicSearchUsersRequest,
+  PublicSearchUsersResponse,
   RefreshTokenRequest,
   RefreshTokenResponse,
   UpdateAvatarRequest,
@@ -80,6 +83,16 @@ export const useUsers = () => {
     })
   }
 
+  const publicSearchUser = async (req: PublicSearchUsersRequest) => {
+    const query = toQueryString(req)
+
+    return callApi<PublicSearchUsersRequest, PublicSearchUsersResponse>({
+      method: "GET",
+      path: `/v1/users/publicsearch?${query}`,
+      token: accessToken
+    })
+  }
+
   return {
     login,
     getNewToken,
@@ -87,6 +100,7 @@ export const useUsers = () => {
     getMe,
     changePassword,
     updateAvatar,
-    updateUser
+    updateUser,
+    publicSearchUser
   }
 }
