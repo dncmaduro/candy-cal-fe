@@ -3,6 +3,7 @@ import {
   IconAppWindow,
   IconPackages,
   IconPower,
+  IconShoppingBag,
   IconUser,
   IconVideo
 } from "@tabler/icons-react"
@@ -27,7 +28,8 @@ export const UserMenu = () => {
     "accounting-emp": "Nhân viên kế toán",
     "system-emp": "Nhân viên hệ thống",
     "livestream-leader": "Trưởng nhóm livestream",
-    "livestream-emp": "Nhân viên livestream"
+    "livestream-emp": "Nhân viên livestream",
+    "sales-emp": "Nhân viên sales"
   }
 
   const APPS = [
@@ -45,6 +47,11 @@ export const UserMenu = () => {
       to: "/livestream",
       label: "Livestream",
       icon: <IconVideo size={18} />
+    },
+    {
+      to: "/sales",
+      label: "Sales",
+      icon: <IconShoppingBag size={18} />
     }
   ]
 
