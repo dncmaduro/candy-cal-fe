@@ -79,11 +79,15 @@ const SalesIndexRoute = SalesIndexImport.update({
   path: "/sales/",
   getParentRoute: () => rootRoute
 } as any)
-
-const PostauthIndexRoute = PostauthIndexImport.update({
+const PrivacyPolicyIndexRoute = PrivacyPolicyIndexRouteImport.update({
+  id: "/privacy-policy/",
+  path: "/privacy-policy/",
+  getParentRoute: () => rootRouteImport
+} as any)
+const PostauthIndexRoute = PostauthIndexRouteImport.update({
   id: "/postauth/",
   path: "/postauth/",
-  getParentRoute: () => rootRoute
+  getParentRoute: () => rootRouteImport
 } as any)
 
 const MarketingStorageIndexRoute = MarketingStorageIndexImport.update({
@@ -166,21 +170,18 @@ const MarketingStorageSystemLogsIndexRoute =
     path: "/marketing-storage/system-logs/",
     getParentRoute: () => rootRoute
   } as any)
-
 const MarketingStorageStorageIndexRoute =
   MarketingStorageStorageIndexImport.update({
     id: "/marketing-storage/storage/",
     path: "/marketing-storage/storage/",
     getParentRoute: () => rootRoute
   } as any)
-
 const MarketingStorageOrdersLogsIndexRoute =
   MarketingStorageOrdersLogsIndexImport.update({
     id: "/marketing-storage/orders-logs/",
     path: "/marketing-storage/orders-logs/",
     getParentRoute: () => rootRoute
   } as any)
-
 const MarketingStorageOldLogsIndexRoute =
   MarketingStorageOldLogsIndexImport.update({
     id: "/marketing-storage/old-logs/",
@@ -200,14 +201,12 @@ const MarketingStorageIncomesIndexRoute =
     path: "/marketing-storage/incomes/",
     getParentRoute: () => rootRoute
   } as any)
-
 const MarketingStorageDeliveredRequestsIndexRoute =
   MarketingStorageDeliveredRequestsIndexImport.update({
     id: "/marketing-storage/delivered-requests/",
     path: "/marketing-storage/delivered-requests/",
     getParentRoute: () => rootRoute
   } as any)
-
 const MarketingStorageCalfileIndexRoute =
   MarketingStorageCalfileIndexImport.update({
     id: "/marketing-storage/calfile/",
@@ -269,7 +268,6 @@ const LandingLandingPageIndexRoute = LandingLandingPageIndexImport.update({
   path: "/landing/landing-page/",
   getParentRoute: () => rootRoute
 } as any)
-
 const SalesMessagesConversationIdRoute =
   SalesMessagesConversationIdImport.update({
     id: "/sales/messages/$conversationId",
@@ -545,6 +543,7 @@ export interface FileRoutesByFullPath {
   "/livestream": typeof LivestreamIndexRoute
   "/marketing-storage": typeof MarketingStorageIndexRoute
   "/postauth": typeof PostauthIndexRoute
+  "/privacy-policy": typeof PrivacyPolicyIndexRoute
   "/sales": typeof SalesIndexRoute
   "/user": typeof UserIndexRoute
   "/sales/messages/$conversationId": typeof SalesMessagesConversationIdRoute
@@ -574,7 +573,6 @@ export interface FileRoutesByFullPath {
   "/sales/orders": typeof SalesOrdersIndexRoute
   "/sales/price": typeof SalesPriceIndexRoute
 }
-
 export interface FileRoutesByTo {
   "/": typeof IndexRoute
   "/access-denied": typeof AccessDeniedIndexRoute
@@ -582,6 +580,7 @@ export interface FileRoutesByTo {
   "/livestream": typeof LivestreamIndexRoute
   "/marketing-storage": typeof MarketingStorageIndexRoute
   "/postauth": typeof PostauthIndexRoute
+  "/privacy-policy": typeof PrivacyPolicyIndexRoute
   "/sales": typeof SalesIndexRoute
   "/user": typeof UserIndexRoute
   "/sales/messages/$conversationId": typeof SalesMessagesConversationIdRoute
@@ -611,15 +610,15 @@ export interface FileRoutesByTo {
   "/sales/orders": typeof SalesOrdersIndexRoute
   "/sales/price": typeof SalesPriceIndexRoute
 }
-
 export interface FileRoutesById {
-  __root__: typeof rootRoute
+  __root__: typeof rootRouteImport
   "/": typeof IndexRoute
   "/access-denied/": typeof AccessDeniedIndexRoute
   "/landing/": typeof LandingIndexRoute
   "/livestream/": typeof LivestreamIndexRoute
   "/marketing-storage/": typeof MarketingStorageIndexRoute
   "/postauth/": typeof PostauthIndexRoute
+  "/privacy-policy/": typeof PrivacyPolicyIndexRoute
   "/sales/": typeof SalesIndexRoute
   "/user/": typeof UserIndexRoute
   "/sales/messages/$conversationId": typeof SalesMessagesConversationIdRoute
@@ -649,7 +648,6 @@ export interface FileRoutesById {
   "/sales/orders/": typeof SalesOrdersIndexRoute
   "/sales/price/": typeof SalesPriceIndexRoute
 }
-
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
@@ -659,6 +657,7 @@ export interface FileRouteTypes {
     | "/livestream"
     | "/marketing-storage"
     | "/postauth"
+    | "/privacy-policy"
     | "/sales"
     | "/user"
     | "/sales/messages/$conversationId"
@@ -695,6 +694,7 @@ export interface FileRouteTypes {
     | "/livestream"
     | "/marketing-storage"
     | "/postauth"
+    | "/privacy-policy"
     | "/sales"
     | "/user"
     | "/sales/messages/$conversationId"
@@ -731,6 +731,7 @@ export interface FileRouteTypes {
     | "/livestream/"
     | "/marketing-storage/"
     | "/postauth/"
+    | "/privacy-policy/"
     | "/sales/"
     | "/user/"
     | "/sales/messages/$conversationId"
@@ -761,7 +762,6 @@ export interface FileRouteTypes {
     | "/sales/price/"
   fileRoutesById: FileRoutesById
 }
-
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRouteWithChildren
@@ -771,6 +771,7 @@ export interface RootRouteChildren {
   LivestreamIndexRoute: typeof LivestreamIndexRoute
   MarketingStorageIndexRoute: typeof MarketingStorageIndexRoute
   PostauthIndexRoute: typeof PostauthIndexRoute
+  PrivacyPolicyIndexRoute: typeof PrivacyPolicyIndexRoute
   SalesIndexRoute: typeof SalesIndexRoute
   UserIndexRoute: typeof UserIndexRoute
   SalesMessagesConversationIdRoute: typeof SalesMessagesConversationIdRoute
@@ -801,6 +802,256 @@ export interface RootRouteChildren {
   SalesPriceIndexRoute: typeof SalesPriceIndexRoute
 }
 
+declare module "@tanstack/react-router" {
+  interface FileRoutesByPath {
+    "/": {
+      id: "/"
+      path: "/"
+      fullPath: "/"
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/user/": {
+      id: "/user/"
+      path: "/user"
+      fullPath: "/user"
+      preLoaderRoute: typeof UserIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/sales/": {
+      id: "/sales/"
+      path: "/sales"
+      fullPath: "/sales"
+      preLoaderRoute: typeof SalesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/privacy-policy/": {
+      id: "/privacy-policy/"
+      path: "/privacy-policy"
+      fullPath: "/privacy-policy"
+      preLoaderRoute: typeof PrivacyPolicyIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/postauth/": {
+      id: "/postauth/"
+      path: "/postauth"
+      fullPath: "/postauth"
+      preLoaderRoute: typeof PostauthIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/marketing-storage/": {
+      id: "/marketing-storage/"
+      path: "/marketing-storage"
+      fullPath: "/marketing-storage"
+      preLoaderRoute: typeof MarketingStorageIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/livestream/": {
+      id: "/livestream/"
+      path: "/livestream"
+      fullPath: "/livestream"
+      preLoaderRoute: typeof LivestreamIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/landing/": {
+      id: "/landing/"
+      path: "/landing"
+      fullPath: "/landing"
+      preLoaderRoute: typeof LandingIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/access-denied/": {
+      id: "/access-denied/"
+      path: "/access-denied"
+      fullPath: "/access-denied"
+      preLoaderRoute: typeof AccessDeniedIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/sales/price/": {
+      id: "/sales/price/"
+      path: "/sales/price"
+      fullPath: "/sales/price"
+      preLoaderRoute: typeof SalesPriceIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/sales/orders/": {
+      id: "/sales/orders/"
+      path: "/sales/orders"
+      fullPath: "/sales/orders"
+      preLoaderRoute: typeof SalesOrdersIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/sales/messages/": {
+      id: "/sales/messages/"
+      path: "/sales/messages"
+      fullPath: "/sales/messages"
+      preLoaderRoute: typeof SalesMessagesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/sales/items/": {
+      id: "/sales/items/"
+      path: "/sales/items"
+      fullPath: "/sales/items"
+      preLoaderRoute: typeof SalesItemsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/sales/funnel/": {
+      id: "/sales/funnel/"
+      path: "/sales/funnel"
+      fullPath: "/sales/funnel"
+      preLoaderRoute: typeof SalesFunnelIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/sales/dashboard/": {
+      id: "/sales/dashboard/"
+      path: "/sales/dashboard"
+      fullPath: "/sales/dashboard"
+      preLoaderRoute: typeof SalesDashboardIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/sales/channels/": {
+      id: "/sales/channels/"
+      path: "/sales/channels"
+      fullPath: "/sales/channels"
+      preLoaderRoute: typeof SalesChannelsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/marketing-storage/tasks/": {
+      id: "/marketing-storage/tasks/"
+      path: "/marketing-storage/tasks"
+      fullPath: "/marketing-storage/tasks"
+      preLoaderRoute: typeof MarketingStorageTasksIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/marketing-storage/system-logs/": {
+      id: "/marketing-storage/system-logs/"
+      path: "/marketing-storage/system-logs"
+      fullPath: "/marketing-storage/system-logs"
+      preLoaderRoute: typeof MarketingStorageSystemLogsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/marketing-storage/storage/": {
+      id: "/marketing-storage/storage/"
+      path: "/marketing-storage/storage"
+      fullPath: "/marketing-storage/storage"
+      preLoaderRoute: typeof MarketingStorageStorageIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/marketing-storage/orders-logs/": {
+      id: "/marketing-storage/orders-logs/"
+      path: "/marketing-storage/orders-logs"
+      fullPath: "/marketing-storage/orders-logs"
+      preLoaderRoute: typeof MarketingStorageOrdersLogsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/marketing-storage/old-logs/": {
+      id: "/marketing-storage/old-logs/"
+      path: "/marketing-storage/old-logs"
+      fullPath: "/marketing-storage/old-logs"
+      preLoaderRoute: typeof MarketingStorageOldLogsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/marketing-storage/logs/": {
+      id: "/marketing-storage/logs/"
+      path: "/marketing-storage/logs"
+      fullPath: "/marketing-storage/logs"
+      preLoaderRoute: typeof MarketingStorageLogsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/marketing-storage/incomes/": {
+      id: "/marketing-storage/incomes/"
+      path: "/marketing-storage/incomes"
+      fullPath: "/marketing-storage/incomes"
+      preLoaderRoute: typeof MarketingStorageIncomesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/marketing-storage/delivered-requests/": {
+      id: "/marketing-storage/delivered-requests/"
+      path: "/marketing-storage/delivered-requests"
+      fullPath: "/marketing-storage/delivered-requests"
+      preLoaderRoute: typeof MarketingStorageDeliveredRequestsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/marketing-storage/calfile/": {
+      id: "/marketing-storage/calfile/"
+      path: "/marketing-storage/calfile"
+      fullPath: "/marketing-storage/calfile"
+      preLoaderRoute: typeof MarketingStorageCalfileIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/marketing-storage/cal/": {
+      id: "/marketing-storage/cal/"
+      path: "/marketing-storage/cal"
+      fullPath: "/marketing-storage/cal"
+      preLoaderRoute: typeof MarketingStorageCalIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/marketing-storage/accounting-storage/": {
+      id: "/marketing-storage/accounting-storage/"
+      path: "/marketing-storage/accounting-storage"
+      fullPath: "/marketing-storage/accounting-storage"
+      preLoaderRoute: typeof MarketingStorageAccountingStorageIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/livestream/stats/": {
+      id: "/livestream/stats/"
+      path: "/livestream/stats"
+      fullPath: "/livestream/stats"
+      preLoaderRoute: typeof LivestreamStatsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/livestream/periods/": {
+      id: "/livestream/periods/"
+      path: "/livestream/periods"
+      fullPath: "/livestream/periods"
+      preLoaderRoute: typeof LivestreamPeriodsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/livestream/members/": {
+      id: "/livestream/members/"
+      path: "/livestream/members"
+      fullPath: "/livestream/members"
+      preLoaderRoute: typeof LivestreamMembersIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/livestream/goals/": {
+      id: "/livestream/goals/"
+      path: "/livestream/goals"
+      fullPath: "/livestream/goals"
+      preLoaderRoute: typeof LivestreamGoalsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/livestream/channels/": {
+      id: "/livestream/channels/"
+      path: "/livestream/channels"
+      fullPath: "/livestream/channels"
+      preLoaderRoute: typeof LivestreamChannelsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/livestream/calendar/": {
+      id: "/livestream/calendar/"
+      path: "/livestream/calendar"
+      fullPath: "/livestream/calendar"
+      preLoaderRoute: typeof LivestreamCalendarIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/landing/landing-page/": {
+      id: "/landing/landing-page/"
+      path: "/landing/landing-page"
+      fullPath: "/landing/landing-page"
+      preLoaderRoute: typeof LandingLandingPageIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/sales/messages/$conversationId": {
+      id: "/sales/messages/$conversationId"
+      path: "/sales/messages/$conversationId"
+      fullPath: "/sales/messages/$conversationId"
+      preLoaderRoute: typeof SalesMessagesConversationIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+  }
+}
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   PrivacyPolicyRoute: PrivacyPolicyRouteWithChildren,
@@ -810,6 +1061,7 @@ const rootRouteChildren: RootRouteChildren = {
   LivestreamIndexRoute: LivestreamIndexRoute,
   MarketingStorageIndexRoute: MarketingStorageIndexRoute,
   PostauthIndexRoute: PostauthIndexRoute,
+  PrivacyPolicyIndexRoute: PrivacyPolicyIndexRoute,
   SalesIndexRoute: SalesIndexRoute,
   UserIndexRoute: UserIndexRoute,
   SalesMessagesConversationIdRoute: SalesMessagesConversationIdRoute,
@@ -841,8 +1093,7 @@ const rootRouteChildren: RootRouteChildren = {
   SalesOrdersIndexRoute: SalesOrdersIndexRoute,
   SalesPriceIndexRoute: SalesPriceIndexRoute
 }
-
-export const routeTree = rootRoute
+export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
 

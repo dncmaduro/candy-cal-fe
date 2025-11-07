@@ -1,13 +1,15 @@
 import {
+  Anchor,
   AppShell,
   Badge,
   Box,
   Container,
   Flex,
   Group,
-  rem
+  rem,
+  Text
 } from "@mantine/core"
-import { useNavigate } from "@tanstack/react-router"
+import { Link, useNavigate } from "@tanstack/react-router"
 import { ReactNode, useEffect } from "react"
 import { useUserStore } from "../../store/userStore"
 import { UserMenu } from "./UserMenu"
@@ -74,6 +76,7 @@ export const LandingLayout = ({ children }: Props) => {
   return (
     <AppShell
       header={{ height: 64 }}
+      footer={{ height: 60 }}
       padding="md"
       withBorder={false}
       style={{ background: "#f8fafc" }}
@@ -129,13 +132,39 @@ export const LandingLayout = ({ children }: Props) => {
         </Container>
       </AppShell.Header>
 
-      <AppShell.Main style={{ background: "none" }} h={"calc(100vh - 128px)"}>
+      <AppShell.Main style={{ background: "none" }} h={"calc(100vh - 192px)"}>
         <Container size="xl">
           <Box w="100%" maw={1200} mx="auto">
             {children}
           </Box>
         </Container>
       </AppShell.Main>
+
+      <AppShell.Footer
+        style={{
+          borderTop: "1px solid #ececec",
+          background: "#fff"
+        }}
+      >
+        <Container size="xl" px={{ base: 16, md: 32 }} h="100%">
+          <Flex h="100%" align="center" justify="space-between">
+            <Text size="sm" c="dimmed">
+              © {new Date().getFullYear()} Candy Cal. Bảo lưu mọi quyền.
+            </Text>
+            <Group gap="md">
+              <Anchor
+                component={Link}
+                to="/privacy-policy"
+                size="sm"
+                c="dimmed"
+                underline="hover"
+              >
+                Chính sách bảo mật
+              </Anchor>
+            </Group>
+          </Flex>
+        </Container>
+      </AppShell.Footer>
     </AppShell>
   )
 }
