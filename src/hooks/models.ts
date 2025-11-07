@@ -2647,6 +2647,19 @@ export interface SearchSalesOrderRequest {
   startDate?: string
   endDate?: string
   searchText?: string
+  shippingType?: "shipping_vtp" | "shipping_cargo"
+  page: number
+  limit: number
+}
+
+/** @interface */
+export interface ExportXlsxSalesOrderRequest {
+  salesFunnelId?: string
+  returning?: boolean
+  startDate?: string
+  endDate?: string
+  searchText?: string
+  shippingType?: "shipping_vtp" | "shipping_cargo"
   page: number
   limit: number
 }

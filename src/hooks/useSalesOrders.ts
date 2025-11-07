@@ -5,6 +5,7 @@ import {
   CreateSalesOrderRequest,
   CreateSalesOrderResponse,
   DeleteSalesOrderRequest,
+  ExportXlsxSalesOrderRequest,
   GetSalesOrderByIdResponse,
   SearchSalesOrderRequest,
   SearchSalesOrderResponse,
@@ -78,12 +79,27 @@ export const useSalesOrders = () => {
     })
   }
 
+  const exportXlsxSalesOrder = async (req: ExportXlsxSalesOrderRequest) => {
+    const query = toQueryString(req)
+
+    return callApi<never, Blob>({
+      path: `/v1/salesorders/export/xlsx?${query}`,
+      method: "GET",
+      token: accessToken,
+      headers: {
+        "Content-Type":
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+    })
+  }
+
   return {
     createSalesOrder,
     updateSalesOrderItems,
     updateShippingInfo,
     deleteSalesOrder,
     getSalesOrderById,
-    searchSalesOrders
+    searchSalesOrders,
+    exportXlsxSalesOrder
   }
 }
