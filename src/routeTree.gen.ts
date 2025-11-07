@@ -11,11 +11,10 @@
 // Import Routes
 
 import { Route as rootRoute } from "./routes/__root"
-import { Route as TestErrorImport } from "./routes/test-error"
-import { Route as PrivacyPolicyImport } from "./routes/privacy-policy"
 import { Route as IndexImport } from "./routes/index"
 import { Route as UserIndexImport } from "./routes/user/index"
 import { Route as SalesIndexImport } from "./routes/sales/index"
+import { Route as PrivacyPolicyIndexImport } from "./routes/privacy-policy/index"
 import { Route as PostauthIndexImport } from "./routes/postauth/index"
 import { Route as MarketingStorageIndexImport } from "./routes/marketing-storage/index"
 import { Route as LivestreamIndexImport } from "./routes/livestream/index"
@@ -50,18 +49,6 @@ import { Route as SalesMessagesConversationIdImport } from "./routes/sales/messa
 
 // Create/Update Routes
 
-const TestErrorRoute = TestErrorImport.update({
-  id: "/test-error",
-  path: "/test-error",
-  getParentRoute: () => rootRoute
-} as any)
-
-const PrivacyPolicyRoute = PrivacyPolicyImport.update({
-  id: "/privacy-policy",
-  path: "/privacy-policy",
-  getParentRoute: () => rootRoute
-} as any)
-
 const IndexRoute = IndexImport.update({
   id: "/",
   path: "/",
@@ -79,15 +66,17 @@ const SalesIndexRoute = SalesIndexImport.update({
   path: "/sales/",
   getParentRoute: () => rootRoute
 } as any)
-const PrivacyPolicyIndexRoute = PrivacyPolicyIndexRouteImport.update({
+
+const PrivacyPolicyIndexRoute = PrivacyPolicyIndexImport.update({
   id: "/privacy-policy/",
   path: "/privacy-policy/",
-  getParentRoute: () => rootRouteImport
+  getParentRoute: () => rootRoute
 } as any)
-const PostauthIndexRoute = PostauthIndexRouteImport.update({
+
+const PostauthIndexRoute = PostauthIndexImport.update({
   id: "/postauth/",
   path: "/postauth/",
-  getParentRoute: () => rootRouteImport
+  getParentRoute: () => rootRoute
 } as any)
 
 const MarketingStorageIndexRoute = MarketingStorageIndexImport.update({
@@ -170,18 +159,21 @@ const MarketingStorageSystemLogsIndexRoute =
     path: "/marketing-storage/system-logs/",
     getParentRoute: () => rootRoute
   } as any)
+
 const MarketingStorageStorageIndexRoute =
   MarketingStorageStorageIndexImport.update({
     id: "/marketing-storage/storage/",
     path: "/marketing-storage/storage/",
     getParentRoute: () => rootRoute
   } as any)
+
 const MarketingStorageOrdersLogsIndexRoute =
   MarketingStorageOrdersLogsIndexImport.update({
     id: "/marketing-storage/orders-logs/",
     path: "/marketing-storage/orders-logs/",
     getParentRoute: () => rootRoute
   } as any)
+
 const MarketingStorageOldLogsIndexRoute =
   MarketingStorageOldLogsIndexImport.update({
     id: "/marketing-storage/old-logs/",
@@ -201,12 +193,14 @@ const MarketingStorageIncomesIndexRoute =
     path: "/marketing-storage/incomes/",
     getParentRoute: () => rootRoute
   } as any)
+
 const MarketingStorageDeliveredRequestsIndexRoute =
   MarketingStorageDeliveredRequestsIndexImport.update({
     id: "/marketing-storage/delivered-requests/",
     path: "/marketing-storage/delivered-requests/",
     getParentRoute: () => rootRoute
   } as any)
+
 const MarketingStorageCalfileIndexRoute =
   MarketingStorageCalfileIndexImport.update({
     id: "/marketing-storage/calfile/",
@@ -268,6 +262,7 @@ const LandingLandingPageIndexRoute = LandingLandingPageIndexImport.update({
   path: "/landing/landing-page/",
   getParentRoute: () => rootRoute
 } as any)
+
 const SalesMessagesConversationIdRoute =
   SalesMessagesConversationIdImport.update({
     id: "/sales/messages/$conversationId",
@@ -284,20 +279,6 @@ declare module "@tanstack/react-router" {
       path: "/"
       fullPath: "/"
       preLoaderRoute: typeof IndexImport
-      parentRoute: typeof rootRoute
-    }
-    "/privacy-policy": {
-      id: "/privacy-policy"
-      path: "/privacy-policy"
-      fullPath: "/privacy-policy"
-      preLoaderRoute: typeof PrivacyPolicyImport
-      parentRoute: typeof rootRoute
-    }
-    "/test-error": {
-      id: "/test-error"
-      path: "/test-error"
-      fullPath: "/test-error"
-      preLoaderRoute: typeof TestErrorImport
       parentRoute: typeof rootRoute
     }
     "/access-denied/": {
@@ -333,6 +314,13 @@ declare module "@tanstack/react-router" {
       path: "/postauth"
       fullPath: "/postauth"
       preLoaderRoute: typeof PostauthIndexImport
+      parentRoute: typeof rootRoute
+    }
+    "/privacy-policy/": {
+      id: "/privacy-policy/"
+      path: "/privacy-policy"
+      fullPath: "/privacy-policy"
+      preLoaderRoute: typeof PrivacyPolicyIndexImport
       parentRoute: typeof rootRoute
     }
     "/sales/": {
@@ -573,6 +561,7 @@ export interface FileRoutesByFullPath {
   "/sales/orders": typeof SalesOrdersIndexRoute
   "/sales/price": typeof SalesPriceIndexRoute
 }
+
 export interface FileRoutesByTo {
   "/": typeof IndexRoute
   "/access-denied": typeof AccessDeniedIndexRoute
@@ -610,8 +599,9 @@ export interface FileRoutesByTo {
   "/sales/orders": typeof SalesOrdersIndexRoute
   "/sales/price": typeof SalesPriceIndexRoute
 }
+
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport
+  __root__: typeof rootRoute
   "/": typeof IndexRoute
   "/access-denied/": typeof AccessDeniedIndexRoute
   "/landing/": typeof LandingIndexRoute
@@ -648,6 +638,7 @@ export interface FileRoutesById {
   "/sales/orders/": typeof SalesOrdersIndexRoute
   "/sales/price/": typeof SalesPriceIndexRoute
 }
+
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
@@ -762,6 +753,7 @@ export interface FileRouteTypes {
     | "/sales/price/"
   fileRoutesById: FileRoutesById
 }
+
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRouteWithChildren
@@ -800,256 +792,6 @@ export interface RootRouteChildren {
   SalesMessagesIndexRoute: typeof SalesMessagesIndexRoute
   SalesOrdersIndexRoute: typeof SalesOrdersIndexRoute
   SalesPriceIndexRoute: typeof SalesPriceIndexRoute
-}
-
-declare module "@tanstack/react-router" {
-  interface FileRoutesByPath {
-    "/": {
-      id: "/"
-      path: "/"
-      fullPath: "/"
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/user/": {
-      id: "/user/"
-      path: "/user"
-      fullPath: "/user"
-      preLoaderRoute: typeof UserIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/sales/": {
-      id: "/sales/"
-      path: "/sales"
-      fullPath: "/sales"
-      preLoaderRoute: typeof SalesIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/privacy-policy/": {
-      id: "/privacy-policy/"
-      path: "/privacy-policy"
-      fullPath: "/privacy-policy"
-      preLoaderRoute: typeof PrivacyPolicyIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/postauth/": {
-      id: "/postauth/"
-      path: "/postauth"
-      fullPath: "/postauth"
-      preLoaderRoute: typeof PostauthIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/marketing-storage/": {
-      id: "/marketing-storage/"
-      path: "/marketing-storage"
-      fullPath: "/marketing-storage"
-      preLoaderRoute: typeof MarketingStorageIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/livestream/": {
-      id: "/livestream/"
-      path: "/livestream"
-      fullPath: "/livestream"
-      preLoaderRoute: typeof LivestreamIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/landing/": {
-      id: "/landing/"
-      path: "/landing"
-      fullPath: "/landing"
-      preLoaderRoute: typeof LandingIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/access-denied/": {
-      id: "/access-denied/"
-      path: "/access-denied"
-      fullPath: "/access-denied"
-      preLoaderRoute: typeof AccessDeniedIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/sales/price/": {
-      id: "/sales/price/"
-      path: "/sales/price"
-      fullPath: "/sales/price"
-      preLoaderRoute: typeof SalesPriceIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/sales/orders/": {
-      id: "/sales/orders/"
-      path: "/sales/orders"
-      fullPath: "/sales/orders"
-      preLoaderRoute: typeof SalesOrdersIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/sales/messages/": {
-      id: "/sales/messages/"
-      path: "/sales/messages"
-      fullPath: "/sales/messages"
-      preLoaderRoute: typeof SalesMessagesIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/sales/items/": {
-      id: "/sales/items/"
-      path: "/sales/items"
-      fullPath: "/sales/items"
-      preLoaderRoute: typeof SalesItemsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/sales/funnel/": {
-      id: "/sales/funnel/"
-      path: "/sales/funnel"
-      fullPath: "/sales/funnel"
-      preLoaderRoute: typeof SalesFunnelIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/sales/dashboard/": {
-      id: "/sales/dashboard/"
-      path: "/sales/dashboard"
-      fullPath: "/sales/dashboard"
-      preLoaderRoute: typeof SalesDashboardIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/sales/channels/": {
-      id: "/sales/channels/"
-      path: "/sales/channels"
-      fullPath: "/sales/channels"
-      preLoaderRoute: typeof SalesChannelsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/marketing-storage/tasks/": {
-      id: "/marketing-storage/tasks/"
-      path: "/marketing-storage/tasks"
-      fullPath: "/marketing-storage/tasks"
-      preLoaderRoute: typeof MarketingStorageTasksIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/marketing-storage/system-logs/": {
-      id: "/marketing-storage/system-logs/"
-      path: "/marketing-storage/system-logs"
-      fullPath: "/marketing-storage/system-logs"
-      preLoaderRoute: typeof MarketingStorageSystemLogsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/marketing-storage/storage/": {
-      id: "/marketing-storage/storage/"
-      path: "/marketing-storage/storage"
-      fullPath: "/marketing-storage/storage"
-      preLoaderRoute: typeof MarketingStorageStorageIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/marketing-storage/orders-logs/": {
-      id: "/marketing-storage/orders-logs/"
-      path: "/marketing-storage/orders-logs"
-      fullPath: "/marketing-storage/orders-logs"
-      preLoaderRoute: typeof MarketingStorageOrdersLogsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/marketing-storage/old-logs/": {
-      id: "/marketing-storage/old-logs/"
-      path: "/marketing-storage/old-logs"
-      fullPath: "/marketing-storage/old-logs"
-      preLoaderRoute: typeof MarketingStorageOldLogsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/marketing-storage/logs/": {
-      id: "/marketing-storage/logs/"
-      path: "/marketing-storage/logs"
-      fullPath: "/marketing-storage/logs"
-      preLoaderRoute: typeof MarketingStorageLogsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/marketing-storage/incomes/": {
-      id: "/marketing-storage/incomes/"
-      path: "/marketing-storage/incomes"
-      fullPath: "/marketing-storage/incomes"
-      preLoaderRoute: typeof MarketingStorageIncomesIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/marketing-storage/delivered-requests/": {
-      id: "/marketing-storage/delivered-requests/"
-      path: "/marketing-storage/delivered-requests"
-      fullPath: "/marketing-storage/delivered-requests"
-      preLoaderRoute: typeof MarketingStorageDeliveredRequestsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/marketing-storage/calfile/": {
-      id: "/marketing-storage/calfile/"
-      path: "/marketing-storage/calfile"
-      fullPath: "/marketing-storage/calfile"
-      preLoaderRoute: typeof MarketingStorageCalfileIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/marketing-storage/cal/": {
-      id: "/marketing-storage/cal/"
-      path: "/marketing-storage/cal"
-      fullPath: "/marketing-storage/cal"
-      preLoaderRoute: typeof MarketingStorageCalIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/marketing-storage/accounting-storage/": {
-      id: "/marketing-storage/accounting-storage/"
-      path: "/marketing-storage/accounting-storage"
-      fullPath: "/marketing-storage/accounting-storage"
-      preLoaderRoute: typeof MarketingStorageAccountingStorageIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/livestream/stats/": {
-      id: "/livestream/stats/"
-      path: "/livestream/stats"
-      fullPath: "/livestream/stats"
-      preLoaderRoute: typeof LivestreamStatsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/livestream/periods/": {
-      id: "/livestream/periods/"
-      path: "/livestream/periods"
-      fullPath: "/livestream/periods"
-      preLoaderRoute: typeof LivestreamPeriodsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/livestream/members/": {
-      id: "/livestream/members/"
-      path: "/livestream/members"
-      fullPath: "/livestream/members"
-      preLoaderRoute: typeof LivestreamMembersIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/livestream/goals/": {
-      id: "/livestream/goals/"
-      path: "/livestream/goals"
-      fullPath: "/livestream/goals"
-      preLoaderRoute: typeof LivestreamGoalsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/livestream/channels/": {
-      id: "/livestream/channels/"
-      path: "/livestream/channels"
-      fullPath: "/livestream/channels"
-      preLoaderRoute: typeof LivestreamChannelsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/livestream/calendar/": {
-      id: "/livestream/calendar/"
-      path: "/livestream/calendar"
-      fullPath: "/livestream/calendar"
-      preLoaderRoute: typeof LivestreamCalendarIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/landing/landing-page/": {
-      id: "/landing/landing-page/"
-      path: "/landing/landing-page"
-      fullPath: "/landing/landing-page"
-      preLoaderRoute: typeof LandingLandingPageIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/sales/messages/$conversationId": {
-      id: "/sales/messages/$conversationId"
-      path: "/sales/messages/$conversationId"
-      fullPath: "/sales/messages/$conversationId"
-      preLoaderRoute: typeof SalesMessagesConversationIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-  }
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -1093,7 +835,8 @@ const rootRouteChildren: RootRouteChildren = {
   SalesOrdersIndexRoute: SalesOrdersIndexRoute,
   SalesPriceIndexRoute: SalesPriceIndexRoute
 }
-export const routeTree = rootRouteImport
+
+export const routeTree = rootRoute
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
 
@@ -1104,13 +847,12 @@ export const routeTree = rootRouteImport
       "filePath": "__root.tsx",
       "children": [
         "/",
-        "/privacy-policy",
-        "/test-error",
         "/access-denied/",
         "/landing/",
         "/livestream/",
         "/marketing-storage/",
         "/postauth/",
+        "/privacy-policy/",
         "/sales/",
         "/user/",
         "/sales/messages/$conversationId",
@@ -1144,15 +886,6 @@ export const routeTree = rootRouteImport
     "/": {
       "filePath": "index.tsx"
     },
-    "/privacy-policy": {
-      "filePath": "privacy-policy.tsx",
-      "children": [
-        "/privacy-policy/"
-      ]
-    },
-    "/test-error": {
-      "filePath": "test-error.tsx"
-    },
     "/access-denied/": {
       "filePath": "access-denied/index.tsx"
     },
@@ -1167,6 +900,9 @@ export const routeTree = rootRouteImport
     },
     "/postauth/": {
       "filePath": "postauth/index.tsx"
+    },
+    "/privacy-policy/": {
+      "filePath": "privacy-policy/index.tsx"
     },
     "/sales/": {
       "filePath": "sales/index.tsx"

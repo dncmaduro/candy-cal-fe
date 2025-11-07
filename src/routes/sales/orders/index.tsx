@@ -15,7 +15,7 @@ import {
   Pagination
 } from "@mantine/core"
 import { DatePickerInput } from "@mantine/dates"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useMutation } from "@tanstack/react-query"
 import { useCallback, useMemo, useState } from "react"
 import { modals } from "@mantine/modals"
 import { format } from "date-fns"
@@ -26,7 +26,8 @@ import {
   IconTrash,
   IconChevronDown,
   IconChevronRight,
-  IconSearch
+  IconSearch,
+  IconDownload
 } from "@tabler/icons-react"
 import { SalesLayout } from "../../../components/layouts/SalesLayout"
 import { Can } from "../../../components/common/Can"
@@ -71,7 +72,8 @@ type EnrichedSalesOrderItem = SalesOrderItem & {
 }
 
 function RouteComponent() {
-  const { searchSalesOrders, deleteSalesOrder } = useSalesOrders()
+  const { searchSalesOrders, deleteSalesOrder, exportXlsxSalesOrder } =
+    useSalesOrders()
   const { searchFunnel } = useSalesFunnel()
 
   const [page, setPage] = useState(1)
@@ -79,6 +81,7 @@ function RouteComponent() {
   const [searchText, setSearchText] = useState("")
   const [returningFilter, setReturningFilter] = useState<string>("")
   const [funnelFilter, setFunnelFilter] = useState<string>("")
+  const [shippingTypeFilter, setShippingTypeFilter] = useState<string>("")
   const [startDate, setStartDate] = useState<Date | null>(null)
   const [endDate, setEndDate] = useState<Date | null>(null)
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({})
@@ -102,6 +105,7 @@ function RouteComponent() {
       searchText,
       returningFilter,
       funnelFilter,
+      shippingTypeFilter,
       startDate,
       endDate
     ],
@@ -113,9 +117,32 @@ function RouteComponent() {
         returning:
           returningFilter === "" ? undefined : returningFilter === "true",
         salesFunnelId: funnelFilter || undefined,
+        shippingType:
+          shippingTypeFilter === ""
+            ? undefined
+            : (shippingTypeFilter as "shipping_vtp" | "shipping_cargo"),
         startDate: startDate ? format(startDate, "yyyy-MM-dd") : undefined,
         endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined
       })
+  })
+
+  // Export Excel mutation
+  const { mutate: exportXlsx } = useMutation({
+    mutationFn: exportXlsxSalesOrder,
+    onSuccess: (response) => {
+      const url = URL.createObjectURL(response.data)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = `Don_hang_${format(new Date(), "ddMMyyyy")}_${
+        startDate ? format(startDate, "ddMMyyyy") : ""
+      }_${endDate ? format(endDate, "ddMMyyyy") : ""}.xlsx`
+      link.click()
+      URL.revokeObjectURL(url)
+      CToast.success({ title: "Xuất file Excel thành công" })
+    },
+    onError: () => {
+      CToast.error({ title: "Có lỗi xảy ra khi xuất file Excel" })
+    }
   })
 
   // Enrich data with funnel info
@@ -274,11 +301,11 @@ function RouteComponent() {
             />
 
             <Select
-              placeholder="Tất cả trạng thái"
+              placeholder="Loại khách"
               data={[
-                { value: "", label: "Tất cả trạng thái" },
-                { value: "false", label: "Bình thường" },
-                { value: "true", label: "Hoàn trả" }
+                { value: "", label: "Tất cả" },
+                { value: "false", label: "Khách mới" },
+                { value: "true", label: "Khách cũ" }
               ]}
               value={returningFilter}
               onChange={(value) => setReturningFilter(value || "")}
@@ -297,6 +324,19 @@ function RouteComponent() {
               searchable
               clearable
               style={{ width: 250 }}
+            />
+
+            <Select
+              placeholder="Đơn vị vận chuyển"
+              data={[
+                { value: "", label: "Tất cả đơn vị" },
+                { value: "shipping_vtp", label: "Viettel Post" },
+                { value: "shipping_cargo", label: "Shipcode lên chành" }
+              ]}
+              value={shippingTypeFilter}
+              onChange={(value) => setShippingTypeFilter(value || "")}
+              clearable
+              style={{ width: 200 }}
             />
 
             <DatePickerInput
@@ -318,16 +358,143 @@ function RouteComponent() {
             />
 
             <Box style={{ marginLeft: "auto" }}>
-              <Can roles={["admin", "sale-leader"]}>
+              <Group gap="xs">
                 <Button
-                  onClick={handleCreateOrder}
-                  leftSection={<IconPlus size={16} />}
+                  onClick={() => {
+                    modals.openConfirmModal({
+                      title: <b>Xác nhận xuất file Excel</b>,
+                      children: (
+                        <Box>
+                          <Text mb="md">
+                            Bạn có chắc chắn muốn xuất file Excel với các bộ lọc
+                            hiện tại?
+                          </Text>
+                          <Box
+                            style={{
+                              background: "#f8f9fa",
+                              padding: "12px",
+                              borderRadius: "8px"
+                            }}
+                          >
+                            <Text size="sm" fw={600} mb="xs">
+                              Thông tin xuất:
+                            </Text>
+                            <Text size="sm" mb={4}>
+                              • Tổng số đơn hàng:{" "}
+                              <strong>{data?.data.total || 0}</strong> đơn
+                            </Text>
+                            {searchText && (
+                              <Text size="sm" mb={4}>
+                                • Tìm kiếm: <strong>{searchText}</strong>
+                              </Text>
+                            )}
+                            {returningFilter && (
+                              <Text size="sm" mb={4}>
+                                • Loại khách:{" "}
+                                <strong>
+                                  {returningFilter === "true"
+                                    ? "Khách cũ"
+                                    : "Khách mới"}
+                                </strong>
+                              </Text>
+                            )}
+                            {funnelFilter && (
+                              <Text size="sm" mb={4}>
+                                • Khách hàng:{" "}
+                                <strong>
+                                  {
+                                    funnelOptions.find(
+                                      (f) => f.value === funnelFilter
+                                    )?.label
+                                  }
+                                </strong>
+                              </Text>
+                            )}
+                            {shippingTypeFilter && (
+                              <Text size="sm" mb={4}>
+                                • Đơn vị vận chuyển:{" "}
+                                <strong>
+                                  {shippingTypeFilter === "shipping_vtp"
+                                    ? "Viettel Post"
+                                    : "Shipcode lên chành"}
+                                </strong>
+                              </Text>
+                            )}
+                            {startDate && (
+                              <Text size="sm" mb={4}>
+                                • Từ ngày:{" "}
+                                <strong>
+                                  {format(startDate, "dd/MM/yyyy")}
+                                </strong>
+                              </Text>
+                            )}
+                            {endDate && (
+                              <Text size="sm" mb={4}>
+                                • Đến ngày:{" "}
+                                <strong>{format(endDate, "dd/MM/yyyy")}</strong>
+                              </Text>
+                            )}
+                            {!searchText &&
+                              !returningFilter &&
+                              !funnelFilter &&
+                              !shippingTypeFilter &&
+                              !startDate &&
+                              !endDate && (
+                                <Text size="sm" c="orange" mb={4}>
+                                  ⚠️ Không có bộ lọc nào được áp dụng. Tất cả
+                                  đơn hàng sẽ được xuất.
+                                </Text>
+                              )}
+                          </Box>
+                        </Box>
+                      ),
+                      labels: { confirm: "Xuất Excel", cancel: "Hủy" },
+                      confirmProps: { color: "green" },
+                      onConfirm: () => {
+                        exportXlsx({
+                          page: 1,
+                          limit: 9999,
+                          searchText: searchText || undefined,
+                          returning:
+                            returningFilter === ""
+                              ? undefined
+                              : returningFilter === "true",
+                          salesFunnelId: funnelFilter || undefined,
+                          shippingType:
+                            shippingTypeFilter === ""
+                              ? undefined
+                              : (shippingTypeFilter as
+                                  | "shipping_vtp"
+                                  | "shipping_cargo"),
+                          startDate: startDate
+                            ? format(startDate, "yyyy-MM-dd")
+                            : undefined,
+                          endDate: endDate
+                            ? format(endDate, "yyyy-MM-dd")
+                            : undefined
+                        })
+                      }
+                    })
+                  }}
+                  leftSection={<IconDownload size={16} />}
                   size="sm"
                   radius="md"
+                  color="green"
+                  variant="light"
                 >
-                  Tạo đơn hàng
+                  Xuất Excel
                 </Button>
-              </Can>
+                <Can roles={["admin", "sale-leader"]}>
+                  <Button
+                    onClick={handleCreateOrder}
+                    leftSection={<IconPlus size={16} />}
+                    size="sm"
+                    radius="md"
+                  >
+                    Tạo đơn hàng
+                  </Button>
+                </Can>
+              </Group>
             </Box>
           </Flex>
 
