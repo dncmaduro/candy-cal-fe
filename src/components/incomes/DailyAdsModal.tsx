@@ -10,16 +10,21 @@ import {
   Tooltip,
   Alert,
   SimpleGrid,
-  Badge
+  Badge,
+  SegmentedControl,
+  Select,
+  NumberInput,
+  Divider
 } from "@mantine/core"
 import { Dropzone, FileWithPath } from "@mantine/dropzone"
 import { DatePickerInput } from "@mantine/dates"
-import { IconCheck, IconX } from "@tabler/icons-react"
+import { IconCheck, IconX, IconFileUpload, IconEdit } from "@tabler/icons-react"
 import { useMutation } from "@tanstack/react-query"
 import { CToast } from "../common/CToast"
 import {
   CreateDailyAdsRequest,
-  GetPreviousDailyAdsBefore4pmResponse
+  GetPreviousDailyAdsBefore4pmResponse,
+  CreateSimpleDailyAdsRequest
 } from "../../hooks/models"
 import { useDailyAds } from "../../hooks/useDailyAds"
 import { modals } from "@mantine/modals"
@@ -47,9 +52,14 @@ export const DailyAdsModal = ({ refetch }: Props) => {
   const {
     createDailyAds,
     createDailyAdsWithSavedAdsCost,
-    getPreviousDailyAds
+    getPreviousDailyAds,
+    createSimpleDailyAds
   } = useDailyAds()
+  const [mode, setMode] = useState<"file" | "manual">("file")
+  const [currency, setCurrency] = useState<"vnd" | "usd">("vnd")
   const [date, setDate] = useState<Date | null>(null)
+  const [liveAdsCost, setLiveAdsCost] = useState<number>(0)
+  const [shopAdsCost, setShopAdsCost] = useState<number>(0)
   const [previousAdsData, setPreviousAdsData] =
     useState<GetPreviousDailyAdsBefore4pmResponse | null>(null)
   const [previousAdsStatus, setPreviousAdsStatus] = useState<
@@ -100,6 +110,20 @@ export const DailyAdsModal = ({ refetch }: Props) => {
     }
   })
 
+  const { mutateAsync: createSimpleAds, isPending: submittingSimpleAds } =
+    useMutation({
+      mutationFn: async (req: CreateSimpleDailyAdsRequest) =>
+        createSimpleDailyAds(req),
+      onSuccess: () => {
+        CToast.success({ title: "Thêm chi phí quảng cáo thành công!" })
+        modals.closeAll()
+        refetch?.()
+      },
+      onError: () => {
+        CToast.error({ title: "Có lỗi xảy ra khi thêm chi phí quảng cáo" })
+      }
+    })
+
   const { mutate: fetchPreviousAds } = useMutation({
     mutationFn: async (date: Date) => {
       const response = await getPreviousDailyAds({ date })
@@ -141,6 +165,23 @@ export const DailyAdsModal = ({ refetch }: Props) => {
       return
     }
 
+    // Manual mode: submit simple ads with numbers
+    if (mode === "manual") {
+      if (liveAdsCost < 0 || shopAdsCost < 0) {
+        CToast.error({ title: "Chi phí quảng cáo không được âm" })
+        return
+      }
+
+      await createSimpleAds({
+        date: date!,
+        liveAdsCost,
+        shopAdsCost,
+        currency
+      })
+      return
+    }
+
+    // File mode below
     // If user accepted previous ads data, only need 4 files (not the first 2)
     if (previousAdsStatus === "accepted") {
       const requiredFiles = [
@@ -166,7 +207,7 @@ export const DailyAdsModal = ({ refetch }: Props) => {
 
       await createAdsWithSaved({
         files: fileList,
-        req: { date: date! }
+        req: { date: date!, currency }
       })
     } else {
       // Normal flow: need all 6 files
@@ -186,7 +227,7 @@ export const DailyAdsModal = ({ refetch }: Props) => {
 
       await createAds({
         files: fileList,
-        req: { date: date! }
+        req: { date: date!, currency }
       })
     }
   }
@@ -370,59 +411,140 @@ export const DailyAdsModal = ({ refetch }: Props) => {
       <Text size="xl" fw={700}>
         Thêm chi phí quảng cáo
       </Text>
+
+      <SegmentedControl
+        value={mode}
+        onChange={(v) => setMode(v as "file" | "manual")}
+        data={[
+          {
+            label: (
+              <Group gap="xs" justify="center">
+                <IconEdit size={16} />
+                <span>Nhập số</span>
+              </Group>
+            ),
+            value: "manual"
+          },
+          {
+            label: (
+              <Group gap="xs" justify="center">
+                <IconFileUpload size={16} />
+                <span>Upload file</span>
+              </Group>
+            ),
+            value: "file"
+          }
+        ]}
+        size="md"
+        fullWidth
+      />
+
       <Alert title="Lưu ý" color="blue" variant="light">
         <Text size="sm">
-          Tải lên 6 file chi phí quảng cáo cho ngày đã chọn. Sau khi tải lên, hệ
-          thống sẽ xử lý và cập nhật dữ liệu.
+          {mode === "file"
+            ? "Tải lên 6 file chi phí quảng cáo cho ngày đã chọn. Sau khi tải lên, hệ thống sẽ xử lý và cập nhật dữ liệu."
+            : "Nhập trực tiếp chi phí quảng cáo Live và Shop cho ngày đã chọn."}
         </Text>
       </Alert>
 
-      <DatePickerInput
-        label="Chọn ngày"
-        size="md"
-        placeholder="Chọn ngày"
-        value={date}
-        onChange={setDate}
-        maxDate={new Date()}
-        withAsterisk
-        className="max-w-[210px]"
-        disabled={submittingAds}
-      />
+      <Group align="flex-end" gap="md">
+        <DatePickerInput
+          label="Chọn ngày"
+          size="md"
+          placeholder="Chọn ngày"
+          value={date}
+          onChange={setDate}
+          maxDate={new Date()}
+          withAsterisk
+          className="flex-1"
+          disabled={submittingAds || submittingSimpleAds}
+        />
+        <Select
+          label="Tiền tệ"
+          size="md"
+          value={currency}
+          onChange={(v) => setCurrency(v as "vnd" | "usd")}
+          data={[
+            { value: "vnd", label: "VNĐ" },
+            { value: "usd", label: "USD" }
+          ]}
+          className="flex-1"
+          w={120}
+          withAsterisk
+          disabled={submittingAds || submittingSimpleAds}
+        />
+      </Group>
 
-      <Button
-        variant="outline"
-        color="blue"
-        onClick={handleFetchPreviousAds}
-        loading={previousAdsStatus === "loading"}
-        disabled={!date || previousAdsStatus === "accepted" || submittingAds}
-        leftSection={<IconCheck size={16} />}
-      >
-        Lấy dữ liệu ads trước 4 giờ chiều hôm trước
-      </Button>
-
-      <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
-        {renderPreviousAdsSection()}
-        {Object.entries(ADS_FILE_LABELS)
-          .filter(([key]) => {
-            const isFirstTwoFiles =
-              key === "yesterdayLiveAdsCostFileBefore4pm" ||
-              key === "yesterdayShopAdsCostFileBefore4pm"
-
-            // Skip first 2 files only when renderPreviousAdsSection handles them
-            // (i.e., when status is NOT idle without data)
-            if (isFirstTwoFiles && previousAdsStatus !== "idle") {
-              return false
+      {mode === "manual" ? (
+        <>
+          <Divider label="Chi phí quảng cáo" labelPosition="center" />
+          <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
+            <NumberInput
+              label="Live Ads Cost"
+              placeholder="Nhập chi phí Live Ads"
+              value={liveAdsCost}
+              onChange={(v) => setLiveAdsCost(Number(v) || 0)}
+              min={0}
+              size="md"
+              thousandSeparator=","
+              suffix={currency === "vnd" ? " VNĐ" : " USD"}
+              withAsterisk
+              disabled={submittingSimpleAds}
+            />
+            <NumberInput
+              label="Shop Ads Cost"
+              placeholder="Nhập chi phí Shop Ads"
+              value={shopAdsCost}
+              onChange={(v) => setShopAdsCost(Number(v) || 0)}
+              min={0}
+              size="md"
+              thousandSeparator=","
+              suffix={currency === "vnd" ? " VNĐ" : " USD"}
+              withAsterisk
+              disabled={submittingSimpleAds}
+            />
+          </SimpleGrid>
+        </>
+      ) : (
+        <>
+          <Button
+            variant="outline"
+            color="blue"
+            onClick={handleFetchPreviousAds}
+            loading={previousAdsStatus === "loading"}
+            disabled={
+              !date || previousAdsStatus === "accepted" || submittingAds
             }
+            leftSection={<IconCheck size={16} />}
+          >
+            Lấy dữ liệu ads trước 4 giờ chiều hôm trước
+          </Button>
 
-            // Also skip if we have data to show
-            if (isFirstTwoFiles && previousAdsData) {
-              return false
-            }
+          <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
+            {renderPreviousAdsSection()}
+            {Object.entries(ADS_FILE_LABELS)
+              .filter(([key]) => {
+                const isFirstTwoFiles =
+                  key === "yesterdayLiveAdsCostFileBefore4pm" ||
+                  key === "yesterdayShopAdsCostFileBefore4pm"
 
-            return true
-          })
-          .map(([key, label]) => renderAdsDropzone(key, label))}
-      </SimpleGrid>
+                // Skip first 2 files only when renderPreviousAdsSection handles them
+                // (i.e., when status is NOT idle without data)
+                if (isFirstTwoFiles && previousAdsStatus !== "idle") {
+                  return false
+                }
+
+                // Also skip if we have data to show
+                if (isFirstTwoFiles && previousAdsData) {
+                  return false
+                }
+
+                return true
+              })
+              .map(([key, label]) => renderAdsDropzone(key, label))}
+          </SimpleGrid>
+        </>
+      )}
 
       <Group justify="end" mt="md">
         <Button
@@ -430,24 +552,27 @@ export const DailyAdsModal = ({ refetch }: Props) => {
           onClick={() => modals.closeAll()}
           size="md"
           radius="xl"
-          disabled={submittingAds}
+          disabled={submittingAds || submittingSimpleAds}
         >
           Huỷ
         </Button>
         <Button
           onClick={handleSubmitAdsCost}
-          loading={submittingAds}
+          loading={submittingAds || submittingSimpleAds}
           disabled={
             !date ||
-            (previousAdsStatus === "accepted"
-              ? ![
-                  "yesterdayLiveAdsCostFile",
-                  "yesterdayShopAdsCostFile",
-                  "todayLiveAdsCostFileBefore4pm",
-                  "todayShopAdsCostFileBefore4pm"
-                ].every((key) => adsFiles[key].file !== null)
-              : !Object.values(adsFiles).every((f) => f.file !== null)) ||
-            submittingAds
+            (mode === "manual"
+              ? false
+              : previousAdsStatus === "accepted"
+                ? ![
+                    "yesterdayLiveAdsCostFile",
+                    "yesterdayShopAdsCostFile",
+                    "todayLiveAdsCostFileBefore4pm",
+                    "todayShopAdsCostFileBefore4pm"
+                  ].every((key) => adsFiles[key].file !== null)
+                : !Object.values(adsFiles).every((f) => f.file !== null)) ||
+            submittingAds ||
+            submittingSimpleAds
           }
           size="md"
           radius="xl"

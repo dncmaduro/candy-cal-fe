@@ -3,6 +3,7 @@ import { toQueryString } from "../utils/toQuery"
 import { callApi } from "./axios"
 import {
   CreateDailyAdsRequest,
+  CreateSimpleDailyAdsRequest,
   GetPreviousDailyAdsBefore4pmRequest,
   GetPreviousDailyAdsBefore4pmResponse
 } from "./models"
@@ -76,5 +77,19 @@ export const useDailyAds = () => {
     })
   }
 
-  return { createDailyAds, createDailyAdsWithSavedAdsCost, getPreviousDailyAds }
+  const createSimpleDailyAds = async (req: CreateSimpleDailyAdsRequest) => {
+    return callApi<CreateSimpleDailyAdsRequest, never>({
+      path: `/v1/dailyads/simpledailyads`,
+      method: "POST",
+      data: req,
+      token: accessToken
+    })
+  }
+
+  return {
+    createDailyAds,
+    createDailyAdsWithSavedAdsCost,
+    getPreviousDailyAds,
+    createSimpleDailyAds
+  }
 }
