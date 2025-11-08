@@ -1,5 +1,6 @@
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { useMonthGoals } from "../../hooks/useMonthGoals"
+import { useLivestream } from "../../hooks/useLivestream"
 import { useQuery } from "@tanstack/react-query"
 import {
   Box,
@@ -10,10 +11,12 @@ import {
   Group,
   Divider,
   Button,
-  SegmentedControl
+  SegmentedControl,
+  Select,
+  Badge
 } from "@mantine/core"
 import { YearPickerInput } from "@mantine/dates"
-import { IconEdit, IconPlus } from "@tabler/icons-react"
+import { IconEdit, IconPlus, IconFilter } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
 import { MonthGoalModal } from "./MonthGoalModal"
 import { Can } from "../common/Can"
@@ -23,15 +26,38 @@ export const MonthGoals = () => {
   type DiscountMode = "beforeDiscount" | "afterDiscount"
   const [mode, setMode] = useState<DiscountMode>("afterDiscount")
   const [year, setYear] = useState<Date | null>(new Date())
+  const [channelId, setChannelId] = useState<string | null>(null)
+
   const { getGoals } = useMonthGoals()
+  const { searchLivestreamChannels } = useLivestream()
+
+  // Fetch livestream channels
+  const { data: channelsData = [] } = useQuery({
+    queryKey: ["livestream-channels-for-goals"],
+    queryFn: () => searchLivestreamChannels({ page: 1, limit: 100 }),
+    select: (data) => data.data.data || [],
+    staleTime: 5 * 60 * 1000
+  })
+
+  // Channel options for Select
+  const channelOptions = useMemo(() => {
+    return channelsData.map((channel) => ({
+      value: channel._id,
+      label: channel.name
+    }))
+  }, [channelsData])
 
   const {
     data: goalsData,
     isLoading,
     refetch
   } = useQuery({
-    queryKey: ["getGoals", year],
-    queryFn: () => getGoals({ year: year ? year.getFullYear() : undefined }),
+    queryKey: ["getGoals", year, channelId],
+    queryFn: () =>
+      getGoals({
+        year: year ? year.getFullYear() : undefined,
+        channelId: channelId || undefined
+      }),
     select: (data) => data.data
   })
 
@@ -82,6 +108,17 @@ export const MonthGoals = () => {
             clearable
             style={{ width: 120 }}
           />
+          <Select
+            label="Kênh livestream"
+            placeholder="Tất cả kênh"
+            value={channelId}
+            onChange={setChannelId}
+            data={channelOptions}
+            size="md"
+            w={200}
+            clearable
+            searchable
+          />
           <SegmentedControl
             value={mode}
             onChange={(v) => setMode(v as DiscountMode)}
@@ -114,6 +151,22 @@ export const MonthGoals = () => {
       </Flex>
       <Divider my={0} />
       <Box px={{ base: 4, md: 28 }} py={20}>
+        {channelId && (
+          <Flex mb={16} gap="xs" align="center">
+            <Text c="dimmed" fz="sm">
+              Đang lọc theo kênh:
+            </Text>
+            <Badge
+              color="violet"
+              variant="light"
+              leftSection={<IconFilter size={14} />}
+              size="lg"
+            >
+              {channelOptions.find((c) => c.value === channelId)?.label ||
+                "Kênh đã chọn"}
+            </Badge>
+          </Flex>
+        )}
         <Table
           highlightOnHover
           striped
@@ -128,6 +181,7 @@ export const MonthGoals = () => {
           <Table.Thead>
             <Table.Tr>
               <Table.Th style={{ width: 120 }}>Tháng</Table.Th>
+              <Table.Th>Kênh</Table.Th>
               <Table.Th>KPI Live</Table.Th>
               <Table.Th>KPI Shop</Table.Th>
               <Table.Th>KPI % Ads Live</Table.Th>
@@ -140,7 +194,7 @@ export const MonthGoals = () => {
           <Table.Tbody>
             {isLoading ? (
               <Table.Tr>
-                <Table.Td colSpan={8}>
+                <Table.Td colSpan={9}>
                   <Flex justify="center" align="center" h={60}>
                     <Loader />
                   </Flex>
@@ -148,9 +202,14 @@ export const MonthGoals = () => {
               </Table.Tr>
             ) : monthGoals.length > 0 ? (
               monthGoals.map((m) => (
-                <Table.Tr key={m.month}>
+                <Table.Tr key={`${m.month}-${m.year}-${m.channel}`}>
                   <Table.Td>
                     {m.month + 1}/{m.year}
+                  </Table.Td>
+                  <Table.Td>
+                    <Badge color="blue" variant="light" size="sm">
+                      {m.channel.name || "N/A"}
+                    </Badge>
                   </Table.Td>
                   <Table.Td>
                     {m.liveStreamGoal?.toLocaleString?.() || 0}
@@ -162,10 +221,12 @@ export const MonthGoals = () => {
                     {(
                       ((m.totalIncome as any)?.[mode]?.live || 0) +
                       ((m.totalIncome as any)?.[mode]?.shop || 0)
-                    ).toLocaleString?.() || 0} VNĐ
+                    ).toLocaleString?.() || 0}{" "}
+                    VNĐ
                   </Table.Td>
                   <Table.Td>
-                    {((m.KPIPercentage as any)?.[mode]?.live ?? 0)}% / {((m.KPIPercentage as any)?.[mode]?.shop ?? 0)}%
+                    {(m.KPIPercentage as any)?.[mode]?.live ?? 0}% /{" "}
+                    {(m.KPIPercentage as any)?.[mode]?.shop ?? 0}%
                   </Table.Td>
                   <Table.Td>
                     <Group>
@@ -189,6 +250,7 @@ export const MonthGoals = () => {
                                   monthGoal={{
                                     month: m.month,
                                     year: m.year,
+                                    channel: m.channel._id,
                                     liveStreamGoal: m.liveStreamGoal,
                                     shopGoal: m.shopGoal,
                                     liveAdsPercentageGoal:
@@ -211,7 +273,7 @@ export const MonthGoals = () => {
               ))
             ) : (
               <Table.Tr>
-                <Table.Td colSpan={8}>
+                <Table.Td colSpan={9}>
                   <Flex justify="center" align="center" h={60}>
                     <Text c="dimmed">Không có dữ liệu</Text>
                   </Flex>

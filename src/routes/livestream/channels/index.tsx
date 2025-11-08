@@ -1,36 +1,26 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { LivestreamLayout } from "../../../components/layouts/LivestreamLayout"
-import { useLivestream } from "../../../hooks/useLivestream"
 import { useQuery, useMutation } from "@tanstack/react-query"
-import {
-  Box,
-  Button,
-  Divider,
-  Flex,
-  Group,
-  Loader,
-  rem,
-  Table,
-  Text,
-  ActionIcon,
-  TextInput,
-  Pagination,
-  NumberInput
-} from "@mantine/core"
-import {
-  IconEdit,
-  IconPlus,
-  IconTrash,
-  IconExternalLink
-} from "@tabler/icons-react"
+import { Box, Button, rem, Text, ActionIcon } from "@mantine/core"
+import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
 import { Can } from "../../../components/common/Can"
 import { CToast } from "../../../components/common/CToast"
 import { useState } from "react"
-import type { SearchLivestreamChannelsResponse } from "../../../hooks/models"
 import { LivestreamChannelModal } from "../../../components/livestream/LivestreamChannelModal"
+import { CDataTable } from "../../../components/common/CDataTable"
+import { ColumnDef } from "@tanstack/react-table"
+import { format } from "date-fns"
+import { useLivestream } from "../../../hooks/useLivestream"
 
-type LivestreamChannel = SearchLivestreamChannelsResponse["data"][0]
+type LivestreamChannel = {
+  _id: string
+  name: string
+  username: string
+  link: string
+  createdAt?: string
+  updatedAt?: string
+}
 
 export const Route = createFileRoute("/livestream/channels/")({
   component: RouteComponent
@@ -43,11 +33,7 @@ function RouteComponent() {
   const [limit, setLimit] = useState(10)
   const [searchText, setSearchText] = useState("")
 
-  const {
-    data: channelsData,
-    isLoading,
-    refetch
-  } = useQuery({
+  const { data: channelsData, refetch } = useQuery({
     queryKey: ["searchLivestreamChannels", page, limit, searchText],
     queryFn: () =>
       searchLivestreamChannels({
@@ -61,7 +47,7 @@ function RouteComponent() {
   const { mutate: deleteChannel } = useMutation({
     mutationFn: deleteLivestreamChannel,
     onSuccess: () => {
-      CToast.success({ title: "Xóa kênh thành công" })
+      CToast.success({ title: "Xóa kênh livestream thành công" })
       refetch()
     },
     onError: () => {
@@ -71,7 +57,11 @@ function RouteComponent() {
 
   const openChannelModal = (channel?: LivestreamChannel) => {
     modals.open({
-      title: <b>{channel ? "Chỉnh sửa kênh" : "Tạo kênh mới"}</b>,
+      title: (
+        <b>
+          {channel ? "Chỉnh sửa kênh livestream" : "Tạo kênh livestream mới"}
+        </b>
+      ),
       children: <LivestreamChannelModal channel={channel} refetch={refetch} />,
       size: "lg"
     })
@@ -94,6 +84,83 @@ function RouteComponent() {
   const channels = channelsData?.data || []
   const total = channelsData?.total || 0
 
+  const columns: ColumnDef<LivestreamChannel>[] = [
+    {
+      accessorKey: "name",
+      header: "Tên kênh",
+      cell: ({ row }) => (
+        <Text fw={600} size="sm">
+          {row.original.name}
+        </Text>
+      )
+    },
+    {
+      accessorKey: "username",
+      header: "Username",
+      cell: ({ row }) => <Text size="sm">{row.original.username}</Text>
+    },
+    {
+      accessorKey: "link",
+      header: "Link",
+      cell: ({ row }) => (
+        <Text size="sm" c="blue" className="max-w-xs truncate">
+          <a href={row.original.link} target="_blank" rel="noopener noreferrer">
+            {row.original.link}
+          </a>
+        </Text>
+      )
+    },
+    {
+      accessorKey: "createdAt",
+      header: "Ngày tạo",
+      cell: ({ row }) => (
+        <Text size="sm" c="dimmed">
+          {row.original.createdAt
+            ? format(new Date(row.original.createdAt), "dd/MM/yyyy HH:mm")
+            : "-"}
+        </Text>
+      )
+    },
+    {
+      accessorKey: "updatedAt",
+      header: "Cập nhật",
+      cell: ({ row }) => (
+        <Text size="sm" c="dimmed">
+          {row.original.updatedAt
+            ? format(new Date(row.original.updatedAt), "dd/MM/yyyy HH:mm")
+            : "-"}
+        </Text>
+      )
+    },
+    {
+      id: "actions",
+      header: "Thao tác",
+      cell: ({ row }) => (
+        <Can roles={["admin", "sale-leader"]}>
+          <div className="flex gap-2">
+            <ActionIcon
+              variant="light"
+              color="indigo"
+              size="sm"
+              onClick={() => openChannelModal(row.original)}
+            >
+              <IconEdit size={16} />
+            </ActionIcon>
+            <ActionIcon
+              variant="light"
+              color="red"
+              size="sm"
+              onClick={() => confirmDelete(row.original)}
+            >
+              <IconTrash size={16} />
+            </ActionIcon>
+          </div>
+        </Can>
+      ),
+      enableSorting: false
+    }
+  ]
+
   return (
     <LivestreamLayout>
       <Box
@@ -109,179 +176,42 @@ function RouteComponent() {
         }}
       >
         {/* Header Section */}
-        <Flex
-          align="flex-start"
-          justify="space-between"
-          pt={32}
-          pb={16}
-          px={{ base: 8, md: 28 }}
-          direction="row"
-          gap={8}
-        >
-          <Box>
-            <Text fw={700} fz="xl" mb={2}>
-              Quản lý kênh livestream
-            </Text>
-            <Text c="dimmed" fz="sm">
-              Quản lý thông tin các kênh phát sóng livestream
-            </Text>
-          </Box>
-
-          <Can roles={["admin", "livestream-leader"]}>
-            <Button
-              onClick={() => openChannelModal()}
-              leftSection={<IconPlus size={16} />}
-              size="md"
-              radius="xl"
-            >
-              Thêm kênh
-            </Button>
-          </Can>
-        </Flex>
-
-        <Divider my={0} />
-
-        {/* Filters */}
-        <Box px={{ base: 8, md: 28 }} py={16}>
-          <Group gap={16} align="end">
-            <TextInput
-              label="Tìm kiếm"
-              placeholder="Nhập tên kênh hoặc username"
-              value={searchText}
-              onChange={(e) => setSearchText(e.currentTarget.value)}
-              size="sm"
-              style={{ minWidth: 250 }}
-            />
-          </Group>
+        <Box pt={32} pb={16} px={{ base: 8, md: 28 }}>
+          <Text fw={700} fz="xl" mb={2}>
+            Quản lý kênh livestream
+          </Text>
+          <Text c="dimmed" fz="sm">
+            Quản lý thông tin các kênh livestream
+          </Text>
         </Box>
 
         {/* Content */}
-        <Box px={{ base: 4, md: 28 }} py={20}>
-          {isLoading ? (
-            <Flex justify="center" align="center" h={400}>
-              <Loader />
-            </Flex>
-          ) : channels.length === 0 ? (
-            <Flex justify="center" align="center" h={400}>
-              <Text c="dimmed">
-                {searchText ? "Không tìm thấy kênh nào" : "Chưa có kênh nào"}
-              </Text>
-            </Flex>
-          ) : (
-            <>
-              <Table
-                withColumnBorders
-                withTableBorder
-                striped
-                verticalSpacing="sm"
-                horizontalSpacing="md"
-                stickyHeader
-                className="rounded-xl"
-                miw={800}
-              >
-                <Table.Thead>
-                  <Table.Tr>
-                    <Table.Th style={{ width: 200 }}>Tên kênh</Table.Th>
-                    <Table.Th style={{ width: 150 }}>Username</Table.Th>
-                    <Table.Th>Link</Table.Th>
-                    <Table.Th style={{ width: 140 }}>Thao tác</Table.Th>
-                  </Table.Tr>
-                </Table.Thead>
-                <Table.Tbody>
-                  {channels.map((channel) => (
-                    <Table.Tr key={channel._id}>
-                      <Table.Td>
-                        <Text fw={600}>{channel.name}</Text>
-                      </Table.Td>
-                      <Table.Td>
-                        <Text c="dimmed">@{channel.username}</Text>
-                      </Table.Td>
-                      <Table.Td>
-                        <Group gap="xs">
-                          <Text
-                            component="a"
-                            href={channel.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{
-                              textDecoration: "none",
-                              color: "var(--mantine-color-indigo-6)",
-                              cursor: "pointer"
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.textDecoration = "underline"
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.textDecoration = "none"
-                            }}
-                          >
-                            {channel.link.length > 50
-                              ? `${channel.link.substring(0, 50)}...`
-                              : channel.link}
-                          </Text>
-                          <ActionIcon
-                            component="a"
-                            href={channel.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            variant="light"
-                            color="indigo"
-                            size="xs"
-                          >
-                            <IconExternalLink size={12} />
-                          </ActionIcon>
-                        </Group>
-                      </Table.Td>
-                      <Table.Td>
-                        <Group gap="xs">
-                          <Can roles={["admin", "livestream-leader"]}>
-                            <ActionIcon
-                              variant="light"
-                              color="indigo"
-                              size="sm"
-                              onClick={() => openChannelModal(channel)}
-                            >
-                              <IconEdit size={16} />
-                            </ActionIcon>
-                            <ActionIcon
-                              variant="light"
-                              color="red"
-                              size="sm"
-                              onClick={() => confirmDelete(channel)}
-                            >
-                              <IconTrash size={16} />
-                            </ActionIcon>
-                          </Can>
-                        </Group>
-                      </Table.Td>
-                    </Table.Tr>
-                  ))}
-                </Table.Tbody>
-              </Table>
-
-              {/* Pagination */}
-              <Flex justify="space-between" align="center" mt={16}>
-                <Text c="dimmed" mr={8}>
-                  Tổng số kênh: {total}
-                </Text>
-                <Pagination
-                  total={Math.ceil(total / limit)}
-                  value={page}
-                  onChange={setPage}
-                />
-                <Group>
-                  <Text>Số dòng/trang</Text>
-                  <NumberInput
-                    value={limit}
-                    onChange={(val) => setLimit(Number(val) || 10)}
-                    w={100}
-                    min={5}
-                    max={100}
-                  />
-                </Group>
-              </Flex>
-            </>
-          )}
+        <Box px={{ base: 4, md: 28 }} pb={20}>
+          <CDataTable
+            columns={columns}
+            data={channels}
+            enableGlobalFilter={true}
+            globalFilterValue={searchText}
+            onGlobalFilterChange={setSearchText}
+            page={page}
+            totalPages={Math.ceil(total / limit)}
+            onPageChange={setPage}
+            onPageSizeChange={setLimit}
+            initialPageSize={limit}
+            pageSizeOptions={[10, 20, 50, 100]}
+            extraActions={
+              <Can roles={["admin", "sale-leader"]}>
+                <Button
+                  onClick={() => openChannelModal()}
+                  leftSection={<IconPlus size={16} />}
+                  size="sm"
+                  radius="md"
+                >
+                  Thêm kênh
+                </Button>
+              </Can>
+            }
+          />
         </Box>
       </Box>
     </LivestreamLayout>

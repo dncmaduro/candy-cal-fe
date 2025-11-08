@@ -818,6 +818,7 @@ export interface GetIncomesByDateRangeRequest {
   orderId?: string
   productCode?: string
   productSource?: string
+  channelId?: string
 }
 
 /** @interface */
@@ -828,6 +829,10 @@ export interface GetIncomesByDateRangeResponse {
     customer: string
     province: string
     shippingProvider: string
+    channel?: {
+      _id: string
+      name: string
+    }
     date: Date
     products: {
       creator?: string
@@ -861,6 +866,7 @@ export interface UpdateIncomesBoxRequest {
 export interface GetTotalIncomesByMonthRequest {
   month: number
   year: number
+  channelId?: string
 }
 
 /** @interface */
@@ -875,6 +881,7 @@ export interface GetTotalIncomesByMonthResponse {
 export interface GetTotalQuantityByMonthRequest {
   month: number
   year: number
+  channelId?: string
 }
 
 /** @interface */
@@ -889,6 +896,7 @@ export interface GetTotalQuantityByMonthResponse {
 export interface GetKPIPercentageByMonthRequest {
   month: number
   year: number
+  channelId?: string
 }
 
 /** @interface */
@@ -907,6 +915,7 @@ export interface CreateMonthGoalRequest {
   shopGoal: number
   liveAdsPercentageGoal: number
   shopAdsPercentageGoal: number
+  channel: string
 }
 
 /** @interface */
@@ -917,11 +926,16 @@ export interface CreateMonthGoalResponse {
   shopGoal: number
   liveAdsPercentageGoal: number
   shopAdsPercentageGoal: number
+  channel: {
+    _id: string
+    name: string
+  }
 }
 
 /** @interface */
 export interface GetGoalsRequest {
   year?: number
+  channelId?: string
 }
 
 /** @interface */
@@ -931,6 +945,10 @@ export interface GetGoalsResponse {
     year: number
     liveStreamGoal: number
     shopGoal: number
+    channel: {
+      name: string
+      _id: string
+    }
     liveAdsPercentageGoal: number
     shopAdsPercentageGoal: number
     totalIncome: {
@@ -952,6 +970,7 @@ export interface GetGoalsResponse {
 export interface GetGoalRequest {
   month: number
   year: number
+  channelId?: string
 }
 
 /** @interface */
@@ -962,6 +981,7 @@ export interface GetGoalResponse {
   shopGoal: number
   liveAdsPercentageGoal: number
   shopAdsPercentageGoal: number
+  channel: string
 }
 
 /** @interface */
@@ -972,6 +992,7 @@ export interface UpdateGoalRequest {
   shopGoal: number
   liveAdsPercentageGoal: number
   shopAdsPercentageGoal: number
+  channel: string
 }
 
 /** @interface */
@@ -982,12 +1003,14 @@ export interface UpdateGoalResponse {
   shopGoal: number
   liveAdsPercentageGoal: number
   shopAdsPercentageGoal: number
+  channel: string
 }
 
 /** @interface */
 export interface DeleteGoalRequest {
   month: number
   year: number
+  channelId: string
 }
 
 /** @interface */
@@ -1065,6 +1088,7 @@ export interface ExportXlsxIncomesRequest {
   orderId?: string
   productCode?: string
   productSource?: string
+  channel?: string
 }
 
 /** @interface */
@@ -1349,6 +1373,7 @@ export interface GetInformationSystemLogsRespomse {
 export interface GetRangeStatsRequest {
   startDate: string
   endDate: string
+  channelId?: string
 }
 
 /** @interface */
@@ -1680,6 +1705,7 @@ export interface SystemLogsOptionsResponse {
 export interface GetTotalLiveAndShopIncomeByMonthRequest {
   month: number
   year: number
+  channelId?: string
 }
 
 /** @interface */
@@ -1694,6 +1720,7 @@ export interface GetTotalLiveAndShopIncomeByMonthResponse {
 export interface GetAdsCostSplitByMonthRequest {
   month: number
   year: number
+  channelId?: string
 }
 
 /** @interface */
@@ -1739,6 +1766,7 @@ export interface GetPreviousDailyAdsBefore4pmResponse {
 /** @interface */
 export interface InsertIncomeAndUpdateSourceRequest {
   date: Date
+  channel: string
 }
 
 /** @interface */
@@ -2087,7 +2115,10 @@ export interface GetLivestreamMonthGoalsResponse {
     _id: string
     month: number
     year: number
-    channel: string
+    channel: {
+      _id: string
+      name: string
+    }
     goal: number
   }[]
   total: number

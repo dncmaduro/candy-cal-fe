@@ -9,13 +9,15 @@ import {
   CloseButton,
   Loader,
   Tooltip,
-  Alert
+  Alert,
+  Select
 } from "@mantine/core"
 import { Dropzone, FileWithPath } from "@mantine/dropzone"
 import { DatePickerInput } from "@mantine/dates"
 import { IconCheck, IconX } from "@tabler/icons-react"
-import { useMutation } from "@tanstack/react-query"
+import { useMutation, useQuery } from "@tanstack/react-query"
 import { useIncomes } from "../../hooks/useIncomes"
+import { useLivestream } from "../../hooks/useLivestream"
 import { CToast } from "../common/CToast"
 import { modals } from "@mantine/modals"
 
@@ -36,10 +38,22 @@ interface Props {
 
 export const InsertIncomeModalV2 = ({ refetch }: Props) => {
   const { insertIncomeAndUpdateSource } = useIncomes()
+  const { searchLivestreamChannels } = useLivestream()
   const [date, setDate] = useState<Date | null>(null)
+  const [channel, setChannel] = useState<string | null>(null)
   const [files, setFiles] = useState<Record<keyof typeof LABELS, FileState>>({
     totalIncome: { file: null, status: "pending" },
     sourceSplit: { file: null, status: "pending" }
+  })
+
+  const { data: channelsData } = useQuery({
+    queryKey: ["searchLivestreamChannels"],
+    queryFn: () =>
+      searchLivestreamChannels({
+        page: 1,
+        limit: 100
+      }),
+    select: (data) => data.data
   })
 
   const { mutateAsync: insertAndUpdate, isPending: insertingIncomes } =
@@ -49,7 +63,7 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
         req
       }: {
         files: File[]
-        req: { date: Date }
+        req: { date: Date; channel: string }
       }) => insertIncomeAndUpdateSource(fileList, req),
       onSuccess: () => {
         setFiles((prev) => ({
@@ -74,8 +88,13 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
     })
 
   const handleInsertIncomes = async () => {
-    if (!date || !files.totalIncome.file || !files.sourceSplit.file) {
-      CToast.error({ title: "Vui lòng chọn ngày và đủ 2 file" })
+    if (
+      !date ||
+      !channel ||
+      !files.totalIncome.file ||
+      !files.sourceSplit.file
+    ) {
+      CToast.error({ title: "Vui lòng chọn ngày, kênh và đủ 2 file" })
       return
     }
 
@@ -87,12 +106,13 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
 
     await insertAndUpdate({
       files: [files.totalIncome.file, files.sourceSplit.file],
-      req: { date }
+      req: { date, channel }
     })
   }
 
   const disabledInsertIncomes =
     !date ||
+    !channel ||
     !files.totalIncome.file ||
     !files.sourceSplit.file ||
     insertingIncomes
@@ -175,17 +195,37 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
         </Text>
       </Alert>
 
-      <DatePickerInput
-        label="Chọn ngày"
-        size="md"
-        placeholder="Chọn ngày"
-        value={date}
-        onChange={setDate}
-        maxDate={new Date()}
-        withAsterisk
-        className="max-w-[210px]"
-        disabled={insertingIncomes}
-      />
+      <Group align="flex-end" gap={12} w={"100%"}>
+        <DatePickerInput
+          label="Chọn ngày"
+          size="md"
+          placeholder="Chọn ngày"
+          value={date}
+          onChange={setDate}
+          maxDate={new Date()}
+          withAsterisk
+          className="flex-1"
+          disabled={insertingIncomes}
+        />
+
+        <Select
+          label="Chọn kênh livestream"
+          size="md"
+          placeholder="Chọn kênh"
+          value={channel}
+          onChange={setChannel}
+          data={
+            channelsData?.data.map((ch) => ({
+              value: ch._id,
+              label: ch.name
+            })) || []
+          }
+          searchable
+          withAsterisk
+          className="flex-1"
+          disabled={insertingIncomes}
+        />
+      </Group>
 
       <Stack align="start" justify="center" gap="sm">
         {renderDropzone("totalIncome")}

@@ -82,7 +82,7 @@ function RouteComponent() {
       children: (
         <Text size="sm">
           Bạn có chắc chắn muốn xóa mục tiêu tháng {goal.month + 1}/{goal.year}{" "}
-          của kênh {goal.channel}?
+          của kênh {goal.channel.name}?
         </Text>
       ),
       labels: { confirm: "Xóa", cancel: "Hủy" },
@@ -188,7 +188,7 @@ function RouteComponent() {
                       </Text>
                     </Table.Td>
                     <Table.Td>
-                      <Text>{goal.channel}</Text>
+                      <Text>{goal.channel.name}</Text>
                     </Table.Td>
                     <Table.Td>
                       <Text fw={600} c="indigo">
