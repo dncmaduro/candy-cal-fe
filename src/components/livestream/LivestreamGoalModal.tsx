@@ -16,7 +16,10 @@ interface Props {
     _id: string
     month: number
     year: number
-    channel: string
+    channel: {
+      _id: string
+      name: string
+    }
     goal: number
   }
   refetch: () => void
@@ -63,7 +66,7 @@ export const LivestreamGoalModal = ({ goal, refetch }: Props) => {
     defaultValues: {
       month: goal?.month ?? new Date().getMonth(),
       year: goal?.year ?? new Date().getFullYear(),
-      channel: goal?.channel ?? "",
+      channel: goal?.channel._id ?? "",
       goal: goal?.goal ?? 0
     }
   })

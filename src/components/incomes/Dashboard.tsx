@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { useIncomes } from "../../hooks/useIncomes"
+import { useLivestream } from "../../hooks/useLivestream"
 import {
   Box,
   Flex,
@@ -9,7 +10,10 @@ import {
   Button,
   Stack,
   Paper,
-  Divider
+  Divider,
+  Select,
+  ActionIcon,
+  Badge
 } from "@mantine/core"
 import { modals } from "@mantine/modals"
 import {
@@ -23,7 +27,9 @@ import {
   IconDeviceDesktop,
   IconBuilding,
   IconAnalyze,
-  IconTrophy
+  IconTrophy,
+  IconFilter,
+  IconFilterOff
 } from "@tabler/icons-react"
 import { useMonthGoals } from "../../hooks/useMonthGoals"
 import { KPIBox } from "./KPIBox"
@@ -31,11 +37,17 @@ import { TopCreatorsModal } from "./TopCreatorsModal"
 import { fmtPercent } from "../../utils/fmt"
 import { SegmentedControl } from "@mantine/core"
 import { CDashboardLayout } from "../common/CDashboardLayout"
+import { format } from "date-fns"
 
 export const Dashboard = () => {
   const [kpiView, setKpiView] = useState<"live" | "shop" | "total">("live")
   type DiscountMode = "beforeDiscount" | "afterDiscount"
   const [mode, setMode] = useState<DiscountMode>("afterDiscount")
+  const [channelId, setChannelId] = useState<string | null>(null)
+  const [selectedMonth, setSelectedMonth] = useState<string>(() => {
+    const now = new Date()
+    return new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+  })
 
   const {
     getKPIPercentageByMonth,
@@ -45,42 +57,105 @@ export const Dashboard = () => {
     getAdsCostSplitByMonth
   } = useIncomes()
 
-  const currentYear = new Date().getFullYear()
-  const currentMonth = new Date().getMonth()
   const { getGoal } = useMonthGoals()
+  const { searchLivestreamChannels } = useLivestream()
+
+  // Fetch livestream channels for the filter
+  const { data: channelsData = [] } = useQuery({
+    queryKey: ["searchLivestreamChannels", "all"],
+    queryFn: () =>
+      searchLivestreamChannels({
+        page: 1,
+        limit: 100
+      }),
+    select: (data) => data.data.data || [],
+    staleTime: 5 * 60 * 1000 // Cache for 5 minutes
+  })
+
+  // Generate list of last 24 months for selection
+  const monthOptions = useMemo(() => {
+    const now = new Date()
+    const options = []
+    for (let i = 0; i < 24; i++) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      options.push({
+        value: date.toISOString(),
+        label: format(date, "MM/yyyy")
+      })
+    }
+    return options
+  }, [])
+
+  // Generate channel options from livestream channels
+  const channelOptions = useMemo(() => {
+    return channelsData.map((channel) => ({
+      value: channel._id,
+      label: channel.name
+    }))
+  }, [channelsData])
+
+  // Parse selected month
+  const selectedDate = new Date(selectedMonth)
+  const currentMonth = selectedDate.getMonth()
+  const currentYear = selectedDate.getFullYear()
 
   const { data: KPIPercentageData } = useQuery({
-    queryKey: ["getKPIPercentageByMonth", currentMonth, currentYear],
+    queryKey: ["getKPIPercentageByMonth", currentMonth, currentYear, channelId],
     queryFn: () =>
-      getKPIPercentageByMonth({ month: currentMonth, year: currentYear }),
+      getKPIPercentageByMonth({
+        month: currentMonth,
+        year: currentYear,
+        channelId: channelId || undefined
+      }),
     select: (data) => data.data
   })
 
   const { data: totalQuantityData } = useQuery({
-    queryKey: ["getTotalQuantityByMonth", currentMonth, currentYear],
+    queryKey: ["getTotalQuantityByMonth", currentMonth, currentYear, channelId],
     queryFn: () =>
-      getTotalQuantityByMonth({ month: currentMonth, year: currentYear }),
+      getTotalQuantityByMonth({
+        month: currentMonth,
+        year: currentYear,
+        channelId: channelId || undefined
+      }),
     select: (data) => data.data
   })
 
   const { data: totalIncomesData } = useQuery({
-    queryKey: ["getTotalIncomesByMonth", currentMonth, currentYear],
+    queryKey: ["getTotalIncomesByMonth", currentMonth, currentYear, channelId],
     queryFn: () =>
-      getTotalIncomesByMonth({ month: currentMonth, year: currentYear }),
+      getTotalIncomesByMonth({
+        month: currentMonth,
+        year: currentYear,
+        channelId: channelId || undefined
+      }),
     select: (data) => data.data
   })
 
   const { data: liveVideoIncomeMonthData } = useQuery({
-    queryKey: ["getLiveShopIncomeByMonth", currentMonth, currentYear],
+    queryKey: [
+      "getLiveShopIncomeByMonth",
+      currentMonth,
+      currentYear,
+      channelId
+    ],
     queryFn: () =>
-      getLiveShopIncomeByMonth({ month: currentMonth, year: currentYear }),
+      getLiveShopIncomeByMonth({
+        month: currentMonth,
+        year: currentYear,
+        channelId: channelId || undefined
+      }),
     select: (data) => data.data
   })
 
   const { data: adsCostSplitMonthData } = useQuery({
-    queryKey: ["getAdsCostSplitByMonth", currentMonth, currentYear],
+    queryKey: ["getAdsCostSplitByMonth", currentMonth, currentYear, channelId],
     queryFn: () =>
-      getAdsCostSplitByMonth({ month: currentMonth, year: currentYear }),
+      getAdsCostSplitByMonth({
+        month: currentMonth,
+        year: currentYear,
+        channelId: channelId || undefined
+      }),
     select: (data) => data.data
   })
 
@@ -126,8 +201,10 @@ export const Dashboard = () => {
       ? totalIncomesSelected.live
       : kpiView === "shop"
         ? totalIncomesSelected.shop
-        : (totalIncomesSelected.live || 0) + (totalIncomesSelected.shop || 0)
+        : totalIncomesSelected.live + totalIncomesSelected.shop
     : undefined
+
+  console.log(totalIncomesSelected, kpiView)
 
   const quantityValue = totalQuantityData
     ? kpiView === "live"
@@ -211,6 +288,39 @@ export const Dashboard = () => {
       subheader="Tổng quan hiệu suất kinh doanh theo thời gian thực"
       rightHeader={
         <>
+          <Select
+            label="Tháng"
+            value={selectedMonth}
+            onChange={(v) => setSelectedMonth(v || selectedMonth)}
+            data={monthOptions}
+            size="sm"
+            w={140}
+          />
+          <Group gap="xs">
+            <Select
+              label="Kênh livestream"
+              placeholder="Tất cả kênh"
+              value={channelId}
+              onChange={setChannelId}
+              data={channelOptions}
+              size="sm"
+              w={200}
+              clearable
+              searchable
+            />
+            {channelId && (
+              <ActionIcon
+                color="gray"
+                variant="subtle"
+                size="sm"
+                onClick={() => setChannelId(null)}
+                title="Xóa lọc kênh"
+                mt="xl"
+              >
+                <IconFilterOff size={16} />
+              </ActionIcon>
+            )}
+          </Group>
           <Button
             color="grape"
             variant="gradient"
@@ -268,7 +378,7 @@ export const Dashboard = () => {
               variant="gradient"
               gradient={{ from: "blue.7", to: "indigo.6", deg: 45 }}
             >
-              Số liệu tháng hiện tại
+              Số liệu tháng
             </Text>
             <Text
               fz="sm"
@@ -278,11 +388,22 @@ export const Dashboard = () => {
               bg="rgba(59, 130, 246, 0.1)"
               style={{ borderRadius: "20px" }}
             >
-              {new Date().toLocaleDateString("vi-VN", {
+              {selectedDate.toLocaleDateString("vi-VN", {
                 month: "long",
                 year: "numeric"
               })}
             </Text>
+            {channelId && (
+              <Badge
+                color="violet"
+                variant="light"
+                leftSection={<IconFilter size={14} />}
+                size="lg"
+              >
+                {channelOptions.find((c) => c.value === channelId)?.label ||
+                  "Kênh đã chọn"}
+              </Badge>
+            )}
           </Flex>
 
           {/* KPI Performance Section */}
