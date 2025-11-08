@@ -26,6 +26,7 @@ import { DailyAdsModal } from "./DailyAdsModal"
 import { IconDownload, IconPlus, IconX } from "@tabler/icons-react"
 import { DeleteIncomeModal } from "./DeleteIncomeModal"
 import { useProducts } from "../../hooks/useProducts"
+import { useLivestream } from "../../hooks/useLivestream"
 import { PackingRulesBoxTypes } from "../../constants/rules"
 import { ExportXlsxIncomesRequest } from "../../hooks/models"
 import { CToast } from "../common/CToast"
@@ -37,6 +38,7 @@ export const Incomes = () => {
   const [orderId, setOrderId] = useState<string>()
   const [productCode, setProductCode] = useState<string>()
   const [productSource, setProductSource] = useState<string>()
+  const [channelFilter, setChannelFilter] = useState<string>()
   const [startDate, setStartDate] = useState<Date | null>(() => {
     const d = new Date()
     d.setDate(d.getDate() - 30)
@@ -46,6 +48,7 @@ export const Incomes = () => {
   const { getIncomesByDateRange, exportXlsxIncomes, getRangeStats } =
     useIncomes()
   const { searchProducts } = useProducts()
+  const { searchLivestreamChannels } = useLivestream()
 
   const startOfDayISO = (d: Date) => {
     const dt = new Date(d)
@@ -72,7 +75,8 @@ export const Incomes = () => {
       endDate,
       orderId,
       productCode,
-      productSource
+      productSource,
+      channelFilter
     ],
     queryFn: () =>
       getIncomesByDateRange({
@@ -84,7 +88,8 @@ export const Incomes = () => {
         endDate: endDate ? endOfDayISO(endDate) : endOfDayISO(new Date()),
         orderId,
         productCode,
-        productSource
+        productSource,
+        channelId: channelFilter
       }),
     select: (data) => data.data
   })
@@ -92,6 +97,16 @@ export const Incomes = () => {
   const { data: productsData } = useQuery({
     queryKey: ["searchProducts", ""],
     queryFn: () => searchProducts({ searchText: "", deleted: false }),
+    select: (data) => data.data
+  })
+
+  const { data: channelsData } = useQuery({
+    queryKey: ["searchLivestreamChannels"],
+    queryFn: () =>
+      searchLivestreamChannels({
+        page: 1,
+        limit: 100
+      }),
     select: (data) => data.data
   })
 
@@ -140,6 +155,15 @@ export const Incomes = () => {
     )
   }, [productsData])
 
+  const channelOptions = useMemo(() => {
+    return (
+      channelsData?.data.map((channel) => ({
+        value: channel._id,
+        label: channel.name
+      })) || []
+    )
+  }, [channelsData])
+
   const sourceOptions = useMemo(() => {
     return [
       {
@@ -167,6 +191,7 @@ export const Incomes = () => {
     { label: "Khách hàng", key: "customer", width: 140 },
     { label: "Tỉnh thành", key: "province", width: 120 },
     { label: "Đơn vị vận chuyển", key: "shippingProvider", width: 150 },
+    { label: "Kênh", key: "channel", width: 120 },
     { label: "Mã sản phẩm", key: "code", width: 110 },
     // { label: "Tên sản phẩm", key: "name", width: 160 },
     { label: "Nguồn", key: "source", width: 140 },
@@ -205,7 +230,7 @@ export const Incomes = () => {
 
   useEffect(() => {
     setPage(1)
-  }, [startDate, endDate, orderId, productCode, productSource])
+  }, [startDate, endDate, orderId, productCode, productSource, channelFilter])
 
   const sourceColors = {
     ads: "green",
@@ -359,6 +384,17 @@ export const Incomes = () => {
               clearable
               style={{ minWidth: 160 }}
             />
+            <Select
+              label="Kênh"
+              data={channelOptions}
+              value={channelFilter}
+              onChange={(val) => setChannelFilter(val ?? undefined)}
+              size="md"
+              searchable
+              placeholder="Tìm kiếm theo kênh"
+              clearable
+              style={{ minWidth: 180 }}
+            />
             <Button
               color="green"
               size="md"
@@ -373,7 +409,8 @@ export const Incomes = () => {
                     : endOfDayISO(new Date()),
                   orderId,
                   productCode,
-                  productSource
+                  productSource,
+                  channel: channelFilter
                 })
               }}
               variant="light"
@@ -428,7 +465,7 @@ export const Incomes = () => {
             horizontalSpacing="md"
             stickyHeader
             className="rounded-xl"
-            miw={2400}
+            miw={2520}
           >
             <Table.Thead>
               <Table.Tr>
@@ -484,6 +521,12 @@ export const Incomes = () => {
                             style={{ verticalAlign: "middle" }}
                           >
                             {item.shippingProvider || "-"}
+                          </Table.Td>
+                          <Table.Td
+                            rowSpan={productLen}
+                            style={{ verticalAlign: "middle" }}
+                          >
+                            {item.channel?.name || "-"}
                           </Table.Td>
                         </>
                       )}

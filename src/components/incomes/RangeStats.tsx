@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react"
 import { useIncomes } from "../../hooks/useIncomes"
 import { useMonthGoals } from "../../hooks/useMonthGoals"
+import { useLivestream } from "../../hooks/useLivestream"
 import { DatePickerInput } from "@mantine/dates"
 import {
   Flex,
@@ -13,7 +14,8 @@ import {
   Group,
   Select,
   Badge,
-  SegmentedControl
+  SegmentedControl,
+  ActionIcon
 } from "@mantine/core"
 import {
   format,
@@ -28,7 +30,11 @@ import type { GetRangeStatsResponse } from "../../hooks/models"
 import { LiveAndVideoStats } from "./LiveAndVideoStats"
 import { SourcesStats } from "./SourcesStats"
 import { CDashboardLayout } from "../common/CDashboardLayout"
-import { IconCalendarStats } from "@tabler/icons-react"
+import {
+  IconCalendarStats,
+  IconFilter,
+  IconFilterOff
+} from "@tabler/icons-react"
 
 type RangeType = "day" | "week" | "month"
 type DiscountMode = "beforeDiscount" | "afterDiscount"
@@ -42,7 +48,10 @@ const RangeSelector = ({
   weekDate,
   setWeekDate,
   monthValue,
-  setMonthValue
+  setMonthValue,
+  channelId,
+  setChannelId,
+  channelsData
 }: {
   rangeType: RangeType
   onChangeRangeType: (r: RangeType) => void
@@ -52,6 +61,9 @@ const RangeSelector = ({
   setWeekDate: (d: Date | null) => void
   monthValue: string
   setMonthValue: (v: string) => void
+  channelId: string | null
+  setChannelId: (id: string | null) => void
+  channelsData: any[]
 }) => {
   // last 24 months for selection
   const months = useMemo(() => {
@@ -88,7 +100,7 @@ const RangeSelector = ({
   }, [])
 
   return (
-    <Group align="flex-end" gap={12}>
+    <Group align="flex-end" gap={12} wrap="nowrap">
       <Select
         value={rangeType}
         onChange={(v) => onChangeRangeType((v as RangeType) || "day")}
@@ -99,6 +111,7 @@ const RangeSelector = ({
         ]}
         size="sm"
         w={140}
+        label="Loại"
       />
 
       {rangeType === "day" && (
@@ -110,6 +123,7 @@ const RangeSelector = ({
           size="sm"
           radius="md"
           maxDate={new Date()}
+          w={160}
         />
       )}
 
@@ -134,6 +148,35 @@ const RangeSelector = ({
           w={160}
         />
       )}
+
+      <Select
+        label="Kênh livestream"
+        placeholder="Tất cả kênh"
+        value={channelId}
+        onChange={setChannelId}
+        data={[
+          ...channelsData.map((channel) => ({
+            label: channel.name,
+            value: channel._id
+          }))
+        ]}
+        size="sm"
+        w={180}
+        clearable
+        leftSection={<IconFilter size={16} />}
+      />
+
+      {channelId && (
+        <ActionIcon
+          variant="subtle"
+          color="gray"
+          size="sm"
+          onClick={() => setChannelId(null)}
+          title="Xóa bộ lọc kênh"
+        >
+          <IconFilterOff size={16} />
+        </ActionIcon>
+      )}
     </Group>
   )
 }
@@ -141,9 +184,11 @@ const RangeSelector = ({
 export const RangeStats = () => {
   const { getRangeStats } = useIncomes()
   const { getGoal } = useMonthGoals()
+  const { searchLivestreamChannels } = useLivestream()
 
   const [rangeType, setRangeType] = useState<RangeType>("day")
   const [mode, setMode] = useState<DiscountMode>("afterDiscount")
+  const [channelId, setChannelId] = useState<string | null>(null)
   const [day, setDay] = useState<Date | null>(() => {
     const d = new Date()
     d.setDate(d.getDate() - 1)
@@ -157,6 +202,18 @@ export const RangeStats = () => {
   const [monthValue, setMonthValue] = useState<string>(() =>
     new Date().toISOString()
   )
+
+  // Fetch livestream channels for the filter
+  const { data: channelsData = [] } = useQuery({
+    queryKey: ["searchLivestreamChannels", "all"],
+    queryFn: () =>
+      searchLivestreamChannels({
+        page: 1,
+        limit: 100 // Get all channels
+      }),
+    select: (data) => data.data.data || [],
+    staleTime: 5 * 60 * 1000 // Cache for 5 minutes
+  })
 
   // derived objects for the selected discount mode (before/after)
   // (we access current via (current as any)[mode] inline below)
@@ -207,12 +264,18 @@ export const RangeStats = () => {
   }, [rangeType, day, weekDate, monthValue])
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["getRangeStats", range?.start ?? null, range?.end ?? null],
+    queryKey: [
+      "getRangeStats",
+      range?.start ?? null,
+      range?.end ?? null,
+      channelId
+    ],
     queryFn: async () => {
       if (!range) return null
       const res = await getRangeStats({
         startDate: range.start,
-        endDate: range.end
+        endDate: range.end,
+        channelId: channelId || undefined
       })
       return res.data as GetRangeStatsResponse
     },
@@ -255,6 +318,9 @@ export const RangeStats = () => {
             setWeekDate={setWeekDate}
             monthValue={monthValue}
             setMonthValue={setMonthValue}
+            channelId={channelId}
+            setChannelId={setChannelId}
+            channelsData={channelsData}
           />
           <SegmentedControl
             value={mode}
@@ -269,14 +335,61 @@ export const RangeStats = () => {
       }
       content={
         <>
+          {/* Filter Summary */}
+          {(channelId || range) && (
+            <Paper withBorder p="md" radius="md" mb="lg" bg="blue.0">
+              <Group gap="md" align="center">
+                <IconFilter size={16} color="var(--mantine-color-blue-6)" />
+                <Text size="sm" fw={500} c="blue.7">
+                  Bộ lọc đang áp dụng:
+                </Text>
+                {range && (
+                  <Badge variant="light" color="blue" size="sm">
+                    {range.label}
+                  </Badge>
+                )}
+                {channelId && (
+                  <Badge variant="light" color="green" size="sm">
+                    {channelsData.find((c) => c._id === channelId)?.name ||
+                      "Kênh đã chọn"}
+                  </Badge>
+                )}
+              </Group>
+            </Paper>
+          )}
+
           {isLoading ? (
-            <Flex justify="center" align="center" h={160}>
-              <Loader />
-            </Flex>
+            <Paper withBorder p="xl" radius="lg">
+              <Flex
+                justify="center"
+                align="center"
+                h={160}
+                direction="column"
+                gap="md"
+              >
+                <Loader size="lg" />
+                <Text c="dimmed" size="sm">
+                  Đang tải dữ liệu thống kê...
+                </Text>
+              </Flex>
+            </Paper>
           ) : error ? (
-            <Text c="red" fz="sm">
-              Không lấy được dữ liệu
-            </Text>
+            <Paper withBorder p="xl" radius="lg" bg="red.0">
+              <Flex
+                justify="center"
+                align="center"
+                h={160}
+                direction="column"
+                gap="md"
+              >
+                <Text c="red" fw={500}>
+                  Không lấy được dữ liệu
+                </Text>
+                <Text c="red.7" size="sm">
+                  Vui lòng thử lại sau hoặc liên hệ quản trị viên
+                </Text>
+              </Flex>
+            </Paper>
           ) : current ? (
             <Stack gap={12}>
               <Paper withBorder p="lg" radius="lg">
@@ -666,9 +779,27 @@ export const RangeStats = () => {
               </Text>
             </Stack>
           ) : (
-            <Text c="dimmed" fz="sm">
-              Chọn khoảng để xem thống kê
-            </Text>
+            <Paper withBorder p="xl" radius="lg" bg="gray.0">
+              <Flex
+                justify="center"
+                align="center"
+                h={160}
+                direction="column"
+                gap="md"
+              >
+                <IconCalendarStats
+                  size={48}
+                  color="var(--mantine-color-gray-5)"
+                />
+                <Text c="dimmed" fw={500} size="lg">
+                  Chọn khoảng thời gian để xem thống kê
+                </Text>
+                <Text c="dimmed" size="sm" ta="center">
+                  Sử dụng các bộ lọc ở trên để chọn khoảng thời gian và kênh bán
+                  hàng
+                </Text>
+              </Flex>
+            </Paper>
           )}
         </>
       }

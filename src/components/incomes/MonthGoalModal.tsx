@@ -1,17 +1,19 @@
-import { useMutation } from "@tanstack/react-query"
+import { useMutation, useQuery } from "@tanstack/react-query"
 import { useMonthGoals } from "../../hooks/useMonthGoals"
+import { useLivestream } from "../../hooks/useLivestream"
 import { modals } from "@mantine/modals"
 import { CToast } from "../common/CToast"
 import { Controller, useForm } from "react-hook-form"
 import { CreateMonthGoalRequest } from "../../hooks/models"
-import { Button, Group, NumberInput, Stack } from "@mantine/core"
+import { Button, Group, NumberInput, Stack, Select } from "@mantine/core"
 import { MonthPickerInput } from "@mantine/dates"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 
 interface Props {
   monthGoal?: {
     month: number
     year: number
+    channel?: string
     liveStreamGoal: number
     shopGoal: number
     liveAdsPercentageGoal?: number
@@ -22,12 +24,30 @@ interface Props {
 
 export const MonthGoalModal = ({ monthGoal, refetch }: Props) => {
   const { createMonthGoal, updateGoal } = useMonthGoals()
+  const { searchLivestreamChannels } = useLivestream()
   const [month, setMonth] = useState<Date | null>(new Date())
+
+  // Fetch livestream channels
+  const { data: channelsData = [] } = useQuery({
+    queryKey: ["livestream-channels-for-goals-modal"],
+    queryFn: () => searchLivestreamChannels({ page: 1, limit: 100 }),
+    select: (data) => data.data.data || [],
+    staleTime: 5 * 60 * 1000
+  })
+
+  // Channel options for Select
+  const channelOptions = useMemo(() => {
+    return channelsData.map((channel) => ({
+      value: channel._id,
+      label: channel.name
+    }))
+  }, [channelsData])
 
   const { handleSubmit, setValue, control } = useForm<CreateMonthGoalRequest>({
     defaultValues: monthGoal ?? {
       month: new Date().getMonth(),
       year: new Date().getFullYear(),
+      channel: "",
       liveStreamGoal: 1_000_000,
       shopGoal: 1_000_000,
       liveAdsPercentageGoal: 0,
@@ -93,6 +113,21 @@ export const MonthGoalModal = ({ monthGoal, refetch }: Props) => {
           label="Tháng"
           size="md"
           valueFormat="MM/YYYY"
+        />
+        <Controller
+          control={control}
+          name="channel"
+          render={({ field }) => (
+            <Select
+              label="Kênh livestream"
+              placeholder="Chọn kênh"
+              data={channelOptions}
+              size="md"
+              searchable
+              required
+              {...field}
+            />
+          )}
         />
         <Controller
           control={control}
