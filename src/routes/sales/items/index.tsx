@@ -1,16 +1,29 @@
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useState } from "react"
 import { ColumnDef } from "@tanstack/react-table"
-import { Button, Group, Text, Select, Badge, Box, rem } from "@mantine/core"
+import {
+  Button,
+  Group,
+  Text,
+  Select,
+  Badge,
+  Box,
+  rem,
+  ActionIcon,
+  Tooltip
+} from "@mantine/core"
 import { modals } from "@mantine/modals"
 import { useDebouncedValue } from "@mantine/hooks"
-import { useQuery } from "@tanstack/react-query"
-import { IconUpload } from "@tabler/icons-react"
+import { useQuery, useMutation } from "@tanstack/react-query"
+import { IconUpload, IconPlus, IconEdit, IconTrash } from "@tabler/icons-react"
 import { CDataTable } from "../../../components/common/CDataTable"
 import { useSalesItems } from "../../../hooks/useSalesItems"
 import { SearchSalesItemsResponse } from "../../../hooks/models"
 import { SalesLayout } from "../../../components/layouts/SalesLayout"
 import { UploadSalesItemsModal } from "../../../components/sales/UploadSalesItemsModal"
+import { SalesItemModal } from "../../../components/sales/SalesItemModal"
+import { Can } from "../../../components/common/Can"
+import { CToast } from "../../../components/common/CToast"
 
 export const Route = createFileRoute("/sales/items/")({
   component: RouteComponent
@@ -19,8 +32,14 @@ export const Route = createFileRoute("/sales/items/")({
 type SalesItem = SearchSalesItemsResponse["data"][0]
 
 function RouteComponent() {
-  const { searchSalesItems, getSalesItemsFactory, getSalesItemsSource } =
-    useSalesItems()
+  const navigate = useNavigate()
+  const {
+    searchSalesItems,
+    getSalesItemsFactory,
+    getSalesItemsSource,
+    deleteSalesItem,
+    getSalesItemDetail
+  } = useSalesItems()
 
   // Table state
   const [page, setPage] = useState(1)
@@ -64,6 +83,92 @@ function RouteComponent() {
         limit: pageSize
       })
   })
+
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: deleteSalesItem,
+    onSuccess: () => {
+      CToast.success({ title: "Xóa sản phẩm thành công" })
+      refetch()
+    },
+    onError: (error: any) => {
+      CToast.error({
+        title:
+          error?.response?.data?.message || "Có lỗi xảy ra khi xóa sản phẩm"
+      })
+    }
+  })
+
+  // CRUD handlers
+  const handleCreateItem = () => {
+    modals.open({
+      title: <b>Tạo sản phẩm mới</b>,
+      children: (
+        <SalesItemModal
+          onSuccess={() => {
+            refetch()
+            modals.closeAll()
+          }}
+        />
+      ),
+      size: "md"
+    })
+  }
+
+  const handleUploadItems = () => {
+    modals.open({
+      title: <b>Upload danh sách sản phẩm</b>,
+      children: (
+        <UploadSalesItemsModal
+          onSuccess={() => {
+            refetch()
+            modals.closeAll()
+          }}
+        />
+      ),
+      size: "md"
+    })
+  }
+
+  const handleEditItem = async (item: SalesItem) => {
+    try {
+      const detailData = await getSalesItemDetail(item._id)
+      modals.open({
+        title: <b>Chỉnh sửa sản phẩm</b>,
+        children: (
+          <SalesItemModal
+            item={detailData.data}
+            onSuccess={() => {
+              refetch()
+              modals.closeAll()
+            }}
+          />
+        ),
+        size: "md"
+      })
+    } catch (error: any) {
+      CToast.error({
+        title:
+          error?.response?.data?.message ||
+          "Có lỗi xảy ra khi tải thông tin sản phẩm"
+      })
+    }
+  }
+
+  const handleDeleteItem = (item: SalesItem) => {
+    modals.openConfirmModal({
+      title: "Xác nhận xóa sản phẩm",
+      children: (
+        <Text size="sm">
+          Bạn có chắc chắn muốn xóa sản phẩm <strong>{item.name.vn}</strong>{" "}
+          không? Hành động này không thể hoàn tác.
+        </Text>
+      ),
+      labels: { confirm: "Xóa", cancel: "Hủy" },
+      confirmProps: { color: "red" },
+      onConfirm: () => deleteMutation.mutate(item._id)
+    })
+  }
 
   // Columns
   const columns: ColumnDef<SalesItem>[] = [
@@ -146,6 +251,46 @@ function RouteComponent() {
           {new Date(row.original.createdAt).toLocaleDateString("vi-VN")}
         </Text>
       )
+    },
+    {
+      id: "actions",
+      header: "Thao tác",
+      cell: ({ row }) => {
+        const item = row.original
+        return (
+          <Can roles={["admin", "sales-emp"]}>
+            <Group gap="xs">
+              <Tooltip label="Chỉnh sửa" withArrow>
+                <ActionIcon
+                  variant="light"
+                  color="blue"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleEditItem(item)
+                  }}
+                >
+                  <IconEdit size={16} />
+                </ActionIcon>
+              </Tooltip>
+              <Tooltip label="Xóa" withArrow>
+                <ActionIcon
+                  variant="light"
+                  color="red"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleDeleteItem(item)
+                  }}
+                  loading={deleteMutation.isPending}
+                >
+                  <IconTrash size={16} />
+                </ActionIcon>
+              </Tooltip>
+            </Group>
+          </Can>
+        )
+      }
     }
   ]
 
@@ -174,27 +319,30 @@ function RouteComponent() {
                 Đồng bộ và quản lý danh sách sản phẩm
               </Text>
             </div>
-            <Button
-              leftSection={<IconUpload size={16} />}
-              onClick={() => {
-                modals.open({
-                  title: <b>Đồng bộ từ file</b>,
-                  children: (
-                    <UploadSalesItemsModal
-                      onSuccess={() => {
-                        modals.closeAll()
-                        refetch()
-                      }}
-                    />
-                  ),
-                  size: "md"
-                })
-              }}
-              size="sm"
-              radius="md"
-            >
-              Đồng bộ từ file
-            </Button>
+            <Group gap="sm">
+              <Button
+                leftSection={<IconUpload size={16} />}
+                onClick={() => {
+                  modals.open({
+                    title: <b>Đồng bộ từ file</b>,
+                    children: (
+                      <UploadSalesItemsModal
+                        onSuccess={() => {
+                          modals.closeAll()
+                          refetch()
+                        }}
+                      />
+                    ),
+                    size: "md"
+                  })
+                }}
+                size="sm"
+                radius="md"
+                variant="light"
+              >
+                Đồng bộ từ file
+              </Button>
+            </Group>
           </Group>
         </Box>
 
@@ -216,6 +364,9 @@ function RouteComponent() {
               setSearchText(value)
               setPage(1)
             }}
+            onRowClick={(row) =>
+              navigate({ to: `/sales/items/${row.original._id}` })
+            }
             extraFilters={
               <>
                 <Select
@@ -249,15 +400,27 @@ function RouteComponent() {
               </>
             }
             extraActions={
-              <Button
-                variant="light"
-                onClick={() => refetch()}
-                disabled={!data}
-                size="sm"
-                radius="md"
-              >
-                Làm mới
-              </Button>
+              <Can roles={["admin", "sales-leader"]}>
+                <Group gap="xs">
+                  <Button
+                    leftSection={<IconUpload size={16} />}
+                    onClick={handleUploadItems}
+                    variant="light"
+                    size="sm"
+                    radius="md"
+                  >
+                    Upload XLSX
+                  </Button>
+                  <Button
+                    leftSection={<IconPlus size={16} />}
+                    onClick={handleCreateItem}
+                    size="sm"
+                    radius="md"
+                  >
+                    Tạo sản phẩm
+                  </Button>
+                </Group>
+              </Can>
             }
           />
         </Box>

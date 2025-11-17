@@ -190,7 +190,7 @@ export function CDataTable<TData, TValue>({
   return (
     <div className={clsx("w-full space-y-3", className)}>
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-end gap-2">
         {enableGlobalFilter && (
           <TextInput
             className="min-w-[220px]"
@@ -341,6 +341,12 @@ export function CDataTable<TData, TValue>({
                       <td
                         key={cell.id}
                         className="px-3 py-2 text-sm text-gray-700"
+                        onClick={(e) => {
+                          // Prevent row click when clicking on actions column
+                          if (cell.column.id === "actions") {
+                            e.stopPropagation()
+                          }
+                        }}
                       >
                         {flexRender(
                           cell.column.columnDef.cell,

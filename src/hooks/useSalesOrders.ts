@@ -6,17 +6,52 @@ import {
   CreateSalesOrderResponse,
   DeleteSalesOrderRequest,
   ExportXlsxSalesOrderRequest,
+  GetOrdersByFunnelRequest,
+  GetOrdersByFunnelResponse,
   GetSalesOrderByIdResponse,
+  MoveSalesOrderToOfficialRequest,
+  MoveSalesOrderToOfficialResponse,
   SearchSalesOrderRequest,
   SearchSalesOrderResponse,
   UpdateSalesOrderItemsRequest,
   UpdateSalesOrderItemsResponse,
+  UpdateSalesOrderTaxShippingRequest,
+  UpdateSalesOrderTaxShippingResponse,
   UpdateShippingInfoRequest,
   UpdateShippingInfoResponse
 } from "./models"
 
 export const useSalesOrders = () => {
   const { accessToken } = useUserStore()
+
+  const uploadSalesOrders = async (file: File) => {
+    const formData = new FormData()
+    formData.append("file", file)
+
+    return callApi<FormData, never>({
+      path: `/v1/salesorders/upload`,
+      data: formData,
+      method: "POST",
+      token: accessToken,
+      headers: {
+        "Content-Type": "multipart/form-data"
+      }
+    })
+  }
+
+  const downloadSalesOrdersTemplate = async () => {
+    return callApi<never, Blob>({
+      path: `/v1/salesorders/upload/template`,
+      method: "GET",
+      token: accessToken,
+      headers: {
+        "Content-Type":
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        Accept:
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+    })
+  }
 
   const createSalesOrder = async (req: CreateSalesOrderRequest) => {
     return callApi<CreateSalesOrderRequest, CreateSalesOrderResponse>({
@@ -46,7 +81,7 @@ export const useSalesOrders = () => {
     req: UpdateShippingInfoRequest
   ) => {
     return callApi<UpdateShippingInfoRequest, UpdateShippingInfoResponse>({
-      path: `/v1/salesorders/${id}/shipping`,
+      path: `/v1/salesorders/${id}/shipping-tax`,
       method: "PATCH",
       data: req,
       token: accessToken
@@ -93,13 +128,61 @@ export const useSalesOrders = () => {
     })
   }
 
+  const updateSalesOrderTaxShipping = async (
+    id: string,
+    req: UpdateSalesOrderTaxShippingRequest
+  ) => {
+    return callApi<
+      UpdateSalesOrderTaxShippingRequest,
+      UpdateSalesOrderTaxShippingResponse
+    >({
+      path: `/v1/salesorders/${id}/tax-shipping`,
+      method: "PATCH",
+      data: req,
+      token: accessToken
+    })
+  }
+
+  const moveSalesOrderToOfficial = async (
+    id: string,
+    req: MoveSalesOrderToOfficialRequest
+  ) => {
+    return callApi<
+      MoveSalesOrderToOfficialRequest,
+      MoveSalesOrderToOfficialResponse
+    >({
+      path: `/v1/salesorders/${id}/convert-official`,
+      method: "PATCH",
+      data: req,
+      token: accessToken
+    })
+  }
+
+  const getOrdersByFunnel = async (
+    funnelId: string,
+    req: GetOrdersByFunnelRequest
+  ) => {
+    const query = toQueryString(req)
+
+    return callApi<never, GetOrdersByFunnelResponse>({
+      path: `/v1/salesorders/funnel/${funnelId}?${query}`,
+      method: "GET",
+      token: accessToken
+    })
+  }
+
   return {
+    uploadSalesOrders,
+    downloadSalesOrdersTemplate,
     createSalesOrder,
     updateSalesOrderItems,
     updateShippingInfo,
     deleteSalesOrder,
     getSalesOrderById,
     searchSalesOrders,
-    exportXlsxSalesOrder
+    exportXlsxSalesOrder,
+    updateSalesOrderTaxShipping,
+    moveSalesOrderToOfficial,
+    getOrdersByFunnel
   }
 }

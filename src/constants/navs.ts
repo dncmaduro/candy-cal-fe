@@ -133,6 +133,12 @@ export const SALES_NAVS = [
     icon: "IconChartFunnel"
   },
   {
+    to: `${SALES_NAVS_URL}/tasks`,
+    label: "Công việc",
+    roles: ["admin", "sales-leader", "sales-emp", "system-emp"],
+    icon: "IconChecklist"
+  },
+  {
     to: `${SALES_NAVS_URL}/orders`,
     label: "Đơn hàng",
     roles: ["admin", "sales-emp", "system-emp"],
@@ -155,5 +161,11 @@ export const SALES_NAVS = [
     label: "Chỉ số",
     roles: ["admin", "sales-emp", "system-emp"],
     icon: "IconChartBar"
+  },
+  {
+    to: `${SALES_NAVS_URL}/customer-ranks`,
+    label: "Hạng khách hàng",
+    roles: ["admin", "sales-emp", "system-emp"],
+    icon: "IconDeviceTabletStar"
   }
 ]

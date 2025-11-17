@@ -90,6 +90,12 @@ export const MoveToContactedModal = ({
           })}
         />
 
+        <TextInput
+          label="Địa chỉ"
+          placeholder="Nhập địa chỉ"
+          {...register("address")}
+        />
+
         <Group justify="flex-end" mt="md">
           <Button
             variant="default"
