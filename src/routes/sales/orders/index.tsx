@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import {
   Badge,
   Button,
@@ -8,34 +8,29 @@ import {
   Text,
   Select,
   ActionIcon,
-  Flex,
-  Collapse,
-  Table,
-  TextInput,
-  Pagination
+  Flex
 } from "@mantine/core"
 import { DatePickerInput } from "@mantine/dates"
 import { useQuery, useMutation } from "@tanstack/react-query"
-import { useCallback, useMemo, useState } from "react"
+import { useState } from "react"
 import { modals } from "@mantine/modals"
 import { format } from "date-fns"
 import {
   IconPlus,
   IconEdit,
-  IconTruck,
   IconTrash,
-  IconChevronDown,
-  IconChevronRight,
-  IconSearch,
-  IconDownload
+  IconDownload,
+  IconFileUpload
 } from "@tabler/icons-react"
+import { ColumnDef } from "@tanstack/react-table"
 import { SalesLayout } from "../../../components/layouts/SalesLayout"
 import { Can } from "../../../components/common/Can"
+import { CDataTable } from "../../../components/common/CDataTable"
 import { useSalesOrders } from "../../../hooks/useSalesOrders"
 import { useSalesFunnel } from "../../../hooks/useSalesFunnel"
 import { CreateSalesOrderModal } from "../../../components/sales/CreateSalesOrderModal"
-import { UpdateShippingCodeModal } from "../../../components/sales/UpdateShippingCodeModal"
 import { UpdateOrderItemsModal } from "../../../components/sales/UpdateOrderItemsModal"
+import { UploadSalesOrdersModal } from "../../../components/sales/UploadSalesOrdersModal"
 import { CToast } from "../../../components/common/CToast"
 
 export const Route = createFileRoute("/sales/orders/")({
@@ -47,6 +42,29 @@ type SalesOrderItem = {
   salesFunnelId: {
     _id: string
     name: string
+    province: {
+      _id: string
+      code: string
+      name: string
+      createdAt: string
+      updatedAt: string
+    }
+    phoneNumber: string
+    address?: string
+    psid: string
+    channel: {
+      _id: string
+      channelName: string
+    }
+    user: {
+      _id: string
+      name: string
+    }
+    hasBuyed: boolean
+    cost?: number
+    stage: "lead" | "contacted" | "customer" | "closed"
+    createdAt: string
+    updatedAt: string
   }
   items: {
     code: string
@@ -62,16 +80,14 @@ type SalesOrderItem = {
   storage: "position_HaNam" | "position_MKT"
   date: string
   total: number
+  discount?: number
+  status: "draft" | "official"
   createdAt: string
   updatedAt: string
 }
 
-type EnrichedSalesOrderItem = SalesOrderItem & {
-  customerName: string
-  customerFacebook: string
-}
-
 function RouteComponent() {
+  const navigate = useNavigate()
   const { searchSalesOrders, deleteSalesOrder, exportXlsxSalesOrder } =
     useSalesOrders()
   const { searchFunnel } = useSalesFunnel()
@@ -82,9 +98,9 @@ function RouteComponent() {
   const [returningFilter, setReturningFilter] = useState<string>("")
   const [funnelFilter, setFunnelFilter] = useState<string>("")
   const [shippingTypeFilter, setShippingTypeFilter] = useState<string>("")
+  const [statusFilter, setStatusFilter] = useState<string>("")
   const [startDate, setStartDate] = useState<Date | null>(null)
   const [endDate, setEndDate] = useState<Date | null>(null)
-  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({})
 
   // Load reference data
   const { data: funnelData } = useQuery({
@@ -106,6 +122,7 @@ function RouteComponent() {
       returningFilter,
       funnelFilter,
       shippingTypeFilter,
+      statusFilter,
       startDate,
       endDate
     ],
@@ -121,6 +138,10 @@ function RouteComponent() {
           shippingTypeFilter === ""
             ? undefined
             : (shippingTypeFilter as "shipping_vtp" | "shipping_cargo"),
+        status:
+          statusFilter === ""
+            ? undefined
+            : (statusFilter as "draft" | "official"),
         startDate: startDate ? format(startDate, "yyyy-MM-dd") : undefined,
         endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined
       })
@@ -145,34 +166,13 @@ function RouteComponent() {
     }
   })
 
-  // Enrich data with funnel info
-  const enrichedData = useMemo(() => {
-    if (!data?.data.data) return []
-
-    const funnels = funnelData?.data.data || []
-
-    return data.data.data.map((item) => {
-      const funnel = funnels.find((f) => f._id === item.salesFunnelId._id)
-      return {
-        ...item,
-        customerName: funnel?.name || "N/A",
-        customerFacebook: funnel?.facebook || "N/A"
-      }
-    })
-  }, [data, funnelData])
+  const ordersData = data?.data.data || []
 
   const funnelOptions =
     funnelData?.data.data.map((item) => ({
       value: item._id,
-      label: `${item.name} - ${item.facebook}`
+      label: `${item.name}${item.phoneNumber ? ` - ${item.phoneNumber}` : ""}`
     })) || []
-
-  const toggleRow = (orderId: string) => {
-    setExpandedRows((prev) => ({
-      ...prev,
-      [orderId]: !prev[orderId]
-    }))
-  }
 
   const handleCreateOrder = () => {
     modals.open({
@@ -189,18 +189,11 @@ function RouteComponent() {
     })
   }
 
-  const handleUpdateShippingInfo = (
-    orderId: string,
-    currentShippingCode?: string,
-    currentShippingType?: "shipping_vtp" | "shipping_cargo"
-  ) => {
+  const handleUploadOrders = () => {
     modals.open({
-      title: <b>Cập nhật thông tin vận chuyển</b>,
+      title: <b>Upload danh sách đơn hàng</b>,
       children: (
-        <UpdateShippingCodeModal
-          orderId={orderId}
-          currentShippingCode={currentShippingCode}
-          currentShippingType={currentShippingType}
+        <UploadSalesOrdersModal
           onSuccess={() => {
             refetch()
             modals.closeAll()
@@ -211,7 +204,7 @@ function RouteComponent() {
     })
   }
 
-  const handleUpdateItems = (item: EnrichedSalesOrderItem) => {
+  const handleUpdateItems = (item: SalesOrderItem) => {
     modals.open({
       title: <b>Cập nhật sản phẩm</b>,
       children: (
@@ -221,6 +214,7 @@ function RouteComponent() {
             code: si.code,
             quantity: si.quantity
           }))}
+          currentDiscount={item.discount}
           onSuccess={() => {
             refetch()
             modals.closeAll()
@@ -252,17 +246,162 @@ function RouteComponent() {
     })
   }
 
-  const factoryDisplay = useCallback((factory: string) => {
-    const factories: Record<string, string> = {
-      candy: "Xưởng kẹo mút",
-      manufacturing: "Xưởng gia công",
-      position_MongCai: "Kho Móng Cái",
-      jelly: "Xưởng thạch",
-      import: "Hàng nhập khẩu"
+  const columns: ColumnDef<SalesOrderItem>[] = [
+    {
+      accessorKey: "salesFunnelId.name",
+      header: "Khách hàng",
+      cell: ({ row }) => (
+        <div>
+          <Flex gap={4} align={"center"}>
+            <Text fw={500} size="sm">
+              {row.original.salesFunnelId.name}
+            </Text>
+            <Badge
+              variant="light"
+              size="xs"
+              color={row.original.returning ? "violet" : "green"}
+            >
+              {row.original.returning ? "Khách cũ" : "Khách mới"}
+            </Badge>
+          </Flex>
+          <Text size="xs" c="dimmed">
+            {row.original.salesFunnelId.phoneNumber}
+          </Text>
+        </div>
+      )
+    },
+    {
+      accessorKey: "items",
+      header: "Số SP",
+      cell: ({ row }) => (
+        <Badge variant="light" color="blue" size="lg">
+          {row.original.items.length}
+        </Badge>
+      )
+    },
+    {
+      accessorKey: "total",
+      header: "Tổng tiền",
+      cell: ({ row }) => (
+        <Text fw={500} size="sm">
+          {row.original.total.toLocaleString("vi-VN")}đ
+        </Text>
+      )
+    },
+    {
+      accessorKey: "discount",
+      header: "Chiết khấu/thùng",
+      cell: ({ row }) =>
+        row.original.discount ? (
+          <div>
+            <Text size="sm" c="orange" fw={600}>
+              {row.original.discount.toLocaleString("vi-VN")}đ/thùng
+            </Text>
+            <Text size="xs" c="dimmed">
+              Tổng:{" "}
+              {(
+                row.original.discount *
+                row.original.items.reduce((sum, item) => sum + item.quantity, 0)
+              ).toLocaleString("vi-VN")}
+              đ
+            </Text>
+          </div>
+        ) : (
+          <Text size="sm" c="dimmed">
+            -
+          </Text>
+        )
+    },
+    {
+      accessorKey: "status",
+      header: "Trạng thái",
+      cell: ({ row }) => (
+        <Badge
+          variant="light"
+          color={row.original.status === "official" ? "green" : "gray"}
+          size="sm"
+        >
+          {row.original.status === "official" ? "Chính thức" : "Báo giá"}
+        </Badge>
+      )
+    },
+    {
+      accessorKey: "shippingCode",
+      header: "Mã vận đơn",
+      cell: ({ row }) => (
+        <Text size="sm">{row.original.shippingCode || "Chưa có"}</Text>
+      )
+    },
+    {
+      accessorKey: "shippingType",
+      header: "Đơn vị vận chuyển",
+      cell: ({ row }) =>
+        row.original.shippingType ? (
+          <Text size="sm">
+            {row.original.shippingType === "shipping_vtp"
+              ? "Viettel Post"
+              : "Shipcode lên chành"}
+          </Text>
+        ) : (
+          <Text size="sm" c="dimmed">
+            Chưa có
+          </Text>
+        )
+    },
+    {
+      accessorKey: "storage",
+      header: "Kho",
+      cell: ({ row }) => (
+        <Text size="sm">
+          {row.original.storage === "position_HaNam" ? "Kho Hà Nội" : "Kho MKT"}
+        </Text>
+      )
+    },
+    {
+      accessorKey: "date",
+      header: "Ngày đặt",
+      cell: ({ row }) => (
+        <Text size="sm" c="dimmed">
+          {format(new Date(row.original.date), "dd/MM/yyyy")}
+        </Text>
+      )
+    },
+    {
+      id: "actions",
+      header: "Thao tác",
+      cell: ({ row }) => (
+        <Can roles={["admin", "sales-leader"]}>
+          <Group gap="xs">
+            <ActionIcon
+              variant="light"
+              color="indigo"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation()
+                handleUpdateItems(row.original)
+              }}
+              title="Cập nhật sản phẩm"
+            >
+              <IconEdit size={16} />
+            </ActionIcon>
+            <ActionIcon
+              variant="light"
+              color="red"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation()
+                handleDeleteOrder(row.original._id)
+              }}
+              title="Xóa đơn hàng"
+            >
+              <IconTrash size={16} />
+            </ActionIcon>
+          </Group>
+        </Can>
+      ),
+      enableSorting: false
     }
-
-    return factories[factory] || factory
-  }, [])
+  ]
 
   return (
     <SalesLayout>
@@ -290,75 +429,96 @@ function RouteComponent() {
 
         {/* Content */}
         <Box px={{ base: 4, md: 28 }} pb={20}>
-          {/* Filters */}
-          <Flex gap="sm" mb="md" wrap="wrap">
-            <TextInput
-              placeholder="Tìm kiếm..."
-              leftSection={<IconSearch size={16} />}
-              value={searchText}
-              onChange={(e) => setSearchText(e.currentTarget.value)}
-              style={{ minWidth: 220 }}
-            />
+          <CDataTable
+            columns={columns}
+            data={ordersData}
+            enableGlobalFilter={true}
+            globalFilterValue={searchText}
+            onGlobalFilterChange={setSearchText}
+            page={page}
+            totalPages={Math.ceil((data?.data.total || 0) / limit)}
+            onPageChange={setPage}
+            onPageSizeChange={setLimit}
+            initialPageSize={limit}
+            pageSizeOptions={[10, 20, 50, 100]}
+            onRowClick={(row) =>
+              navigate({ to: `/sales/orders/${row.original._id}` })
+            }
+            extraFilters={
+              <>
+                <Select
+                  placeholder="Loại khách"
+                  data={[
+                    { value: "", label: "Tất cả" },
+                    { value: "false", label: "Khách mới" },
+                    { value: "true", label: "Khách cũ" }
+                  ]}
+                  value={returningFilter}
+                  onChange={(value) => setReturningFilter(value || "")}
+                  clearable
+                  style={{ width: 200 }}
+                />
 
-            <Select
-              placeholder="Loại khách"
-              data={[
-                { value: "", label: "Tất cả" },
-                { value: "false", label: "Khách mới" },
-                { value: "true", label: "Khách cũ" }
-              ]}
-              value={returningFilter}
-              onChange={(value) => setReturningFilter(value || "")}
-              clearable
-              style={{ width: 200 }}
-            />
+                <Select
+                  placeholder="Tất cả khách hàng"
+                  data={[
+                    { value: "", label: "Tất cả khách hàng" },
+                    ...funnelOptions
+                  ]}
+                  value={funnelFilter}
+                  onChange={(value) => setFunnelFilter(value || "")}
+                  searchable
+                  clearable
+                  style={{ width: 250 }}
+                />
 
-            <Select
-              placeholder="Tất cả khách hàng"
-              data={[
-                { value: "", label: "Tất cả khách hàng" },
-                ...funnelOptions
-              ]}
-              value={funnelFilter}
-              onChange={(value) => setFunnelFilter(value || "")}
-              searchable
-              clearable
-              style={{ width: 250 }}
-            />
+                <Select
+                  placeholder="Đơn vị vận chuyển"
+                  data={[
+                    { value: "", label: "Tất cả đơn vị" },
+                    { value: "shipping_vtp", label: "Viettel Post" },
+                    { value: "shipping_cargo", label: "Shipcode lên chành" }
+                  ]}
+                  value={shippingTypeFilter}
+                  onChange={(value) => setShippingTypeFilter(value || "")}
+                  clearable
+                  style={{ width: 200 }}
+                />
 
-            <Select
-              placeholder="Đơn vị vận chuyển"
-              data={[
-                { value: "", label: "Tất cả đơn vị" },
-                { value: "shipping_vtp", label: "Viettel Post" },
-                { value: "shipping_cargo", label: "Shipcode lên chành" }
-              ]}
-              value={shippingTypeFilter}
-              onChange={(value) => setShippingTypeFilter(value || "")}
-              clearable
-              style={{ width: 200 }}
-            />
+                <Select
+                  placeholder="Trạng thái"
+                  data={[
+                    { value: "", label: "Tất cả trạng thái" },
+                    { value: "draft", label: "Báo giá" },
+                    { value: "official", label: "Chính thức" }
+                  ]}
+                  value={statusFilter}
+                  onChange={(value) => setStatusFilter(value || "")}
+                  clearable
+                  style={{ width: 180 }}
+                />
 
-            <DatePickerInput
-              placeholder="Từ ngày"
-              value={startDate}
-              onChange={setStartDate}
-              clearable
-              valueFormat="DD/MM/YYYY"
-              style={{ width: 180 }}
-            />
+                <DatePickerInput
+                  placeholder="Từ ngày"
+                  value={startDate}
+                  onChange={setStartDate}
+                  clearable
+                  valueFormat="DD/MM/YYYY"
+                  style={{ width: 180 }}
+                />
 
-            <DatePickerInput
-              placeholder="Đến ngày"
-              value={endDate}
-              onChange={setEndDate}
-              clearable
-              valueFormat="DD/MM/YYYY"
-              style={{ width: 180 }}
-            />
-
-            <Box style={{ marginLeft: "auto" }}>
-              <Group gap="xs">
+                <DatePickerInput
+                  placeholder="Đến ngày"
+                  value={endDate}
+                  onChange={setEndDate}
+                  clearable
+                  valueFormat="DD/MM/YYYY"
+                  style={{ width: 180 }}
+                />
+              </>
+            }
+            extraActions={
+              <>
                 <Button
                   onClick={() => {
                     modals.openConfirmModal({
@@ -420,6 +580,16 @@ function RouteComponent() {
                                 </strong>
                               </Text>
                             )}
+                            {statusFilter && (
+                              <Text size="sm" mb={4}>
+                                • Trạng thái:{" "}
+                                <strong>
+                                  {statusFilter === "draft"
+                                    ? "Báo giá"
+                                    : "Chính thức"}
+                                </strong>
+                              </Text>
+                            )}
                             {startDate && (
                               <Text size="sm" mb={4}>
                                 • Từ ngày:{" "}
@@ -438,6 +608,7 @@ function RouteComponent() {
                               !returningFilter &&
                               !funnelFilter &&
                               !shippingTypeFilter &&
+                              !statusFilter &&
                               !startDate &&
                               !endDate && (
                                 <Text size="sm" c="orange" mb={4}>
@@ -466,6 +637,10 @@ function RouteComponent() {
                               : (shippingTypeFilter as
                                   | "shipping_vtp"
                                   | "shipping_cargo"),
+                          status:
+                            statusFilter === ""
+                              ? undefined
+                              : (statusFilter as "draft" | "official"),
                           startDate: startDate
                             ? format(startDate, "yyyy-MM-dd")
                             : undefined,
@@ -484,7 +659,16 @@ function RouteComponent() {
                 >
                   Xuất Excel
                 </Button>
-                <Can roles={["admin", "sale-leader"]}>
+                <Can roles={["admin", "sales-leader"]}>
+                  <Button
+                    onClick={handleUploadOrders}
+                    leftSection={<IconFileUpload size={16} />}
+                    size="sm"
+                    radius="md"
+                    variant="light"
+                  >
+                    Upload XLSX
+                  </Button>
                   <Button
                     onClick={handleCreateOrder}
                     leftSection={<IconPlus size={16} />}
@@ -494,253 +678,9 @@ function RouteComponent() {
                     Tạo đơn hàng
                   </Button>
                 </Can>
-              </Group>
-            </Box>
-          </Flex>
-
-          {/* Custom Table with Expandable Rows */}
-          <Box
-            style={{
-              border: "1px solid #e9ecef",
-              borderRadius: 12,
-              overflow: "hidden"
-            }}
-          >
-            <Table highlightOnHover>
-              <Table.Thead>
-                <Table.Tr>
-                  <Table.Th style={{ width: 40 }}></Table.Th>
-                  <Table.Th>Khách hàng</Table.Th>
-                  <Table.Th>Số SP</Table.Th>
-                  <Table.Th>Tổng tiền</Table.Th>
-                  <Table.Th>Mã vận đơn</Table.Th>
-                  <Table.Th>Đơn vị vận chuyển</Table.Th>
-                  <Table.Th>Kho</Table.Th>
-                  <Table.Th>Ngày đặt</Table.Th>
-                  <Table.Th>Thao tác</Table.Th>
-                </Table.Tr>
-              </Table.Thead>
-              <Table.Tbody>
-                {enrichedData.map((item) => (
-                  <>
-                    <Table.Tr key={item._id}>
-                      <Table.Td>
-                        <ActionIcon
-                          variant="subtle"
-                          size="sm"
-                          onClick={() => toggleRow(item._id)}
-                        >
-                          {expandedRows[item._id] ? (
-                            <IconChevronDown size={16} />
-                          ) : (
-                            <IconChevronRight size={16} />
-                          )}
-                        </ActionIcon>
-                      </Table.Td>
-                      <Table.Td>
-                        <div>
-                          <Flex gap={4} align={"center"}>
-                            <Text fw={500} size="sm">
-                              {item.customerName}
-                            </Text>
-                            <Badge
-                              variant="light"
-                              size="xs"
-                              color={item.returning ? "violet" : "green"}
-                            >
-                              {item.returning ? "Khách cũ" : "Khách mới"}
-                            </Badge>
-                          </Flex>
-                          <Text size="xs" c="dimmed">
-                            {item.customerFacebook}
-                          </Text>
-                        </div>
-                      </Table.Td>
-                      <Table.Td>
-                        <Badge variant="light" color="blue" size="lg">
-                          {item.items.length}
-                        </Badge>
-                      </Table.Td>
-                      <Table.Td>
-                        <Text fw={500} size="sm">
-                          {item.total.toLocaleString("vi-VN")}đ
-                        </Text>
-                      </Table.Td>
-                      <Table.Td>
-                        <Text size="sm">{item.shippingCode || "Chưa có"}</Text>
-                      </Table.Td>
-                      <Table.Td>
-                        {item.shippingType ? (
-                          <Text size="sm">
-                            {item.shippingType === "shipping_vtp"
-                              ? "Viettel Post"
-                              : "Shipcode lên chành"}
-                          </Text>
-                        ) : (
-                          <Text size="sm" c="dimmed">
-                            Chưa có
-                          </Text>
-                        )}
-                      </Table.Td>
-                      <Table.Td>
-                        <Text size="sm">
-                          {item.storage === "position_HaNam"
-                            ? "Kho Hà Nam"
-                            : "Kho MKT"}
-                        </Text>
-                      </Table.Td>
-                      <Table.Td>
-                        <Text size="sm" c="dimmed">
-                          {format(new Date(item.date), "dd/MM/yyyy")}
-                        </Text>
-                      </Table.Td>
-                      <Table.Td>
-                        <Can roles={["admin", "sale-leader"]}>
-                          <Group gap="xs">
-                            <ActionIcon
-                              variant="light"
-                              color="blue"
-                              size="sm"
-                              onClick={() =>
-                                handleUpdateShippingInfo(
-                                  item._id,
-                                  item.shippingCode,
-                                  item.shippingType
-                                )
-                              }
-                              title="Cập nhật thông tin vận chuyển"
-                            >
-                              <IconTruck size={16} />
-                            </ActionIcon>
-                            <ActionIcon
-                              variant="light"
-                              color="indigo"
-                              size="sm"
-                              onClick={() => handleUpdateItems(item)}
-                              title="Cập nhật sản phẩm"
-                            >
-                              <IconEdit size={16} />
-                            </ActionIcon>
-                            <ActionIcon
-                              variant="light"
-                              color="red"
-                              size="sm"
-                              onClick={() => handleDeleteOrder(item._id)}
-                              title="Xóa đơn hàng"
-                            >
-                              <IconTrash size={16} />
-                            </ActionIcon>
-                          </Group>
-                        </Can>
-                      </Table.Td>
-                    </Table.Tr>
-
-                    {/* Expanded Row - Items Detail */}
-                    {expandedRows[item._id] && (
-                      <Table.Tr>
-                        <Table.Td colSpan={9} style={{ padding: 0 }}>
-                          <Collapse in={expandedRows[item._id]}>
-                            <Box p="md" bg="#fafbfc">
-                              <Text fw={600} size="sm" mb="sm">
-                                Chi tiết sản phẩm:
-                              </Text>
-                              <Table
-                                withTableBorder
-                                bg={"white"}
-                                withColumnBorders
-                                style={{ fontSize: "0.875rem" }}
-                              >
-                                <Table.Thead>
-                                  <Table.Tr>
-                                    <Table.Th>Mã SP</Table.Th>
-                                    <Table.Th>Tên SP</Table.Th>
-                                    <Table.Th>Số lượng</Table.Th>
-                                    <Table.Th>Đơn giá</Table.Th>
-                                    <Table.Th>Thành tiền</Table.Th>
-                                    <Table.Th>Factory</Table.Th>
-                                    <Table.Th>Source</Table.Th>
-                                  </Table.Tr>
-                                </Table.Thead>
-                                <Table.Tbody>
-                                  {item.items.map((subItem, idx) => (
-                                    <Table.Tr key={idx}>
-                                      <Table.Td>
-                                        <Text size="sm" fw={500}>
-                                          {subItem.code}
-                                        </Text>
-                                      </Table.Td>
-                                      <Table.Td>
-                                        <Text size="sm">{subItem.name}</Text>
-                                      </Table.Td>
-                                      <Table.Td>
-                                        <Text size="sm">
-                                          {subItem.quantity}
-                                        </Text>
-                                      </Table.Td>
-                                      <Table.Td>
-                                        <Text size="sm">
-                                          {subItem.price.toLocaleString(
-                                            "vi-VN"
-                                          )}
-                                          đ
-                                        </Text>
-                                      </Table.Td>
-                                      <Table.Td>
-                                        <Text size="sm" fw={500}>
-                                          {(
-                                            subItem.price * subItem.quantity
-                                          ).toLocaleString("vi-VN")}
-                                          đ
-                                        </Text>
-                                      </Table.Td>
-                                      <Table.Td>
-                                        <Text size="sm">
-                                          {factoryDisplay(
-                                            subItem.factory || ""
-                                          )}
-                                        </Text>
-                                      </Table.Td>
-                                      <Table.Td>
-                                        <Text size="sm">
-                                          {subItem.source === "inside"
-                                            ? "Hàng trong nhà máy"
-                                            : "Hàng ngoài nhà máy"}
-                                        </Text>
-                                      </Table.Td>
-                                    </Table.Tr>
-                                  ))}
-                                </Table.Tbody>
-                              </Table>
-                            </Box>
-                          </Collapse>
-                        </Table.Td>
-                      </Table.Tr>
-                    )}
-                  </>
-                ))}
-              </Table.Tbody>
-            </Table>
-          </Box>
-
-          {/* Pagination */}
-          <Flex justify="space-between" align="center" mt="md">
-            <Text size="sm" c="dimmed">
-              Trang {page} / {Math.ceil((data?.data.total || 0) / limit)} · Tổng{" "}
-              {data?.data.total || 0} đơn hàng
-            </Text>
-            <Pagination
-              total={Math.ceil((data?.data.total || 0) / limit)}
-              value={page}
-              onChange={setPage}
-              withEdges
-            />
-            <Select
-              style={{ width: 100 }}
-              value={String(limit)}
-              onChange={(value) => setLimit(Number(value) || 10)}
-              data={["10", "20", "50", "100"]}
-            />
-          </Flex>
+              </>
+            }
+          />
         </Box>
       </Box>
     </SalesLayout>

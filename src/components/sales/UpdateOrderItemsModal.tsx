@@ -1,4 +1,4 @@
-import { Button, Group, Select, NumberInput } from "@mantine/core"
+import { Button, Group, Select, NumberInput, Text } from "@mantine/core"
 import { useForm } from "react-hook-form"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { useState } from "react"
@@ -15,12 +15,16 @@ type ItemInput = {
 type UpdateOrderItemsModalProps = {
   orderId: string
   currentItems: { code: string; quantity: number }[]
+  currentDiscount?: number
+  currentDeposit?: number
   onSuccess: () => void
 }
 
 export const UpdateOrderItemsModal = ({
   orderId,
   currentItems,
+  currentDiscount,
+  currentDeposit,
   onSuccess
 }: UpdateOrderItemsModalProps) => {
   const { updateSalesOrderItems } = useSalesOrders()
@@ -29,6 +33,8 @@ export const UpdateOrderItemsModal = ({
   const [items, setItems] = useState<ItemInput[]>(
     currentItems.length > 0 ? currentItems : [{ code: "", quantity: 1 }]
   )
+  const [discount, setDiscount] = useState<number>(currentDiscount || 0)
+  const [deposit, setDeposit] = useState<number>(currentDeposit || 0)
 
   const { handleSubmit } = useForm()
 
@@ -52,7 +58,9 @@ export const UpdateOrderItemsModal = ({
       }
 
       return updateSalesOrderItems(orderId, {
-        items: validItems
+        items: validItems,
+        discount: discount,
+        deposit: deposit
       })
     },
     onSuccess: () => {
@@ -96,8 +104,72 @@ export const UpdateOrderItemsModal = ({
       label: `${item.code} - ${item.name.vn}`
     })) || []
 
+  const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0)
+  const totalDiscount = discount * totalQuantity
+
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
+      <NumberInput
+        label={
+          <Text fw={700} size="md" c="orange">
+            Chiết khấu mỗi thùng
+          </Text>
+        }
+        placeholder="Nhập số tiền chiết khấu mỗi thùng"
+        description={
+          <Text size="xs" c="dimmed">
+            Số tiền chiết khấu cho mỗi thùng hàng • Tổng số lượng:{" "}
+            <Text component="span" fw={600} c="blue">
+              {totalQuantity} thùng
+            </Text>{" "}
+            • Tổng chiết khấu:{" "}
+            <Text component="span" fw={700} c="orange">
+              {totalDiscount.toLocaleString("vi-VN")}đ
+            </Text>
+          </Text>
+        }
+        value={discount}
+        onChange={(value) => setDiscount(Number(value) || 0)}
+        mb="md"
+        min={0}
+        thousandSeparator=","
+        suffix=" đ/thùng"
+        styles={{
+          input: {
+            borderColor: "orange",
+            borderWidth: 2,
+            fontWeight: 600
+          }
+        }}
+      />
+
+      <NumberInput
+        label={
+          <Text fw={700} size="md" c="teal">
+            Tiền cọc
+          </Text>
+        }
+        placeholder="Nhập số tiền cọc"
+        description={
+          <Text size="xs" c="dimmed">
+            Số tiền khách hàng đã đặt cọc cho đơn hàng này
+          </Text>
+        }
+        value={deposit}
+        onChange={(value) => setDeposit(Number(value) || 0)}
+        mb="md"
+        min={0}
+        thousandSeparator=","
+        suffix=" đ"
+        styles={{
+          input: {
+            borderColor: "teal",
+            borderWidth: 2,
+            fontWeight: 600
+          }
+        }}
+      />
+
       <Group mb="xs" align="center" justify="space-between">
         <strong>Sản phẩm</strong>
         <Button

@@ -1,29 +1,27 @@
 import { useState } from "react"
 import { useMutation } from "@tanstack/react-query"
-import { Button, FileButton, Group, Stack, Text, Divider } from "@mantine/core"
+import { Button, Group, Stack, Text, FileButton, Divider } from "@mantine/core"
 import {
-  IconFileSpreadsheet,
   IconUpload,
+  IconFileSpreadsheet,
   IconDownload
 } from "@tabler/icons-react"
-import { useSalesItems } from "../../hooks/useSalesItems"
+import { useSalesFunnel } from "../../hooks/useSalesFunnel"
 import { CToast } from "../common/CToast"
 
-interface UploadSalesItemsModalProps {
+interface Props {
   onSuccess: () => void
 }
 
-export const UploadSalesItemsModal = ({
-  onSuccess
-}: UploadSalesItemsModalProps) => {
-  const { uploadSalesItems, downloadSalesItemsTemplate } = useSalesItems()
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+export const UploadFunnelsModal = ({ onSuccess }: Props) => {
+  const { uploadFunnelsByXlsx, downloadFunnelTemplate } = useSalesFunnel()
+  const [file, setFile] = useState<File | null>(null)
 
-  const { mutate: uploadFile, isPending: uploading } = useMutation({
-    mutationFn: (file: File) => uploadSalesItems(file),
+  const { mutate: uploadFile, isPending } = useMutation({
+    mutationFn: (file: File) => uploadFunnelsByXlsx(file),
     onSuccess: () => {
       CToast.success({
-        title: "Upload thành công - Dữ liệu sản phẩm đã được import"
+        title: "Upload thành công - Dữ liệu funnel đã được import"
       })
       onSuccess()
     },
@@ -35,15 +33,16 @@ export const UploadSalesItemsModal = ({
   })
 
   const { mutate: downloadTemplate, isPending: isDownloading } = useMutation({
-    mutationFn: () => downloadSalesItemsTemplate(),
+    mutationFn: () => downloadFunnelTemplate(),
     onSuccess: (response) => {
+      // Create blob URL and download
       const blob = new Blob([response.data], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
       })
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement("a")
       link.href = url
-      link.download = `sales-items-template-${new Date().getTime()}.xlsx`
+      link.download = `funnel-template-${new Date().getTime()}.xlsx`
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
@@ -59,15 +58,19 @@ export const UploadSalesItemsModal = ({
     }
   })
 
+  const handleFileSelect = (selectedFile: File | null) => {
+    setFile(selectedFile)
+  }
+
   const handleUpload = () => {
-    if (!selectedFile) {
+    if (!file) {
       CToast.error({
         title: "Vui lòng chọn file XLSX để upload"
       })
       return
     }
 
-    uploadFile(selectedFile)
+    uploadFile(file)
   }
 
   const handleDownloadTemplate = () => {
@@ -77,9 +80,8 @@ export const UploadSalesItemsModal = ({
   return (
     <Stack gap="md">
       <Text size="sm" c="dimmed">
-        Upload file Excel (.xlsx) để import danh sách sản phẩm. File cần có các
-        cột: Mã SP, Tên (Tiếng Việt), Tên (Tiếng Trung), Nhà máy, Nguồn, Giá,
-        Quy cách, v.v.
+        Upload file Excel (.xlsx) để import danh sách funnel. File cần có các
+        cột: Tên, Số điện thoại, Tỉnh/TP, Địa chỉ, Kênh, v.v.
       </Text>
 
       {/* Download Template Section */}
@@ -97,7 +99,7 @@ export const UploadSalesItemsModal = ({
 
       {/* Upload Section */}
       <FileButton
-        onChange={setSelectedFile}
+        onChange={handleFileSelect}
         accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
       >
         {(props) => (
@@ -107,15 +109,15 @@ export const UploadSalesItemsModal = ({
             variant="light"
             fullWidth
           >
-            {selectedFile ? selectedFile.name : "Chọn file XLSX"}
+            {file ? file.name : "Chọn file XLSX"}
           </Button>
         )}
       </FileButton>
 
-      {selectedFile && (
+      {file && (
         <Text size="sm" c="dimmed">
-          Đã chọn: <strong>{selectedFile.name}</strong> (
-          {(selectedFile.size / 1024).toFixed(2)} KB)
+          Đã chọn: <strong>{file.name}</strong> ({(file.size / 1024).toFixed(2)}{" "}
+          KB)
         </Text>
       )}
 
@@ -123,8 +125,8 @@ export const UploadSalesItemsModal = ({
         <Button
           leftSection={<IconUpload size={16} />}
           onClick={handleUpload}
-          loading={uploading}
-          disabled={!selectedFile}
+          loading={isPending}
+          disabled={!file}
         >
           Upload
         </Button>

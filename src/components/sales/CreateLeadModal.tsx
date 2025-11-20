@@ -65,7 +65,7 @@ export const CreateLeadModal = ({ onSuccess }: CreateLeadModalProps) => {
   const userOptions =
     usersData?.data.data.map((user) => ({
       value: user._id,
-      label: user.name
+      label: user.name ?? "Anonymous"
     })) || []
 
   return (
@@ -77,14 +77,6 @@ export const CreateLeadModal = ({ onSuccess }: CreateLeadModalProps) => {
           required
           error={errors.name?.message}
           {...register("name", { required: "Tên khách hàng là bắt buộc" })}
-        />
-
-        <TextInput
-          label="Facebook"
-          placeholder="Nhập link Facebook hoặc tên Facebook"
-          required
-          error={errors.facebook?.message}
-          {...register("facebook", { required: "Facebook là bắt buộc" })}
         />
 
         <Controller

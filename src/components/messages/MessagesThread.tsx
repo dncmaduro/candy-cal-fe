@@ -205,7 +205,6 @@ export function MessagesThread({ psid, conversationId }: Props) {
                           funnelId={funnelData._id}
                           currentData={{
                             name: funnelData.name,
-                            facebook: funnelData.facebook,
                             province: funnelData.province,
                             phoneNumber: funnelData.phoneNumber,
                             channel: funnelData.channel._id,
