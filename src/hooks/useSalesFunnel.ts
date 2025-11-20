@@ -1,6 +1,8 @@
 import { useUserStore } from "../store/userStore"
 import { callApi } from "./axios"
 import {
+  CheckPermissionOnFunnelRequest,
+  CheckPermissionOnFunnelResponse,
   CreateLeadRequest,
   CreateLeadResponse,
   GetFunnelByIdRequest,
@@ -15,6 +17,8 @@ import {
   UpdateFunnelCostResponse,
   UpdateFunnelInfoRequest,
   UpdateFunnelInfoResponse,
+  UpdateFunnelResponsibleUserRequest,
+  UpdateFunnelResponsibleUserResponse,
   UpdateStageRequest
 } from "./models"
 import { toQueryString } from "../utils/toQuery"
@@ -93,6 +97,60 @@ export const useSalesFunnel = () => {
     })
   }
 
+  const updateFunnelResponsibleUser = async (
+    id: string,
+    req: UpdateFunnelResponsibleUserRequest
+  ) => {
+    return callApi<
+      UpdateFunnelResponsibleUserRequest,
+      UpdateFunnelResponsibleUserResponse
+    >({
+      path: `/v1/salesfunnel/${id}/user`,
+      method: "PATCH",
+      data: req,
+      token: accessToken
+    })
+  }
+
+  const checkPermissionOnFunnel = async (
+    req: CheckPermissionOnFunnelRequest
+  ) => {
+    return callApi<never, CheckPermissionOnFunnelResponse>({
+      path: `/v1/salesfunnel/${req.id}/check-permission`,
+      method: "GET",
+      token: accessToken
+    })
+  }
+
+  const uploadFunnelsByXlsx = async (file: File) => {
+    const formData = new FormData()
+    formData.append("file", file)
+
+    return callApi<FormData, never>({
+      path: `/v1/salesfunnel/upload`,
+      data: formData,
+      method: "POST",
+      token: accessToken,
+      headers: {
+        "Content-Type": "multipart/form-data"
+      }
+    })
+  }
+
+  const downloadFunnelTemplate = async () => {
+    return callApi<never, Blob>({
+      path: `/v1/salesfunnel/upload/template`,
+      method: "GET",
+      token: accessToken,
+      headers: {
+        "Content-Type":
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        Accept:
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+    })
+  }
+
   return {
     createLead,
     moveToContacted,
@@ -101,6 +159,10 @@ export const useSalesFunnel = () => {
     getFunnelById,
     searchFunnel,
     getFunnelByPsid,
-    updateFunnelCost
+    updateFunnelCost,
+    updateFunnelResponsibleUser,
+    checkPermissionOnFunnel,
+    uploadFunnelsByXlsx,
+    downloadFunnelTemplate
   }
 }

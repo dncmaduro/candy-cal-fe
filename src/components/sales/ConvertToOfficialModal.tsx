@@ -1,17 +1,24 @@
-import { Button, Group, TextInput, Select, NumberInput } from "@mantine/core"
+import {
+  Button,
+  Group,
+  TextInput,
+  Select,
+  NumberInput,
+  Text
+} from "@mantine/core"
 import { useForm, Controller } from "react-hook-form"
 import { useMutation } from "@tanstack/react-query"
 import { CToast } from "../common/CToast"
 import { useSalesOrders } from "../../hooks/useSalesOrders"
 
-type UpdateShippingInfoFormData = {
+type ConvertToOfficialFormData = {
   shippingCode?: string
   shippingType?: "shipping_vtp" | "shipping_cargo"
   tax?: number
   shippingCost?: number
 }
 
-type UpdateShippingInfoModalProps = {
+type ConvertToOfficialModalProps = {
   orderId: string
   currentShippingCode?: string
   currentShippingType?: "shipping_vtp" | "shipping_cargo"
@@ -21,7 +28,7 @@ type UpdateShippingInfoModalProps = {
   onSuccess: () => void
 }
 
-export const UpdateShippingInfoModal = ({
+export const ConvertToOfficialModal = ({
   orderId,
   currentShippingCode,
   currentShippingType,
@@ -29,15 +36,15 @@ export const UpdateShippingInfoModal = ({
   currentShippingCost,
   total,
   onSuccess
-}: UpdateShippingInfoModalProps) => {
-  const { updateShippingInfo } = useSalesOrders()
+}: ConvertToOfficialModalProps) => {
+  const { moveSalesOrderToOfficial } = useSalesOrders()
 
   const {
     control,
     handleSubmit,
     formState: { errors },
     setValue
-  } = useForm<UpdateShippingInfoFormData>({
+  } = useForm<ConvertToOfficialFormData>({
     defaultValues: {
       shippingCode: currentShippingCode || "",
       shippingType: currentShippingType || undefined,
@@ -47,23 +54,30 @@ export const UpdateShippingInfoModal = ({
   })
 
   const mutation = useMutation({
-    mutationFn: (data: UpdateShippingInfoFormData) => {
-      return updateShippingInfo(orderId, data)
+    mutationFn: (data: ConvertToOfficialFormData) => {
+      // API requires tax and shippingCost to be numbers
+      const requestData = {
+        tax: data.tax ?? 0,
+        shippingCost: data.shippingCost ?? 0,
+        shippingCode: data.shippingCode,
+        shippingType: data.shippingType
+      }
+      return moveSalesOrderToOfficial(orderId, requestData)
     },
     onSuccess: () => {
-      CToast.success({ title: "Cập nhật thông tin vận chuyển thành công" })
+      CToast.success({ title: "Chuyển đơn hàng sang chính thức thành công" })
       onSuccess()
     },
     onError: (error: any) => {
       CToast.error({
         title:
           error?.response?.data?.message ||
-          "Có lỗi xảy ra khi cập nhật thông tin vận chuyển"
+          "Có lỗi xảy ra khi chuyển đơn hàng sang chính thức"
       })
     }
   })
 
-  const onSubmit = (data: UpdateShippingInfoFormData) => {
+  const onSubmit = (data: ConvertToOfficialFormData) => {
     mutation.mutate(data)
   }
 
@@ -73,6 +87,11 @@ export const UpdateShippingInfoModal = ({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
+      <Text size="sm" c="dimmed" mb="lg">
+        Cập nhật thông tin vận chuyển và thuế để chuyển đơn hàng từ báo giá sang
+        chính thức
+      </Text>
+
       <Controller
         name="shippingCode"
         control={control}
@@ -160,13 +179,10 @@ export const UpdateShippingInfoModal = ({
       />
 
       <Group justify="flex-end" mt="xl">
-        <Button type="submit" loading={mutation.isPending}>
-          Cập nhật
+        <Button type="submit" loading={mutation.isPending} color="green">
+          Chuyển sang chính thức
         </Button>
       </Group>
     </form>
   )
 }
-
-// Keep old export for backward compatibility
-export const UpdateShippingCodeModal = UpdateShippingInfoModal

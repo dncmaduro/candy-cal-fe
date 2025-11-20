@@ -1,9 +1,10 @@
-import { useForm } from "react-hook-form"
-import { useMutation } from "@tanstack/react-query"
-import { Button, Stack, TextInput } from "@mantine/core"
+import { useForm, Controller } from "react-hook-form"
+import { useMutation, useQuery } from "@tanstack/react-query"
+import { Button, Stack, TextInput, Select } from "@mantine/core"
 import { modals } from "@mantine/modals"
 import { CToast } from "../common/CToast"
 import { useSalesChannels } from "../../hooks/useSalesChannels"
+import { useUsers } from "../../hooks/useUsers"
 import {
   CreateSalesChannelRequest,
   GetSalesChannelDetailResponse
@@ -18,15 +19,32 @@ type FormData = CreateSalesChannelRequest
 
 export const SalesChannelModal = ({ channel, refetch }: Props) => {
   const { createSalesChannel, updateSalesChannel } = useSalesChannels()
+  const { publicSearchUser } = useUsers()
   const isEdit = !!channel
+
+  // Load users for assignee selection
+  const { data: usersData } = useQuery({
+    queryKey: ["users", "public", "sales"],
+    queryFn: () => publicSearchUser({ page: 1, limit: 999, role: "sales-emp" })
+  })
+
+  const userOptions = [
+    { value: "", label: "Không có" },
+    ...(usersData?.data.data.map((user) => ({
+      value: user._id,
+      label: user.name ?? "Anonymous"
+    })) || [])
+  ]
 
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors }
   } = useForm<FormData>({
     defaultValues: {
-      channelName: channel?.channelName || ""
+      channelName: channel?.channelName || "",
+      assignedTo: channel?.assignedTo?.id || ""
     }
   })
 
@@ -74,6 +92,23 @@ export const SalesChannelModal = ({ channel, refetch }: Props) => {
             required: "Tên kênh là bắt buộc"
           })}
           error={errors.channelName?.message}
+        />
+
+        <Controller
+          name="assignedTo"
+          control={control}
+          render={({ field }) => (
+            <Select
+              label="Nhân viên phụ trách"
+              placeholder="Chọn nhân viên phụ trách kênh"
+              data={userOptions}
+              value={field.value || ""}
+              onChange={(value) => field.onChange(value || "")}
+              searchable
+              clearable
+              size="md"
+            />
+          )}
         />
 
         <Button

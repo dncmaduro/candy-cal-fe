@@ -29,7 +29,7 @@ export const useSalesChannels = () => {
   ) => {
     return callApi<UpdateSalesChannelRequest, UpdateSalesChannelResponse>({
       path: `/v1/saleschannels/${id}`,
-      method: "PUT",
+      method: "PATCH",
       data: req,
       token: accessToken
     })

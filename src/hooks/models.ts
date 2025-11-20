@@ -2209,6 +2209,7 @@ export interface DeleteLivestreamChannelRequest {
 /** @interface */
 export interface CreateSalesChannelRequest {
   channelName: string
+  assignedTo?: string
 }
 
 /** @interface */
@@ -2223,6 +2224,7 @@ export interface CreateSalesChannelResponse {
 /** @interface */
 export interface UpdateSalesChannelRequest {
   channelName?: string
+  assignedTo?: string
 }
 
 /** @interface */
@@ -2251,6 +2253,11 @@ export interface SearchSalesChannelResponse {
   data: {
     _id: string
     channelName: string
+    assignedTo?: {
+      id: string
+      name: string
+      username: string
+    }
     createdAt: string
     updatedAt: string
     deletedAt?: string
@@ -2267,6 +2274,11 @@ export interface GetSalesChannelDetailRequest {
 export interface GetSalesChannelDetailResponse {
   _id: string
   channelName: string
+  assignedTo?: {
+    id: string
+    name: string
+    username: string
+  }
   createdAt: string
   updatedAt: string
   deletedAt?: string
@@ -2349,7 +2361,6 @@ export interface DeleteSalesPriceItemRequest {
 /** @interface */
 export interface CreateLeadRequest {
   name: string
-  facebook: string
   channel: string
   user?: string
 }
@@ -2358,9 +2369,15 @@ export interface CreateLeadRequest {
 export interface CreateLeadResponse {
   _id: string
   name: string
-  facebook: string
-  province?: string // Reference to Province schema
+  province?: {
+    _id: string
+    code: string
+    name: string
+    createdAt: string
+    updatedAt: string
+  }
   phoneNumber?: string
+  secondaryPhoneNumbers?: string[]
   psid: string
   channel: {
     _id: string
@@ -2381,15 +2398,23 @@ export interface CreateLeadResponse {
 export interface MoveToContactedRequest {
   province: string
   phoneNumber: string
+  address?: string
 }
 
 /** @interface */
 export interface MoveToContactedResponse {
   _id: string
   name: string
-  facebook: string
-  province: string
+  province: {
+    _id: string
+    code: string
+    name: string
+    createdAt: string
+    updatedAt: string
+  }
   phoneNumber: string
+  secondaryPhoneNumbers?: string[]
+  address?: string
   psid: string
   channel: {
     _id: string
@@ -2414,9 +2439,10 @@ export interface UpdateStageRequest {
 /** @interface */
 export interface UpdateFunnelInfoRequest {
   name?: string
-  facebook?: string
   province?: string
   phoneNumber?: string
+  secondaryPhoneNumbers?: string[]
+  address?: string
   channel?: string
   hasBuyed?: boolean
 }
@@ -2425,9 +2451,16 @@ export interface UpdateFunnelInfoRequest {
 export interface UpdateFunnelInfoResponse {
   _id: string
   name: string
-  facebook: string
-  province: string
+  province: {
+    _id: string
+    code: string
+    name: string
+    createdAt: string
+    updatedAt: string
+  }
   phoneNumber: string
+  secondaryPhoneNumbers?: string[]
+  address?: string
   psid: string
   channel: {
     _id: string
@@ -2453,9 +2486,16 @@ export interface GetFunnelByIdRequest {
 export interface GetFunnelByIdResponse {
   _id: string
   name: string
-  facebook: string
-  province: string
+  province: {
+    _id: string
+    code: string
+    name: string
+    createdAt: string
+    updatedAt: string
+  }
   phoneNumber: string
+  secondaryPhoneNumbers?: string[]
+  address?: string
   psid: string
   channel: {
     _id: string
@@ -2478,7 +2518,9 @@ export interface SearchFunnelRequest {
   channel?: string
   province?: string
   user?: string
+  rank?: "gold" | "silver" | "bronze"
   searchText?: string
+  noActivityDays?: number
   page: number
   limit: number
 }
@@ -2488,9 +2530,15 @@ export interface SearchFunnelResponse {
   data: {
     _id: string
     name: string
-    facebook: string
-    province: string
+    province: {
+      _id: string
+      code: string
+      name: string
+      createdAt: string
+      updatedAt: string
+    }
     phoneNumber: string
+    secondaryPhoneNumbers?: string[]
     psid: string
     channel: {
       _id: string
@@ -2503,6 +2551,8 @@ export interface SearchFunnelResponse {
     hasBuyed: boolean
     cost?: number
     stage: "lead" | "contacted" | "customer" | "closed"
+    totalIncome: number
+    rank: "gold" | "silver" | "bronze"
     createdAt: string
     updatedAt: string
   }[]
@@ -2518,9 +2568,15 @@ export interface GetSalesFunnelByPsidRequest {
 export interface GetSalesFunnelByPsidResponse {
   _id: string
   name: string
-  facebook: string
-  province: string
+  province: {
+    _id: string
+    code: string
+    name: string
+    createdAt: string
+    updatedAt: string
+  }
   phoneNumber: string
+  secondaryPhoneNumbers?: string[]
   psid: string
   channel: {
     _id: string
@@ -2533,6 +2589,8 @@ export interface GetSalesFunnelByPsidResponse {
   hasBuyed: boolean
   cost?: number
   stage: "lead" | "contacted" | "customer" | "closed"
+  totalIncome: number
+  rank: "gold" | "silver" | "bronze"
   createdAt: string
   updatedAt: string
 }
@@ -2547,7 +2605,50 @@ export interface UpdateFunnelCostResponse {
   _id: string
   name: string
   facebook: string
-  province: string
+  province: {
+    _id: string
+    code: string
+    name: string
+    createdAt: string
+    updatedAt: string
+  }
+  phoneNumber: string
+  secondaryPhoneNumbers?: string[]
+  psid: string
+  channel: {
+    _id: string
+    channelName: string
+  }
+  user: {
+    _id: string
+    name: string
+  }
+  hasBuyed: boolean
+  cost?: number
+  stage: "lead" | "contacted" | "customer" | "closed"
+  totalIncome: number
+  rank: "gold" | "silver" | "bronze"
+  createdAt: string
+  updatedAt: string
+}
+
+/** @interface */
+export interface UpdateFunnelResponsibleUserRequest {
+  userId: string
+}
+
+/** @interface */
+export interface UpdateFunnelResponsibleUserResponse {
+  _id: string
+  name: string
+  facebook: string
+  province: {
+    _id: string
+    code: string
+    name: string
+    createdAt: string
+    updatedAt: string
+  }
   phoneNumber: string
   psid: string
   channel: {
@@ -2561,8 +2662,22 @@ export interface UpdateFunnelCostResponse {
   hasBuyed: boolean
   cost?: number
   stage: "lead" | "contacted" | "customer" | "closed"
+  totalIncome: number
+  rank: "gold" | "silver" | "bronze"
   createdAt: string
   updatedAt: string
+}
+
+/** @interface */
+export interface CheckPermissionOnFunnelRequest {
+  id: string
+}
+
+/** @interface */
+export interface CheckPermissionOnFunnelResponse {
+  hasPermission: boolean
+  isAdmin: boolean
+  isResponsible: boolean
 }
 
 // -------------------- SALES ORDERS --------------------
@@ -2573,6 +2688,8 @@ export interface CreateSalesOrderRequest {
   items: { code: string; quantity: number }[]
   storage: "position_HaNam" | "position_MKT"
   date: Date
+  discount?: number
+  deposit?: number
 }
 
 /** @interface */
@@ -2592,6 +2709,11 @@ export interface CreateSalesOrderResponse {
   cost?: number
   date: string
   total: number
+  tax?: number
+  shippingCost?: number
+  deposit?: number
+  discount?: number
+  status: "draft" | "official"
   createdAt: string
   updatedAt: string
 }
@@ -2599,12 +2721,41 @@ export interface CreateSalesOrderResponse {
 /** @interface */
 export interface UpdateSalesOrderItemsRequest {
   items?: { code: string; quantity: number }[]
+  discount?: number
+  deposit?: number
 }
 
 /** @interface */
 export interface UpdateSalesOrderItemsResponse {
   _id: string
-  salesFunnelId: string
+  salesFunnelId: {
+    _id: string
+    name: string
+    province: {
+      _id: string
+      code: string
+      name: string
+      createdAt: string
+      updatedAt: string
+    }
+    phoneNumber: string
+    secondaryPhoneNumbers?: string[]
+    address?: string
+    psid: string
+    channel: {
+      _id: string
+      channelName: string
+    }
+    user: {
+      _id: string
+      name: string
+    }
+    hasBuyed: boolean
+    cost?: number
+    stage: "lead" | "contacted" | "customer" | "closed"
+    createdAt: string
+    updatedAt: string
+  }
   items: {
     code: string
     name: string
@@ -2618,6 +2769,11 @@ export interface UpdateSalesOrderItemsResponse {
   cost?: number
   date: string
   total: number
+  tax?: number
+  shippingCost?: number
+  deposit?: number
+  discount?: number
+  status: "draft" | "official"
   createdAt: string
   updatedAt: string
 }
@@ -2626,12 +2782,41 @@ export interface UpdateSalesOrderItemsResponse {
 export interface UpdateShippingInfoRequest {
   shippingCode?: string
   shippingType?: "shipping_vtp" | "shipping_cargo"
+  tax?: number
+  shippingCost?: number
 }
 
 /** @interface */
 export interface UpdateShippingInfoResponse {
   _id: string
-  salesFunnelId: string
+  salesFunnelId: {
+    _id: string
+    name: string
+    province: {
+      _id: string
+      code: string
+      name: string
+      createdAt: string
+      updatedAt: string
+    }
+    phoneNumber: string
+    secondaryPhoneNumbers?: string[]
+    address?: string
+    psid: string
+    channel: {
+      _id: string
+      channelName: string
+    }
+    user: {
+      _id: string
+      name: string
+    }
+    hasBuyed: boolean
+    cost?: number
+    stage: "lead" | "contacted" | "customer" | "closed"
+    createdAt: string
+    updatedAt: string
+  }
   items: {
     code: string
     name: string
@@ -2645,6 +2830,11 @@ export interface UpdateShippingInfoResponse {
   cost?: number
   date: string
   total: number
+  tax?: number
+  shippingCost?: number
+  deposit?: number
+  discount?: number
+  status: "draft" | "official"
   createdAt: string
   updatedAt: string
 }
@@ -2657,12 +2847,46 @@ export interface GetSalesOrderByIdRequest {
 /** @interface */
 export interface GetSalesOrderByIdResponse {
   _id: string
-  salesFunnelId: string
+  salesFunnelId: {
+    _id: string
+    name: string
+    province: {
+      _id: string
+      code: string
+      name: string
+      createdAt: string
+      updatedAt: string
+    }
+    phoneNumber: string
+    secondaryPhoneNumbers?: string[]
+    address?: string
+    psid: string
+    channel: {
+      _id: string
+      channelName: string
+    }
+    user: {
+      _id: string
+      name: string
+    }
+    hasBuyed: boolean
+    cost?: number
+    stage: "lead" | "contacted" | "customer" | "closed"
+    createdAt: string
+    updatedAt: string
+  }
   items: {
     code: string
     name: string
     price: number
     quantity: number
+    source?: "inside" | "outside"
+    factory?:
+      | "candy"
+      | "manufacturing"
+      | "position_MongCai"
+      | "jelly"
+      | "import"
   }[]
   returning: boolean
   shippingCode?: string
@@ -2671,6 +2895,11 @@ export interface GetSalesOrderByIdResponse {
   cost?: number
   date: string
   total: number
+  discount?: number
+  deposit?: number
+  tax?: number
+  shippingCost?: number
+  status: "draft" | "official"
   createdAt: string
   updatedAt: string
 }
@@ -2688,6 +2917,8 @@ export interface SearchSalesOrderRequest {
   endDate?: string
   searchText?: string
   shippingType?: "shipping_vtp" | "shipping_cargo"
+  status?: "draft" | "official"
+  rank?: "gold" | "silver" | "bronze"
   page: number
   limit: number
 }
@@ -2700,6 +2931,7 @@ export interface ExportXlsxSalesOrderRequest {
   endDate?: string
   searchText?: string
   shippingType?: "shipping_vtp" | "shipping_cargo"
+  status?: "draft" | "official"
   page: number
   limit: number
 }
@@ -2711,6 +2943,30 @@ export interface SearchSalesOrderResponse {
     salesFunnelId: {
       _id: string
       name: string
+      province: {
+        _id: string
+        code: string
+        name: string
+        createdAt: string
+        updatedAt: string
+      }
+      phoneNumber: string
+      secondaryPhoneNumbers?: string[]
+      address?: string
+      psid: string
+      channel: {
+        _id: string
+        channelName: string
+      }
+      user: {
+        _id: string
+        name: string
+      }
+      hasBuyed: boolean
+      cost?: number
+      stage: "lead" | "contacted" | "customer" | "closed"
+      createdAt: string
+      updatedAt: string
     }
     items: {
       code: string
@@ -2732,6 +2988,9 @@ export interface SearchSalesOrderResponse {
     cost?: number
     date: string
     total: number
+    discount?: number
+    deposit?: number
+    status: "draft" | "official"
     createdAt: string
     updatedAt: string
   }[]
@@ -2754,6 +3013,7 @@ export interface PublicSearchUsersRequest {
   searchText?: string
   page: number
   limit: number
+  role?: string
 }
 
 /** @interface */
@@ -2761,8 +3021,102 @@ export interface PublicSearchUsersResponse {
   data: {
     _id: string
     name: string
+    roles?: string[]
   }[]
   total: number
+}
+
+/** @interface */
+export interface UpdateSalesOrderTaxShippingRequest {
+  tax: number
+  shippingCost: number
+}
+
+/** @interface */
+export interface UpdateSalesOrderTaxShippingResponse {
+  _id: string
+  salesFunnelId: string
+  items: {
+    code: string
+    name: string
+    price: number
+    quantity: number
+  }[]
+  returning: boolean
+  shippingCode?: string
+  shippingType?: "shipping_vtp" | "shipping_cargo"
+  storage: "position_HaNam" | "position_MKT"
+  cost?: number
+  date: string
+  total: number
+  tax: number
+  shippingCost: number
+  status: "draft" | "official"
+  createdAt: string
+  updatedAt: string
+}
+
+/** @interface */
+export interface MoveSalesOrderToOfficialRequest {
+  tax: number
+  shippingCost: number
+}
+
+/** @interface */
+export interface MoveSalesOrderToOfficialResponse {
+  _id: string
+  salesFunnelId: string
+  items: {
+    code: string
+    name: string
+    price: number
+    quantity: number
+  }[]
+  returning: boolean
+  shippingCode?: string
+  shippingType?: "shipping_vtp" | "shipping_cargo"
+  storage: "position_HaNam" | "position_MKT"
+  cost?: number
+  date: string
+  total: number
+  tax: number
+  shippingCost: number
+  createdAt: string
+  updatedAt: string
+}
+
+/** @interface */
+export interface GetOrdersByFunnelRequest {
+  page: number
+  limit: number
+}
+
+/** @interface */
+export interface GetOrdersByFunnelResponse {
+  data: {
+    _id: string
+    salesFunnelId: string
+    items: {
+      code: string
+      name: string
+      price: number
+      quantity: number
+    }[]
+    returning: boolean
+    shippingCode?: string
+    shippingType?: "shipping_vtp" | "shipping_cargo"
+    storage: "position_HaNam" | "position_MKT"
+    cost?: number
+    date: string
+    total: number
+    tax?: number
+    shippingCost?: number
+    status: "draft" | "official"
+    createdAt: string
+    updatedAt: string
+  }[]
+  total: number
+  daysSinceLastPurchase: number | null
 }
 
 // -------------------- META SERVICES --------------------
@@ -2883,6 +3237,139 @@ export interface GetSalesItemsSourcesResponse {
   }[]
 }
 
+/** @interface */
+export interface CreateSalesItemRequest {
+  code: string
+  name: {
+    vn: string
+    cn: string
+  }
+  factory: "candy" | "manufacturing" | "position_MongCai" | "jelly" | "import"
+  price: number
+  source: "inside" | "outside"
+}
+
+/** @interface */
+export interface CreateSalesItemResponse {
+  _id: string
+  code: string
+  name: {
+    vn: string
+    cn: string
+  }
+  factory: "candy" | "manufacturing" | "position_MongCai" | "jelly" | "import"
+  price: number
+  source: "inside" | "outside"
+  createdAt: string
+  updatedAt: string
+}
+
+/** @interface */
+export interface UpdateSalesItemRequest {
+  name?: {
+    vn: string
+    cn: string
+  }
+  factory?: "candy" | "manufacturing" | "position_MongCai" | "jelly" | "import"
+  price?: number
+  source?: "inside" | "outside"
+}
+
+/** @interface */
+export interface UpdateSalesItemResponse {
+  _id: string
+  code: string
+  name: {
+    vn: string
+    cn: string
+  }
+  factory: "candy" | "manufacturing" | "position_MongCai" | "jelly" | "import"
+  price: number
+  source: "inside" | "outside"
+  createdAt: string
+  updatedAt: string
+}
+
+/** @interface */
+export interface DeleteSalesItemRequest {
+  id: string
+}
+
+/** @interface */
+export interface GetSalesItemDetailRequest {
+  id: string
+}
+
+/** @interface */
+export interface GetSalesItemDetailResponse {
+  _id: string
+  code: string
+  name: {
+    vn: string
+    cn: string
+  }
+  factory: "candy" | "manufacturing" | "position_MongCai" | "jelly" | "import"
+  price: number
+  source: "inside" | "outside"
+  createdAt: string
+  updatedAt: string
+}
+
+/** @interface */
+export interface GetSalesItemsQuantityByRangeRequest {
+  startDate: Date
+  endDate: Date
+}
+
+/** @interface */
+export interface GetSalesItemsQuantityByRangeResponse {
+  code: string
+  totalQuantity: number
+  orderCount: number
+}
+
+/** @interface */
+export interface GetSalesItemsTopCustomersByRangeRequest {
+  startDate: Date
+  endDate: Date
+}
+
+/** @interface */
+export interface GetSalesItemsTopCustomersByRangeResponse {
+  code: string
+  topCustomers: Array<{
+    funnel: {
+      _id: string
+      name: string
+      province: {
+        _id: string
+        code: string
+        name: string
+        createdAt: string
+        updatedAt: string
+      }
+      phoneNumber: string
+      secondaryPhoneNumbers?: string[]
+      psid: string
+      channel: {
+        _id: string
+        channelName: string
+      }
+      user: {
+        _id: string
+        name: string
+      }
+      hasBuyed: boolean
+      cost?: number
+      stage: "lead" | "contacted" | "customer" | "closed"
+      createdAt: string
+      updatedAt: string
+    }
+    totalQuantity: number
+    orderCount: number
+  }>
+}
+
 // -------------------- SALES DASHBOARD --------------------
 
 /** @interface */
@@ -2937,4 +3424,339 @@ export interface GetMonthlyMetricsResponse {
     customer: number
     closed: number
   }
+}
+
+// -------------------- SALES CUSTOMER RANKS --------------------
+
+/** @interface */
+export interface CreateSalesCustomerRankRequest {
+  rank: "gold" | "silver" | "bronze"
+  minIncome: number
+}
+
+/** @interface */
+export interface CreateSalesCustomerRankResponse {
+  _id: string
+  rank: "gold" | "silver" | "bronze"
+  minIncome: number
+}
+
+/** @interface */
+export interface UpdateSalesCustomerRankRequest {
+  rank?: "gold" | "silver" | "bronze"
+  minIncome?: number
+}
+
+/** @interface */
+export interface UpdateSalesCustomerRankResponse {
+  _id: string
+  rank: "gold" | "silver" | "bronze"
+  minIncome: number
+}
+
+/** @interface */
+export interface DeleteSalesCustomerRankRequest {
+  id: string
+}
+
+/** @interface */
+export interface GetSalesCustomerRankRequest {
+  id: string
+}
+
+/** @interface */
+export interface GetSalesCustomerRankResponse {
+  _id: string
+  rank: "gold" | "silver" | "bronze"
+  minIncome: number
+}
+
+/** @interface */
+export interface GetSalesCustomerRanksRequest {
+  page: number
+  limit: number
+}
+
+/** @interface */
+export interface GetSalesCustomerRanksResponse {
+  _id: string
+  rank: "gold" | "silver" | "bronze"
+  minIncome: number
+}
+
+// -------------------- SALES ACTIVITIES --------------------
+
+/** @interface */
+export interface CreateSalesActivityRequest {
+  time: Date
+  type: "call" | "message" | "other"
+  note?: string
+  salesFunnelId: string
+}
+
+/** @interface */
+export interface CreateSalesActivityResponse {
+  _id: string
+  time: Date
+  type: "call" | "message" | "other"
+  note?: string
+  salesFunnelId: {
+    _id: string
+    name: string
+    phoneNumber: string
+  }
+  createdAt: string
+  updatedAt: string
+}
+
+/** @interface */
+export interface UpdateSalesActivityRequest {
+  time?: Date
+  type?: "call" | "message" | "other"
+  note?: string
+}
+
+/** @interface */
+export interface UpdateSalesActivityResponse {
+  _id: string
+  time: Date
+  type: "call" | "message" | "other"
+  note?: string
+  salesFunnelId: {
+    _id: string
+    name: string
+    phoneNumber: string
+  }
+  createdAt: string
+  updatedAt: string
+}
+
+/** @interface */
+export interface DeleteSalesActivityRequest {
+  id: string
+}
+
+/** @interface */
+export interface GetSalesActivityRequest {
+  id: string
+}
+
+/** @interface */
+export interface GetSalesActivityResponse {
+  _id: string
+  time: Date
+  type: "call" | "message" | "other"
+  note?: string
+  salesFunnelId: {
+    _id: string
+    name: string
+    phoneNumber: string
+  }
+  createdAt: string
+  updatedAt: string
+}
+
+/** @interface */
+export interface GetSalesActivitiesRequest {
+  salesFunnelId?: string
+  page: number
+  limit: number
+  type?: "call" | "message" | "other"
+}
+
+/** @interface */
+export interface GetSalesActivitiesResponse {
+  data: {
+    _id: string
+    time: Date
+    type: "call" | "message" | "other"
+    note?: string
+    salesFunnelId: {
+      _id: string
+      name: string
+      phoneNumber: string
+    }
+    createdAt: string
+    updatedAt: string
+  }[]
+  total: number
+}
+
+/** @interface */
+export interface GetLatestActivityBySalesFunnelIdRequest {
+  salesFunnelId: string
+}
+
+/** @interface */
+export interface GetLatestActivityBySalesFunnelIdResponse {
+  _id: string
+  time: Date
+  type: "call" | "message" | "other"
+  note?: string
+  salesFunnelId: {
+    _id: string
+    name: string
+    phoneNumber: string
+  }
+  createdAt: string
+  updatedAt: string
+}
+
+// -------------------- SALES TASKS --------------------
+
+/** @interface */
+export interface CreateSalesTaskRequest {
+  salesFunnelId: string
+  type: "call" | "message" | "other"
+  note?: string
+  deadline: Date
+}
+
+/** @interface */
+export interface CreateSalesTaskResponse {
+  _id: string
+  salesFunnelId: {
+    _id: string
+    name: string
+    phoneNumber: string
+  }
+  type: "call" | "message" | "other"
+  assigneeId: {
+    id: string
+    name: string
+    username: string
+  }
+  note?: string
+  completed: boolean
+  completedAt?: Date
+  activityId?: string
+  deadline: Date
+  createdAt: string
+  updatedAt: string
+}
+
+/** @interface */
+export interface UpdateSalesTaskRequest {
+  type?: "call" | "message" | "other"
+  note?: string
+  deadline?: Date
+}
+
+/** @interface */
+export interface UpdateSalesTaskResponse {
+  _id: string
+  salesFunnelId: {
+    _id: string
+    name: string
+    phoneNumber: string
+  }
+  type: "call" | "message" | "other"
+  assigneeId: {
+    id: string
+    name: string
+    username: string
+  }
+  note?: string
+  completed: boolean
+  completedAt?: Date
+  activityId?: string
+  deadline: Date
+  createdAt: string
+  updatedAt: string
+}
+
+/** @interface */
+export interface DeleteSalesTaskRequest {
+  id: string
+}
+
+/** @interface */
+export interface GetSalesTaskRequest {
+  id: string
+}
+
+/** @interface */
+export interface GetSalesTaskResponse {
+  _id: string
+  salesFunnelId: {
+    _id: string
+    name: string
+    phoneNumber: string
+  }
+  type: "call" | "message" | "other"
+  assigneeId: {
+    id: string
+    name: string
+    username: string
+  }
+  note?: string
+  completed: boolean
+  completedAt?: Date
+  activityId?: string
+  deadline: Date
+  createdAt: string
+  updatedAt: string
+}
+
+/** @interface */
+export interface GetSalesTasksRequest {
+  salesFunnelId?: string
+  assigneeId?: string
+  completed?: boolean
+  page: number
+  limit: number
+}
+
+/** @interface */
+export interface GetSalesTasksResponse {
+  data: {
+    _id: string
+    salesFunnelId: {
+      _id: string
+      name: string
+      phoneNumber: string
+    }
+    type: "call" | "message" | "other"
+    assigneeId: {
+      id: string
+      name: string
+      username: string
+    }
+    note?: string
+    completed: boolean
+    completedAt?: Date
+    activityId?: string
+    deadline: Date
+    createdAt: string
+    updatedAt: string
+  }[]
+  total: number
+}
+
+/** @interface */
+export interface CompleteTaskRequest {
+  id: string
+}
+
+/** @interface */
+export interface CompleteTaskResponse {
+  _id: string
+  salesFunnelId: {
+    _id: string
+    name: string
+    phoneNumber: string
+  }
+  type: "call" | "message" | "other"
+  assigneeId: {
+    id: string
+    name: string
+    username: string
+  }
+  note?: string
+  completed: boolean
+  completedAt?: Date
+  activityId?: string
+  deadline: Date
+  createdAt: string
+  updatedAt: string
 }

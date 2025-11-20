@@ -1,4 +1,4 @@
-import { Button, Group, Select, NumberInput } from "@mantine/core"
+import { Button, Group, Select, NumberInput, Text } from "@mantine/core"
 import { DatePickerInput } from "@mantine/dates"
 import { useForm, Controller } from "react-hook-form"
 import { useMutation, useQuery } from "@tanstack/react-query"
@@ -13,6 +13,8 @@ type CreateSalesOrderFormData = {
   salesFunnelId: string
   storage: "position_HaNam" | "position_MKT"
   date: Date
+  discount?: number
+  deposit?: number
 }
 
 type ItemInput = {
@@ -43,7 +45,9 @@ export const CreateSalesOrderModal = ({
     defaultValues: {
       salesFunnelId: salesFunnelId || "",
       storage: "position_HaNam",
-      date: new Date()
+      date: new Date(),
+      discount: 0,
+      deposit: 0
     }
   })
 
@@ -80,7 +84,9 @@ export const CreateSalesOrderModal = ({
         salesFunnelId: data.salesFunnelId,
         items: validItems,
         storage: data.storage,
-        date: data.date
+        date: data.date,
+        discount: data.discount,
+        deposit: data.deposit
       })
     },
     onSuccess: () => {
@@ -124,7 +130,7 @@ export const CreateSalesOrderModal = ({
   const funnelOptions =
     funnelData?.data.data.map((item) => ({
       value: item._id,
-      label: `${item.name} - ${item.facebook}`
+      label: `${item.name}${item.phoneNumber ? ` - ${item.phoneNumber}` : ""}`
     })) || []
 
   const salesItemOptions =
@@ -164,7 +170,7 @@ export const CreateSalesOrderModal = ({
             label="Kho xuất hàng"
             placeholder="Chọn kho"
             data={[
-              { value: "position_HaNam", label: "Kho Hà Nam" },
+              { value: "position_HaNam", label: "Kho Hà Nội" },
               { value: "position_MKT", label: "Kho MKT" }
             ]}
             required
@@ -187,6 +193,64 @@ export const CreateSalesOrderModal = ({
             error={errors.date?.message}
             mb="md"
             valueFormat="DD/MM/YYYY"
+          />
+        )}
+      />
+
+      <Controller
+        name="discount"
+        control={control}
+        render={({ field }) => (
+          <NumberInput
+            {...field}
+            label={
+              <Text fw={700} size="md" c="orange">
+                Chiết khấu mỗi thùng
+              </Text>
+            }
+            placeholder="Nhập số tiền chiết khấu mỗi thùng"
+            description="Số tiền chiết khấu cho mỗi thùng hàng (sẽ nhân với tổng số lượng)"
+            error={errors.discount?.message}
+            mb="md"
+            min={0}
+            thousandSeparator=","
+            suffix=" đ/thùng"
+            styles={{
+              input: {
+                borderColor: "orange",
+                borderWidth: 2,
+                fontWeight: 600
+              }
+            }}
+          />
+        )}
+      />
+
+      <Controller
+        name="deposit"
+        control={control}
+        render={({ field }) => (
+          <NumberInput
+            {...field}
+            label={
+              <Text fw={700} size="md" c="teal">
+                Tiền cọc
+              </Text>
+            }
+            placeholder="Nhập số tiền cọc"
+            description="Số tiền khách hàng đã đặt cọc cho đơn hàng này"
+            error={errors.deposit?.message}
+            mb="md"
+            min={0}
+            thousandSeparator=","
+            suffix=" đ"
+            styles={{
+              input: {
+                borderColor: "teal",
+                borderWidth: 2,
+                fontWeight: 600
+              }
+            }}
           />
         )}
       />

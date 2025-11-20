@@ -10,7 +10,7 @@ import {
   ActionIcon,
   Tooltip
 } from "@mantine/core"
-import { useMutation, useQuery } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 import { useMemo, useState } from "react"
 import { modals } from "@mantine/modals"
 import { format } from "date-fns"
@@ -19,8 +19,11 @@ import {
   IconEdit,
   IconArrowRight,
   IconProgress,
-  IconMessage,
-  IconCash
+  // IconMessage,
+  IconCash,
+  IconFileUpload,
+  IconHistory,
+  IconChecklist
 } from "@tabler/icons-react"
 import { SalesLayout } from "../../../components/layouts/SalesLayout"
 import { Can } from "../../../components/common/Can"
@@ -34,8 +37,11 @@ import { MoveToContactedModal } from "../../../components/sales/MoveToContactedM
 import { UpdateStageModal } from "../../../components/sales/UpdateStageModal"
 import { UpdateFunnelInfoModal } from "../../../components/sales/UpdateFunnelInfoModal"
 import { UpdateFunnelCostModal } from "../../../components/sales/UpdateFunnelCostModal"
+import { UploadFunnelsModal } from "../../../components/sales/UploadFunnelsModal"
+import { SalesActivitiesDrawer } from "../../../components/sales/SalesActivitiesDrawer"
+import { CreateTaskModal } from "../../../components/sales/CreateTaskModal"
 import { ColumnDef } from "@tanstack/react-table"
-import { useMetaServices } from "../../../hooks/useMetaServices"
+// import { useMetaServices } from "../../../hooks/useMetaServices"
 
 export const Route = createFileRoute("/sales/funnel/")({
   component: RouteComponent
@@ -44,9 +50,16 @@ export const Route = createFileRoute("/sales/funnel/")({
 type FunnelItem = {
   _id: string
   name: string
-  facebook: string
-  province?: string // Reference to Province schema
+  province: {
+    _id: string
+    code: string
+    name: string
+    createdAt: string
+    updatedAt: string
+  }
   phoneNumber?: string
+  secondaryPhoneNumbers?: string[]
+  address?: string
   psid: string
   channel: {
     _id: string
@@ -55,18 +68,14 @@ type FunnelItem = {
   user: {
     _id: string
     name: string
-  }
+  } | null
   hasBuyed: boolean
   cost?: number
+  totalIncome: number
+  rank: "gold" | "silver" | "bronze"
   stage: "lead" | "contacted" | "customer" | "closed"
   createdAt: string
   updatedAt: string
-}
-
-type EnrichedFunnelItem = FunnelItem & {
-  provinceName: string
-  userName?: string
-  channelName: string
 }
 
 const STAGE_BADGE_COLOR: Record<string, string> = {
@@ -83,13 +92,25 @@ const STAGE_LABEL: Record<string, string> = {
   closed: "Đã đóng"
 }
 
+const RANK_LABELS: Record<string, string> = {
+  gold: "Vàng",
+  silver: "Bạc",
+  bronze: "Đồng"
+}
+
+const RANK_COLORS: Record<string, string> = {
+  gold: "yellow",
+  silver: "gray",
+  bronze: "orange"
+}
+
 function RouteComponent() {
+  const navigate = useNavigate()
   const { searchFunnel } = useSalesFunnel()
   const { getProvinces } = useProvinces()
-  const { publicSearchUser } = useUsers()
+  const { publicSearchUser, getMe } = useUsers()
   const { searchSalesChannels } = useSalesChannels()
-  const { getConversationIdByPsid } = useMetaServices()
-  const navigate = useNavigate()
+  // const { getConversationIdByPsid } = useMetaServices()
 
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(10)
@@ -98,18 +119,28 @@ function RouteComponent() {
   const [provinceFilter, setProvinceFilter] = useState<string>("")
   const [channelFilter, setChannelFilter] = useState<string>("")
   const [userFilter, setUserFilter] = useState<string>("")
+  const [rankFilter, setRankFilter] = useState<string>("")
+  const [noActivityDaysFilter, setNoActivityDaysFilter] = useState<string>("")
+  const [activitiesDrawerOpen, setActivitiesDrawerOpen] = useState(false)
+  const [selectedFunnelId, setSelectedFunnelId] = useState<string | null>(null)
+  const [selectedFunnelName, setSelectedFunnelName] = useState<string>("")
 
-  const { mutate: goToMessage } = useMutation({
-    mutationFn: async (psid: string) => {
-      const {
-        data: { conversationId }
-      } = await getConversationIdByPsid(psid)
+  // const { mutate: goToMessage } = useMutation({
+  //   mutationFn: async (psid: string) => {
+  //     const {
+  //       data: { conversationId }
+  //     } = await getConversationIdByPsid(psid)
 
-      navigate({ to: `/sales/messages/${conversationId}` })
-    }
-  })
+  //     navigate({ to: `/sales/messages/${conversationId}` })
+  //   }
+  // })
 
   // Load reference data
+  const { data: meData } = useQuery({
+    queryKey: ["me"],
+    queryFn: getMe
+  })
+
   const { data: provincesData } = useQuery({
     queryKey: ["provinces"],
     queryFn: getProvinces
@@ -135,7 +166,9 @@ function RouteComponent() {
       stageFilter,
       provinceFilter,
       channelFilter,
-      userFilter
+      userFilter,
+      rankFilter,
+      noActivityDaysFilter
     ],
     queryFn: () =>
       searchFunnel({
@@ -147,26 +180,18 @@ function RouteComponent() {
           : undefined,
         province: provinceFilter || undefined,
         channel: channelFilter || undefined,
-        user: userFilter || undefined
+        user: userFilter || undefined,
+        rank: rankFilter
+          ? (rankFilter as "gold" | "silver" | "bronze")
+          : undefined,
+        noActivityDays: noActivityDaysFilter
+          ? Number(noActivityDaysFilter)
+          : undefined
       })
   })
 
   // Enrich data with reference data
-  const enrichedData = useMemo(() => {
-    if (!data?.data.data) return []
-
-    const provinces = provincesData?.data.provinces || []
-
-    return data.data.data.map((item) => {
-      return {
-        ...item,
-        provinceName:
-          provinces.find((p) => p._id === item.province)?.name || "N/A",
-        channelName: item.channel.channelName,
-        userName: item.user ? item.user.name : "N/A"
-      }
-    })
-  }, [data, provincesData])
+  const funnelData = data?.data.data || []
 
   const provinceOptions =
     provincesData?.data.provinces.map((province) => ({
@@ -183,7 +208,7 @@ function RouteComponent() {
   const userOptions =
     usersData?.data.data.map((user) => ({
       value: user._id,
-      label: user.name
+      label: user.name ?? "Anonymous"
     })) || []
 
   const handleCreateLead = () => {
@@ -198,6 +223,21 @@ function RouteComponent() {
         />
       ),
       size: "lg"
+    })
+  }
+
+  const handleUploadFunnels = () => {
+    modals.open({
+      title: <b>Upload danh sách Funnel</b>,
+      children: (
+        <UploadFunnelsModal
+          onSuccess={() => {
+            refetch()
+            modals.closeAll()
+          }}
+        />
+      ),
+      size: "md"
     })
   }
 
@@ -237,7 +277,7 @@ function RouteComponent() {
     })
   }
 
-  const handleUpdateInfo = (item: EnrichedFunnelItem) => {
+  const handleUpdateInfo = (item: FunnelItem) => {
     modals.open({
       title: <b>Cập nhật thông tin</b>,
       children: (
@@ -245,9 +285,10 @@ function RouteComponent() {
           funnelId={item._id}
           currentData={{
             name: item.name,
-            facebook: item.facebook,
             province: item.province,
             phoneNumber: item.phoneNumber,
+            secondaryPhoneNumbers: item.secondaryPhoneNumbers,
+            address: item.address,
             channel: item.channel._id,
             hasBuyed: item.hasBuyed
           }}
@@ -278,26 +319,46 @@ function RouteComponent() {
     })
   }
 
-  const handleSendMessage = (item: EnrichedFunnelItem) => {
-    goToMessage(item.psid)
+  const handleViewActivities = (funnelId: string, funnelName: string) => {
+    setSelectedFunnelId(funnelId)
+    setSelectedFunnelName(funnelName)
+    setActivitiesDrawerOpen(true)
   }
 
-  const columns: ColumnDef<EnrichedFunnelItem>[] = [
+  const handleCreateTask = (funnelId: string, funnelName: string) => {
+    modals.open({
+      title: <b>Tạo task mới</b>,
+      children: (
+        <CreateTaskModal
+          funnelId={funnelId}
+          funnelName={funnelName}
+          onSuccess={() => {
+            refetch()
+            modals.closeAll()
+          }}
+        />
+      ),
+      size: "lg"
+    })
+  }
+
+  // const handleSendMessage = (item: EnrichedFunnelItem) => {
+  //   goToMessage(item.psid)
+  // }
+
+  // Check permissions
+  const me = meData?.data
+  const isAdmin = useMemo(() => {
+    return me?.roles?.includes("admin") ?? false
+  }, [me])
+
+  const columns: ColumnDef<FunnelItem>[] = [
     {
       accessorKey: "name",
       header: "Tên",
       cell: ({ row }) => (
         <Text fw={500} size="sm">
           {row.original.name}
-        </Text>
-      )
-    },
-    {
-      accessorKey: "facebook",
-      header: "Facebook",
-      cell: ({ row }) => (
-        <Text size="sm" c="dimmed">
-          {row.original.facebook}
         </Text>
       )
     },
@@ -309,19 +370,23 @@ function RouteComponent() {
       )
     },
     {
-      accessorKey: "provinceName",
+      accessorKey: "province",
       header: "Tỉnh/TP",
-      cell: ({ row }) => <Text size="sm">{row.original.provinceName}</Text>
+      cell: ({ row }) => <Text size="sm">{row.original.province?.name}</Text>
     },
     {
-      accessorKey: "channelName",
+      accessorKey: "channel",
       header: "Kênh",
-      cell: ({ row }) => <Text size="sm">{row.original.channelName}</Text>
+      cell: ({ row }) => (
+        <Text size="sm">{row.original.channel.channelName}</Text>
+      )
     },
     {
-      accessorKey: "userName",
+      accessorKey: "user",
       header: "Nhân viên",
-      cell: ({ row }) => <Text size="sm">{row.original.userName}</Text>
+      cell: ({ row }) => (
+        <Text size="sm">{row.original.user?.name || "N/A"}</Text>
+      )
     },
     {
       accessorKey: "stage",
@@ -333,11 +398,22 @@ function RouteComponent() {
       )
     },
     {
-      accessorKey: "hasBuyed",
-      header: "Đã mua",
+      accessorKey: "totalIncome",
+      header: "Tổng doanh thu",
       cell: ({ row }) => (
-        <Badge color={row.original.hasBuyed ? "green" : "gray"}>
-          {row.original.hasBuyed ? "Có" : "Chưa"}
+        <Text fw={600} size="sm" c="blue">
+          {row.original.totalIncome
+            ? row.original.totalIncome.toLocaleString("vi-VN") + "đ"
+            : "N/A"}
+        </Text>
+      )
+    },
+    {
+      accessorKey: "rank",
+      header: "Hạng",
+      cell: ({ row }) => (
+        <Badge variant="light" color={RANK_COLORS[row.original.rank]} size="lg">
+          {RANK_LABELS[row.original.rank]}
         </Badge>
       )
     },
@@ -366,63 +442,89 @@ function RouteComponent() {
       header: "Thao tác",
       cell: ({ row }) => {
         const item = row.original
+        const isResponsibleUser = item.user?._id === me?._id
+
+        if (!isAdmin && !isResponsibleUser) {
+          return null
+        }
+
         return (
-          <Can roles={["admin", "sale-leader"]}>
-            <Group gap="xs">
-              {item.stage === "lead" && (
-                <Tooltip label="Chuyển sang Đã liên hệ" withArrow>
-                  <ActionIcon
-                    variant="light"
-                    color="cyan"
-                    size="sm"
-                    onClick={() => handleMoveToContacted(item._id)}
-                  >
-                    <IconArrowRight size={16} />
-                  </ActionIcon>
-                </Tooltip>
-              )}
-              <Tooltip label="Cập nhật thông tin" withArrow>
+          <Group gap="xs">
+            <Tooltip label="Xem hoạt động chăm sóc" withArrow>
+              <ActionIcon
+                variant="light"
+                color="blue"
+                size="sm"
+                onClick={() => handleViewActivities(item._id, item.name)}
+              >
+                <IconHistory size={16} />
+              </ActionIcon>
+            </Tooltip>
+            {(isAdmin || me?.roles?.includes("sales-leader")) && (
+              <Tooltip label="Tạo task" withArrow>
                 <ActionIcon
                   variant="light"
-                  color="indigo"
+                  color="green"
                   size="sm"
-                  onClick={() => handleUpdateInfo(item)}
+                  onClick={() => handleCreateTask(item._id, item.name)}
                 >
-                  <IconEdit size={16} />
+                  <IconChecklist size={16} />
                 </ActionIcon>
               </Tooltip>
-              <Tooltip label="Cập nhật giai đoạn" withArrow>
+            )}
+            {item.stage === "lead" && (
+              <Tooltip label="Chuyển sang Đã liên hệ" withArrow>
                 <ActionIcon
                   variant="light"
-                  color="violet"
+                  color="cyan"
                   size="sm"
-                  onClick={() => handleUpdateStage(item._id, item.stage)}
+                  onClick={() => handleMoveToContacted(item._id)}
                 >
-                  <IconProgress size={16} />
+                  <IconArrowRight size={16} />
                 </ActionIcon>
               </Tooltip>
-              <Tooltip label="Cập nhật chi phí marketing" withArrow>
-                <ActionIcon
-                  variant="light"
-                  color="yellow"
-                  size="sm"
-                  onClick={() => handleUpdateCost(item._id, item.cost)}
-                >
-                  <IconCash size={16} />
-                </ActionIcon>
-              </Tooltip>
-              <Tooltip label="Nhắn tin" withArrow>
-                <ActionIcon
-                  variant="light"
-                  color="teal"
-                  size="sm"
-                  onClick={() => handleSendMessage(item)}
-                >
-                  <IconMessage size={16} />
-                </ActionIcon>
-              </Tooltip>
-            </Group>
-          </Can>
+            )}
+            <Tooltip label="Cập nhật thông tin" withArrow>
+              <ActionIcon
+                variant="light"
+                color="indigo"
+                size="sm"
+                onClick={() => handleUpdateInfo(item)}
+              >
+                <IconEdit size={16} />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label="Cập nhật giai đoạn" withArrow>
+              <ActionIcon
+                variant="light"
+                color="violet"
+                size="sm"
+                onClick={() => handleUpdateStage(item._id, item.stage)}
+              >
+                <IconProgress size={16} />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label="Cập nhật chi phí marketing" withArrow>
+              <ActionIcon
+                variant="light"
+                color="yellow"
+                size="sm"
+                onClick={() => handleUpdateCost(item._id, item.cost)}
+              >
+                <IconCash size={16} />
+              </ActionIcon>
+            </Tooltip>
+            {/* <Tooltip label="Nhắn tin" withArrow>
+              <ActionIcon
+                variant="light"
+                color="teal"
+                size="sm"
+                onClick={() => handleSendMessage(item)}
+              >
+                <IconMessage size={16} />
+              </ActionIcon>
+            </Tooltip> */}
+          </Group>
         )
       },
       enableSorting: false
@@ -457,7 +559,7 @@ function RouteComponent() {
         <Box px={{ base: 4, md: 28 }} pb={20}>
           <CDataTable
             columns={columns}
-            data={enrichedData}
+            data={funnelData}
             enableGlobalFilter={true}
             globalFilterValue={searchText}
             onGlobalFilterChange={setSearchText}
@@ -467,9 +569,13 @@ function RouteComponent() {
             onPageSizeChange={setLimit}
             initialPageSize={limit}
             pageSizeOptions={[10, 20, 50, 100]}
+            onRowClick={(row) =>
+              navigate({ to: `/sales/funnel/${row.original._id}` })
+            }
             extraFilters={
               <>
                 <Select
+                  label="Giai đoạn"
                   placeholder="Tất cả giai đoạn"
                   data={[
                     { value: "", label: "Tất cả giai đoạn" },
@@ -485,6 +591,7 @@ function RouteComponent() {
                 />
 
                 <Select
+                  label="Tỉnh/TP"
                   placeholder="Tất cả tỉnh/TP"
                   data={[
                     { value: "", label: "Tất cả tỉnh/TP" },
@@ -498,6 +605,7 @@ function RouteComponent() {
                 />
 
                 <Select
+                  label="Kênh"
                   placeholder="Tất cả kênh"
                   data={[
                     { value: "", label: "Tất cả kênh" },
@@ -511,6 +619,7 @@ function RouteComponent() {
                 />
 
                 <Select
+                  label="Nhân viên"
                   placeholder="Tất cả nhân viên"
                   data={[
                     { value: "", label: "Tất cả nhân viên" },
@@ -522,23 +631,88 @@ function RouteComponent() {
                   clearable
                   style={{ width: 200 }}
                 />
+
+                <Select
+                  label="Hạng"
+                  placeholder="Tất cả hạng"
+                  data={[
+                    { value: "", label: "Tất cả hạng" },
+                    { value: "gold", label: "Vàng" },
+                    { value: "silver", label: "Bạc" },
+                    { value: "bronze", label: "Đồng" }
+                  ]}
+                  value={rankFilter}
+                  onChange={(value) => setRankFilter(value || "")}
+                  clearable
+                  style={{ width: 180 }}
+                  renderOption={({ option }) => {
+                    if (!option.value) {
+                      return <Text size="sm">{option.label}</Text>
+                    }
+                    return (
+                      <Badge
+                        variant="light"
+                        color={RANK_COLORS[option.value]}
+                        size="lg"
+                      >
+                        {option.label}
+                      </Badge>
+                    )
+                  }}
+                />
+
+                <Select
+                  label="Không hoạt động"
+                  placeholder="Chọn số ngày"
+                  data={[
+                    { value: "", label: "Tất cả" },
+                    { value: "7", label: "> 7 ngày" },
+                    { value: "14", label: "> 14 ngày" },
+                    { value: "30", label: "> 30 ngày" },
+                    { value: "60", label: "> 60 ngày" },
+                    { value: "90", label: "> 90 ngày" }
+                  ]}
+                  value={noActivityDaysFilter}
+                  onChange={(value) => setNoActivityDaysFilter(value || "")}
+                  clearable
+                  style={{ width: 180 }}
+                />
               </>
             }
             extraActions={
-              <Can roles={["admin", "sale-leader"]}>
-                <Button
-                  onClick={handleCreateLead}
-                  leftSection={<IconPlus size={16} />}
-                  size="sm"
-                  radius="md"
-                >
-                  Tạo Lead
-                </Button>
+              <Can roles={["admin", "sales-leader"]}>
+                <Group gap="xs">
+                  <Button
+                    onClick={handleUploadFunnels}
+                    leftSection={<IconFileUpload size={16} />}
+                    size="sm"
+                    radius="md"
+                    variant="light"
+                  >
+                    Upload XLSX
+                  </Button>
+                  <Button
+                    onClick={handleCreateLead}
+                    leftSection={<IconPlus size={16} />}
+                    size="sm"
+                    radius="md"
+                  >
+                    Tạo Lead
+                  </Button>
+                </Group>
               </Can>
             }
           />
         </Box>
       </Box>
+
+      {/* Activities Drawer */}
+      <SalesActivitiesDrawer
+        opened={activitiesDrawerOpen}
+        onClose={() => setActivitiesDrawerOpen(false)}
+        funnelId={selectedFunnelId}
+        funnelName={selectedFunnelName}
+      />
     </SalesLayout>
   )
 }
