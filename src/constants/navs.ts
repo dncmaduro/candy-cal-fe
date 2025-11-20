@@ -135,7 +135,7 @@ export const SALES_NAVS = [
   {
     to: `${SALES_NAVS_URL}/tasks`,
     label: "Công việc",
-    roles: ["admin", "sales-leader", "sales-emp", "system-emp"],
+    roles: ["admin", "sales-leader", "system-emp"],
     icon: "IconChecklist"
   },
   {
@@ -159,7 +159,7 @@ export const SALES_NAVS = [
   {
     to: `${SALES_NAVS_URL}/dashboard`,
     label: "Chỉ số",
-    roles: ["admin", "sales-emp", "system-emp"],
+    roles: ["admin", "sales-leader", "system-emp"],
     icon: "IconChartBar"
   },
   {

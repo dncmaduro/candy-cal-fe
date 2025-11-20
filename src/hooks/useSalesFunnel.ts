@@ -7,6 +7,8 @@ import {
   CreateLeadResponse,
   GetFunnelByIdRequest,
   GetFunnelByIdResponse,
+  GetFunnelByUserRequest,
+  GetFunnelByUserResponse,
   GetSalesFunnelByPsidRequest,
   GetSalesFunnelByPsidResponse,
   MoveToContactedRequest,
@@ -151,6 +153,19 @@ export const useSalesFunnel = () => {
     })
   }
 
+  const getFunnelByUser = async (
+    userId: string,
+    req: GetFunnelByUserRequest
+  ) => {
+    const query = toQueryString(req)
+
+    return callApi<GetFunnelByUserRequest, GetFunnelByUserResponse>({
+      path: `/v1/salesfunnel/user/${userId}?${query}`,
+      method: "GET",
+      token: accessToken
+    })
+  }
+
   return {
     createLead,
     moveToContacted,
@@ -163,6 +178,7 @@ export const useSalesFunnel = () => {
     updateFunnelResponsibleUser,
     checkPermissionOnFunnel,
     uploadFunnelsByXlsx,
-    downloadFunnelTemplate
+    downloadFunnelTemplate,
+    getFunnelByUser
   }
 }
