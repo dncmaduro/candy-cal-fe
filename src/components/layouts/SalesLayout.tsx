@@ -112,6 +112,21 @@ export const SalesLayout = ({ children }: { children: ReactNode }) => {
                 ? "DEVELOPMENT"
                 : `v${pkg.version}`}
             </Badge>
+            <Badge
+              ml={0}
+              variant="gradient"
+              gradient={{ from: "red", to: "orange", deg: 112 }}
+              radius="xl"
+              size="md"
+              fw={700}
+              style={{
+                fontFamily: "Montserrat, sans-serif",
+                letterSpacing: 0.2
+              }}
+              hidden={import.meta.env.VITE_ENV !== "testing"}
+            >
+              TESTING
+            </Badge>
           </Group>
           <Group gap={8} style={{ marginRight: rem(16) }}>
             <MyTasksPopover />
