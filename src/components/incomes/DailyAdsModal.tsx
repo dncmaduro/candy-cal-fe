@@ -19,7 +19,7 @@ import {
 import { Dropzone, FileWithPath } from "@mantine/dropzone"
 import { DatePickerInput } from "@mantine/dates"
 import { IconCheck, IconX, IconFileUpload, IconEdit } from "@tabler/icons-react"
-import { useMutation } from "@tanstack/react-query"
+import { useMutation, useQuery } from "@tanstack/react-query"
 import { CToast } from "../common/CToast"
 import {
   CreateDailyAdsRequest,
@@ -27,6 +27,7 @@ import {
   CreateSimpleDailyAdsRequest
 } from "../../hooks/models"
 import { useDailyAds } from "../../hooks/useDailyAds"
+import { useLivestream } from "../../hooks/useLivestream"
 import { modals } from "@mantine/modals"
 
 type FileStatus = "pending" | "uploading" | "success" | "error"
@@ -55,9 +56,11 @@ export const DailyAdsModal = ({ refetch }: Props) => {
     getPreviousDailyAds,
     createSimpleDailyAds
   } = useDailyAds()
+  const { searchLivestreamChannels } = useLivestream()
   const [mode, setMode] = useState<"file" | "manual">("file")
   const [currency, setCurrency] = useState<"vnd" | "usd">("vnd")
   const [date, setDate] = useState<Date | null>(null)
+  const [channel, setChannel] = useState<string | null>(null)
   const [liveAdsCost, setLiveAdsCost] = useState<number>(0)
   const [shopAdsCost, setShopAdsCost] = useState<number>(0)
   const [previousAdsData, setPreviousAdsData] =
@@ -72,6 +75,16 @@ export const DailyAdsModal = ({ refetch }: Props) => {
     yesterdayShopAdsCostFile: { file: null, status: "pending" },
     todayLiveAdsCostFileBefore4pm: { file: null, status: "pending" },
     todayShopAdsCostFileBefore4pm: { file: null, status: "pending" }
+  })
+
+  const { data: channelsData } = useQuery({
+    queryKey: ["searchLivestreamChannels"],
+    queryFn: () =>
+      searchLivestreamChannels({
+        page: 1,
+        limit: 100
+      }),
+    select: (data) => data.data
   })
 
   const { mutateAsync: createAds, isPending: submittingAds } = useMutation({
@@ -165,6 +178,11 @@ export const DailyAdsModal = ({ refetch }: Props) => {
       return
     }
 
+    if (!channel) {
+      CToast.error({ title: "Vui lòng chọn kênh livestream" })
+      return
+    }
+
     // Manual mode: submit simple ads with numbers
     if (mode === "manual") {
       if (liveAdsCost < 0 || shopAdsCost < 0) {
@@ -174,6 +192,7 @@ export const DailyAdsModal = ({ refetch }: Props) => {
 
       await createSimpleAds({
         date: date!,
+        channel: channel!,
         liveAdsCost,
         shopAdsCost,
         currency
@@ -207,7 +226,7 @@ export const DailyAdsModal = ({ refetch }: Props) => {
 
       await createAdsWithSaved({
         files: fileList,
-        req: { date: date!, currency }
+        req: { date: date!, channel: channel!, currency }
       })
     } else {
       // Normal flow: need all 6 files
@@ -227,7 +246,7 @@ export const DailyAdsModal = ({ refetch }: Props) => {
 
       await createAds({
         files: fileList,
-        req: { date: date!, currency }
+        req: { date: date!, channel: channel!, currency }
       })
     }
   }
@@ -459,6 +478,25 @@ export const DailyAdsModal = ({ refetch }: Props) => {
           className="flex-1"
           disabled={submittingAds || submittingSimpleAds}
         />
+
+        <Select
+          label="Chọn kênh livestream"
+          size="md"
+          placeholder="Chọn kênh"
+          value={channel}
+          onChange={setChannel}
+          data={
+            channelsData?.data.map((ch) => ({
+              value: ch._id,
+              label: ch.name
+            })) || []
+          }
+          searchable
+          withAsterisk
+          className="flex-1"
+          disabled={submittingAds || submittingSimpleAds}
+        />
+
         <Select
           label="Tiền tệ"
           size="md"
@@ -561,6 +599,7 @@ export const DailyAdsModal = ({ refetch }: Props) => {
           loading={submittingAds || submittingSimpleAds}
           disabled={
             !date ||
+            !channel ||
             (mode === "manual"
               ? false
               : previousAdsStatus === "accepted"
