@@ -35,7 +35,16 @@ import { UploadSalesOrdersModal } from "../../../components/sales/UploadSalesOrd
 import { CToast } from "../../../components/common/CToast"
 
 export const Route = createFileRoute("/sales/orders/")({
-  component: RouteComponent
+  component: RouteComponent,
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      createNew: search.createNew as string | undefined,
+      funnelId: search.funnelId as string | undefined,
+      items: search.items as string | undefined,
+      discount: search.discount as string | undefined,
+      deposit: search.deposit as string | undefined
+    }
+  }
 })
 
 type SalesOrderItem = {
@@ -89,6 +98,8 @@ type SalesOrderItem = {
 
 function RouteComponent() {
   const navigate = useNavigate()
+  const search = Route.useSearch()
+  console.log(search)
   const { searchSalesOrders, deleteSalesOrder, exportXlsxSalesOrder } =
     useSalesOrders()
   const { searchFunnel, getFunnelByUser } = useSalesFunnel()
@@ -212,11 +223,47 @@ function RouteComponent() {
       label: `${item.name}${item.phoneNumber ? ` - ${item.phoneNumber}` : ""}`
     })) || []
 
-  const handleCreateOrder = () => {
+  // Handle create order from deleted order
+  useEffect(() => {
+    if (search.createNew === "true" && search.funnelId && search.items) {
+      try {
+        const parsedItems = JSON.parse(search.items)
+        const discount = search.discount
+          ? parseFloat(search.discount)
+          : undefined
+        const deposit = search.deposit ? parseFloat(search.deposit) : undefined
+        handleCreateOrder(search.funnelId, parsedItems, discount, deposit)
+        // Clear search params
+        navigate({
+          to: "/sales/orders",
+          search: {}
+        })
+      } catch (error) {
+        console.error("Error parsing items:", error)
+      }
+    }
+  }, [
+    search.createNew,
+    search.funnelId,
+    search.items,
+    search.discount,
+    search.deposit
+  ])
+
+  const handleCreateOrder = (
+    funnelId?: string,
+    initialItems?: { code: string; quantity: number }[],
+    initialDiscount?: number,
+    initialDeposit?: number
+  ) => {
     modals.open({
       title: <b>Tạo đơn hàng mới</b>,
       children: (
         <CreateSalesOrderModal
+          salesFunnelId={funnelId}
+          initialItems={initialItems}
+          initialDiscount={initialDiscount}
+          initialDeposit={initialDeposit}
           onSuccess={() => {
             refetch()
             modals.closeAll()
@@ -419,6 +466,7 @@ function RouteComponent() {
                 handleUpdateItems(row.original)
               }}
               title="Cập nhật sản phẩm"
+              hidden={row.original.status === "official"}
             >
               <IconEdit size={16} />
             </ActionIcon>
@@ -714,7 +762,7 @@ function RouteComponent() {
                     Upload XLSX
                   </Button>
                   <Button
-                    onClick={handleCreateOrder}
+                    onClick={() => handleCreateOrder()}
                     leftSection={<IconPlus size={16} />}
                     size="sm"
                     radius="md"
