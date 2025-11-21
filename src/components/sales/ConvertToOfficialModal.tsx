@@ -25,6 +25,7 @@ type ConvertToOfficialModalProps = {
   currentTax?: number
   currentShippingCost?: number
   total: number
+  weight: number
   onSuccess: () => void
 }
 
@@ -35,6 +36,7 @@ export const ConvertToOfficialModal = ({
   currentTax,
   currentShippingCost,
   total,
+  weight,
   onSuccess
 }: ConvertToOfficialModalProps) => {
   const { moveSalesOrderToOfficial } = useSalesOrders()
@@ -83,6 +85,10 @@ export const ConvertToOfficialModal = ({
 
   const applyTax = (rate: number) => {
     setValue("tax", Math.floor((total * rate) / 100))
+  }
+
+  const applyShipping = () => {
+    setValue("shippingCost", Math.ceil(weight) * 5000)
   }
 
   return (
@@ -174,6 +180,25 @@ export const ConvertToOfficialModal = ({
             min={0}
             thousandSeparator=","
             suffix=" đ"
+            styles={{
+              section: {
+                display: "flex",
+                justifyContent: "space-between",
+                width: "85px"
+              }
+            }}
+            rightSection={
+              <>
+                <Button
+                  radius={"xl"}
+                  size="xs"
+                  variant="light"
+                  onClick={() => applyShipping()}
+                >
+                  Phí 5k/kg
+                </Button>
+              </>
+            }
           />
         )}
       />

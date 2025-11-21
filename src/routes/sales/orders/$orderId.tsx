@@ -24,7 +24,8 @@ import {
   IconTruck,
   IconTrash,
   IconPrinter,
-  IconDeviceFloppy
+  IconDeviceFloppy,
+  IconRefresh
 } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
 import { useCallback, useMemo, useState } from "react"
@@ -80,11 +81,30 @@ function RouteComponent() {
 
   const order = data?.data
 
+  const { mutate: sync, isPending: isSyncing } = useMutation({
+    mutationFn: () =>
+      updateSalesOrderItems(orderId, {
+        items: order?.items.map((si) => ({
+          code: si.code,
+          quantity: si.quantity
+        }))
+      }),
+    onSuccess: () => {
+      CToast.success({ title: "Đồng bộ sản phẩm thành công" })
+      refetch()
+    },
+    onError: (error: any) => {
+      CToast.error({
+        title:
+          error?.response?.data?.message || "Có lỗi xảy ra khi đồng bộ sản phẩm"
+      })
+    }
+  })
+
   // Mutation for updating mass and area
   const { mutate: updateMassAndArea, isPending: isUpdatingMassArea } =
     useMutation({
       mutationFn: () => {
-        console.log(extendedItems)
         const items = extendedItems.map((item) => ({
           code: item.code,
           quantity: item.quantity,
@@ -430,6 +450,7 @@ function RouteComponent() {
           currentTax={order.tax}
           currentShippingCost={order.shippingCost}
           total={order.total}
+          weight={enhancedCalculations.totalWeight}
           onSuccess={() => {
             refetch()
             modals.closeAll()
@@ -440,25 +461,88 @@ function RouteComponent() {
     })
   }
 
+  const handleDeleteAndCreateNew = async () => {
+    if (!order) return
+
+    try {
+      await deleteSalesOrder({ id: order._id })
+      CToast.success({ title: "Đã xóa đơn hàng" })
+
+      // Navigate to orders page with state to trigger create modal
+      navigate({
+        to: "/sales/orders",
+        search: {
+          createNew: "true",
+          funnelId: order.salesFunnelId._id,
+          items: JSON.stringify(
+            order.items.map((item) => ({
+              code: item.code,
+              quantity: item.quantity
+            }))
+          ),
+          discount: order.discount?.toString(),
+          deposit: order.deposit?.toString()
+        }
+      })
+    } catch (error: any) {
+      CToast.error({
+        title:
+          error?.response?.data?.message || "Có lỗi xảy ra khi xóa đơn hàng"
+      })
+    }
+  }
+
   const handleDeleteOrder = () => {
     if (!order) return
-    modals.openConfirmModal({
+    modals.open({
       title: <b>Xác nhận xóa</b>,
-      children: <Text>Bạn có chắc chắn muốn xóa đơn hàng này?</Text>,
-      labels: { confirm: "Xóa", cancel: "Hủy" },
-      confirmProps: { color: "red" },
-      onConfirm: async () => {
-        try {
-          await deleteSalesOrder({ id: order._id })
-          CToast.success({ title: "Xóa đơn hàng thành công" })
-          navigate({ to: "/sales/orders" })
-        } catch (error: any) {
-          CToast.error({
-            title:
-              error?.response?.data?.message || "Có lỗi xảy ra khi xóa đơn hàng"
-          })
-        }
-      }
+      children: (
+        <Stack gap="md">
+          <Text>Bạn có chắc chắn muốn xóa đơn hàng này?</Text>
+          <Text size="sm" c="dimmed">
+            Hoặc bạn có thể xóa và tạo đơn mới với cùng thông tin khách hàng và
+            sản phẩm.
+          </Text>
+
+          <Group justify="space-between" mt="md">
+            <Button
+              variant="outline"
+              color="blue"
+              onClick={() => {
+                modals.closeAll()
+                handleDeleteAndCreateNew()
+              }}
+            >
+              Xóa & Tạo đơn mới
+            </Button>
+
+            <Group gap="xs">
+              <Button variant="default" onClick={() => modals.closeAll()}>
+                Hủy
+              </Button>
+              <Button
+                color="red"
+                onClick={async () => {
+                  try {
+                    await deleteSalesOrder({ id: order._id })
+                    CToast.success({ title: "Xóa đơn hàng thành công" })
+                    modals.closeAll()
+                    navigate({ to: "/sales/orders" })
+                  } catch (error: any) {
+                    CToast.error({
+                      title:
+                        error?.response?.data?.message ||
+                        "Có lỗi xảy ra khi xóa đơn hàng"
+                    })
+                  }
+                }}
+              >
+                Xóa
+              </Button>
+            </Group>
+          </Group>
+        </Stack>
+      )
     })
   }
 
@@ -470,6 +554,10 @@ function RouteComponent() {
         </Box>
       </SalesLayout>
     )
+  }
+
+  const handleSyncItems = () => {
+    sync()
   }
 
   return (
@@ -532,35 +620,38 @@ function RouteComponent() {
                   Báo giá cho khách
                 </Button>
                 {order.status === "draft" && (
-                  <Button
-                    variant="light"
-                    color="green"
-                    leftSection={<IconTruck size={18} />}
-                    onClick={handleConvertToOfficial}
-                  >
-                    Chuyển sang chính thức
-                  </Button>
+                  <>
+                    <Button
+                      variant="light"
+                      color="green"
+                      leftSection={<IconTruck size={18} />}
+                      onClick={handleConvertToOfficial}
+                    >
+                      Chuyển sang chính thức
+                    </Button>
+                    <Tooltip label="Cập nhật vận chuyển & thuế" withArrow>
+                      <ActionIcon
+                        variant="light"
+                        color="blue"
+                        size="lg"
+                        onClick={handleUpdateShippingInfo}
+                      >
+                        <IconTruck size={20} />
+                      </ActionIcon>
+                    </Tooltip>
+                    <Tooltip label="Cập nhật sản phẩm" withArrow>
+                      <ActionIcon
+                        variant="light"
+                        color="indigo"
+                        size="lg"
+                        onClick={handleUpdateItems}
+                      >
+                        <IconEdit size={20} />
+                      </ActionIcon>
+                    </Tooltip>
+                  </>
                 )}
-                <Tooltip label="Cập nhật vận chuyển & thuế" withArrow>
-                  <ActionIcon
-                    variant="light"
-                    color="blue"
-                    size="lg"
-                    onClick={handleUpdateShippingInfo}
-                  >
-                    <IconTruck size={20} />
-                  </ActionIcon>
-                </Tooltip>
-                <Tooltip label="Cập nhật sản phẩm" withArrow>
-                  <ActionIcon
-                    variant="light"
-                    color="indigo"
-                    size="lg"
-                    onClick={handleUpdateItems}
-                  >
-                    <IconEdit size={20} />
-                  </ActionIcon>
-                </Tooltip>
+
                 <Tooltip label="Xóa đơn hàng" withArrow>
                   <ActionIcon
                     variant="light"
@@ -795,18 +886,33 @@ function RouteComponent() {
                   pageSizeOptions={[10, 20, 50]}
                   initialPageSize={10}
                   extraActions={
-                    <Tooltip label="Cập nhật khối lượng và diện tích" withArrow>
+                    <Group>
                       <Button
+                        onClick={handleSyncItems}
+                        color="indigo"
+                        leftSection={<IconRefresh size={16} />}
+                        loading={isSyncing}
+                        disabled={isSyncing}
                         variant="light"
-                        color="teal"
-                        size="sm"
-                        onClick={() => updateMassAndArea()}
-                        loading={isUpdatingMassArea}
-                        leftSection={<IconDeviceFloppy size={16} />}
                       >
-                        Cập nhật khối lượng & diện tích
+                        Đồng bộ sản phẩm
                       </Button>
-                    </Tooltip>
+                      <Tooltip
+                        label="Cập nhật khối lượng và diện tích"
+                        withArrow
+                      >
+                        <Button
+                          variant="light"
+                          color="teal"
+                          size="sm"
+                          onClick={() => updateMassAndArea()}
+                          loading={isUpdatingMassArea}
+                          leftSection={<IconDeviceFloppy size={16} />}
+                        >
+                          Cập nhật khối lượng & diện tích
+                        </Button>
+                      </Tooltip>
+                    </Group>
                   }
                 />
                 {/* Enhanced Summary Section */}
