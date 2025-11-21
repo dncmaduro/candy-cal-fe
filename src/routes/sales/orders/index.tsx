@@ -12,7 +12,7 @@ import {
 } from "@mantine/core"
 import { DatePickerInput } from "@mantine/dates"
 import { useQuery, useMutation } from "@tanstack/react-query"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { modals } from "@mantine/modals"
 import { format } from "date-fns"
 import {
@@ -28,6 +28,7 @@ import { Can } from "../../../components/common/Can"
 import { CDataTable } from "../../../components/common/CDataTable"
 import { useSalesOrders } from "../../../hooks/useSalesOrders"
 import { useSalesFunnel } from "../../../hooks/useSalesFunnel"
+import { useUsers } from "../../../hooks/useUsers"
 import { CreateSalesOrderModal } from "../../../components/sales/CreateSalesOrderModal"
 import { UpdateOrderItemsModal } from "../../../components/sales/UpdateOrderItemsModal"
 import { UploadSalesOrdersModal } from "../../../components/sales/UploadSalesOrdersModal"
@@ -90,7 +91,8 @@ function RouteComponent() {
   const navigate = useNavigate()
   const { searchSalesOrders, deleteSalesOrder, exportXlsxSalesOrder } =
     useSalesOrders()
-  const { searchFunnel } = useSalesFunnel()
+  const { searchFunnel, getFunnelByUser } = useSalesFunnel()
+  const { getMe } = useUsers()
 
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(10)
@@ -101,15 +103,49 @@ function RouteComponent() {
   const [statusFilter, setStatusFilter] = useState<string>("")
   const [startDate, setStartDate] = useState<Date | null>(null)
   const [endDate, setEndDate] = useState<Date | null>(null)
+  const [userIdFilter, setUserIdFilter] = useState<string>("")
 
-  // Load reference data
+  // Get current user info
+  const { data: meData } = useQuery({
+    queryKey: ["getMe"],
+    queryFn: getMe
+  })
+
+  const me = meData?.data
+
+  // Check user roles
+  const isAdmin = me?.roles.includes("admin")
+  const isSystemEmp = me?.roles.includes("system-emp")
+  const isSalesLeader = me?.roles.includes("sales-leader")
+  const isSalesEmp = me?.roles.includes("sales-emp")
+
+  // Determine if user can see all funnels or only their own
+  const canSeeAllFunnels = isAdmin || isSystemEmp || isSalesLeader
+
+  // Auto-apply user filter for sales-emp
+  useEffect(() => {
+    if (!canSeeAllFunnels && isSalesEmp && me?._id) {
+      setUserIdFilter(me._id)
+    }
+  }, [canSeeAllFunnels, isSalesEmp, me?._id])
+
+  // Load reference data - use appropriate query based on role
   const { data: funnelData } = useQuery({
-    queryKey: ["salesFunnel", "all"],
-    queryFn: () =>
-      searchFunnel({
-        page: 1,
-        limit: 999
-      })
+    queryKey: ["salesFunnel", canSeeAllFunnels ? "all" : me?._id],
+    queryFn: async () => {
+      if (canSeeAllFunnels) {
+        return await searchFunnel({
+          page: 1,
+          limit: 999
+        })
+      } else if (me?._id) {
+        return await getFunnelByUser(me._id, {
+          limit: 999
+        })
+      }
+      return undefined
+    },
+    enabled: !!me
   })
 
   // Load orders data with filters
@@ -124,7 +160,8 @@ function RouteComponent() {
       shippingTypeFilter,
       statusFilter,
       startDate,
-      endDate
+      endDate,
+      userIdFilter
     ],
     queryFn: () =>
       searchSalesOrders({
@@ -143,7 +180,8 @@ function RouteComponent() {
             ? undefined
             : (statusFilter as "draft" | "official"),
         startDate: startDate ? format(startDate, "yyyy-MM-dd") : undefined,
-        endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined
+        endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
+        userId: userIdFilter || undefined
       })
   })
 
@@ -169,7 +207,7 @@ function RouteComponent() {
   const ordersData = data?.data.data || []
 
   const funnelOptions =
-    funnelData?.data.data.map((item) => ({
+    funnelData?.data.data.map((item: any) => ({
       value: item._id,
       label: `${item.name}${item.phoneNumber ? ` - ${item.phoneNumber}` : ""}`
     })) || []
@@ -447,6 +485,7 @@ function RouteComponent() {
             extraFilters={
               <>
                 <Select
+                  label="Loại khách"
                   placeholder="Loại khách"
                   data={[
                     { value: "", label: "Tất cả" },
@@ -460,6 +499,7 @@ function RouteComponent() {
                 />
 
                 <Select
+                  label="Khách hàng"
                   placeholder="Tất cả khách hàng"
                   data={[
                     { value: "", label: "Tất cả khách hàng" },
@@ -473,6 +513,7 @@ function RouteComponent() {
                 />
 
                 <Select
+                  label="Đơn vị vận chuyển"
                   placeholder="Đơn vị vận chuyển"
                   data={[
                     { value: "", label: "Tất cả đơn vị" },
@@ -486,6 +527,7 @@ function RouteComponent() {
                 />
 
                 <Select
+                  label="Trạng thái"
                   placeholder="Trạng thái"
                   data={[
                     { value: "", label: "Tất cả trạng thái" },
@@ -499,6 +541,7 @@ function RouteComponent() {
                 />
 
                 <DatePickerInput
+                  label="Từ ngày"
                   placeholder="Từ ngày"
                   value={startDate}
                   onChange={setStartDate}
@@ -508,6 +551,7 @@ function RouteComponent() {
                 />
 
                 <DatePickerInput
+                  label="Đến ngày"
                   placeholder="Đến ngày"
                   value={endDate}
                   onChange={setEndDate}

@@ -43,6 +43,9 @@ function RouteComponent() {
   ) {
     return <Navigate to="/marketing-storage/storage" />
   }
+  if (meData?.roles[0] === "sales-emp" || meData?.roles[0] === "sales-leader") {
+    return <Navigate to="/sales/funnel" />
+  }
   if (meData?.roles[0] === "accounting-emp") {
     return <Navigate to="/marketing-storage/accounting-storage" />
   }

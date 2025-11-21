@@ -11,7 +11,7 @@ import {
   Tooltip
 } from "@mantine/core"
 import { useQuery } from "@tanstack/react-query"
-import { useMemo, useState } from "react"
+import { useMemo, useState, useEffect } from "react"
 import { modals } from "@mantine/modals"
 import { format } from "date-fns"
 import {
@@ -351,6 +351,26 @@ function RouteComponent() {
   const isAdmin = useMemo(() => {
     return me?.roles?.includes("admin") ?? false
   }, [me])
+  const isSalesLeader = useMemo(() => {
+    return me?.roles?.includes("sales-leader") ?? false
+  }, [me])
+  const isSystemEmp = useMemo(() => {
+    return me?.roles?.includes("system-emp") ?? false
+  }, [me])
+  const isSalesEmp = useMemo(() => {
+    return me?.roles?.includes("sales-emp") ?? false
+  }, [me])
+
+  // Determine filter visibility based on roles
+  const showUserFilter = isAdmin || isSystemEmp
+  const showChannelFilter = isAdmin || isSystemEmp || isSalesLeader
+
+  // Auto-apply user filter for sales-emp
+  useEffect(() => {
+    if (isSalesEmp && !isAdmin && !isSystemEmp && !isSalesLeader && me?._id) {
+      setUserFilter(me._id)
+    }
+  }, [isSalesEmp, isAdmin, isSystemEmp, isSalesLeader, me?._id])
 
   const columns: ColumnDef<FunnelItem>[] = [
     {
@@ -444,7 +464,7 @@ function RouteComponent() {
         const item = row.original
         const isResponsibleUser = item.user?._id === me?._id
 
-        if (!isAdmin && !isResponsibleUser) {
+        if (!isAdmin && !isSalesLeader && !isResponsibleUser) {
           return null
         }
 
@@ -604,33 +624,37 @@ function RouteComponent() {
                   style={{ width: 200 }}
                 />
 
-                <Select
-                  label="Kênh"
-                  placeholder="Tất cả kênh"
-                  data={[
-                    { value: "", label: "Tất cả kênh" },
-                    ...channelOptions
-                  ]}
-                  value={channelFilter}
-                  onChange={(value) => setChannelFilter(value || "")}
-                  searchable
-                  clearable
-                  style={{ width: 200 }}
-                />
+                {showChannelFilter && (
+                  <Select
+                    label="Kênh"
+                    placeholder="Tất cả kênh"
+                    data={[
+                      { value: "", label: "Tất cả kênh" },
+                      ...channelOptions
+                    ]}
+                    value={channelFilter}
+                    onChange={(value) => setChannelFilter(value || "")}
+                    searchable
+                    clearable
+                    style={{ width: 200 }}
+                  />
+                )}
 
-                <Select
-                  label="Nhân viên"
-                  placeholder="Tất cả nhân viên"
-                  data={[
-                    { value: "", label: "Tất cả nhân viên" },
-                    ...userOptions
-                  ]}
-                  value={userFilter}
-                  onChange={(value) => setUserFilter(value || "")}
-                  searchable
-                  clearable
-                  style={{ width: 200 }}
-                />
+                {showUserFilter && (
+                  <Select
+                    label="Nhân viên"
+                    placeholder="Tất cả nhân viên"
+                    data={[
+                      { value: "", label: "Tất cả nhân viên" },
+                      ...userOptions
+                    ]}
+                    value={userFilter}
+                    onChange={(value) => setUserFilter(value || "")}
+                    searchable
+                    clearable
+                    style={{ width: 200 }}
+                  />
+                )}
 
                 <Select
                   label="Hạng"
