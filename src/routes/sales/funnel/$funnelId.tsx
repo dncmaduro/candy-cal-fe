@@ -21,7 +21,6 @@ import {
   IconEdit,
   IconProgress,
   IconCash,
-  IconUserEdit,
   IconArrowRight,
   IconEye,
   IconPlus,
@@ -40,7 +39,6 @@ import { useUsers } from "../../../hooks/useUsers"
 import { UpdateFunnelInfoModal } from "../../../components/sales/UpdateFunnelInfoModal"
 import { UpdateStageModal } from "../../../components/sales/UpdateStageModal"
 import { UpdateFunnelCostModal } from "../../../components/sales/UpdateFunnelCostModal"
-import { UpdateFunnelResponsibleUserModal } from "../../../components/sales/UpdateFunnelResponsibleUserModal"
 import { MoveToContactedModal } from "../../../components/sales/MoveToContactedModal"
 import { SalesActivitiesDrawer } from "../../../components/sales/SalesActivitiesDrawer"
 import { CDataTable } from "../../../components/common/CDataTable"
@@ -291,24 +289,6 @@ function RouteComponent() {
     })
   }
 
-  const handleUpdateResponsibleUser = () => {
-    if (!funnel) return
-    modals.open({
-      title: <b>Cập nhật người phụ trách</b>,
-      children: (
-        <UpdateFunnelResponsibleUserModal
-          funnelId={funnel._id}
-          currentUserId={funnel.user?._id}
-          onSuccess={() => {
-            refetch()
-            modals.closeAll()
-          }}
-        />
-      ),
-      size: "md"
-    })
-  }
-
   const handleMoveToContacted = () => {
     if (!funnel) return
     modals.open({
@@ -415,18 +395,6 @@ function RouteComponent() {
                     <IconCash size={20} />
                   </ActionIcon>
                 </Tooltip>
-                {isAdmin && (
-                  <Tooltip label="Cập nhật người phụ trách" withArrow>
-                    <ActionIcon
-                      variant="light"
-                      color="teal"
-                      size="lg"
-                      onClick={handleUpdateResponsibleUser}
-                    >
-                      <IconUserEdit size={20} />
-                    </ActionIcon>
-                  </Tooltip>
-                )}
               </Group>
             )}
           </Group>

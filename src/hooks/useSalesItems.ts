@@ -87,7 +87,7 @@ export const useSalesItems = () => {
   const updateSalesItem = async (id: string, req: UpdateSalesItemRequest) => {
     return callApi<UpdateSalesItemRequest, UpdateSalesItemResponse>({
       path: `/v1/salesitems/${id}`,
-      method: "PUT",
+      method: "PATCH",
       data: req,
       token: accessToken
     })
