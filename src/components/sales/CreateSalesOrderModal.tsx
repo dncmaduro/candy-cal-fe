@@ -1,4 +1,15 @@
-import { Button, Group, Select, NumberInput, Text } from "@mantine/core"
+import {
+  Button,
+  Group,
+  Select,
+  NumberInput,
+  Text,
+  TextInput,
+  Stack,
+  ActionIcon,
+  Divider,
+  Checkbox
+} from "@mantine/core"
 import { DatePickerInput } from "@mantine/dates"
 import { useForm, Controller } from "react-hook-form"
 import { useMutation, useQuery } from "@tanstack/react-query"
@@ -8,6 +19,8 @@ import { CToast } from "../common/CToast"
 import { useSalesOrders } from "../../hooks/useSalesOrders"
 import { useSalesFunnel } from "../../hooks/useSalesFunnel"
 import { useSalesItems } from "../../hooks/useSalesItems"
+import { useProvinces } from "../../hooks/useProvinces"
+import { useSalesChannels } from "../../hooks/useSalesChannels"
 
 type CreateSalesOrderFormData = {
   salesFunnelId: string
@@ -15,6 +28,13 @@ type CreateSalesOrderFormData = {
   date: Date
   discount?: number
   deposit?: number
+  // New customer info
+  isNewCustomer?: boolean
+  newCustomerName?: string
+  newCustomerChannel?: string
+  province?: string
+  phoneNumber?: string
+  address?: string
 }
 
 type ItemInput = {
@@ -25,31 +45,54 @@ type ItemInput = {
 type CreateSalesOrderModalProps = {
   onSuccess: () => void
   salesFunnelId?: string
+  initialItems?: { code: string; quantity: number }[]
+  initialDiscount?: number
+  initialDeposit?: number
 }
 
 export const CreateSalesOrderModal = ({
   onSuccess,
-  salesFunnelId
+  salesFunnelId,
+  initialItems,
+  initialDiscount,
+  initialDeposit
 }: CreateSalesOrderModalProps) => {
   const { createSalesOrder } = useSalesOrders()
-  const { searchFunnel } = useSalesFunnel()
+  const { searchFunnel, createLead, updateFunnelInfo } = useSalesFunnel()
   const { searchSalesItems } = useSalesItems()
+  const { getProvinces } = useProvinces()
+  const { searchSalesChannels } = useSalesChannels()
 
-  const [items, setItems] = useState<ItemInput[]>([{ code: "", quantity: 1 }])
+  const [items, setItems] = useState<ItemInput[]>(
+    initialItems && initialItems.length > 0
+      ? initialItems
+      : [{ code: "", quantity: 1 }]
+  )
+
+  const [secondaryPhones, setSecondaryPhones] = useState<string[]>([])
 
   const {
     control,
     handleSubmit,
+    watch,
     formState: { errors }
   } = useForm<CreateSalesOrderFormData>({
     defaultValues: {
       salesFunnelId: salesFunnelId || "",
       storage: "position_HaNam",
       date: new Date(),
-      discount: 0,
-      deposit: 0
+      discount: initialDiscount ?? 0,
+      deposit: initialDeposit ?? 0,
+      isNewCustomer: false,
+      newCustomerName: "",
+      newCustomerChannel: "",
+      province: "",
+      phoneNumber: "",
+      address: ""
     }
   })
+
+  const watchIsNewCustomer = watch("isNewCustomer")
 
   // Load funnel items for dropdown
   const { data: funnelData } = useQuery({
@@ -71,8 +114,20 @@ export const CreateSalesOrderModal = ({
       })
   })
 
+  // Load provinces
+  const { data: provincesData } = useQuery({
+    queryKey: ["provinces"],
+    queryFn: getProvinces
+  })
+
+  // Load sales channels
+  const { data: channelsData } = useQuery({
+    queryKey: ["salesChannels", "all"],
+    queryFn: () => searchSalesChannels({ page: 1, limit: 999 })
+  })
+
   const mutation = useMutation({
-    mutationFn: (data: CreateSalesOrderFormData) => {
+    mutationFn: async (data: CreateSalesOrderFormData) => {
       // Filter out empty items
       const validItems = items.filter((item) => item.code && item.quantity > 0)
 
@@ -80,8 +135,34 @@ export const CreateSalesOrderModal = ({
         throw new Error("Vui lòng thêm ít nhất một sản phẩm")
       }
 
+      let funnelId = data.salesFunnelId
+
+      // If creating new customer
+      if (data.isNewCustomer) {
+        if (!data.newCustomerName || !data.newCustomerChannel) {
+          throw new Error("Vui lòng điền tên khách hàng và kênh")
+        }
+
+        // Step 1: Create lead
+        const leadResponse = await createLead({
+          name: data.newCustomerName,
+          channel: data.newCustomerChannel
+        })
+
+        funnelId = leadResponse.data._id
+
+        // Step 2: Update funnel info with additional details
+        await updateFunnelInfo(funnelId, {
+          province: data.province,
+          phoneNumber: data.phoneNumber,
+          secondaryPhoneNumbers: secondaryPhones.filter((p) => p.trim() !== ""),
+          address: data.address
+        })
+      }
+
+      // Step 3: Create order
       return createSalesOrder({
-        salesFunnelId: data.salesFunnelId,
+        salesFunnelId: funnelId,
         items: validItems,
         storage: data.storage,
         date: data.date,
@@ -102,11 +183,32 @@ export const CreateSalesOrderModal = ({
   })
 
   const onSubmit = (data: CreateSalesOrderFormData) => {
-    if (!data.salesFunnelId) {
+    if (!data.isNewCustomer && !data.salesFunnelId) {
       CToast.error({ title: "Vui lòng chọn khách hàng" })
       return
     }
+    if (
+      data.isNewCustomer &&
+      (!data.newCustomerName || !data.newCustomerChannel)
+    ) {
+      CToast.error({ title: "Vui lòng điền tên khách hàng và kênh" })
+      return
+    }
     mutation.mutate(data)
+  }
+
+  const addSecondaryPhone = () => {
+    setSecondaryPhones([...secondaryPhones, ""])
+  }
+
+  const removeSecondaryPhone = (index: number) => {
+    setSecondaryPhones(secondaryPhones.filter((_, i) => i !== index))
+  }
+
+  const updateSecondaryPhone = (index: number, value: string) => {
+    const newPhones = [...secondaryPhones]
+    newPhones[index] = value
+    setSecondaryPhones(newPhones)
   }
 
   const handleAddItem = () => {
@@ -139,26 +241,169 @@ export const CreateSalesOrderModal = ({
       label: `${item.code} - ${item.name.vn}`
     })) || []
 
+  const provinceOptions =
+    provincesData?.data.provinces.map((province) => ({
+      value: province._id,
+      label: province.name
+    })) || []
+
+  const channelOptions =
+    channelsData?.data.data.map((channel) => ({
+      value: channel._id,
+      label: channel.channelName
+    })) || []
+
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      <Controller
-        name="salesFunnelId"
-        control={control}
-        rules={{ required: "Vui lòng chọn khách hàng" }}
-        render={({ field }) => (
-          <Select
-            {...field}
-            label="Khách hàng"
-            placeholder="Chọn khách hàng"
-            data={funnelOptions}
-            searchable
-            required
-            readOnly={!!salesFunnelId}
-            error={errors.salesFunnelId?.message}
-            mb="md"
+      {!salesFunnelId && (
+        <Controller
+          name="isNewCustomer"
+          control={control}
+          render={({ field: { value, onChange, ...field } }) => (
+            <Checkbox
+              {...field}
+              checked={value}
+              label="Tạo đơn cho khách hàng mới"
+              mb="md"
+              onChange={(event) => {
+                onChange(event.currentTarget.checked)
+              }}
+            />
+          )}
+        />
+      )}
+
+      {!watchIsNewCustomer ? (
+        <Controller
+          name="salesFunnelId"
+          control={control}
+          rules={{
+            required: !watchIsNewCustomer ? "Vui lòng chọn khách hàng" : false
+          }}
+          render={({ field }) => (
+            <Select
+              {...field}
+              label="Khách hàng"
+              placeholder="Chọn khách hàng"
+              data={funnelOptions}
+              searchable
+              required={!watchIsNewCustomer}
+              readOnly={!!salesFunnelId}
+              error={errors.salesFunnelId?.message}
+              mb="md"
+            />
+          )}
+        />
+      ) : (
+        <Stack gap="md" mb="md">
+          <Divider label="Thông tin khách hàng mới" labelPosition="center" />
+
+          <Controller
+            name="newCustomerName"
+            control={control}
+            rules={{
+              required: watchIsNewCustomer
+                ? "Tên khách hàng là bắt buộc"
+                : false
+            }}
+            render={({ field }) => (
+              <TextInput
+                {...field}
+                label="Tên khách hàng"
+                placeholder="Nhập tên khách hàng"
+                required={watchIsNewCustomer}
+                error={errors.newCustomerName?.message}
+              />
+            )}
           />
-        )}
-      />
+
+          <Controller
+            name="newCustomerChannel"
+            control={control}
+            rules={{
+              required: watchIsNewCustomer ? "Kênh là bắt buộc" : false
+            }}
+            render={({ field }) => (
+              <Select
+                {...field}
+                label="Kênh"
+                placeholder="Chọn kênh"
+                data={channelOptions}
+                searchable
+                required={watchIsNewCustomer}
+                error={errors.newCustomerChannel?.message}
+              />
+            )}
+          />
+
+          <Controller
+            name="province"
+            control={control}
+            render={({ field }) => (
+              <Select
+                {...field}
+                label="Tỉnh/Thành phố"
+                placeholder="Chọn tỉnh/thành phố"
+                data={provinceOptions}
+                searchable
+                clearable
+              />
+            )}
+          />
+
+          <Controller
+            name="phoneNumber"
+            control={control}
+            render={({ field }) => (
+              <TextInput
+                {...field}
+                label="Số điện thoại chính"
+                placeholder="Nhập số điện thoại chính"
+              />
+            )}
+          />
+
+          <Stack gap="xs">
+            <Group justify="space-between">
+              <Text size="sm" fw={500}>
+                Số điện thoại phụ
+              </Text>
+              <ActionIcon variant="light" size="sm" onClick={addSecondaryPhone}>
+                <IconPlus size={16} />
+              </ActionIcon>
+            </Group>
+            {secondaryPhones.map((phone, index) => (
+              <Group key={index} gap="xs">
+                <TextInput
+                  placeholder="Nhập số điện thoại phụ"
+                  value={phone}
+                  onChange={(e) => updateSecondaryPhone(index, e.target.value)}
+                  style={{ flex: 1 }}
+                />
+                <ActionIcon
+                  color="red"
+                  variant="light"
+                  onClick={() => removeSecondaryPhone(index)}
+                >
+                  <IconTrash size={16} />
+                </ActionIcon>
+              </Group>
+            ))}
+          </Stack>
+
+          <Controller
+            name="address"
+            control={control}
+            render={({ field }) => (
+              <TextInput
+                {...field}
+                label="Địa chỉ"
+                placeholder="Nhập địa chỉ"
+              />
+            )}
+          />
+        </Stack>
+      )}
 
       <Controller
         name="storage"
