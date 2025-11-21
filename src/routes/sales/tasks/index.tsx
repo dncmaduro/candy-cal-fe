@@ -205,7 +205,11 @@ function RouteComponent() {
     {
       accessorKey: "assigneeId.name",
       header: "Người thực hiện",
-      cell: ({ row }) => <Text size="sm">{row.original.assigneeId.name}</Text>
+      cell: ({ row }) => (
+        <Text size="sm">
+          {row.original.assigneeId ? row.original.assigneeId.name : "N/A"}
+        </Text>
+      )
     },
     {
       accessorKey: "deadline",
@@ -257,7 +261,8 @@ function RouteComponent() {
       header: "Thao tác",
       cell: ({ row }) => {
         const item = row.original
-        const isAssignee = item.assigneeId.id === me?._id
+        console.log(item)
+        const isAssignee = item.assigneeId && item.assigneeId.id === me?._id
         const canManage = isAdmin || isSaleLeader || isAssignee
 
         if (!canManage) {

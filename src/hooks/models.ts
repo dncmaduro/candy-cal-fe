@@ -2680,6 +2680,43 @@ export interface CheckPermissionOnFunnelResponse {
   isResponsible: boolean
 }
 
+/** @interface */
+export interface GetFunnelByUserRequest {
+  limit: number
+}
+
+/** @interface */
+export interface GetFunnelByUserResponse {
+  data: {
+    _id: string
+    name: string
+    province: {
+      _id: string
+      code: string
+      name: string
+      createdAt: string
+      updatedAt: string
+    }
+    phoneNumber: string
+    secondaryPhoneNumbers?: string[]
+    address?: string
+    psid: string
+    channel: {
+      _id: string
+      channelName: string
+    }
+    user: {
+      _id: string
+      name: string
+    }
+    hasBuyed: boolean
+    cost?: number
+    stage: "lead" | "contacted" | "customer" | "closed"
+    createdAt: string
+    updatedAt: string
+  }[]
+}
+
 // -------------------- SALES ORDERS --------------------
 
 /** @interface */
@@ -2915,6 +2952,7 @@ export interface SearchSalesOrderRequest {
   returning?: boolean
   startDate?: string
   endDate?: string
+  userId?: string
   searchText?: string
   shippingType?: "shipping_vtp" | "shipping_cargo"
   status?: "draft" | "official"
