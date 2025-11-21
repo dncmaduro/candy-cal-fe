@@ -1737,6 +1737,7 @@ export interface GetAdsCostSplitByMonthResponse {
 export interface CreateDailyAdsRequest {
   date: Date
   currency: "vnd" | "usd"
+  channel: string
 }
 
 /** @interface */
@@ -1745,6 +1746,7 @@ export interface CreateSimpleDailyAdsRequest {
   liveAdsCost: number
   shopAdsCost: number
   currency: "vnd" | "usd"
+  channel: string
 }
 
 // -------------------- INCOME AND SOURCE --------------------
