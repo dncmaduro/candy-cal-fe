@@ -35,6 +35,7 @@ interface Props {
   initialWeights?: Record<string, number>
   initialSquareMeters?: Record<string, number>
   initialSpecifications?: Record<string, string>
+  shippingCost?: number
   onDataChange?: (data: {
     weights: Record<string, number>
     squareMeters: Record<string, number>
@@ -47,6 +48,7 @@ export const QuotationModal = ({
   initialWeights = {},
   initialSquareMeters = {},
   initialSpecifications = {},
+  shippingCost = 0,
   onDataChange
 }: Props) => {
   const { getSalesOrderById } = useSalesOrders()
@@ -72,9 +74,10 @@ export const QuotationModal = ({
     if (!orderData?.data.items) return []
 
     return orderData.data.items.map((item) => {
-      // Get values from state or defaults
-      const weight = itemWeights[item.code] ?? 0.1
-      const squareMetersPerItem = itemSquareMeters[item.code] ?? 0
+      // Use values from state if edited, otherwise use values from API
+      const weight = itemWeights[item.code] ?? item.massPerBox ?? 0.1
+      const squareMetersPerItem =
+        itemSquareMeters[item.code] ?? item.areaPerBox ?? 0
       const specification = itemSpecifications[item.code] ?? ""
 
       const totalWeight = weight * item.quantity
@@ -109,7 +112,6 @@ export const QuotationModal = ({
       (sum, item) => sum + item.totalSquareMeters,
       0
     )
-    const shippingCost = Math.ceil(totalWeight) * 5000 // 5k per kg, rounded up
     const subtotal = itemsWithExtendedData.reduce(
       (sum, item) => sum + item.price * item.quantity,
       0

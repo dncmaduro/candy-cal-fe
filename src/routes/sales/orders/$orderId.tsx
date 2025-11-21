@@ -23,11 +23,13 @@ import {
   IconEdit,
   IconTruck,
   IconTrash,
-  IconPrinter
+  IconPrinter,
+  IconDeviceFloppy
 } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
 import { useCallback, useMemo, useState } from "react"
 import { ColumnDef } from "@tanstack/react-table"
+import { useMutation } from "@tanstack/react-query"
 import { SalesLayout } from "../../../components/layouts/SalesLayout"
 import { CDataTable } from "../../../components/common/CDataTable"
 import { useSalesOrders } from "../../../hooks/useSalesOrders"
@@ -59,7 +61,8 @@ const STAGE_LABEL: Record<string, string> = {
 function RouteComponent() {
   const { orderId } = Route.useParams()
   const navigate = useNavigate()
-  const { getSalesOrderById, deleteSalesOrder } = useSalesOrders()
+  const { getSalesOrderById, deleteSalesOrder, updateSalesOrderItems } =
+    useSalesOrders()
 
   // State for editable fields (weight, square meters, specification)
   const [itemWeights, setItemWeights] = useState<Record<string, number>>({})
@@ -76,6 +79,33 @@ function RouteComponent() {
   })
 
   const order = data?.data
+
+  // Mutation for updating mass and area
+  const { mutate: updateMassAndArea, isPending: isUpdatingMassArea } =
+    useMutation({
+      mutationFn: () => {
+        console.log(extendedItems)
+        const items = extendedItems.map((item) => ({
+          code: item.code,
+          quantity: item.quantity,
+          massPerBox: item.weight,
+          areaPerBox: item.squareMetersPerItem
+        }))
+
+        return updateSalesOrderItems(orderId, { items })
+      },
+      onSuccess: () => {
+        CToast.success({ title: "Cập nhật khối lượng và diện tích thành công" })
+        refetch()
+      },
+      onError: (error: any) => {
+        CToast.error({
+          title:
+            error?.response?.data?.message ||
+            "Có lỗi xảy ra khi cập nhật khối lượng và diện tích"
+        })
+      }
+    })
 
   const factoryDisplay = useCallback((factory: string) => {
     const factories: Record<string, string> = {
@@ -137,8 +167,10 @@ function RouteComponent() {
     if (!order?.items) return []
 
     return order.items.map((item) => {
-      const weight = itemWeights[item.code] ?? 0.1
-      const squareMetersPerItem = itemSquareMeters[item.code] ?? 0
+      // Use values from state if edited, otherwise use values from API
+      const weight = itemWeights[item.code] ?? item.massPerBox ?? 0.1
+      const squareMetersPerItem =
+        itemSquareMeters[item.code] ?? item.areaPerBox ?? 0
       const specification = itemSpecifications[item.code] ?? ""
 
       return {
@@ -175,7 +207,7 @@ function RouteComponent() {
     const discountTotal = discount * totalQuantity
     const subtotalAfterDiscount = subtotal - discountTotal
 
-    const shippingCost = Math.ceil(totalWeight) * 5000 // 5k per kg, rounded up
+    const shippingCost = order?.shippingCost || 0
     const tax = order?.tax || 0
     const deposit = order?.deposit || 0
 
@@ -196,7 +228,13 @@ function RouteComponent() {
       totalAmount,
       remainingAmount
     }
-  }, [extendedItems, order?.discount, order?.tax, order?.deposit])
+  }, [
+    extendedItems,
+    order?.discount,
+    order?.tax,
+    order?.deposit,
+    order?.shippingCost
+  ])
 
   const itemColumns = useMemo<ColumnDef<ExtendedOrderItem>[]>(
     () => [
@@ -346,6 +384,7 @@ function RouteComponent() {
           currentTax={order.tax}
           currentShippingCost={order.shippingCost}
           total={order.total}
+          weight={enhancedCalculations.totalWeight}
           onSuccess={() => {
             refetch()
             modals.closeAll()
@@ -478,6 +517,7 @@ function RouteComponent() {
                           initialWeights={itemWeights}
                           initialSquareMeters={itemSquareMeters}
                           initialSpecifications={itemSpecifications}
+                          shippingCost={order.shippingCost}
                           onDataChange={(data) => {
                             setItemWeights(data.weights)
                             setItemSquareMeters(data.squareMeters)
@@ -754,6 +794,20 @@ function RouteComponent() {
                   enableGlobalFilter={false}
                   pageSizeOptions={[10, 20, 50]}
                   initialPageSize={10}
+                  extraActions={
+                    <Tooltip label="Cập nhật khối lượng và diện tích" withArrow>
+                      <Button
+                        variant="light"
+                        color="teal"
+                        size="sm"
+                        onClick={() => updateMassAndArea()}
+                        loading={isUpdatingMassArea}
+                        leftSection={<IconDeviceFloppy size={16} />}
+                      >
+                        Cập nhật khối lượng & diện tích
+                      </Button>
+                    </Tooltip>
+                  }
                 />
                 {/* Enhanced Summary Section */}
                 <Box
@@ -797,10 +851,7 @@ function RouteComponent() {
                         {enhancedCalculations.totalWeight.toFixed(1)} kg):
                       </Text>
                       <Text size="sm">
-                        {enhancedCalculations.shippingCost.toLocaleString(
-                          "vi-VN"
-                        )}
-                        đ
+                        {order.shippingCost?.toLocaleString("vi-VN")}đ
                       </Text>
                     </Group>
 
