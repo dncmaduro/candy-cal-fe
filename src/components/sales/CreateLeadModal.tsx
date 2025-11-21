@@ -6,7 +6,6 @@ import { CToast } from "../common/CToast"
 import { useSalesFunnel } from "../../hooks/useSalesFunnel"
 import { CreateLeadRequest } from "../../hooks/models"
 import { useSalesChannels } from "../../hooks/useSalesChannels"
-import { useUsers } from "../../hooks/useUsers"
 
 interface CreateLeadModalProps {
   onSuccess?: () => void
@@ -16,16 +15,10 @@ export const CreateLeadModal = ({ onSuccess }: CreateLeadModalProps) => {
   const queryClient = useQueryClient()
   const { createLead } = useSalesFunnel()
   const { searchSalesChannels } = useSalesChannels()
-  const { publicSearchUser } = useUsers()
 
   const { data: channelsData } = useQuery({
     queryKey: ["salesChannels", "all"],
     queryFn: () => searchSalesChannels({ page: 1, limit: 999 })
-  })
-
-  const { data: usersData } = useQuery({
-    queryKey: ["users", "public", "all"],
-    queryFn: () => publicSearchUser({ page: 1, limit: 999 })
   })
 
   const {
@@ -62,12 +55,6 @@ export const CreateLeadModal = ({ onSuccess }: CreateLeadModalProps) => {
       label: channel.channelName
     })) || []
 
-  const userOptions =
-    usersData?.data.data.map((user) => ({
-      value: user._id,
-      label: user.name ?? "Anonymous"
-    })) || []
-
   return (
     <form onSubmit={handleSubmit(onSubmit, onInvalid)}>
       <Stack gap="md">
@@ -92,23 +79,6 @@ export const CreateLeadModal = ({ onSuccess }: CreateLeadModalProps) => {
               searchable
               required
               error={errors.channel?.message}
-            />
-          )}
-        />
-
-        <Controller
-          name="user"
-          control={control}
-          rules={{ required: "Nhân viên phụ trách là bắt buộc" }}
-          render={({ field }) => (
-            <Select
-              {...field}
-              label="Nhân viên phụ trách"
-              placeholder="Chọn nhân viên"
-              data={userOptions}
-              searchable
-              required
-              error={errors.user?.message}
             />
           )}
         />

@@ -2364,7 +2364,6 @@ export interface DeleteSalesPriceItemRequest {
 export interface CreateLeadRequest {
   name: string
   channel: string
-  user?: string
 }
 
 /** @interface */
@@ -2740,6 +2739,8 @@ export interface CreateSalesOrderResponse {
     name: string
     price: number
     quantity: number
+    massPerBox?: number
+    areaPerBox?: number
   }[]
   returning: boolean
   shippingCode?: string
@@ -2759,7 +2760,12 @@ export interface CreateSalesOrderResponse {
 
 /** @interface */
 export interface UpdateSalesOrderItemsRequest {
-  items?: { code: string; quantity: number }[]
+  items?: {
+    code: string
+    quantity: number
+    massPerBox?: number
+    areaPerBox?: number
+  }[]
   discount?: number
   deposit?: number
 }
@@ -2800,6 +2806,8 @@ export interface UpdateSalesOrderItemsResponse {
     name: string
     price: number
     quantity: number
+    massPerBox?: number
+    areaPerBox?: number
   }[]
   returning: boolean
   shippingCode?: string
@@ -2919,6 +2927,8 @@ export interface GetSalesOrderByIdResponse {
     name: string
     price: number
     quantity: number
+    massPerBox?: number
+    areaPerBox?: number
     source?: "inside" | "outside"
     factory?:
       | "candy"
@@ -3013,6 +3023,8 @@ export interface SearchSalesOrderResponse {
       name: string
       price: number
       quantity: number
+      massPerBox?: number
+      areaPerBox?: number
       source?: "inside" | "outside"
       factory?:
         | "candy"
@@ -3081,6 +3093,8 @@ export interface UpdateSalesOrderTaxShippingResponse {
     name: string
     price: number
     quantity: number
+    massPerBox?: number
+    areaPerBox?: number
   }[]
   returning: boolean
   shippingCode?: string
