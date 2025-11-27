@@ -12,9 +12,7 @@ import {
   Divider,
   ActionIcon,
   Tooltip,
-  Button,
-  NumberInput,
-  TextInput
+  Button
 } from "@mantine/core"
 import { useQuery } from "@tanstack/react-query"
 import { format } from "date-fns"
@@ -24,11 +22,10 @@ import {
   IconTruck,
   IconTrash,
   IconPrinter,
-  IconDeviceFloppy,
   IconRefresh
 } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useMemo } from "react"
 import { ColumnDef } from "@tanstack/react-table"
 import { useMutation } from "@tanstack/react-query"
 import { SalesLayout } from "../../../components/layouts/SalesLayout"
@@ -65,14 +62,7 @@ function RouteComponent() {
   const { getSalesOrderById, deleteSalesOrder, updateSalesOrderItems } =
     useSalesOrders()
 
-  // State for editable fields (weight, square meters, specification)
-  const [itemWeights, setItemWeights] = useState<Record<string, number>>({})
-  const [itemSquareMeters, setItemSquareMeters] = useState<
-    Record<string, number>
-  >({})
-  const [itemSpecifications, setItemSpecifications] = useState<
-    Record<string, string>
-  >({})
+  // No longer need state for editable fields - now read-only from API
 
   const { data, refetch } = useQuery({
     queryKey: ["salesOrder", orderId],
@@ -101,31 +91,7 @@ function RouteComponent() {
     }
   })
 
-  // Mutation for updating mass and area
-  const { mutate: updateMassAndArea, isPending: isUpdatingMassArea } =
-    useMutation({
-      mutationFn: () => {
-        const items = extendedItems.map((item) => ({
-          code: item.code,
-          quantity: item.quantity,
-          massPerBox: item.weight,
-          areaPerBox: item.squareMetersPerItem
-        }))
-
-        return updateSalesOrderItems(orderId, { items })
-      },
-      onSuccess: () => {
-        CToast.success({ title: "Cập nhật khối lượng và diện tích thành công" })
-        refetch()
-      },
-      onError: (error: any) => {
-        CToast.error({
-          title:
-            error?.response?.data?.message ||
-            "Có lỗi xảy ra khi cập nhật khối lượng và diện tích"
-        })
-      }
-    })
+  // No longer need mutation for mass and area - now read-only from API
 
   const factoryDisplay = useCallback((factory: string) => {
     const factories: Record<string, string> = {
@@ -150,6 +116,7 @@ function RouteComponent() {
       | "position_MongCai"
       | "jelly"
       | "import"
+    note?: string
   }
 
   type ExtendedOrderItem = OrderItem & {
@@ -160,38 +127,15 @@ function RouteComponent() {
     specification: string
   }
 
-  // Handler functions for editable fields
-  const handleWeightChange = (code: string, weight: number) => {
-    setItemWeights((prev) => ({
-      ...prev,
-      [code]: weight
-    }))
-  }
-
-  const handleSquareMetersChange = (code: string, squareMeters: number) => {
-    setItemSquareMeters((prev) => ({
-      ...prev,
-      [code]: squareMeters
-    }))
-  }
-
-  const handleSpecificationChange = (code: string, specification: string) => {
-    setItemSpecifications((prev) => ({
-      ...prev,
-      [code]: specification
-    }))
-  }
-
-  // Process items with extended data
+  // Process items with extended data from API
   const extendedItems = useMemo((): ExtendedOrderItem[] => {
     if (!order?.items) return []
 
     return order.items.map((item) => {
-      // Use values from state if edited, otherwise use values from API
-      const weight = itemWeights[item.code] ?? item.massPerBox ?? 0.1
-      const squareMetersPerItem =
-        itemSquareMeters[item.code] ?? item.areaPerBox ?? 0
-      const specification = itemSpecifications[item.code] ?? ""
+      // Now all values come directly from API
+      const weight = item.mass ?? 0
+      const squareMetersPerItem = item.area ?? 0
+      const specification = item.specification ?? ""
 
       return {
         ...item,
@@ -202,7 +146,7 @@ function RouteComponent() {
         specification
       }
     })
-  }, [order?.items, itemWeights, itemSquareMeters, itemSpecifications])
+  }, [order?.items])
 
   // Calculate enhanced totals including shipping
   const enhancedCalculations = useMemo(() => {
@@ -298,73 +242,51 @@ function RouteComponent() {
       },
       {
         id: "squareMetersPerItem",
-        header: "m²/sp",
+        header: "m³/sp",
         cell: ({ row }) => (
-          <NumberInput
-            value={row.original.squareMetersPerItem}
-            onChange={(value) =>
-              handleSquareMetersChange(row.original.code, Number(value) || 0)
-            }
-            size="xs"
-            min={0}
-            step={0.1}
-            decimalScale={2}
-            hideControls
-            w={60}
-            styles={{ input: { textAlign: "center", fontSize: "11px" } }}
-          />
+          <Text size="sm">
+            {row.original.squareMetersPerItem > 0
+              ? `${row.original.squareMetersPerItem} m³`
+              : "-"}
+          </Text>
         )
       },
       {
         id: "totalSquareMeters",
-        header: "Tổng m²",
+        header: "Tổng m³",
         cell: ({ row }) => (
-          <Text size="sm">{row.original.totalSquareMeters.toFixed(2)} m²</Text>
+          <Text size="sm">
+            {row.original.totalSquareMeters > 0
+              ? `${row.original.totalSquareMeters.toFixed(2)} m³`
+              : "-"}
+          </Text>
         )
       },
       {
         id: "specification",
         header: "Quy cách",
         cell: ({ row }) => (
-          <TextInput
-            value={row.original.specification}
-            onChange={(event) =>
-              handleSpecificationChange(
-                row.original.code,
-                event.currentTarget.value
-              )
-            }
-            size="xs"
-            placeholder="Quy cách..."
-            styles={{ input: { width: "120px", fontSize: "11px" } }}
-          />
+          <Text size="sm">{row.original.specification || "-"}</Text>
         )
       },
       {
         id: "weight",
         header: "kg/sp",
         cell: ({ row }) => (
-          <NumberInput
-            value={row.original.weight}
-            onChange={(value) =>
-              handleWeightChange(row.original.code, Number(value) || 0)
-            }
-            size="xs"
-            min={0}
-            step={0.1}
-            decimalScale={2}
-            hideControls
-            styles={{
-              input: { textAlign: "center", width: "50px", fontSize: "11px" }
-            }}
-          />
+          <Text size="sm">
+            {row.original.weight > 0 ? `${row.original.weight} kg` : "-"}
+          </Text>
         )
       },
       {
         id: "totalWeight",
         header: "Tổng kg",
         cell: ({ row }) => (
-          <Text size="sm">{row.original.totalWeight.toFixed(2)} kg</Text>
+          <Text size="sm">
+            {row.original.totalWeight > 0
+              ? `${row.original.totalWeight.toFixed(2)} kg`
+              : "-"}
+          </Text>
         )
       },
       {
@@ -387,6 +309,11 @@ function RouteComponent() {
               : "Hàng ngoài nhà máy"}
           </Badge>
         )
+      },
+      {
+        accessorKey: "note",
+        header: "Ghi chú",
+        cell: ({ row }) => <Text size="sm">{row.original.note || "-"}</Text>
       }
     ],
     [factoryDisplay]
@@ -424,7 +351,8 @@ function RouteComponent() {
           orderId={order._id}
           currentItems={order.items.map((si) => ({
             code: si.code,
-            quantity: si.quantity
+            quantity: si.quantity,
+            note: si.note
           }))}
           currentDiscount={order.discount}
           currentDeposit={order.deposit}
@@ -434,7 +362,7 @@ function RouteComponent() {
           }}
         />
       ),
-      size: "lg"
+      size: "xl"
     })
   }
 
@@ -602,15 +530,7 @@ function RouteComponent() {
                       children: (
                         <QuotationModal
                           orderId={order._id}
-                          initialWeights={itemWeights}
-                          initialSquareMeters={itemSquareMeters}
-                          initialSpecifications={itemSpecifications}
                           shippingCost={order.shippingCost}
-                          onDataChange={(data) => {
-                            setItemWeights(data.weights)
-                            setItemSquareMeters(data.squareMeters)
-                            setItemSpecifications(data.specifications)
-                          }}
                         />
                       ),
                       size: "70vw"
@@ -699,7 +619,7 @@ function RouteComponent() {
                         <Text size="sm" c="dimmed">
                           Địa chỉ
                         </Text>
-                        <Text>{order.salesFunnelId.address || "N/A"}</Text>
+                        <Text>{order.address || "N/A"}</Text>
                       </div>
                       <div>
                         <Text size="sm" c="dimmed" mb={0}>
@@ -735,7 +655,7 @@ function RouteComponent() {
                           Tỉnh/Thành phố
                         </Text>
                         <Text>
-                          {order.salesFunnelId.province?.name || "N/A"}
+                          {order.province ? order.province.name : "N/A"}
                         </Text>
                       </div>
                       <div>
@@ -807,6 +727,13 @@ function RouteComponent() {
                         <Text>
                           {format(new Date(order.date), "dd/MM/yyyy")}
                         </Text>
+                      </div>
+
+                      <div>
+                        <Text size="sm" c="dimmed">
+                          Số điện thoại
+                        </Text>
+                        <Text>{order.phoneNumber || "Chưa có"}</Text>
                       </div>
                     </Stack>
                   </Grid.Col>
@@ -897,21 +824,6 @@ function RouteComponent() {
                       >
                         Đồng bộ sản phẩm
                       </Button>
-                      <Tooltip
-                        label="Cập nhật khối lượng và diện tích"
-                        withArrow
-                      >
-                        <Button
-                          variant="light"
-                          color="teal"
-                          size="sm"
-                          onClick={() => updateMassAndArea()}
-                          loading={isUpdatingMassArea}
-                          leftSection={<IconDeviceFloppy size={16} />}
-                        >
-                          Cập nhật khối lượng & diện tích
-                        </Button>
-                      </Tooltip>
                     </Group>
                   }
                 />

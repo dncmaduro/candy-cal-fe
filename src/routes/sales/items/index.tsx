@@ -5,8 +5,6 @@ import {
   Button,
   Group,
   Text,
-  Select,
-  Badge,
   Box,
   rem,
   ActionIcon,
@@ -33,13 +31,8 @@ type SalesItem = SearchSalesItemsResponse["data"][0]
 
 function RouteComponent() {
   const navigate = useNavigate()
-  const {
-    searchSalesItems,
-    getSalesItemsFactory,
-    getSalesItemsSource,
-    deleteSalesItem,
-    getSalesItemDetail
-  } = useSalesItems()
+  const { searchSalesItems, deleteSalesItem, getSalesItemDetail } =
+    useSalesItems()
 
   // Table state
   const [page, setPage] = useState(1)
@@ -49,36 +42,12 @@ function RouteComponent() {
   // Debounce search text để tránh call API quá nhiều
   const [debouncedSearchText] = useDebouncedValue(searchText, 500)
 
-  // Filters
-  const [factoryFilter, setFactoryFilter] = useState<string | null>(null)
-  const [sourceFilter, setSourceFilter] = useState<string | null>(null)
-
-  // Load factories and sources for filters
-  const { data: factoriesData } = useQuery({
-    queryKey: ["salesItemsFactories"],
-    queryFn: getSalesItemsFactory
-  })
-
-  const { data: sourcesData } = useQuery({
-    queryKey: ["salesItemsSources"],
-    queryFn: getSalesItemsSource
-  })
-
-  // Load sales items data with filters
+  // Load sales items data
   const { data, refetch } = useQuery({
-    queryKey: [
-      "salesItems",
-      page,
-      pageSize,
-      debouncedSearchText,
-      factoryFilter,
-      sourceFilter
-    ],
+    queryKey: ["salesItems", page, pageSize, debouncedSearchText],
     queryFn: () =>
       searchSalesItems({
         searchText: debouncedSearchText || undefined,
-        factory: factoryFilter || undefined,
-        source: sourceFilter || undefined,
         page,
         limit: pageSize
       })
@@ -111,7 +80,7 @@ function RouteComponent() {
           }}
         />
       ),
-      size: "md"
+      size: "lg"
     })
   }
 
@@ -144,7 +113,7 @@ function RouteComponent() {
             }}
           />
         ),
-        size: "md"
+        size: "lg"
       })
     } catch (error: any) {
       CToast.error({
@@ -200,36 +169,34 @@ function RouteComponent() {
       )
     },
     {
-      accessorKey: "factory",
-      header: "Nhà máy",
-      cell: ({ row }) => {
-        const factoryLabel =
-          factoriesData?.data.data.find((f) => f.value === row.original.factory)
-            ?.label || row.original.factory
-        return (
-          <Badge variant="light" size="sm">
-            {factoryLabel}
-          </Badge>
-        )
-      }
+      accessorKey: "size",
+      header: "Kích thước",
+      cell: ({ row }) => <Text size="sm">{row.original.size || "-"}</Text>
     },
     {
-      accessorKey: "source",
-      header: "Nguồn",
-      cell: ({ row }) => {
-        const sourceLabel =
-          sourcesData?.data.data.find((s) => s.value === row.original.source)
-            ?.label || row.original.source
-        return (
-          <Badge
-            variant="light"
-            size="sm"
-            color={row.original.source === "inside" ? "blue" : "orange"}
-          >
-            {sourceLabel}
-          </Badge>
-        )
-      }
+      accessorKey: "area",
+      header: "Số khối",
+      cell: ({ row }) => (
+        <Text size="sm">
+          {row.original.area ? `${row.original.area} m³` : "-"}
+        </Text>
+      )
+    },
+    {
+      accessorKey: "mass",
+      header: "Khối lượng",
+      cell: ({ row }) => (
+        <Text size="sm">
+          {row.original.mass ? `${row.original.mass} kg` : "-"}
+        </Text>
+      )
+    },
+    {
+      accessorKey: "specification",
+      header: "Quy cách",
+      cell: ({ row }) => (
+        <Text size="sm">{row.original.specification || "-"}</Text>
+      )
     },
     {
       accessorKey: "price",
@@ -366,38 +333,6 @@ function RouteComponent() {
             }}
             onRowClick={(row) =>
               navigate({ to: `/sales/items/${row.original._id}` })
-            }
-            extraFilters={
-              <>
-                <Select
-                  placeholder="Tất cả nhà máy"
-                  data={[
-                    { value: "", label: "Tất cả nhà máy" },
-                    ...(factoriesData?.data.data || [])
-                  ]}
-                  value={factoryFilter || ""}
-                  onChange={(value) => {
-                    setFactoryFilter(value || null)
-                    setPage(1)
-                  }}
-                  clearable
-                  style={{ width: 200 }}
-                />
-                <Select
-                  placeholder="Tất cả nguồn"
-                  data={[
-                    { value: "", label: "Tất cả nguồn" },
-                    ...(sourcesData?.data.data || [])
-                  ]}
-                  value={sourceFilter || ""}
-                  onChange={(value) => {
-                    setSourceFilter(value || null)
-                    setPage(1)
-                  }}
-                  clearable
-                  style={{ width: 200 }}
-                />
-              </>
             }
             extraActions={
               <Can roles={["admin", "sales-leader"]}>

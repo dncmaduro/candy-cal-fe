@@ -44,7 +44,8 @@ export const SalesChannelModal = ({ channel, refetch }: Props) => {
   } = useForm<FormData>({
     defaultValues: {
       channelName: channel?.channelName || "",
-      assignedTo: channel?.assignedTo?.id || ""
+      assignedTo: channel?.assignedTo?.id || "",
+      phoneNumber: channel?.phoneNumber || ""
     }
   })
 
@@ -107,6 +108,20 @@ export const SalesChannelModal = ({ channel, refetch }: Props) => {
               searchable
               clearable
               size="md"
+            />
+          )}
+        />
+
+        <Controller
+          name="phoneNumber"
+          control={control}
+          render={({ field }) => (
+            <TextInput
+              label="Số điện thoại"
+              placeholder="Nhập số điện thoại"
+              {...field}
+              size="md"
+              type="tel"
             />
           )}
         />

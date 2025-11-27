@@ -208,7 +208,8 @@ export function MessagesThread({ psid, conversationId }: Props) {
                             province: funnelData.province,
                             phoneNumber: funnelData.phoneNumber,
                             channel: funnelData.channel._id,
-                            hasBuyed: funnelData.hasBuyed
+                            hasBuyed: funnelData.hasBuyed,
+                            funnelSource: funnelData.funnelSource
                           }}
                         />
                       ),

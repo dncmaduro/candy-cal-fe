@@ -5,18 +5,18 @@ import {
   Text,
   Table,
   Stack,
-  NumberInput,
   Title,
-  TextInput,
   Divider,
   Box,
-  Button
+  Button,
+  Image
 } from "@mantine/core"
 import { format } from "date-fns"
 import { useMemo, useState, useRef } from "react"
 import html2canvas from "html2canvas"
 import { IconCamera } from "@tabler/icons-react"
 import { CToast } from "../common/CToast"
+import MCD from "../../../public/mcd.png"
 
 interface ItemWithExtendedData {
   code: string
@@ -28,41 +28,18 @@ interface ItemWithExtendedData {
   squareMetersPerItem: number
   totalSquareMeters: number
   specification: string
+  note?: string
 }
 
 interface Props {
   orderId: string
-  initialWeights?: Record<string, number>
-  initialSquareMeters?: Record<string, number>
-  initialSpecifications?: Record<string, string>
   shippingCost?: number
-  onDataChange?: (data: {
-    weights: Record<string, number>
-    squareMeters: Record<string, number>
-    specifications: Record<string, string>
-  }) => void
 }
 
-export const QuotationModal = ({
-  orderId,
-  initialWeights = {},
-  initialSquareMeters = {},
-  initialSpecifications = {},
-  shippingCost = 0,
-  onDataChange
-}: Props) => {
+export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
   const { getSalesOrderById } = useSalesOrders()
   const contentRef = useRef<HTMLDivElement>(null)
   const [isCapturing, setIsCapturing] = useState(false)
-
-  // State for editable fields - initialize with passed values
-  const [itemWeights, setItemWeights] =
-    useState<Record<string, number>>(initialWeights)
-  const [itemSquareMeters, setItemSquareMeters] =
-    useState<Record<string, number>>(initialSquareMeters)
-  const [itemSpecifications, setItemSpecifications] = useState<
-    Record<string, string>
-  >(initialSpecifications)
 
   const { data: orderData } = useQuery({
     queryKey: ["salesOrder", orderId],
@@ -74,11 +51,10 @@ export const QuotationModal = ({
     if (!orderData?.data.items) return []
 
     return orderData.data.items.map((item) => {
-      // Use values from state if edited, otherwise use values from API
-      const weight = itemWeights[item.code] ?? item.massPerBox ?? 0.1
-      const squareMetersPerItem =
-        itemSquareMeters[item.code] ?? item.areaPerBox ?? 0
-      const specification = itemSpecifications[item.code] ?? ""
+      // Use values directly from API
+      const weight = item.mass ?? 0.1
+      const squareMetersPerItem = item.area ?? 0
+      const specification = item.specification ?? ""
 
       const totalWeight = weight * item.quantity
       const totalSquareMeters = squareMetersPerItem * item.quantity
@@ -92,7 +68,7 @@ export const QuotationModal = ({
         specification
       }
     })
-  }, [orderData?.data.items, itemWeights, itemSquareMeters, itemSpecifications])
+  }, [orderData?.data.items])
 
   // Calculate totals
   const calculations = useMemo(() => {
@@ -140,58 +116,6 @@ export const QuotationModal = ({
       remainingAmount
     }
   }, [itemsWithExtendedData, orderData?.data])
-
-  // Handler functions
-  const handleWeightChange = (code: string, weight: number) => {
-    const newWeights = {
-      ...itemWeights,
-      [code]: weight
-    }
-    setItemWeights(newWeights)
-
-    // Call parent callback if provided
-    if (onDataChange) {
-      onDataChange({
-        weights: newWeights,
-        squareMeters: itemSquareMeters,
-        specifications: itemSpecifications
-      })
-    }
-  }
-
-  const handleSquareMetersChange = (code: string, squareMeters: number) => {
-    const newSquareMeters = {
-      ...itemSquareMeters,
-      [code]: squareMeters
-    }
-    setItemSquareMeters(newSquareMeters)
-
-    // Call parent callback if provided
-    if (onDataChange) {
-      onDataChange({
-        weights: itemWeights,
-        squareMeters: newSquareMeters,
-        specifications: itemSpecifications
-      })
-    }
-  }
-
-  const handleSpecificationChange = (code: string, specification: string) => {
-    const newSpecifications = {
-      ...itemSpecifications,
-      [code]: specification
-    }
-    setItemSpecifications(newSpecifications)
-
-    // Call parent callback if provided
-    if (onDataChange) {
-      onDataChange({
-        weights: itemWeights,
-        squareMeters: itemSquareMeters,
-        specifications: newSpecifications
-      })
-    }
-  }
 
   const handleCaptureScreenshot = async () => {
     if (!contentRef.current) return
@@ -245,51 +169,64 @@ export const QuotationModal = ({
           Sao chép ảnh
         </Button>
       </Group>
-
       {/* Content to capture */}
       <div ref={contentRef}>
+        <Group ml={8} mt={8} justify="space-between" align="center">
+          <Group>
+            <Image src={MCD} alt="MCD" h={100} />
+            <Stack gap={4}>
+              <Text size="xl" fw={600}>
+                Công ty TNHH My Candy Việt Nam
+              </Text>
+              <Text fw={600}>
+                34-BT6, Foresa 6E, Khu đô thị Xuân Phương, phường Xuân Phương,
+                Hà Nội
+              </Text>
+              <Text fw={600}>Sđt: {orderData.data.phoneNumber}</Text>
+            </Stack>
+          </Group>
+        </Group>
+
         <Stack gap="xs" p="xs">
           {/* Header */}
-          <Box p="xs" style={{ border: "1px solid #dee2e6" }}>
+          <Box p="xs">
             <Stack gap="xs">
               <Group justify="center">
-                <Title order={4} fw={600}>
+                <Title order={3} fw={600}>
                   PHIẾU XUẤT HÀNG DỰ KIẾN
                 </Title>
               </Group>
 
-              <Divider size="xs" />
-
-              <Group justify="space-between" align="center">
-                <Group gap="xs">
-                  <Text size="xs" fw={500}>
+              <Group justify="center" align="center">
+                <Group gap="4">
+                  <Text size="sm" fw={600}>
                     Ngày tạo:
                   </Text>
-                  <Text size="xs">
+                  <Text size="sm">
                     {format(new Date(orderData.data.createdAt), "dd/MM/yyyy")}
-                  </Text>
-                </Group>
-
-                <Group gap="xs">
-                  <Text size="xs" fw={500}>
-                    Khách hàng:
-                  </Text>
-                  <Text size="xs">{orderData.data.salesFunnelId.name}</Text>
-                </Group>
-
-                <Group gap="xs">
-                  <Text size="xs" fw={500}>
-                    SĐT:
-                  </Text>
-                  <Text size="xs">
-                    {orderData.data.salesFunnelId.phoneNumber}
-                    {orderData.data.salesFunnelId.secondaryPhoneNumbers &&
-                      `/${orderData.data.salesFunnelId.secondaryPhoneNumbers.join("/")}`}
                   </Text>
                 </Group>
               </Group>
             </Stack>
           </Box>
+          <Divider size="xs" />
+
+          <Group ml={8} justify="space-between" align="flex-start">
+            <Stack gap={4}>
+              <Text>
+                <b>Khách hàng:</b> {orderData.data.salesFunnelId.name}
+              </Text>
+              <Text>
+                <b>Địa chỉ:</b> {orderData.data.address},{" "}
+                {orderData.data.province.name}
+              </Text>
+              <Text>
+                <b>Số điện thoại:</b> {orderData.data.salesFunnelId.phoneNumber}
+                {orderData.data.salesFunnelId.secondaryPhoneNumbers &&
+                  `${orderData.data.salesFunnelId.secondaryPhoneNumbers.length > 0 ? "/" + orderData.data.salesFunnelId.secondaryPhoneNumbers.join("/") : ""}`}
+              </Text>
+            </Stack>
+          </Group>
 
           {/* Items Table */}
           <Box p="xs" style={{ border: "1px solid #dee2e6" }}>
@@ -337,6 +274,9 @@ export const QuotationModal = ({
                   <Table.Th ta="center" fw={500}>
                     Tổng kg
                   </Table.Th>
+                  <Table.Th ta="center" fw={500}>
+                    Ghi chú
+                  </Table.Th>
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
@@ -352,7 +292,7 @@ export const QuotationModal = ({
                         {item.code}
                       </Text>
                     </Table.Td>
-                    <Table.Td>
+                    <Table.Td ta={"center"}>
                       <Text size="xs">{item.name}</Text>
                     </Table.Td>
                     <Table.Td ta="center">
@@ -360,35 +300,22 @@ export const QuotationModal = ({
                         {item.quantity}
                       </Text>
                     </Table.Td>
-                    <Table.Td ta="right">
+                    <Table.Td ta="center">
                       <Text size="xs">
                         {item.price.toLocaleString("vi-VN")}đ
                       </Text>
                     </Table.Td>
-                    <Table.Td ta="right">
+                    <Table.Td ta="center">
                       <Text size="xs" fw={500}>
                         {(item.price * item.quantity).toLocaleString("vi-VN")}đ
                       </Text>
                     </Table.Td>
                     <Table.Td ta="center">
-                      <NumberInput
-                        value={item.squareMetersPerItem}
-                        onChange={(value) =>
-                          handleSquareMetersChange(
-                            item.code,
-                            Number(value) || 0
-                          )
-                        }
-                        size="xs"
-                        min={0}
-                        step={0.1}
-                        decimalScale={2}
-                        hideControls
-                        w={50}
-                        styles={{
-                          input: { textAlign: "center", fontSize: "10px" }
-                        }}
-                      />
+                      <Text size="xs">
+                        {item.squareMetersPerItem > 0
+                          ? `${item.squareMetersPerItem.toFixed(2)} m³`
+                          : "-"}
+                      </Text>
                     </Table.Td>
                     <Table.Td ta="center">
                       <Text size="xs">
@@ -396,41 +323,18 @@ export const QuotationModal = ({
                       </Text>
                     </Table.Td>
                     <Table.Td ta="center">
-                      <TextInput
-                        value={item.specification}
-                        onChange={(event) =>
-                          handleSpecificationChange(
-                            item.code,
-                            event.currentTarget.value
-                          )
-                        }
-                        size="xs"
-                        placeholder="Quy cách..."
-                        styles={{ input: { width: "120px", fontSize: "10px" } }}
-                      />
+                      <Text size="xs">{item.specification || "-"}</Text>
                     </Table.Td>
                     <Table.Td ta="center">
-                      <NumberInput
-                        value={item.weight}
-                        onChange={(value) =>
-                          handleWeightChange(item.code, Number(value) || 0)
-                        }
-                        size="xs"
-                        min={0}
-                        step={0.1}
-                        decimalScale={2}
-                        hideControls
-                        styles={{
-                          input: {
-                            textAlign: "center",
-                            width: "50px",
-                            fontSize: "10px"
-                          }
-                        }}
-                      />
+                      <Text size="xs">
+                        {item.weight > 0 ? `${item.weight.toFixed(2)} kg` : "-"}
+                      </Text>
                     </Table.Td>
                     <Table.Td ta="center">
                       <Text size="xs">{item.totalWeight.toFixed(2)} kg</Text>
+                    </Table.Td>
+                    <Table.Td ta="center">
+                      <Text size="xs">{item.note || "-"}</Text>
                     </Table.Td>
                   </Table.Tr>
                 ))}
@@ -452,7 +356,7 @@ export const QuotationModal = ({
                     </Text>
                   </Table.Td>
                   <Table.Td></Table.Td>
-                  <Table.Td ta="right">
+                  <Table.Td ta="center">
                     <Text size="xs" fw={600}>
                       {calculations.subtotal.toLocaleString("vi-VN")}đ
                     </Text>

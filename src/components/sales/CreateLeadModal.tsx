@@ -26,7 +26,13 @@ export const CreateLeadModal = ({ onSuccess }: CreateLeadModalProps) => {
     handleSubmit,
     control,
     formState: { errors }
-  } = useForm<CreateLeadRequest>()
+  } = useForm<CreateLeadRequest>({
+    defaultValues: {
+      name: "",
+      channel: "",
+      funnelSource: "ads"
+    }
+  })
 
   const { mutate, isPending } = useMutation({
     mutationFn: createLead,
@@ -55,6 +61,12 @@ export const CreateLeadModal = ({ onSuccess }: CreateLeadModalProps) => {
       label: channel.channelName
     })) || []
 
+  const sourceOptions = [
+    { value: "ads", label: "Ads" },
+    { value: "seeding", label: "Seeding" },
+    { value: "referral", label: "Giới thiệu" }
+  ]
+
   return (
     <form onSubmit={handleSubmit(onSubmit, onInvalid)}>
       <Stack gap="md">
@@ -79,6 +91,23 @@ export const CreateLeadModal = ({ onSuccess }: CreateLeadModalProps) => {
               searchable
               required
               error={errors.channel?.message}
+            />
+          )}
+        />
+
+        <Controller
+          name="funnelSource"
+          control={control}
+          rules={{ required: "Nguồn là bắt buộc" }}
+          render={({ field }) => (
+            <Select
+              {...field}
+              label="Nguồn"
+              placeholder="Chọn nguồn"
+              data={sourceOptions}
+              searchable
+              required
+              error={errors.funnelSource?.message}
             />
           )}
         />
