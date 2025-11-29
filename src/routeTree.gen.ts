@@ -10,371 +10,399 @@
 
 // Import Routes
 
-import { Route as rootRoute } from './routes/__root'
-import { Route as IndexImport } from './routes/index'
-import { Route as UserIndexImport } from './routes/user/index'
-import { Route as PostauthIndexImport } from './routes/postauth/index'
-import { Route as MarketingStorageIndexImport } from './routes/marketing-storage/index'
-import { Route as LivestreamIndexImport } from './routes/livestream/index'
-import { Route as LandingIndexImport } from './routes/landing/index'
-import { Route as AccessDeniedIndexImport } from './routes/access-denied/index'
-import { Route as MarketingStorageTasksIndexImport } from './routes/marketing-storage/tasks/index'
-import { Route as MarketingStorageSystemLogsIndexImport } from './routes/marketing-storage/system-logs/index'
-import { Route as MarketingStorageStorageIndexImport } from './routes/marketing-storage/storage/index'
-import { Route as MarketingStorageOrdersLogsIndexImport } from './routes/marketing-storage/orders-logs/index'
-import { Route as MarketingStorageOldLogsIndexImport } from './routes/marketing-storage/old-logs/index'
-import { Route as MarketingStorageLogsIndexImport } from './routes/marketing-storage/logs/index'
-import { Route as MarketingStorageIncomesIndexImport } from './routes/marketing-storage/incomes/index'
-import { Route as MarketingStorageDeliveredRequestsIndexImport } from './routes/marketing-storage/delivered-requests/index'
-import { Route as MarketingStorageCalfileIndexImport } from './routes/marketing-storage/calfile/index'
-import { Route as MarketingStorageCalIndexImport } from './routes/marketing-storage/cal/index'
-import { Route as MarketingStorageAccountingStorageIndexImport } from './routes/marketing-storage/accounting-storage/index'
-import { Route as LivestreamStatsIndexImport } from './routes/livestream/stats/index'
-import { Route as LivestreamPeriodsIndexImport } from './routes/livestream/periods/index'
-import { Route as LivestreamMembersIndexImport } from './routes/livestream/members/index'
-import { Route as LivestreamGoalsIndexImport } from './routes/livestream/goals/index'
-import { Route as LivestreamChannelsIndexImport } from './routes/livestream/channels/index'
-import { Route as LivestreamCalendarIndexImport } from './routes/livestream/calendar/index'
-import { Route as LandingLandingPageIndexImport } from './routes/landing/landing-page/index'
+import { Route as rootRoute } from "./routes/__root"
+import { Route as TestErrorImport } from "./routes/test-error"
+import { Route as PrivacyPolicyImport } from "./routes/privacy-policy"
+import { Route as IndexImport } from "./routes/index"
+import { Route as UserIndexImport } from "./routes/user/index"
+import { Route as PostauthIndexImport } from "./routes/postauth/index"
+import { Route as MarketingStorageIndexImport } from "./routes/marketing-storage/index"
+import { Route as LivestreamIndexImport } from "./routes/livestream/index"
+import { Route as LandingIndexImport } from "./routes/landing/index"
+import { Route as AccessDeniedIndexImport } from "./routes/access-denied/index"
+import { Route as MarketingStorageTasksIndexImport } from "./routes/marketing-storage/tasks/index"
+import { Route as MarketingStorageSystemLogsIndexImport } from "./routes/marketing-storage/system-logs/index"
+import { Route as MarketingStorageStorageIndexImport } from "./routes/marketing-storage/storage/index"
+import { Route as MarketingStorageOrdersLogsIndexImport } from "./routes/marketing-storage/orders-logs/index"
+import { Route as MarketingStorageOldLogsIndexImport } from "./routes/marketing-storage/old-logs/index"
+import { Route as MarketingStorageLogsIndexImport } from "./routes/marketing-storage/logs/index"
+import { Route as MarketingStorageIncomesIndexImport } from "./routes/marketing-storage/incomes/index"
+import { Route as MarketingStorageDeliveredRequestsIndexImport } from "./routes/marketing-storage/delivered-requests/index"
+import { Route as MarketingStorageCalfileIndexImport } from "./routes/marketing-storage/calfile/index"
+import { Route as MarketingStorageCalIndexImport } from "./routes/marketing-storage/cal/index"
+import { Route as MarketingStorageAccountingStorageIndexImport } from "./routes/marketing-storage/accounting-storage/index"
+import { Route as LivestreamStatsIndexImport } from "./routes/livestream/stats/index"
+import { Route as LivestreamPeriodsIndexImport } from "./routes/livestream/periods/index"
+import { Route as LivestreamMembersIndexImport } from "./routes/livestream/members/index"
+import { Route as LivestreamGoalsIndexImport } from "./routes/livestream/goals/index"
+import { Route as LivestreamChannelsIndexImport } from "./routes/livestream/channels/index"
+import { Route as LivestreamCalendarIndexImport } from "./routes/livestream/calendar/index"
+import { Route as LandingLandingPageIndexImport } from "./routes/landing/landing-page/index"
 
 // Create/Update Routes
 
+const TestErrorRoute = TestErrorImport.update({
+  id: "/test-error",
+  path: "/test-error",
+  getParentRoute: () => rootRoute
+} as any)
+
+const PrivacyPolicyRoute = PrivacyPolicyImport.update({
+  id: "/privacy-policy",
+  path: "/privacy-policy",
+  getParentRoute: () => rootRoute
+} as any)
+
 const IndexRoute = IndexImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRoute,
+  id: "/",
+  path: "/",
+  getParentRoute: () => rootRoute
 } as any)
 
 const UserIndexRoute = UserIndexImport.update({
-  id: '/user/',
-  path: '/user/',
-  getParentRoute: () => rootRoute,
+  id: "/user/",
+  path: "/user/",
+  getParentRoute: () => rootRoute
 } as any)
 
 const PostauthIndexRoute = PostauthIndexImport.update({
-  id: '/postauth/',
-  path: '/postauth/',
-  getParentRoute: () => rootRoute,
+  id: "/postauth/",
+  path: "/postauth/",
+  getParentRoute: () => rootRoute
 } as any)
 
 const MarketingStorageIndexRoute = MarketingStorageIndexImport.update({
-  id: '/marketing-storage/',
-  path: '/marketing-storage/',
-  getParentRoute: () => rootRoute,
+  id: "/marketing-storage/",
+  path: "/marketing-storage/",
+  getParentRoute: () => rootRoute
 } as any)
 
 const LivestreamIndexRoute = LivestreamIndexImport.update({
-  id: '/livestream/',
-  path: '/livestream/',
-  getParentRoute: () => rootRoute,
+  id: "/livestream/",
+  path: "/livestream/",
+  getParentRoute: () => rootRoute
 } as any)
 
 const LandingIndexRoute = LandingIndexImport.update({
-  id: '/landing/',
-  path: '/landing/',
-  getParentRoute: () => rootRoute,
+  id: "/landing/",
+  path: "/landing/",
+  getParentRoute: () => rootRoute
 } as any)
 
 const AccessDeniedIndexRoute = AccessDeniedIndexImport.update({
-  id: '/access-denied/',
-  path: '/access-denied/',
-  getParentRoute: () => rootRoute,
+  id: "/access-denied/",
+  path: "/access-denied/",
+  getParentRoute: () => rootRoute
 } as any)
 
 const MarketingStorageTasksIndexRoute = MarketingStorageTasksIndexImport.update(
   {
-    id: '/marketing-storage/tasks/',
-    path: '/marketing-storage/tasks/',
-    getParentRoute: () => rootRoute,
-  } as any,
+    id: "/marketing-storage/tasks/",
+    path: "/marketing-storage/tasks/",
+    getParentRoute: () => rootRoute
+  } as any
 )
 
 const MarketingStorageSystemLogsIndexRoute =
   MarketingStorageSystemLogsIndexImport.update({
-    id: '/marketing-storage/system-logs/',
-    path: '/marketing-storage/system-logs/',
-    getParentRoute: () => rootRoute,
+    id: "/marketing-storage/system-logs/",
+    path: "/marketing-storage/system-logs/",
+    getParentRoute: () => rootRoute
   } as any)
 
 const MarketingStorageStorageIndexRoute =
   MarketingStorageStorageIndexImport.update({
-    id: '/marketing-storage/storage/',
-    path: '/marketing-storage/storage/',
-    getParentRoute: () => rootRoute,
+    id: "/marketing-storage/storage/",
+    path: "/marketing-storage/storage/",
+    getParentRoute: () => rootRoute
   } as any)
 
 const MarketingStorageOrdersLogsIndexRoute =
   MarketingStorageOrdersLogsIndexImport.update({
-    id: '/marketing-storage/orders-logs/',
-    path: '/marketing-storage/orders-logs/',
-    getParentRoute: () => rootRoute,
+    id: "/marketing-storage/orders-logs/",
+    path: "/marketing-storage/orders-logs/",
+    getParentRoute: () => rootRoute
   } as any)
 
 const MarketingStorageOldLogsIndexRoute =
   MarketingStorageOldLogsIndexImport.update({
-    id: '/marketing-storage/old-logs/',
-    path: '/marketing-storage/old-logs/',
-    getParentRoute: () => rootRoute,
+    id: "/marketing-storage/old-logs/",
+    path: "/marketing-storage/old-logs/",
+    getParentRoute: () => rootRoute
   } as any)
 
 const MarketingStorageLogsIndexRoute = MarketingStorageLogsIndexImport.update({
-  id: '/marketing-storage/logs/',
-  path: '/marketing-storage/logs/',
-  getParentRoute: () => rootRoute,
+  id: "/marketing-storage/logs/",
+  path: "/marketing-storage/logs/",
+  getParentRoute: () => rootRoute
 } as any)
 
 const MarketingStorageIncomesIndexRoute =
   MarketingStorageIncomesIndexImport.update({
-    id: '/marketing-storage/incomes/',
-    path: '/marketing-storage/incomes/',
-    getParentRoute: () => rootRoute,
+    id: "/marketing-storage/incomes/",
+    path: "/marketing-storage/incomes/",
+    getParentRoute: () => rootRoute
   } as any)
 
 const MarketingStorageDeliveredRequestsIndexRoute =
   MarketingStorageDeliveredRequestsIndexImport.update({
-    id: '/marketing-storage/delivered-requests/',
-    path: '/marketing-storage/delivered-requests/',
-    getParentRoute: () => rootRoute,
+    id: "/marketing-storage/delivered-requests/",
+    path: "/marketing-storage/delivered-requests/",
+    getParentRoute: () => rootRoute
   } as any)
 
 const MarketingStorageCalfileIndexRoute =
   MarketingStorageCalfileIndexImport.update({
-    id: '/marketing-storage/calfile/',
-    path: '/marketing-storage/calfile/',
-    getParentRoute: () => rootRoute,
+    id: "/marketing-storage/calfile/",
+    path: "/marketing-storage/calfile/",
+    getParentRoute: () => rootRoute
   } as any)
 
 const MarketingStorageCalIndexRoute = MarketingStorageCalIndexImport.update({
-  id: '/marketing-storage/cal/',
-  path: '/marketing-storage/cal/',
-  getParentRoute: () => rootRoute,
+  id: "/marketing-storage/cal/",
+  path: "/marketing-storage/cal/",
+  getParentRoute: () => rootRoute
 } as any)
 
 const MarketingStorageAccountingStorageIndexRoute =
   MarketingStorageAccountingStorageIndexImport.update({
-    id: '/marketing-storage/accounting-storage/',
-    path: '/marketing-storage/accounting-storage/',
-    getParentRoute: () => rootRoute,
+    id: "/marketing-storage/accounting-storage/",
+    path: "/marketing-storage/accounting-storage/",
+    getParentRoute: () => rootRoute
   } as any)
 
 const LivestreamStatsIndexRoute = LivestreamStatsIndexImport.update({
-  id: '/livestream/stats/',
-  path: '/livestream/stats/',
-  getParentRoute: () => rootRoute,
+  id: "/livestream/stats/",
+  path: "/livestream/stats/",
+  getParentRoute: () => rootRoute
 } as any)
 
 const LivestreamPeriodsIndexRoute = LivestreamPeriodsIndexImport.update({
-  id: '/livestream/periods/',
-  path: '/livestream/periods/',
-  getParentRoute: () => rootRoute,
+  id: "/livestream/periods/",
+  path: "/livestream/periods/",
+  getParentRoute: () => rootRoute
 } as any)
 
 const LivestreamMembersIndexRoute = LivestreamMembersIndexImport.update({
-  id: '/livestream/members/',
-  path: '/livestream/members/',
-  getParentRoute: () => rootRoute,
+  id: "/livestream/members/",
+  path: "/livestream/members/",
+  getParentRoute: () => rootRoute
 } as any)
 
 const LivestreamGoalsIndexRoute = LivestreamGoalsIndexImport.update({
-  id: '/livestream/goals/',
-  path: '/livestream/goals/',
-  getParentRoute: () => rootRoute,
+  id: "/livestream/goals/",
+  path: "/livestream/goals/",
+  getParentRoute: () => rootRoute
 } as any)
 
 const LivestreamChannelsIndexRoute = LivestreamChannelsIndexImport.update({
-  id: '/livestream/channels/',
-  path: '/livestream/channels/',
-  getParentRoute: () => rootRoute,
+  id: "/livestream/channels/",
+  path: "/livestream/channels/",
+  getParentRoute: () => rootRoute
 } as any)
 
 const LivestreamCalendarIndexRoute = LivestreamCalendarIndexImport.update({
-  id: '/livestream/calendar/',
-  path: '/livestream/calendar/',
-  getParentRoute: () => rootRoute,
+  id: "/livestream/calendar/",
+  path: "/livestream/calendar/",
+  getParentRoute: () => rootRoute
 } as any)
 
 const LandingLandingPageIndexRoute = LandingLandingPageIndexImport.update({
-  id: '/landing/landing-page/',
-  path: '/landing/landing-page/',
-  getParentRoute: () => rootRoute,
+  id: "/landing/landing-page/",
+  path: "/landing/landing-page/",
+  getParentRoute: () => rootRoute
 } as any)
 
 // Populate the FileRoutesByPath interface
 
-declare module '@tanstack/react-router' {
+declare module "@tanstack/react-router" {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
+    "/": {
+      id: "/"
+      path: "/"
+      fullPath: "/"
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
-    '/access-denied/': {
-      id: '/access-denied/'
-      path: '/access-denied'
-      fullPath: '/access-denied'
+    "/privacy-policy": {
+      id: "/privacy-policy"
+      path: "/privacy-policy"
+      fullPath: "/privacy-policy"
+      preLoaderRoute: typeof PrivacyPolicyImport
+      parentRoute: typeof rootRoute
+    }
+    "/test-error": {
+      id: "/test-error"
+      path: "/test-error"
+      fullPath: "/test-error"
+      preLoaderRoute: typeof TestErrorImport
+      parentRoute: typeof rootRoute
+    }
+    "/access-denied/": {
+      id: "/access-denied/"
+      path: "/access-denied"
+      fullPath: "/access-denied"
       preLoaderRoute: typeof AccessDeniedIndexImport
       parentRoute: typeof rootRoute
     }
-    '/landing/': {
-      id: '/landing/'
-      path: '/landing'
-      fullPath: '/landing'
+    "/landing/": {
+      id: "/landing/"
+      path: "/landing"
+      fullPath: "/landing"
       preLoaderRoute: typeof LandingIndexImport
       parentRoute: typeof rootRoute
     }
-    '/livestream/': {
-      id: '/livestream/'
-      path: '/livestream'
-      fullPath: '/livestream'
+    "/livestream/": {
+      id: "/livestream/"
+      path: "/livestream"
+      fullPath: "/livestream"
       preLoaderRoute: typeof LivestreamIndexImport
       parentRoute: typeof rootRoute
     }
-    '/marketing-storage/': {
-      id: '/marketing-storage/'
-      path: '/marketing-storage'
-      fullPath: '/marketing-storage'
+    "/marketing-storage/": {
+      id: "/marketing-storage/"
+      path: "/marketing-storage"
+      fullPath: "/marketing-storage"
       preLoaderRoute: typeof MarketingStorageIndexImport
       parentRoute: typeof rootRoute
     }
-    '/postauth/': {
-      id: '/postauth/'
-      path: '/postauth'
-      fullPath: '/postauth'
+    "/postauth/": {
+      id: "/postauth/"
+      path: "/postauth"
+      fullPath: "/postauth"
       preLoaderRoute: typeof PostauthIndexImport
       parentRoute: typeof rootRoute
     }
-    '/user/': {
-      id: '/user/'
-      path: '/user'
-      fullPath: '/user'
+    "/user/": {
+      id: "/user/"
+      path: "/user"
+      fullPath: "/user"
       preLoaderRoute: typeof UserIndexImport
       parentRoute: typeof rootRoute
     }
-    '/landing/landing-page/': {
-      id: '/landing/landing-page/'
-      path: '/landing/landing-page'
-      fullPath: '/landing/landing-page'
+    "/landing/landing-page/": {
+      id: "/landing/landing-page/"
+      path: "/landing/landing-page"
+      fullPath: "/landing/landing-page"
       preLoaderRoute: typeof LandingLandingPageIndexImport
       parentRoute: typeof rootRoute
     }
-    '/livestream/calendar/': {
-      id: '/livestream/calendar/'
-      path: '/livestream/calendar'
-      fullPath: '/livestream/calendar'
+    "/livestream/calendar/": {
+      id: "/livestream/calendar/"
+      path: "/livestream/calendar"
+      fullPath: "/livestream/calendar"
       preLoaderRoute: typeof LivestreamCalendarIndexImport
       parentRoute: typeof rootRoute
     }
-    '/livestream/channels/': {
-      id: '/livestream/channels/'
-      path: '/livestream/channels'
-      fullPath: '/livestream/channels'
+    "/livestream/channels/": {
+      id: "/livestream/channels/"
+      path: "/livestream/channels"
+      fullPath: "/livestream/channels"
       preLoaderRoute: typeof LivestreamChannelsIndexImport
       parentRoute: typeof rootRoute
     }
-    '/livestream/goals/': {
-      id: '/livestream/goals/'
-      path: '/livestream/goals'
-      fullPath: '/livestream/goals'
+    "/livestream/goals/": {
+      id: "/livestream/goals/"
+      path: "/livestream/goals"
+      fullPath: "/livestream/goals"
       preLoaderRoute: typeof LivestreamGoalsIndexImport
       parentRoute: typeof rootRoute
     }
-    '/livestream/members/': {
-      id: '/livestream/members/'
-      path: '/livestream/members'
-      fullPath: '/livestream/members'
+    "/livestream/members/": {
+      id: "/livestream/members/"
+      path: "/livestream/members"
+      fullPath: "/livestream/members"
       preLoaderRoute: typeof LivestreamMembersIndexImport
       parentRoute: typeof rootRoute
     }
-    '/livestream/periods/': {
-      id: '/livestream/periods/'
-      path: '/livestream/periods'
-      fullPath: '/livestream/periods'
+    "/livestream/periods/": {
+      id: "/livestream/periods/"
+      path: "/livestream/periods"
+      fullPath: "/livestream/periods"
       preLoaderRoute: typeof LivestreamPeriodsIndexImport
       parentRoute: typeof rootRoute
     }
-    '/livestream/stats/': {
-      id: '/livestream/stats/'
-      path: '/livestream/stats'
-      fullPath: '/livestream/stats'
+    "/livestream/stats/": {
+      id: "/livestream/stats/"
+      path: "/livestream/stats"
+      fullPath: "/livestream/stats"
       preLoaderRoute: typeof LivestreamStatsIndexImport
       parentRoute: typeof rootRoute
     }
-    '/marketing-storage/accounting-storage/': {
-      id: '/marketing-storage/accounting-storage/'
-      path: '/marketing-storage/accounting-storage'
-      fullPath: '/marketing-storage/accounting-storage'
+    "/marketing-storage/accounting-storage/": {
+      id: "/marketing-storage/accounting-storage/"
+      path: "/marketing-storage/accounting-storage"
+      fullPath: "/marketing-storage/accounting-storage"
       preLoaderRoute: typeof MarketingStorageAccountingStorageIndexImport
       parentRoute: typeof rootRoute
     }
-    '/marketing-storage/cal/': {
-      id: '/marketing-storage/cal/'
-      path: '/marketing-storage/cal'
-      fullPath: '/marketing-storage/cal'
+    "/marketing-storage/cal/": {
+      id: "/marketing-storage/cal/"
+      path: "/marketing-storage/cal"
+      fullPath: "/marketing-storage/cal"
       preLoaderRoute: typeof MarketingStorageCalIndexImport
       parentRoute: typeof rootRoute
     }
-    '/marketing-storage/calfile/': {
-      id: '/marketing-storage/calfile/'
-      path: '/marketing-storage/calfile'
-      fullPath: '/marketing-storage/calfile'
+    "/marketing-storage/calfile/": {
+      id: "/marketing-storage/calfile/"
+      path: "/marketing-storage/calfile"
+      fullPath: "/marketing-storage/calfile"
       preLoaderRoute: typeof MarketingStorageCalfileIndexImport
       parentRoute: typeof rootRoute
     }
-    '/marketing-storage/delivered-requests/': {
-      id: '/marketing-storage/delivered-requests/'
-      path: '/marketing-storage/delivered-requests'
-      fullPath: '/marketing-storage/delivered-requests'
+    "/marketing-storage/delivered-requests/": {
+      id: "/marketing-storage/delivered-requests/"
+      path: "/marketing-storage/delivered-requests"
+      fullPath: "/marketing-storage/delivered-requests"
       preLoaderRoute: typeof MarketingStorageDeliveredRequestsIndexImport
       parentRoute: typeof rootRoute
     }
-    '/marketing-storage/incomes/': {
-      id: '/marketing-storage/incomes/'
-      path: '/marketing-storage/incomes'
-      fullPath: '/marketing-storage/incomes'
+    "/marketing-storage/incomes/": {
+      id: "/marketing-storage/incomes/"
+      path: "/marketing-storage/incomes"
+      fullPath: "/marketing-storage/incomes"
       preLoaderRoute: typeof MarketingStorageIncomesIndexImport
       parentRoute: typeof rootRoute
     }
-    '/marketing-storage/logs/': {
-      id: '/marketing-storage/logs/'
-      path: '/marketing-storage/logs'
-      fullPath: '/marketing-storage/logs'
+    "/marketing-storage/logs/": {
+      id: "/marketing-storage/logs/"
+      path: "/marketing-storage/logs"
+      fullPath: "/marketing-storage/logs"
       preLoaderRoute: typeof MarketingStorageLogsIndexImport
       parentRoute: typeof rootRoute
     }
-    '/marketing-storage/old-logs/': {
-      id: '/marketing-storage/old-logs/'
-      path: '/marketing-storage/old-logs'
-      fullPath: '/marketing-storage/old-logs'
+    "/marketing-storage/old-logs/": {
+      id: "/marketing-storage/old-logs/"
+      path: "/marketing-storage/old-logs"
+      fullPath: "/marketing-storage/old-logs"
       preLoaderRoute: typeof MarketingStorageOldLogsIndexImport
       parentRoute: typeof rootRoute
     }
-    '/marketing-storage/orders-logs/': {
-      id: '/marketing-storage/orders-logs/'
-      path: '/marketing-storage/orders-logs'
-      fullPath: '/marketing-storage/orders-logs'
+    "/marketing-storage/orders-logs/": {
+      id: "/marketing-storage/orders-logs/"
+      path: "/marketing-storage/orders-logs"
+      fullPath: "/marketing-storage/orders-logs"
       preLoaderRoute: typeof MarketingStorageOrdersLogsIndexImport
       parentRoute: typeof rootRoute
     }
-    '/marketing-storage/storage/': {
-      id: '/marketing-storage/storage/'
-      path: '/marketing-storage/storage'
-      fullPath: '/marketing-storage/storage'
+    "/marketing-storage/storage/": {
+      id: "/marketing-storage/storage/"
+      path: "/marketing-storage/storage"
+      fullPath: "/marketing-storage/storage"
       preLoaderRoute: typeof MarketingStorageStorageIndexImport
       parentRoute: typeof rootRoute
     }
-    '/marketing-storage/system-logs/': {
-      id: '/marketing-storage/system-logs/'
-      path: '/marketing-storage/system-logs'
-      fullPath: '/marketing-storage/system-logs'
+    "/marketing-storage/system-logs/": {
+      id: "/marketing-storage/system-logs/"
+      path: "/marketing-storage/system-logs"
+      fullPath: "/marketing-storage/system-logs"
       preLoaderRoute: typeof MarketingStorageSystemLogsIndexImport
       parentRoute: typeof rootRoute
     }
-    '/marketing-storage/tasks/': {
-      id: '/marketing-storage/tasks/'
-      path: '/marketing-storage/tasks'
-      fullPath: '/marketing-storage/tasks'
+    "/marketing-storage/tasks/": {
+      id: "/marketing-storage/tasks/"
+      path: "/marketing-storage/tasks"
+      fullPath: "/marketing-storage/tasks"
       preLoaderRoute: typeof MarketingStorageTasksIndexImport
       parentRoute: typeof rootRoute
     }
@@ -384,177 +412,189 @@ declare module '@tanstack/react-router' {
 // Create and export the route tree
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/access-denied': typeof AccessDeniedIndexRoute
-  '/landing': typeof LandingIndexRoute
-  '/livestream': typeof LivestreamIndexRoute
-  '/marketing-storage': typeof MarketingStorageIndexRoute
-  '/postauth': typeof PostauthIndexRoute
-  '/user': typeof UserIndexRoute
-  '/landing/landing-page': typeof LandingLandingPageIndexRoute
-  '/livestream/calendar': typeof LivestreamCalendarIndexRoute
-  '/livestream/channels': typeof LivestreamChannelsIndexRoute
-  '/livestream/goals': typeof LivestreamGoalsIndexRoute
-  '/livestream/members': typeof LivestreamMembersIndexRoute
-  '/livestream/periods': typeof LivestreamPeriodsIndexRoute
-  '/livestream/stats': typeof LivestreamStatsIndexRoute
-  '/marketing-storage/accounting-storage': typeof MarketingStorageAccountingStorageIndexRoute
-  '/marketing-storage/cal': typeof MarketingStorageCalIndexRoute
-  '/marketing-storage/calfile': typeof MarketingStorageCalfileIndexRoute
-  '/marketing-storage/delivered-requests': typeof MarketingStorageDeliveredRequestsIndexRoute
-  '/marketing-storage/incomes': typeof MarketingStorageIncomesIndexRoute
-  '/marketing-storage/logs': typeof MarketingStorageLogsIndexRoute
-  '/marketing-storage/old-logs': typeof MarketingStorageOldLogsIndexRoute
-  '/marketing-storage/orders-logs': typeof MarketingStorageOrdersLogsIndexRoute
-  '/marketing-storage/storage': typeof MarketingStorageStorageIndexRoute
-  '/marketing-storage/system-logs': typeof MarketingStorageSystemLogsIndexRoute
-  '/marketing-storage/tasks': typeof MarketingStorageTasksIndexRoute
+  "/": typeof IndexRoute
+  "/privacy-policy": typeof PrivacyPolicyRouteWithChildren
+  "/test-error": typeof TestErrorRoute
+  "/access-denied": typeof AccessDeniedIndexRoute
+  "/landing": typeof LandingIndexRoute
+  "/livestream": typeof LivestreamIndexRoute
+  "/marketing-storage": typeof MarketingStorageIndexRoute
+  "/postauth": typeof PostauthIndexRoute
+  "/user": typeof UserIndexRoute
+  "/landing/landing-page": typeof LandingLandingPageIndexRoute
+  "/livestream/calendar": typeof LivestreamCalendarIndexRoute
+  "/livestream/channels": typeof LivestreamChannelsIndexRoute
+  "/livestream/goals": typeof LivestreamGoalsIndexRoute
+  "/livestream/members": typeof LivestreamMembersIndexRoute
+  "/livestream/periods": typeof LivestreamPeriodsIndexRoute
+  "/livestream/stats": typeof LivestreamStatsIndexRoute
+  "/marketing-storage/accounting-storage": typeof MarketingStorageAccountingStorageIndexRoute
+  "/marketing-storage/cal": typeof MarketingStorageCalIndexRoute
+  "/marketing-storage/calfile": typeof MarketingStorageCalfileIndexRoute
+  "/marketing-storage/delivered-requests": typeof MarketingStorageDeliveredRequestsIndexRoute
+  "/marketing-storage/incomes": typeof MarketingStorageIncomesIndexRoute
+  "/marketing-storage/logs": typeof MarketingStorageLogsIndexRoute
+  "/marketing-storage/old-logs": typeof MarketingStorageOldLogsIndexRoute
+  "/marketing-storage/orders-logs": typeof MarketingStorageOrdersLogsIndexRoute
+  "/marketing-storage/storage": typeof MarketingStorageStorageIndexRoute
+  "/marketing-storage/system-logs": typeof MarketingStorageSystemLogsIndexRoute
+  "/marketing-storage/tasks": typeof MarketingStorageTasksIndexRoute
 }
 
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/access-denied': typeof AccessDeniedIndexRoute
-  '/landing': typeof LandingIndexRoute
-  '/livestream': typeof LivestreamIndexRoute
-  '/marketing-storage': typeof MarketingStorageIndexRoute
-  '/postauth': typeof PostauthIndexRoute
-  '/user': typeof UserIndexRoute
-  '/landing/landing-page': typeof LandingLandingPageIndexRoute
-  '/livestream/calendar': typeof LivestreamCalendarIndexRoute
-  '/livestream/channels': typeof LivestreamChannelsIndexRoute
-  '/livestream/goals': typeof LivestreamGoalsIndexRoute
-  '/livestream/members': typeof LivestreamMembersIndexRoute
-  '/livestream/periods': typeof LivestreamPeriodsIndexRoute
-  '/livestream/stats': typeof LivestreamStatsIndexRoute
-  '/marketing-storage/accounting-storage': typeof MarketingStorageAccountingStorageIndexRoute
-  '/marketing-storage/cal': typeof MarketingStorageCalIndexRoute
-  '/marketing-storage/calfile': typeof MarketingStorageCalfileIndexRoute
-  '/marketing-storage/delivered-requests': typeof MarketingStorageDeliveredRequestsIndexRoute
-  '/marketing-storage/incomes': typeof MarketingStorageIncomesIndexRoute
-  '/marketing-storage/logs': typeof MarketingStorageLogsIndexRoute
-  '/marketing-storage/old-logs': typeof MarketingStorageOldLogsIndexRoute
-  '/marketing-storage/orders-logs': typeof MarketingStorageOrdersLogsIndexRoute
-  '/marketing-storage/storage': typeof MarketingStorageStorageIndexRoute
-  '/marketing-storage/system-logs': typeof MarketingStorageSystemLogsIndexRoute
-  '/marketing-storage/tasks': typeof MarketingStorageTasksIndexRoute
+  "/": typeof IndexRoute
+  "/test-error": typeof TestErrorRoute
+  "/access-denied": typeof AccessDeniedIndexRoute
+  "/landing": typeof LandingIndexRoute
+  "/livestream": typeof LivestreamIndexRoute
+  "/marketing-storage": typeof MarketingStorageIndexRoute
+  "/postauth": typeof PostauthIndexRoute
+  "/user": typeof UserIndexRoute
+  "/landing/landing-page": typeof LandingLandingPageIndexRoute
+  "/livestream/calendar": typeof LivestreamCalendarIndexRoute
+  "/livestream/channels": typeof LivestreamChannelsIndexRoute
+  "/livestream/goals": typeof LivestreamGoalsIndexRoute
+  "/livestream/members": typeof LivestreamMembersIndexRoute
+  "/livestream/periods": typeof LivestreamPeriodsIndexRoute
+  "/livestream/stats": typeof LivestreamStatsIndexRoute
+  "/marketing-storage/accounting-storage": typeof MarketingStorageAccountingStorageIndexRoute
+  "/marketing-storage/cal": typeof MarketingStorageCalIndexRoute
+  "/marketing-storage/calfile": typeof MarketingStorageCalfileIndexRoute
+  "/marketing-storage/delivered-requests": typeof MarketingStorageDeliveredRequestsIndexRoute
+  "/marketing-storage/incomes": typeof MarketingStorageIncomesIndexRoute
+  "/marketing-storage/logs": typeof MarketingStorageLogsIndexRoute
+  "/marketing-storage/old-logs": typeof MarketingStorageOldLogsIndexRoute
+  "/marketing-storage/orders-logs": typeof MarketingStorageOrdersLogsIndexRoute
+  "/marketing-storage/storage": typeof MarketingStorageStorageIndexRoute
+  "/marketing-storage/system-logs": typeof MarketingStorageSystemLogsIndexRoute
+  "/marketing-storage/tasks": typeof MarketingStorageTasksIndexRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
-  '/': typeof IndexRoute
-  '/access-denied/': typeof AccessDeniedIndexRoute
-  '/landing/': typeof LandingIndexRoute
-  '/livestream/': typeof LivestreamIndexRoute
-  '/marketing-storage/': typeof MarketingStorageIndexRoute
-  '/postauth/': typeof PostauthIndexRoute
-  '/user/': typeof UserIndexRoute
-  '/landing/landing-page/': typeof LandingLandingPageIndexRoute
-  '/livestream/calendar/': typeof LivestreamCalendarIndexRoute
-  '/livestream/channels/': typeof LivestreamChannelsIndexRoute
-  '/livestream/goals/': typeof LivestreamGoalsIndexRoute
-  '/livestream/members/': typeof LivestreamMembersIndexRoute
-  '/livestream/periods/': typeof LivestreamPeriodsIndexRoute
-  '/livestream/stats/': typeof LivestreamStatsIndexRoute
-  '/marketing-storage/accounting-storage/': typeof MarketingStorageAccountingStorageIndexRoute
-  '/marketing-storage/cal/': typeof MarketingStorageCalIndexRoute
-  '/marketing-storage/calfile/': typeof MarketingStorageCalfileIndexRoute
-  '/marketing-storage/delivered-requests/': typeof MarketingStorageDeliveredRequestsIndexRoute
-  '/marketing-storage/incomes/': typeof MarketingStorageIncomesIndexRoute
-  '/marketing-storage/logs/': typeof MarketingStorageLogsIndexRoute
-  '/marketing-storage/old-logs/': typeof MarketingStorageOldLogsIndexRoute
-  '/marketing-storage/orders-logs/': typeof MarketingStorageOrdersLogsIndexRoute
-  '/marketing-storage/storage/': typeof MarketingStorageStorageIndexRoute
-  '/marketing-storage/system-logs/': typeof MarketingStorageSystemLogsIndexRoute
-  '/marketing-storage/tasks/': typeof MarketingStorageTasksIndexRoute
+  "/": typeof IndexRoute
+  "/privacy-policy": typeof PrivacyPolicyRouteWithChildren
+  "/test-error": typeof TestErrorRoute
+  "/access-denied/": typeof AccessDeniedIndexRoute
+  "/landing/": typeof LandingIndexRoute
+  "/livestream/": typeof LivestreamIndexRoute
+  "/marketing-storage/": typeof MarketingStorageIndexRoute
+  "/postauth/": typeof PostauthIndexRoute
+  "/user/": typeof UserIndexRoute
+  "/landing/landing-page/": typeof LandingLandingPageIndexRoute
+  "/livestream/calendar/": typeof LivestreamCalendarIndexRoute
+  "/livestream/channels/": typeof LivestreamChannelsIndexRoute
+  "/livestream/goals/": typeof LivestreamGoalsIndexRoute
+  "/livestream/members/": typeof LivestreamMembersIndexRoute
+  "/livestream/periods/": typeof LivestreamPeriodsIndexRoute
+  "/livestream/stats/": typeof LivestreamStatsIndexRoute
+  "/marketing-storage/accounting-storage/": typeof MarketingStorageAccountingStorageIndexRoute
+  "/marketing-storage/cal/": typeof MarketingStorageCalIndexRoute
+  "/marketing-storage/calfile/": typeof MarketingStorageCalfileIndexRoute
+  "/marketing-storage/delivered-requests/": typeof MarketingStorageDeliveredRequestsIndexRoute
+  "/marketing-storage/incomes/": typeof MarketingStorageIncomesIndexRoute
+  "/marketing-storage/logs/": typeof MarketingStorageLogsIndexRoute
+  "/marketing-storage/old-logs/": typeof MarketingStorageOldLogsIndexRoute
+  "/marketing-storage/orders-logs/": typeof MarketingStorageOrdersLogsIndexRoute
+  "/marketing-storage/storage/": typeof MarketingStorageStorageIndexRoute
+  "/marketing-storage/system-logs/": typeof MarketingStorageSystemLogsIndexRoute
+  "/marketing-storage/tasks/": typeof MarketingStorageTasksIndexRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/'
-    | '/access-denied'
-    | '/landing'
-    | '/livestream'
-    | '/marketing-storage'
-    | '/postauth'
-    | '/user'
-    | '/landing/landing-page'
-    | '/livestream/calendar'
-    | '/livestream/channels'
-    | '/livestream/goals'
-    | '/livestream/members'
-    | '/livestream/periods'
-    | '/livestream/stats'
-    | '/marketing-storage/accounting-storage'
-    | '/marketing-storage/cal'
-    | '/marketing-storage/calfile'
-    | '/marketing-storage/delivered-requests'
-    | '/marketing-storage/incomes'
-    | '/marketing-storage/logs'
-    | '/marketing-storage/old-logs'
-    | '/marketing-storage/orders-logs'
-    | '/marketing-storage/storage'
-    | '/marketing-storage/system-logs'
-    | '/marketing-storage/tasks'
+    | "/"
+    | "/privacy-policy"
+    | "/test-error"
+    | "/access-denied"
+    | "/landing"
+    | "/livestream"
+    | "/marketing-storage"
+    | "/postauth"
+    | "/user"
+    | "/landing/landing-page"
+    | "/livestream/calendar"
+    | "/livestream/channels"
+    | "/livestream/goals"
+    | "/livestream/members"
+    | "/livestream/periods"
+    | "/livestream/stats"
+    | "/marketing-storage/accounting-storage"
+    | "/marketing-storage/cal"
+    | "/marketing-storage/calfile"
+    | "/marketing-storage/delivered-requests"
+    | "/marketing-storage/incomes"
+    | "/marketing-storage/logs"
+    | "/marketing-storage/old-logs"
+    | "/marketing-storage/orders-logs"
+    | "/marketing-storage/storage"
+    | "/marketing-storage/system-logs"
+    | "/marketing-storage/tasks"
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
-    | '/access-denied'
-    | '/landing'
-    | '/livestream'
-    | '/marketing-storage'
-    | '/postauth'
-    | '/user'
-    | '/landing/landing-page'
-    | '/livestream/calendar'
-    | '/livestream/channels'
-    | '/livestream/goals'
-    | '/livestream/members'
-    | '/livestream/periods'
-    | '/livestream/stats'
-    | '/marketing-storage/accounting-storage'
-    | '/marketing-storage/cal'
-    | '/marketing-storage/calfile'
-    | '/marketing-storage/delivered-requests'
-    | '/marketing-storage/incomes'
-    | '/marketing-storage/logs'
-    | '/marketing-storage/old-logs'
-    | '/marketing-storage/orders-logs'
-    | '/marketing-storage/storage'
-    | '/marketing-storage/system-logs'
-    | '/marketing-storage/tasks'
+    | "/"
+    | "/test-error"
+    | "/access-denied"
+    | "/landing"
+    | "/livestream"
+    | "/marketing-storage"
+    | "/postauth"
+    | "/user"
+    | "/landing/landing-page"
+    | "/livestream/calendar"
+    | "/livestream/channels"
+    | "/livestream/goals"
+    | "/livestream/members"
+    | "/livestream/periods"
+    | "/livestream/stats"
+    | "/marketing-storage/accounting-storage"
+    | "/marketing-storage/cal"
+    | "/marketing-storage/calfile"
+    | "/marketing-storage/delivered-requests"
+    | "/marketing-storage/incomes"
+    | "/marketing-storage/logs"
+    | "/marketing-storage/old-logs"
+    | "/marketing-storage/orders-logs"
+    | "/marketing-storage/storage"
+    | "/marketing-storage/system-logs"
+    | "/marketing-storage/tasks"
   id:
-    | '__root__'
-    | '/'
-    | '/access-denied/'
-    | '/landing/'
-    | '/livestream/'
-    | '/marketing-storage/'
-    | '/postauth/'
-    | '/user/'
-    | '/landing/landing-page/'
-    | '/livestream/calendar/'
-    | '/livestream/channels/'
-    | '/livestream/goals/'
-    | '/livestream/members/'
-    | '/livestream/periods/'
-    | '/livestream/stats/'
-    | '/marketing-storage/accounting-storage/'
-    | '/marketing-storage/cal/'
-    | '/marketing-storage/calfile/'
-    | '/marketing-storage/delivered-requests/'
-    | '/marketing-storage/incomes/'
-    | '/marketing-storage/logs/'
-    | '/marketing-storage/old-logs/'
-    | '/marketing-storage/orders-logs/'
-    | '/marketing-storage/storage/'
-    | '/marketing-storage/system-logs/'
-    | '/marketing-storage/tasks/'
+    | "__root__"
+    | "/"
+    | "/privacy-policy"
+    | "/test-error"
+    | "/access-denied/"
+    | "/landing/"
+    | "/livestream/"
+    | "/marketing-storage/"
+    | "/postauth/"
+    | "/user/"
+    | "/landing/landing-page/"
+    | "/livestream/calendar/"
+    | "/livestream/channels/"
+    | "/livestream/goals/"
+    | "/livestream/members/"
+    | "/livestream/periods/"
+    | "/livestream/stats/"
+    | "/marketing-storage/accounting-storage/"
+    | "/marketing-storage/cal/"
+    | "/marketing-storage/calfile/"
+    | "/marketing-storage/delivered-requests/"
+    | "/marketing-storage/incomes/"
+    | "/marketing-storage/logs/"
+    | "/marketing-storage/old-logs/"
+    | "/marketing-storage/orders-logs/"
+    | "/marketing-storage/storage/"
+    | "/marketing-storage/system-logs/"
+    | "/marketing-storage/tasks/"
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  PrivacyPolicyRoute: typeof PrivacyPolicyRouteWithChildren
+  TestErrorRoute: typeof TestErrorRoute
   AccessDeniedIndexRoute: typeof AccessDeniedIndexRoute
   LandingIndexRoute: typeof LandingIndexRoute
   LivestreamIndexRoute: typeof LivestreamIndexRoute
@@ -583,6 +623,8 @@ export interface RootRouteChildren {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  PrivacyPolicyRoute: PrivacyPolicyRouteWithChildren,
+  TestErrorRoute: TestErrorRoute,
   AccessDeniedIndexRoute: AccessDeniedIndexRoute,
   LandingIndexRoute: LandingIndexRoute,
   LivestreamIndexRoute: LivestreamIndexRoute,
@@ -608,7 +650,7 @@ const rootRouteChildren: RootRouteChildren = {
   MarketingStorageOrdersLogsIndexRoute: MarketingStorageOrdersLogsIndexRoute,
   MarketingStorageStorageIndexRoute: MarketingStorageStorageIndexRoute,
   MarketingStorageSystemLogsIndexRoute: MarketingStorageSystemLogsIndexRoute,
-  MarketingStorageTasksIndexRoute: MarketingStorageTasksIndexRoute,
+  MarketingStorageTasksIndexRoute: MarketingStorageTasksIndexRoute
 }
 
 export const routeTree = rootRoute
@@ -622,6 +664,8 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
+        "/privacy-policy",
+        "/test-error",
         "/access-denied/",
         "/landing/",
         "/livestream/",
@@ -650,6 +694,15 @@ export const routeTree = rootRoute
     },
     "/": {
       "filePath": "index.tsx"
+    },
+    "/privacy-policy": {
+      "filePath": "privacy-policy.tsx",
+      "children": [
+        "/privacy-policy/"
+      ]
+    },
+    "/test-error": {
+      "filePath": "test-error.tsx"
     },
     "/access-denied/": {
       "filePath": "access-denied/index.tsx"

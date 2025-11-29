@@ -85,6 +85,13 @@ npm run routes    # Generate router tree
 
 ## 7. Lịch sử cập nhật
 
+### 3.5.1
+
+- Bổ sung màn hình Bảo trì
+- Giao diện bảng DataTable mới
+- Hỗ trợ tính toán trên nhiều channel Tiktok
+- Bổ sung logic unique cho Tiktok Products
+
 ### 3.5.0
 
 - Cal từ Excel & Cal Orders:

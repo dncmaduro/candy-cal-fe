@@ -16,8 +16,21 @@ import "@mantine/dates/styles.css"
 
 import { createTheme, MantineProvider, Modal } from "@mantine/core"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { MaintenancePage } from "./components/common/MaintenancePage"
 
-const router = createRouter({ routeTree, history: createBrowserHistory() })
+const router = createRouter({
+  routeTree,
+  history: createBrowserHistory(),
+  defaultErrorComponent: ({ error }) => (
+    <MaintenancePage
+      error={error as Error}
+      errorInfo={null}
+      onReset={() => {
+        window.location.href = "/"
+      }}
+    />
+  )
+})
 
 const theme = createTheme({
   primaryColor: "indigo",
@@ -40,7 +53,11 @@ function App() {
         <MantineProvider theme={theme}>
           <ModalsProvider
             modalProps={{
-              overlayProps: { backgroundOpacity: 0.6, blur: 2, color: "black" }
+              overlayProps: {
+                backgroundOpacity: 0.6,
+                blur: 2,
+                color: "black"
+              }
             }}
           >
             <Notifications />
