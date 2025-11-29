@@ -16,7 +16,6 @@ import { useMemo, useState, useRef } from "react"
 import html2canvas from "html2canvas"
 import { IconCamera } from "@tabler/icons-react"
 import { CToast } from "../common/CToast"
-import MCD from "../../../public/mcd.png"
 
 interface ItemWithExtendedData {
   code: string
@@ -173,7 +172,7 @@ export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
       <div ref={contentRef}>
         <Group ml={8} mt={8} justify="space-between" align="center">
           <Group>
-            <Image src={MCD} alt="MCD" h={100} />
+            <Image src="/mcd.png" alt="MCD" h={100} />
             <Stack gap={4}>
               <Text size="xl" fw={600}>
                 Công ty TNHH My Candy Việt Nam

@@ -5,7 +5,6 @@ import {
   GetNotificationsResponse,
   GetUnviewedCountResponse
 } from "./models"
-import sound from "../public/dingdong.mp3"
 
 export const useNotifications = () => {
   const { accessToken } = useUserStore()
@@ -19,7 +18,7 @@ export const useNotifications = () => {
   }
 
   const playNotificationSound = () => {
-    return new Audio(sound).play()
+    return new Audio("/dingdong.mp3").play()
   }
 
   const markAsRead = async (notificationId: string) => {
