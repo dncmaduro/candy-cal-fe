@@ -11,6 +11,7 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as TestErrorImport } from './routes/test-error'
 import { Route as PrivacyPolicyImport } from './routes/privacy-policy'
 import { Route as IndexImport } from './routes/index'
 import { Route as UserIndexImport } from './routes/user/index'
@@ -56,6 +57,12 @@ import { Route as SalesFunnelFunnelIdImport } from './routes/sales/funnel/$funne
 import { Route as SalesDashboardKpiIdImport } from './routes/sales/dashboard/$kpiId'
 
 // Create/Update Routes
+
+const TestErrorRoute = TestErrorImport.update({
+  id: '/test-error',
+  path: '/test-error',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const PrivacyPolicyRoute = PrivacyPolicyImport.update({
   id: '/privacy-policy',
@@ -342,6 +349,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy-policy'
       fullPath: '/privacy-policy'
       preLoaderRoute: typeof PrivacyPolicyImport
+      parentRoute: typeof rootRoute
+    }
+    '/test-error': {
+      id: '/test-error'
+      path: '/test-error'
+      fullPath: '/test-error'
+      preLoaderRoute: typeof TestErrorImport
       parentRoute: typeof rootRoute
     }
     '/access-denied/': {
@@ -651,6 +665,7 @@ const PrivacyPolicyRouteWithChildren = PrivacyPolicyRoute._addFileChildren(
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/privacy-policy': typeof PrivacyPolicyRouteWithChildren
+  '/test-error': typeof TestErrorRoute
   '/access-denied': typeof AccessDeniedIndexRoute
   '/landing': typeof LandingIndexRoute
   '/livestream': typeof LivestreamIndexRoute
@@ -696,6 +711,7 @@ export interface FileRoutesByFullPath {
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/test-error': typeof TestErrorRoute
   '/access-denied': typeof AccessDeniedIndexRoute
   '/landing': typeof LandingIndexRoute
   '/livestream': typeof LivestreamIndexRoute
@@ -743,6 +759,7 @@ export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/privacy-policy': typeof PrivacyPolicyRouteWithChildren
+  '/test-error': typeof TestErrorRoute
   '/access-denied/': typeof AccessDeniedIndexRoute
   '/landing/': typeof LandingIndexRoute
   '/livestream/': typeof LivestreamIndexRoute
@@ -791,6 +808,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/privacy-policy'
+    | '/test-error'
     | '/access-denied'
     | '/landing'
     | '/livestream'
@@ -835,6 +853,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/test-error'
     | '/access-denied'
     | '/landing'
     | '/livestream'
@@ -880,6 +899,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/privacy-policy'
+    | '/test-error'
     | '/access-denied/'
     | '/landing/'
     | '/livestream/'
@@ -927,6 +947,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRouteWithChildren
+  TestErrorRoute: typeof TestErrorRoute
   AccessDeniedIndexRoute: typeof AccessDeniedIndexRoute
   LandingIndexRoute: typeof LandingIndexRoute
   LivestreamIndexRoute: typeof LivestreamIndexRoute
@@ -972,6 +993,7 @@ export interface RootRouteChildren {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   PrivacyPolicyRoute: PrivacyPolicyRouteWithChildren,
+  TestErrorRoute: TestErrorRoute,
   AccessDeniedIndexRoute: AccessDeniedIndexRoute,
   LandingIndexRoute: LandingIndexRoute,
   LivestreamIndexRoute: LivestreamIndexRoute,
@@ -1028,6 +1050,7 @@ export const routeTree = rootRoute
       "children": [
         "/",
         "/privacy-policy",
+        "/test-error",
         "/access-denied/",
         "/landing/",
         "/livestream/",
@@ -1078,6 +1101,9 @@ export const routeTree = rootRoute
       "children": [
         "/privacy-policy/"
       ]
+    },
+    "/test-error": {
+      "filePath": "test-error.tsx"
     },
     "/access-denied/": {
       "filePath": "access-denied/index.tsx"
