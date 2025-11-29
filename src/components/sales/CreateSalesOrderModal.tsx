@@ -35,11 +35,13 @@ type CreateSalesOrderFormData = {
   province?: string
   phoneNumber?: string
   address?: string
+  funnelSource: "ads" | "seeding" | "referral"
 }
 
 type ItemInput = {
   code: string
   quantity: number
+  note?: string
 }
 
 type CreateSalesOrderModalProps = {
@@ -66,7 +68,7 @@ export const CreateSalesOrderModal = ({
   const [items, setItems] = useState<ItemInput[]>(
     initialItems && initialItems.length > 0
       ? initialItems
-      : [{ code: "", quantity: 1 }]
+      : [{ code: "", quantity: 1, note: "" }]
   )
 
   const [secondaryPhones, setSecondaryPhones] = useState<string[]>([])
@@ -88,7 +90,8 @@ export const CreateSalesOrderModal = ({
       newCustomerChannel: "",
       province: "",
       phoneNumber: "",
-      address: ""
+      address: "",
+      funnelSource: "ads"
     }
   })
 
@@ -146,7 +149,8 @@ export const CreateSalesOrderModal = ({
         // Step 1: Create lead
         const leadResponse = await createLead({
           name: data.newCustomerName,
-          channel: data.newCustomerChannel
+          channel: data.newCustomerChannel,
+          funnelSource: data.funnelSource
         })
 
         funnelId = leadResponse.data._id
@@ -212,7 +216,7 @@ export const CreateSalesOrderModal = ({
   }
 
   const handleAddItem = () => {
-    setItems([...items, { code: "", quantity: 1 }])
+    setItems([...items, { code: "", quantity: 1, note: "" }])
   }
 
   const handleRemoveItem = (index: number) => {
@@ -252,6 +256,12 @@ export const CreateSalesOrderModal = ({
       value: channel._id,
       label: channel.channelName
     })) || []
+
+  const sourceOptions = [
+    { value: "ads", label: "Ads" },
+    { value: "seeding", label: "Seeding" },
+    { value: "referral", label: "Giới thiệu" }
+  ]
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -332,6 +342,25 @@ export const CreateSalesOrderModal = ({
                 searchable
                 required={watchIsNewCustomer}
                 error={errors.newCustomerChannel?.message}
+              />
+            )}
+          />
+
+          <Controller
+            name="funnelSource"
+            control={control}
+            rules={{
+              required: watchIsNewCustomer ? "Nguồn là bắt buộc" : false
+            }}
+            render={({ field }) => (
+              <Select
+                {...field}
+                label="Nguồn"
+                placeholder="Chọn nguồn"
+                data={sourceOptions}
+                searchable
+                required={watchIsNewCustomer}
+                error={errors.funnelSource?.message}
               />
             )}
           />
@@ -531,7 +560,16 @@ export const CreateSalesOrderModal = ({
               handleItemChange(index, "quantity", Number(value) || 0)
             }
             min={1}
-            style={{ width: 120 }}
+            style={{ width: 100 }}
+          />
+          <TextInput
+            label={index === 0 ? "Ghi chú" : undefined}
+            placeholder="Nhập ghi chú"
+            value={item.note}
+            onChange={(e) =>
+              handleItemChange(index, "note", e.target.value || "")
+            }
+            w={250}
           />
           {items.length > 1 && (
             <Button

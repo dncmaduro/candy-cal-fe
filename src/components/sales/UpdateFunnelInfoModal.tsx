@@ -34,6 +34,7 @@ interface UpdateFunnelInfoModalProps {
     address?: string
     channel: string
     hasBuyed: boolean
+    funnelSource: "ads" | "seeding" | "referral"
   }
   onSuccess?: () => void
 }
@@ -43,6 +44,7 @@ export const UpdateFunnelInfoModal = ({
   currentData,
   onSuccess
 }: UpdateFunnelInfoModalProps) => {
+  console.log(currentData.funnelSource)
   const queryClient = useQueryClient()
   const { updateFunnelInfo } = useSalesFunnel()
   const { getProvinces } = useProvinces()
@@ -69,7 +71,8 @@ export const UpdateFunnelInfoModal = ({
       phoneNumber: currentData.phoneNumber,
       address: currentData.address,
       channel: currentData.channel,
-      hasBuyed: currentData.hasBuyed
+      hasBuyed: currentData.hasBuyed,
+      funnelSource: currentData.funnelSource
     }
   })
 
@@ -119,6 +122,12 @@ export const UpdateFunnelInfoModal = ({
       value: channel._id,
       label: channel.channelName
     })) || []
+
+  const sourceOptions = [
+    { value: "ads", label: "Ads" },
+    { value: "seeding", label: "Seeding" },
+    { value: "referral", label: "Giới thiệu" }
+  ]
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -198,6 +207,19 @@ export const UpdateFunnelInfoModal = ({
           )}
         />
 
+        <Controller
+          name="funnelSource"
+          control={control}
+          render={({ field }) => (
+            <Select
+              {...field}
+              label="Nguồn"
+              placeholder="Chọn nguồn"
+              data={sourceOptions}
+              searchable
+            />
+          )}
+        />
         <Group justify="flex-end" mt="md">
           <Button
             variant="default"

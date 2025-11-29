@@ -2212,12 +2212,14 @@ export interface DeleteLivestreamChannelRequest {
 export interface CreateSalesChannelRequest {
   channelName: string
   assignedTo?: string
+  phoneNumber: string
 }
 
 /** @interface */
 export interface CreateSalesChannelResponse {
   _id: string
   channelName: string
+  phoneNumber: string
   createdAt: string
   updatedAt: string
   deletedAt?: string
@@ -2227,12 +2229,14 @@ export interface CreateSalesChannelResponse {
 export interface UpdateSalesChannelRequest {
   channelName?: string
   assignedTo?: string
+  phoneNumber?: string
 }
 
 /** @interface */
 export interface UpdateSalesChannelResponse {
   _id: string
   channelName: string
+  phoneNumber: string
   createdAt: string
   updatedAt: string
   deletedAt?: string
@@ -2255,6 +2259,7 @@ export interface SearchSalesChannelResponse {
   data: {
     _id: string
     channelName: string
+    phoneNumber: string
     assignedTo?: {
       id: string
       name: string
@@ -2276,6 +2281,7 @@ export interface GetSalesChannelDetailRequest {
 export interface GetSalesChannelDetailResponse {
   _id: string
   channelName: string
+  phoneNumber: string
   assignedTo?: {
     id: string
     name: string
@@ -2284,6 +2290,23 @@ export interface GetSalesChannelDetailResponse {
   createdAt: string
   updatedAt: string
   deletedAt?: string
+}
+
+/** @interface */
+export interface GetMyChannelResponse {
+  channel: {
+    _id: string
+    channelName: string
+    phoneNumber: string
+    assignedTo?: {
+      id: string
+      name: string
+      username: string
+    }
+    createdAt: string
+    updatedAt: string
+    deletedAt?: string
+  }
 }
 
 // -------------------- SALES PRICE ITEMS --------------------
@@ -2364,6 +2387,7 @@ export interface DeleteSalesPriceItemRequest {
 export interface CreateLeadRequest {
   name: string
   channel: string
+  funnelSource: "ads" | "seeding" | "referral"
 }
 
 /** @interface */
@@ -2391,6 +2415,7 @@ export interface CreateLeadResponse {
   hasBuyed: boolean
   cost?: number
   stage: "lead" | "contacted" | "customer" | "closed"
+  funnelSource: "ads" | "seeding" | "referral"
   createdAt: string
   updatedAt: string
 }
@@ -2428,6 +2453,7 @@ export interface MoveToContactedResponse {
   hasBuyed: boolean
   cost?: number
   stage: "lead" | "contacted" | "customer" | "closed"
+  funnelSource: "ads" | "seeding" | "referral"
   createdAt: string
   updatedAt: string
 }
@@ -2446,6 +2472,7 @@ export interface UpdateFunnelInfoRequest {
   address?: string
   channel?: string
   hasBuyed?: boolean
+  funnelSource?: "ads" | "seeding" | "referral"
 }
 
 /** @interface */
@@ -2474,6 +2501,7 @@ export interface UpdateFunnelInfoResponse {
   hasBuyed: boolean
   cost?: number
   stage: "lead" | "contacted" | "customer" | "closed"
+  funnelSource: "ads" | "seeding" | "referral"
   createdAt: string
   updatedAt: string
 }
@@ -2509,6 +2537,7 @@ export interface GetFunnelByIdResponse {
   hasBuyed: boolean
   cost?: number
   stage: "lead" | "contacted" | "customer" | "closed"
+  funnelSource: "ads" | "seeding" | "referral"
   createdAt: string
   updatedAt: string
 }
@@ -2522,6 +2551,7 @@ export interface SearchFunnelRequest {
   rank?: "gold" | "silver" | "bronze"
   searchText?: string
   noActivityDays?: number
+  funnelSource?: "ads" | "seeding" | "referral"
   page: number
   limit: number
 }
@@ -2554,6 +2584,7 @@ export interface SearchFunnelResponse {
     stage: "lead" | "contacted" | "customer" | "closed"
     totalIncome: number
     rank: "gold" | "silver" | "bronze"
+    funnelSource: "ads" | "seeding" | "referral"
     createdAt: string
     updatedAt: string
   }[]
@@ -2592,6 +2623,7 @@ export interface GetSalesFunnelByPsidResponse {
   stage: "lead" | "contacted" | "customer" | "closed"
   totalIncome: number
   rank: "gold" | "silver" | "bronze"
+  funnelSource: "ads" | "seeding" | "referral"
   createdAt: string
   updatedAt: string
 }
@@ -2629,6 +2661,7 @@ export interface UpdateFunnelCostResponse {
   stage: "lead" | "contacted" | "customer" | "closed"
   totalIncome: number
   rank: "gold" | "silver" | "bronze"
+  funnelSource: "ads" | "seeding" | "referral"
   createdAt: string
   updatedAt: string
 }
@@ -2665,6 +2698,7 @@ export interface UpdateFunnelResponsibleUserResponse {
   stage: "lead" | "contacted" | "customer" | "closed"
   totalIncome: number
   rank: "gold" | "silver" | "bronze"
+  funnelSource: "ads" | "seeding" | "referral"
   createdAt: string
   updatedAt: string
 }
@@ -2713,6 +2747,7 @@ export interface GetFunnelByUserResponse {
     hasBuyed: boolean
     cost?: number
     stage: "lead" | "contacted" | "customer" | "closed"
+    funnelSource: "ads" | "seeding" | "referral"
     createdAt: string
     updatedAt: string
   }[]
@@ -2723,7 +2758,7 @@ export interface GetFunnelByUserResponse {
 /** @interface */
 export interface CreateSalesOrderRequest {
   salesFunnelId: string
-  items: { code: string; quantity: number }[]
+  items: { code: string; quantity: number; note?: string }[]
   storage: "position_HaNam" | "position_MKT"
   date: Date
   discount?: number
@@ -2739,8 +2774,11 @@ export interface CreateSalesOrderResponse {
     name: string
     price: number
     quantity: number
-    massPerBox?: number
-    areaPerBox?: number
+    area?: number
+    mass?: number
+    specification?: string
+    size?: string
+    note?: string
   }[]
   returning: boolean
   shippingCode?: string
@@ -2754,6 +2792,12 @@ export interface CreateSalesOrderResponse {
   deposit?: number
   discount?: number
   status: "draft" | "official"
+  phoneNumber: string
+  address: string
+  province: {
+    id: string
+    name: string
+  }
   createdAt: string
   updatedAt: string
 }
@@ -2763,8 +2807,7 @@ export interface UpdateSalesOrderItemsRequest {
   items?: {
     code: string
     quantity: number
-    massPerBox?: number
-    areaPerBox?: number
+    note?: string
   }[]
   discount?: number
   deposit?: number
@@ -2798,6 +2841,7 @@ export interface UpdateSalesOrderItemsResponse {
     hasBuyed: boolean
     cost?: number
     stage: "lead" | "contacted" | "customer" | "closed"
+    funnelSource: "ads" | "seeding" | "referral"
     createdAt: string
     updatedAt: string
   }
@@ -2806,8 +2850,11 @@ export interface UpdateSalesOrderItemsResponse {
     name: string
     price: number
     quantity: number
-    massPerBox?: number
-    areaPerBox?: number
+    area?: number
+    mass?: number
+    specification?: string
+    size?: string
+    note?: string
   }[]
   returning: boolean
   shippingCode?: string
@@ -2821,6 +2868,12 @@ export interface UpdateSalesOrderItemsResponse {
   deposit?: number
   discount?: number
   status: "draft" | "official"
+  phoneNumber: string
+  address: string
+  province: {
+    id: string
+    name: string
+  }
   createdAt: string
   updatedAt: string
 }
@@ -2861,6 +2914,7 @@ export interface UpdateShippingInfoResponse {
     hasBuyed: boolean
     cost?: number
     stage: "lead" | "contacted" | "customer" | "closed"
+    funnelSource: "ads" | "seeding" | "referral"
     createdAt: string
     updatedAt: string
   }
@@ -2869,6 +2923,11 @@ export interface UpdateShippingInfoResponse {
     name: string
     price: number
     quantity: number
+    area?: number
+    mass?: number
+    specification?: string
+    size?: string
+    note?: string
   }[]
   returning: boolean
   shippingCode?: string
@@ -2882,6 +2941,12 @@ export interface UpdateShippingInfoResponse {
   deposit?: number
   discount?: number
   status: "draft" | "official"
+  phoneNumber: string
+  address: string
+  province: {
+    id: string
+    name: string
+  }
   createdAt: string
   updatedAt: string
 }
@@ -2897,16 +2962,8 @@ export interface GetSalesOrderByIdResponse {
   salesFunnelId: {
     _id: string
     name: string
-    province: {
-      _id: string
-      code: string
-      name: string
-      createdAt: string
-      updatedAt: string
-    }
     phoneNumber: string
     secondaryPhoneNumbers?: string[]
-    address?: string
     psid: string
     channel: {
       _id: string
@@ -2919,6 +2976,7 @@ export interface GetSalesOrderByIdResponse {
     hasBuyed: boolean
     cost?: number
     stage: "lead" | "contacted" | "customer" | "closed"
+    funnelSource: "ads" | "seeding" | "referral"
     createdAt: string
     updatedAt: string
   }
@@ -2927,8 +2985,10 @@ export interface GetSalesOrderByIdResponse {
     name: string
     price: number
     quantity: number
-    massPerBox?: number
-    areaPerBox?: number
+    area?: number
+    mass?: number
+    specification?: string
+    size?: string
     source?: "inside" | "outside"
     factory?:
       | "candy"
@@ -2936,6 +2996,7 @@ export interface GetSalesOrderByIdResponse {
       | "position_MongCai"
       | "jelly"
       | "import"
+    note?: string
   }[]
   returning: boolean
   shippingCode?: string
@@ -2949,6 +3010,12 @@ export interface GetSalesOrderByIdResponse {
   tax?: number
   shippingCost?: number
   status: "draft" | "official"
+  phoneNumber: string
+  address: string
+  province: {
+    id: string
+    name: string
+  }
   createdAt: string
   updatedAt: string
 }
@@ -2993,16 +3060,8 @@ export interface SearchSalesOrderResponse {
     salesFunnelId: {
       _id: string
       name: string
-      province: {
-        _id: string
-        code: string
-        name: string
-        createdAt: string
-        updatedAt: string
-      }
       phoneNumber: string
       secondaryPhoneNumbers?: string[]
-      address?: string
       psid: string
       channel: {
         _id: string
@@ -3015,6 +3074,7 @@ export interface SearchSalesOrderResponse {
       hasBuyed: boolean
       cost?: number
       stage: "lead" | "contacted" | "customer" | "closed"
+      funnelSource: "ads" | "seeding" | "referral"
       createdAt: string
       updatedAt: string
     }
@@ -3023,8 +3083,10 @@ export interface SearchSalesOrderResponse {
       name: string
       price: number
       quantity: number
-      massPerBox?: number
-      areaPerBox?: number
+      area?: number
+      mass?: number
+      specification?: string
+      size?: string
       source?: "inside" | "outside"
       factory?:
         | "candy"
@@ -3032,6 +3094,7 @@ export interface SearchSalesOrderResponse {
         | "position_MongCai"
         | "jelly"
         | "import"
+      note?: string
     }[]
     returning: boolean
     shippingCode?: string
@@ -3043,6 +3106,12 @@ export interface SearchSalesOrderResponse {
     discount?: number
     deposit?: number
     status: "draft" | "official"
+    phoneNumber: string
+    address: string
+    province: {
+      id: string
+      name: string
+    }
     createdAt: string
     updatedAt: string
   }[]
@@ -3095,6 +3164,7 @@ export interface UpdateSalesOrderTaxShippingResponse {
     quantity: number
     massPerBox?: number
     areaPerBox?: number
+    note?: string
   }[]
   returning: boolean
   shippingCode?: string
@@ -3106,6 +3176,12 @@ export interface UpdateSalesOrderTaxShippingResponse {
   tax: number
   shippingCost: number
   status: "draft" | "official"
+  phoneNumber: string
+  address: string
+  province: {
+    id: string
+    name: string
+  }
   createdAt: string
   updatedAt: string
 }
@@ -3125,6 +3201,7 @@ export interface MoveSalesOrderToOfficialResponse {
     name: string
     price: number
     quantity: number
+    note?: string
   }[]
   returning: boolean
   shippingCode?: string
@@ -3155,6 +3232,7 @@ export interface GetOrdersByFunnelResponse {
       name: string
       price: number
       quantity: number
+      note?: string
     }[]
     returning: boolean
     shippingCode?: string
@@ -3166,6 +3244,12 @@ export interface GetOrdersByFunnelResponse {
     tax?: number
     shippingCost?: number
     status: "draft" | "official"
+    phoneNumber: string
+    address: string
+    province: {
+      id: string
+      name: string
+    }
     createdAt: string
     updatedAt: string
   }[]
@@ -3266,9 +3350,18 @@ export interface SearchSalesItemsResponse {
       vn: string
       cn: string
     }
-    factory: "candy" | "manufacturing" | "position_MongCai" | "jelly" | "import"
+    factory?:
+      | "candy"
+      | "manufacturing"
+      | "position_MongCai"
+      | "jelly"
+      | "import"
     price: number
-    source: "inside" | "outside"
+    source?: "inside" | "outside"
+    size?: string
+    area?: number
+    specification?: number
+    mass?: number
     createdAt: string
     updatedAt: string
   }[]
@@ -3298,9 +3391,13 @@ export interface CreateSalesItemRequest {
     vn: string
     cn: string
   }
-  factory: "candy" | "manufacturing" | "position_MongCai" | "jelly" | "import"
+  size?: string
+  area?: number
+  specification?: number
+  mass?: number
+  factory?: "candy" | "manufacturing" | "position_MongCai" | "jelly" | "import"
   price: number
-  source: "inside" | "outside"
+  source?: "inside" | "outside"
 }
 
 /** @interface */
@@ -3311,9 +3408,13 @@ export interface CreateSalesItemResponse {
     vn: string
     cn: string
   }
-  factory: "candy" | "manufacturing" | "position_MongCai" | "jelly" | "import"
+  size?: string
+  area?: number
+  specification?: number
+  mass?: number
+  factory?: "candy" | "manufacturing" | "position_MongCai" | "jelly" | "import"
   price: number
-  source: "inside" | "outside"
+  source?: "inside" | "outside"
   createdAt: string
   updatedAt: string
 }
@@ -3324,6 +3425,10 @@ export interface UpdateSalesItemRequest {
     vn: string
     cn: string
   }
+  size?: string
+  area?: number
+  specification?: number
+  mass?: number
   factory?: "candy" | "manufacturing" | "position_MongCai" | "jelly" | "import"
   price?: number
   source?: "inside" | "outside"
@@ -3337,9 +3442,13 @@ export interface UpdateSalesItemResponse {
     vn: string
     cn: string
   }
-  factory: "candy" | "manufacturing" | "position_MongCai" | "jelly" | "import"
+  size?: string
+  area?: number
+  specification?: number
+  mass?: number
+  factory?: "candy" | "manufacturing" | "position_MongCai" | "jelly" | "import"
   price: number
-  source: "inside" | "outside"
+  source?: "inside" | "outside"
   createdAt: string
   updatedAt: string
 }
@@ -3362,9 +3471,13 @@ export interface GetSalesItemDetailResponse {
     vn: string
     cn: string
   }
-  factory: "candy" | "manufacturing" | "position_MongCai" | "jelly" | "import"
+  size?: string
+  area?: number
+  specification?: number
+  mass?: number
+  factory?: "candy" | "manufacturing" | "position_MongCai" | "jelly" | "import"
   price: number
-  source: "inside" | "outside"
+  source?: "inside" | "outside"
   createdAt: string
   updatedAt: string
 }
@@ -3438,12 +3551,17 @@ export interface GetSalesRevenueResponse {
   totalOrders: number
   revenueFromNewCustomers: number
   revenueFromReturningCustomers: number
-  itemsSold: {
+  topItemsByRevenue: {
+    code: string
+    name: string
+    revenue: number
+  }[]
+  topItemsByQuantity: {
     code: string
     name: string
     quantity: number
-    revenue: number
   }[]
+  otherItemsRevenue: number
   revenueByChannel: {
     channelId: string
     channelName: string
@@ -3455,6 +3573,14 @@ export interface GetSalesRevenueResponse {
     userName: string
     revenue: number
     orderCount: number
+    ordersByCustomerType: {
+      new: number
+      returning: number
+    }
+    revenueByCustomerType: {
+      new: number
+      returning: number
+    }
   }[]
 }
 
@@ -3813,4 +3939,138 @@ export interface CompleteTaskResponse {
   deadline: Date
   createdAt: string
   updatedAt: string
+}
+
+// -------------------- SALES DAILY REPORTS --------------------
+
+/** @interface */
+export interface GetRevenueForDateRequest {
+  date: Date
+  channelId: string
+}
+
+/** @interface */
+export interface GetRevenueForDateResponse {
+  revenue: number
+  newFunnelRevenue: number
+  returningFunnelRevenue: number
+  accumulatedRevenue: number
+  accumulatedAdsCost: number
+  accumulatedNewFunnelRevenue: number
+}
+
+/** @interface */
+export interface CreateSalesDailyReportRequest {
+  date: Date
+  channel: string
+  adsCost: number
+  dateKpi: number
+  revenue: number
+  newFunnelRevenue: number
+  returningFunnelRevenue: number
+  accumulatedRevenue: number
+  accumulatedAdsCost: number
+  accumulatedNewFunnelRevenue: number
+}
+
+/** @interface */
+export interface CreateSalesDailyReportResponse {
+  _id: string
+  date: string
+  channel: string
+  adsCost: number
+  dateKpi: number
+  revenue: number
+  newFunnelRevenue: number
+  returningFunnelRevenue: number
+  accumulatedRevenue: number
+  accumulatedAdsCost: number
+  accumulatedNewFunnelRevenue: number
+  createdAt: string
+  updatedAt: string
+  deletedAt?: string
+}
+
+/** @interface */
+export interface DeleteSalesDailyReportRequest {
+  id: string
+}
+
+/** @interface */
+export interface GetSalesDailyReportsByMonthRequest {
+  month: number
+  year: number
+  channelId: string
+  deleted?: boolean
+}
+
+/** @interface */
+export interface GetSalesDailyReportsByMonthResponse {
+  data: {
+    _id: string
+    date: string
+    channel: string
+    adsCost: number
+    dateKpi: number
+    revenue: number
+    newFunnelRevenue: number
+    returningFunnelRevenue: number
+    accumulatedRevenue: number
+    accumulatedAdsCost: number
+    accumulatedNewFunnelRevenue: number
+    createdAt: string
+    updatedAt: string
+    deletedAt?: string
+  }[]
+  total: number
+}
+
+/** @interface */
+export interface GetSalesDailyReportDetailRequest {
+  id: string
+}
+
+/** @interface */
+export interface GetSalesDailyReportDetailResponse {
+  _id: string
+  date: string
+  channel: string
+  adsCost: number
+  dateKpi: number
+  revenue: number
+  newFunnelRevenue: number
+  returningFunnelRevenue: number
+  accumulatedRevenue: number
+  accumulatedAdsCost: number
+  accumulatedNewFunnelRevenue: number
+  createdAt: string
+  updatedAt: string
+  deletedAt?: string
+}
+
+/** @interface */
+export interface GetSalesMonthKpiRequest {
+  date: Date
+  channelId: string
+}
+
+/** @interface */
+export interface GetSalesMonthKpiResponse {
+  _id: string
+  month: number
+  year: number
+  channel: string
+  kpi: number
+}
+
+/** @interface */
+export interface GetAccumulatedRevenueForMonthRequest {
+  month: number
+  year: number
+  channelId: string
+}
+
+/** @interface */
+export interface GetAccumulatedRevenueForMonthResponse {
+  accumulatedRevenue: number
 }

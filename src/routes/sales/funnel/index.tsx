@@ -74,6 +74,7 @@ type FunnelItem = {
   totalIncome: number
   rank: "gold" | "silver" | "bronze"
   stage: "lead" | "contacted" | "customer" | "closed"
+  funnelSource: "ads" | "seeding" | "referral"
   createdAt: string
   updatedAt: string
 }
@@ -124,6 +125,9 @@ function RouteComponent() {
   const [activitiesDrawerOpen, setActivitiesDrawerOpen] = useState(false)
   const [selectedFunnelId, setSelectedFunnelId] = useState<string | null>(null)
   const [selectedFunnelName, setSelectedFunnelName] = useState<string>("")
+  const [funnelSourceFilter, setFunnelSourceFilter] = useState<
+    "ads" | "seeding" | "referral" | undefined
+  >(undefined)
 
   // const { mutate: goToMessage } = useMutation({
   //   mutationFn: async (psid: string) => {
@@ -168,7 +172,8 @@ function RouteComponent() {
       channelFilter,
       userFilter,
       rankFilter,
-      noActivityDaysFilter
+      noActivityDaysFilter,
+      funnelSourceFilter
     ],
     queryFn: () =>
       searchFunnel({
@@ -186,7 +191,8 @@ function RouteComponent() {
           : undefined,
         noActivityDays: noActivityDaysFilter
           ? Number(noActivityDaysFilter)
-          : undefined
+          : undefined,
+        funnelSource: funnelSourceFilter
       })
   })
 
@@ -290,7 +296,8 @@ function RouteComponent() {
             secondaryPhoneNumbers: item.secondaryPhoneNumbers,
             address: item.address,
             channel: item.channel._id,
-            hasBuyed: item.hasBuyed
+            hasBuyed: item.hasBuyed,
+            funnelSource: item.funnelSource
           }}
           onSuccess={() => {
             refetch()
@@ -372,6 +379,12 @@ function RouteComponent() {
     }
   }, [isSalesEmp, isAdmin, isSystemEmp, isSalesLeader, me?._id])
 
+  const mapFunnelSource = {
+    ads: "Ads",
+    seeding: "Seeding",
+    referral: "Giới thiệu"
+  }
+
   const columns: ColumnDef<FunnelItem>[] = [
     {
       accessorKey: "name",
@@ -438,13 +451,11 @@ function RouteComponent() {
       )
     },
     {
-      accessorKey: "cost",
-      header: "Chi phí MKT",
+      accessorKey: "funnelSource",
+      header: "Nguồn khách",
       cell: ({ row }) => (
         <Text fw={500} size="sm">
-          {row.original.cost
-            ? `${row.original.cost.toLocaleString("vi-VN")}đ`
-            : "N/A"}
+          {mapFunnelSource[row.original.funnelSource]}
         </Text>
       )
     },
@@ -698,6 +709,28 @@ function RouteComponent() {
                   ]}
                   value={noActivityDaysFilter}
                   onChange={(value) => setNoActivityDaysFilter(value || "")}
+                  clearable
+                  style={{ width: 180 }}
+                />
+
+                <Select
+                  label="Nguồn"
+                  placeholder="Chọn nguồn"
+                  data={[
+                    { value: "ads", label: "Ads" },
+                    { value: "seeding", label: "Seeding" },
+                    { value: "referral", label: "Giới thiệu" }
+                  ]}
+                  value={funnelSourceFilter}
+                  onChange={(value) =>
+                    setFunnelSourceFilter(
+                      value === "ads" ||
+                        value === "seeding" ||
+                        value === "referral"
+                        ? value
+                        : undefined
+                    )
+                  }
                   clearable
                   style={{ width: 180 }}
                 />

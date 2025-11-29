@@ -1,4 +1,11 @@
-import { Button, Group, Select, NumberInput, Text } from "@mantine/core"
+import {
+  Button,
+  Group,
+  Select,
+  NumberInput,
+  Text,
+  TextInput
+} from "@mantine/core"
 import { useForm } from "react-hook-form"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { useState } from "react"
@@ -10,6 +17,7 @@ import { useSalesItems } from "../../hooks/useSalesItems"
 type ItemInput = {
   code: string
   quantity: number
+  note?: string
 }
 
 type UpdateOrderItemsModalProps = {
@@ -31,7 +39,9 @@ export const UpdateOrderItemsModal = ({
   const { searchSalesItems } = useSalesItems()
 
   const [items, setItems] = useState<ItemInput[]>(
-    currentItems.length > 0 ? currentItems : [{ code: "", quantity: 1 }]
+    currentItems.length > 0
+      ? currentItems
+      : [{ code: "", quantity: 1, note: "" }]
   )
   const [discount, setDiscount] = useState<number>(currentDiscount || 0)
   const [deposit, setDeposit] = useState<number>(currentDeposit || 0)
@@ -81,7 +91,7 @@ export const UpdateOrderItemsModal = ({
   }
 
   const handleAddItem = () => {
-    setItems([...items, { code: "", quantity: 1 }])
+    setItems([...items, { code: "", quantity: 1, note: "" }])
   }
 
   const handleRemoveItem = (index: number) => {
@@ -202,6 +212,15 @@ export const UpdateOrderItemsModal = ({
             }
             min={1}
             style={{ width: 120 }}
+          />
+          <TextInput
+            label={index === 0 ? "Ghi chú" : undefined}
+            placeholder="Nhập ghi chú"
+            value={item.note}
+            onChange={(e) =>
+              handleItemChange(index, "note", e.target.value || "")
+            }
+            w={250}
           />
           {items.length > 1 && (
             <Button

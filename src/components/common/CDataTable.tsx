@@ -45,6 +45,7 @@ export type DataTableProps<TData, TValue> = {
   extraActions?: React.ReactNode
   globalFilterValue?: string
   onGlobalFilterChange?: (value: string) => void
+  hideSearch?: boolean
 
   // External pagination (server-side)
   page?: number
@@ -74,6 +75,7 @@ export function CDataTable<TData, TValue>({
   extraActions,
   globalFilterValue,
   onGlobalFilterChange,
+  hideSearch = false,
   // external pagination
   page,
   totalPages,
@@ -191,7 +193,7 @@ export function CDataTable<TData, TValue>({
     <div className={clsx("w-full space-y-3", className)}>
       {/* Toolbar */}
       <div className="flex flex-wrap items-end gap-2">
-        {enableGlobalFilter && (
+        {enableGlobalFilter && !hideSearch && (
           <TextInput
             className="min-w-[220px]"
             placeholder="Tìm kiếm..."

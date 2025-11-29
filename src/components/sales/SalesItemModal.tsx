@@ -1,13 +1,6 @@
-import {
-  Button,
-  Group,
-  Stack,
-  TextInput,
-  NumberInput,
-  Select
-} from "@mantine/core"
+import { Button, Group, Stack, TextInput, NumberInput } from "@mantine/core"
 import { useForm, Controller } from "react-hook-form"
-import { useMutation, useQuery } from "@tanstack/react-query"
+import { useMutation } from "@tanstack/react-query"
 import { modals } from "@mantine/modals"
 import { CToast } from "../common/CToast"
 import { useSalesItems } from "../../hooks/useSalesItems"
@@ -21,9 +14,11 @@ type SalesItemFormData = {
   code: string
   nameVn: string
   nameCn: string
-  factory: "candy" | "manufacturing" | "position_MongCai" | "jelly" | "import"
   price: number
-  source: "inside" | "outside"
+  size?: string
+  area?: number
+  mass?: number
+  specification?: number
 }
 
 interface SalesItemModalProps {
@@ -32,25 +27,9 @@ interface SalesItemModalProps {
 }
 
 export const SalesItemModal = ({ item, onSuccess }: SalesItemModalProps) => {
-  const {
-    createSalesItem,
-    updateSalesItem,
-    getSalesItemsFactory,
-    getSalesItemsSource
-  } = useSalesItems()
+  const { createSalesItem, updateSalesItem } = useSalesItems()
 
   const isEdit = !!item
-
-  // Load factories and sources for dropdowns
-  const { data: factoriesData } = useQuery({
-    queryKey: ["salesItemsFactories"],
-    queryFn: getSalesItemsFactory
-  })
-
-  const { data: sourcesData } = useQuery({
-    queryKey: ["salesItemsSources"],
-    queryFn: getSalesItemsSource
-  })
 
   const {
     control,
@@ -61,9 +40,11 @@ export const SalesItemModal = ({ item, onSuccess }: SalesItemModalProps) => {
       code: item?.code || "",
       nameVn: item?.name.vn || "",
       nameCn: item?.name.cn || "",
-      factory: item?.factory || "candy",
       price: item?.price || 0,
-      source: item?.source || "inside"
+      size: item?.size || "",
+      area: item?.area || 0,
+      mass: item?.mass || 0,
+      specification: item?.specification || 0
     }
   })
 
@@ -106,9 +87,11 @@ export const SalesItemModal = ({ item, onSuccess }: SalesItemModalProps) => {
           vn: data.nameVn,
           cn: data.nameCn
         },
-        factory: data.factory,
         price: data.price,
-        source: data.source
+        size: data.size,
+        area: data.area,
+        mass: data.mass,
+        specification: data.specification
       })
     } else {
       createMutation.mutate({
@@ -117,9 +100,11 @@ export const SalesItemModal = ({ item, onSuccess }: SalesItemModalProps) => {
           vn: data.nameVn,
           cn: data.nameCn
         },
-        factory: data.factory,
         price: data.price,
-        source: data.source
+        size: data.size,
+        area: data.area,
+        mass: data.mass,
+        specification: data.specification
       })
     }
   }
@@ -127,18 +112,6 @@ export const SalesItemModal = ({ item, onSuccess }: SalesItemModalProps) => {
   const onInvalid = () => {
     CToast.error({ title: "Vui lòng điền đầy đủ thông tin bắt buộc" })
   }
-
-  const factoryOptions =
-    factoriesData?.data.data.map((factory) => ({
-      value: factory.value,
-      label: factory.label
-    })) || []
-
-  const sourceOptions =
-    sourcesData?.data.data.map((source) => ({
-      value: source.value,
-      label: source.label
-    })) || []
 
   const isPending = createMutation.isPending || updateMutation.isPending
 
@@ -192,38 +165,6 @@ export const SalesItemModal = ({ item, onSuccess }: SalesItemModalProps) => {
         />
 
         <Controller
-          name="factory"
-          control={control}
-          rules={{ required: "Nhà máy là bắt buộc" }}
-          render={({ field }) => (
-            <Select
-              {...field}
-              label="Nhà máy"
-              placeholder="Chọn nhà máy"
-              data={factoryOptions}
-              required
-              error={errors.factory?.message}
-            />
-          )}
-        />
-
-        <Controller
-          name="source"
-          control={control}
-          rules={{ required: "Nguồn là bắt buộc" }}
-          render={({ field }) => (
-            <Select
-              {...field}
-              label="Nguồn"
-              placeholder="Chọn nguồn"
-              data={sourceOptions}
-              required
-              error={errors.source?.message}
-            />
-          )}
-        />
-
-        <Controller
           name="price"
           control={control}
           rules={{
@@ -240,6 +181,61 @@ export const SalesItemModal = ({ item, onSuccess }: SalesItemModalProps) => {
               hideControls
               thousandSeparator=","
               error={errors.price?.message}
+            />
+          )}
+        />
+
+        <Controller
+          name="size"
+          control={control}
+          render={({ field }) => (
+            <TextInput
+              {...field}
+              label="Kích thước"
+              placeholder="Nhập kích thước"
+            />
+          )}
+        />
+
+        <Controller
+          name="area"
+          control={control}
+          render={({ field }) => (
+            <NumberInput
+              {...field}
+              label="Số khối (m³)"
+              placeholder="Nhập số khối"
+              min={0}
+              decimalScale={2}
+              hideControls
+            />
+          )}
+        />
+
+        <Controller
+          name="mass"
+          control={control}
+          render={({ field }) => (
+            <NumberInput
+              {...field}
+              label="Khối lượng (kg)"
+              placeholder="Nhập khối lượng"
+              min={0}
+              decimalScale={2}
+              hideControls
+            />
+          )}
+        />
+
+        <Controller
+          name="specification"
+          control={control}
+          render={({ field }) => (
+            <TextInput
+              {...field}
+              label="Quy cách"
+              placeholder="Nhập quy cách"
+              min={0}
             />
           )}
         />

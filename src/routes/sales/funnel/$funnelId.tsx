@@ -241,7 +241,8 @@ function RouteComponent() {
             secondaryPhoneNumbers: funnel.secondaryPhoneNumbers,
             address: funnel.address,
             channel: funnel.channel._id,
-            hasBuyed: funnel.hasBuyed
+            hasBuyed: funnel.hasBuyed,
+            funnelSource: funnel.funnelSource
           }}
           onSuccess={() => {
             refetch()
@@ -318,6 +319,12 @@ function RouteComponent() {
 
   if (!hasPermission) {
     return null // Will redirect via useEffect
+  }
+
+  const mapFunnelSource = {
+    ads: "Ads",
+    seeding: "Seeding",
+    referral: "Giới thiệu"
   }
 
   return (
@@ -446,6 +453,12 @@ function RouteComponent() {
                       Tỉnh/Thành phố
                     </Text>
                     <Text>{funnel.province?.name || "N/A"}</Text>
+                  </div>
+                  <div>
+                    <Text size="sm" c="dimmed" mb={4}>
+                      Nguồn khách
+                    </Text>
+                    <Text>{mapFunnelSource[funnel.funnelSource] || "N/A"}</Text>
                   </div>
                 </Stack>
               </Paper>

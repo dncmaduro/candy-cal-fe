@@ -3,6 +3,7 @@ import { callApi } from "./axios"
 import {
   CreateSalesChannelRequest,
   CreateSalesChannelResponse,
+  GetMyChannelResponse,
   GetSalesChannelDetailResponse,
   SearchSalesChannelRequest,
   SearchSalesChannelResponse,
@@ -61,11 +62,20 @@ export const useSalesChannels = () => {
     })
   }
 
+  const getMyChannel = async () => {
+    return callApi<never, GetMyChannelResponse>({
+      path: `/v1/saleschannels/my/channel`,
+      method: "GET",
+      token: accessToken
+    })
+  }
+
   return {
     createSalesChannel,
     updateSalesChannel,
     deleteSalesChannel,
     searchSalesChannels,
-    getSalesChannelDetail
+    getSalesChannelDetail,
+    getMyChannel
   }
 }
