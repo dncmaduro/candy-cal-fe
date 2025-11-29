@@ -4059,7 +4059,11 @@ export interface GetSalesMonthKpiResponse {
   _id: string
   month: number
   year: number
-  channel: string
+  channel: {
+    _id: string
+    channelName: string
+    phoneNumber: string
+  }
   kpi: number
 }
 
@@ -4073,4 +4077,89 @@ export interface GetAccumulatedRevenueForMonthRequest {
 /** @interface */
 export interface GetAccumulatedRevenueForMonthResponse {
   accumulatedRevenue: number
+}
+
+/** @interface */
+export interface CreateSalesMonthKpiRequest {
+  month: number
+  year: number
+  channel: string
+  kpi: number
+}
+
+/** @interface */
+export interface CreateSalesMonthKpiResponse {
+  _id: string
+  month: number
+  year: number
+  channel: {
+    _id: string
+    channelName: string
+    phoneNumber: string
+  }
+  kpi: number
+}
+
+/** @interface */
+export interface UpdateSalesMonthKpiRequest {
+  month: number
+  year: number
+  channel: string
+  kpi: number
+}
+
+/** @interface */
+export interface UpdateSalesMonthKpiResponse {
+  _id: string
+  month: number
+  year: number
+  channel: {
+    _id: string
+    channelName: string
+    phoneNumber: string
+  }
+  kpi: number
+}
+
+/** @interface */
+export interface GetMonthKpisRequest {
+  page: number
+  limit: number
+  channelId?: string
+  month?: number
+  year?: number
+}
+
+/** @interface */
+export interface GetMonthKpisResponse {
+  data: {
+    _id: string
+    month: number
+    year: number
+    channel: {
+      _id: string
+      channelName: string
+      phoneNumber: string
+    }
+    kpi: number
+  }[]
+  total: number
+}
+
+/** @interface */
+export interface GetMonthKpiDetailRequest {
+  id: string
+}
+
+/** @interface */
+export interface GetMonthKpiDetailResponse {
+  _id: string
+  month: number
+  year: number
+  channel: {
+    _id: string
+    channelName: string
+    phoneNumber: string
+  }
+  kpi: number
 }

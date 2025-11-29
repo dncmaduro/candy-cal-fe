@@ -14,7 +14,15 @@ import {
   GetSalesDailyReportDetailRequest,
   GetSalesDailyReportDetailResponse,
   GetSalesMonthKpiRequest,
-  GetSalesMonthKpiResponse
+  GetSalesMonthKpiResponse,
+  CreateSalesMonthKpiRequest,
+  CreateSalesMonthKpiResponse,
+  UpdateSalesMonthKpiRequest,
+  UpdateSalesMonthKpiResponse,
+  GetMonthKpisResponse,
+  GetMonthKpisRequest,
+  GetMonthKpiDetailRequest,
+  GetMonthKpiDetailResponse
 } from "./models"
 
 export const useSalesDailyReports = () => {
@@ -94,6 +102,42 @@ export const useSalesDailyReports = () => {
     })
   }
 
+  const createSalesMonthKpi = async (req: CreateSalesMonthKpiRequest) => {
+    return callApi<CreateSalesMonthKpiRequest, CreateSalesMonthKpiResponse>({
+      path: `/v1/salesdailyreports/month-kpi`,
+      method: "POST",
+      data: req,
+      token: accessToken
+    })
+  }
+
+  const updateSalesMonthKpi = async (req: UpdateSalesMonthKpiRequest) => {
+    return callApi<UpdateSalesMonthKpiRequest, UpdateSalesMonthKpiResponse>({
+      path: `/v1/salesdailyreports/month-kpi`,
+      method: "POST",
+      data: req,
+      token: accessToken
+    })
+  }
+
+  const getMonthKpis = async (req: GetMonthKpisRequest) => {
+    const query = toQueryString(req)
+
+    return callApi<never, GetMonthKpisResponse>({
+      path: `/v1/salesdailyreports/month-kpi?${query}`,
+      method: "GET",
+      token: accessToken
+    })
+  }
+
+  const getMonthKpiDetail = async (req: GetMonthKpiDetailRequest) => {
+    return callApi<never, GetMonthKpiDetailResponse>({
+      path: `/v1/salesdailyreports/month-kpi/${req.id}`,
+      method: "GET",
+      token: accessToken
+    })
+  }
+
   return {
     getRevenueForDate,
     createSalesDailyReport,
@@ -101,6 +145,10 @@ export const useSalesDailyReports = () => {
     getSalesDailyReportsByMonth,
     getSalesDailyReportDetail,
     getSalesMonthKpi,
-    getAccumulatedRevenueForMonth
+    getAccumulatedRevenueForMonth,
+    createSalesMonthKpi,
+    updateSalesMonthKpi,
+    getMonthKpis,
+    getMonthKpiDetail
   }
 }

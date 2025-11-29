@@ -53,6 +53,7 @@ import { Route as SalesOrdersOrderIdImport } from "./routes/sales/orders/$orderI
 import { Route as SalesMessagesConversationIdImport } from "./routes/sales/messages/$conversationId"
 import { Route as SalesItemsItemIdImport } from "./routes/sales/items/$itemId"
 import { Route as SalesFunnelFunnelIdImport } from "./routes/sales/funnel/$funnelId"
+import { Route as SalesDashboardKpiIdImport } from "./routes/sales/dashboard/$kpiId"
 
 // Create/Update Routes
 
@@ -325,6 +326,12 @@ const SalesFunnelFunnelIdRoute = SalesFunnelFunnelIdImport.update({
   getParentRoute: () => rootRoute
 } as any)
 
+const SalesDashboardKpiIdRoute = SalesDashboardKpiIdImport.update({
+  id: "/sales/dashboard/$kpiId",
+  path: "/sales/dashboard/$kpiId",
+  getParentRoute: () => rootRoute
+} as any)
+
 // Populate the FileRoutesByPath interface
 
 declare module "@tanstack/react-router" {
@@ -397,6 +404,13 @@ declare module "@tanstack/react-router" {
       path: "/user"
       fullPath: "/user"
       preLoaderRoute: typeof UserIndexImport
+      parentRoute: typeof rootRoute
+    }
+    "/sales/dashboard/$kpiId": {
+      id: "/sales/dashboard/$kpiId"
+      path: "/sales/dashboard/$kpiId"
+      fullPath: "/sales/dashboard/$kpiId"
+      preLoaderRoute: typeof SalesDashboardKpiIdImport
       parentRoute: typeof rootRoute
     }
     "/sales/funnel/$funnelId": {
@@ -651,6 +665,7 @@ export interface FileRoutesByFullPath {
   "/privacy-policy/": typeof PrivacyPolicyIndexRoute
   "/sales": typeof SalesIndexRoute
   "/user": typeof UserIndexRoute
+  "/sales/dashboard/$kpiId": typeof SalesDashboardKpiIdRoute
   "/sales/funnel/$funnelId": typeof SalesFunnelFunnelIdRoute
   "/sales/items/$itemId": typeof SalesItemsItemIdRoute
   "/sales/messages/$conversationId": typeof SalesMessagesConversationIdRoute
@@ -695,6 +710,7 @@ export interface FileRoutesByTo {
   "/privacy-policy": typeof PrivacyPolicyIndexRoute
   "/sales": typeof SalesIndexRoute
   "/user": typeof UserIndexRoute
+  "/sales/dashboard/$kpiId": typeof SalesDashboardKpiIdRoute
   "/sales/funnel/$funnelId": typeof SalesFunnelFunnelIdRoute
   "/sales/items/$itemId": typeof SalesItemsItemIdRoute
   "/sales/messages/$conversationId": typeof SalesMessagesConversationIdRoute
@@ -741,6 +757,7 @@ export interface FileRoutesById {
   "/privacy-policy/": typeof PrivacyPolicyIndexRoute
   "/sales/": typeof SalesIndexRoute
   "/user/": typeof UserIndexRoute
+  "/sales/dashboard/$kpiId": typeof SalesDashboardKpiIdRoute
   "/sales/funnel/$funnelId": typeof SalesFunnelFunnelIdRoute
   "/sales/items/$itemId": typeof SalesItemsItemIdRoute
   "/sales/messages/$conversationId": typeof SalesMessagesConversationIdRoute
@@ -788,6 +805,7 @@ export interface FileRouteTypes {
     | "/privacy-policy/"
     | "/sales"
     | "/user"
+    | "/sales/dashboard/$kpiId"
     | "/sales/funnel/$funnelId"
     | "/sales/items/$itemId"
     | "/sales/messages/$conversationId"
@@ -831,6 +849,7 @@ export interface FileRouteTypes {
     | "/privacy-policy"
     | "/sales"
     | "/user"
+    | "/sales/dashboard/$kpiId"
     | "/sales/funnel/$funnelId"
     | "/sales/items/$itemId"
     | "/sales/messages/$conversationId"
@@ -875,6 +894,7 @@ export interface FileRouteTypes {
     | "/privacy-policy/"
     | "/sales/"
     | "/user/"
+    | "/sales/dashboard/$kpiId"
     | "/sales/funnel/$funnelId"
     | "/sales/items/$itemId"
     | "/sales/messages/$conversationId"
@@ -920,6 +940,7 @@ export interface RootRouteChildren {
   PostauthIndexRoute: typeof PostauthIndexRoute
   SalesIndexRoute: typeof SalesIndexRoute
   UserIndexRoute: typeof UserIndexRoute
+  SalesDashboardKpiIdRoute: typeof SalesDashboardKpiIdRoute
   SalesFunnelFunnelIdRoute: typeof SalesFunnelFunnelIdRoute
   SalesItemsItemIdRoute: typeof SalesItemsItemIdRoute
   SalesMessagesConversationIdRoute: typeof SalesMessagesConversationIdRoute
@@ -964,6 +985,7 @@ const rootRouteChildren: RootRouteChildren = {
   PostauthIndexRoute: PostauthIndexRoute,
   SalesIndexRoute: SalesIndexRoute,
   UserIndexRoute: UserIndexRoute,
+  SalesDashboardKpiIdRoute: SalesDashboardKpiIdRoute,
   SalesFunnelFunnelIdRoute: SalesFunnelFunnelIdRoute,
   SalesItemsItemIdRoute: SalesItemsItemIdRoute,
   SalesMessagesConversationIdRoute: SalesMessagesConversationIdRoute,
@@ -1019,6 +1041,7 @@ export const routeTree = rootRoute
         "/postauth/",
         "/sales/",
         "/user/",
+        "/sales/dashboard/$kpiId",
         "/sales/funnel/$funnelId",
         "/sales/items/$itemId",
         "/sales/messages/$conversationId",
@@ -1086,6 +1109,9 @@ export const routeTree = rootRoute
     },
     "/user/": {
       "filePath": "user/index.tsx"
+    },
+    "/sales/dashboard/$kpiId": {
+      "filePath": "sales/dashboard/$kpiId.tsx"
     },
     "/sales/funnel/$funnelId": {
       "filePath": "sales/funnel/$funnelId.tsx"
