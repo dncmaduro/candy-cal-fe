@@ -33,6 +33,7 @@ import { CreateSalesOrderModal } from "../../../components/sales/CreateSalesOrde
 import { UpdateOrderItemsModal } from "../../../components/sales/UpdateOrderItemsModal"
 import { UploadSalesOrdersModal } from "../../../components/sales/UploadSalesOrdersModal"
 import { CToast } from "../../../components/common/CToast"
+import { SearchSalesOrderResponse } from "../../../hooks/models"
 
 export const Route = createFileRoute("/sales/orders/")({
   component: RouteComponent,
@@ -47,54 +48,7 @@ export const Route = createFileRoute("/sales/orders/")({
   }
 })
 
-type SalesOrderItem = {
-  _id: string
-  salesFunnelId: {
-    _id: string
-    name: string
-    province: {
-      _id: string
-      code: string
-      name: string
-      createdAt: string
-      updatedAt: string
-    }
-    phoneNumber: string
-    address?: string
-    psid: string
-    channel: {
-      _id: string
-      channelName: string
-    }
-    user: {
-      _id: string
-      name: string
-    }
-    hasBuyed: boolean
-    cost?: number
-    stage: "lead" | "contacted" | "customer" | "closed"
-    createdAt: string
-    updatedAt: string
-  }
-  items: {
-    code: string
-    name: string
-    price: number
-    quantity: number
-    factory?: string
-    source?: string
-  }[]
-  returning: boolean
-  shippingCode?: string
-  shippingType?: "shipping_vtp" | "shipping_cargo"
-  storage: "position_HaNam" | "position_MKT"
-  date: string
-  total: number
-  discount?: number
-  status: "draft" | "official"
-  createdAt: string
-  updatedAt: string
-}
+type SalesOrderItem = SearchSalesOrderResponse["data"][0]
 
 function RouteComponent() {
   const navigate = useNavigate()
@@ -270,7 +224,7 @@ function RouteComponent() {
           }}
         />
       ),
-      size: "lg"
+      size: "xl"
     })
   }
 
@@ -297,16 +251,18 @@ function RouteComponent() {
           orderId={item._id}
           currentItems={item.items.map((si) => ({
             code: si.code,
-            quantity: si.quantity
+            quantity: si.quantity,
+            note: si.note
           }))}
           currentDiscount={item.discount}
+          currentDeposit={item.deposit}
           onSuccess={() => {
             refetch()
             modals.closeAll()
           }}
         />
       ),
-      size: "lg"
+      size: "xl"
     })
   }
 

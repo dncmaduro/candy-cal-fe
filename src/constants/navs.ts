@@ -163,6 +163,12 @@ export const SALES_NAVS = [
     icon: "IconChartBar"
   },
   {
+    to: `${SALES_NAVS_URL}/daily-reports`,
+    label: "Báo cáo hàng ngày",
+    roles: ["admin", "sales-leader", "sales-emp", "system-emp"],
+    icon: "IconReportAnalytics"
+  },
+  {
     to: `${SALES_NAVS_URL}/customer-ranks`,
     label: "Hạng khách hàng",
     roles: ["admin", "sales-emp", "system-emp"],

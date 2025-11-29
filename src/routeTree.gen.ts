@@ -11,6 +11,7 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as PrivacyPolicyImport } from './routes/privacy-policy'
 import { Route as IndexImport } from './routes/index'
 import { Route as UserIndexImport } from './routes/user/index'
 import { Route as SalesIndexImport } from './routes/sales/index'
@@ -27,6 +28,7 @@ import { Route as SalesMessagesIndexImport } from './routes/sales/messages/index
 import { Route as SalesItemsIndexImport } from './routes/sales/items/index'
 import { Route as SalesFunnelIndexImport } from './routes/sales/funnel/index'
 import { Route as SalesDashboardIndexImport } from './routes/sales/dashboard/index'
+import { Route as SalesDailyReportsIndexImport } from './routes/sales/daily-reports/index'
 import { Route as SalesCustomerRanksIndexImport } from './routes/sales/customer-ranks/index'
 import { Route as SalesChannelsIndexImport } from './routes/sales/channels/index'
 import { Route as MarketingStorageTasksIndexImport } from './routes/marketing-storage/tasks/index'
@@ -54,6 +56,12 @@ import { Route as SalesFunnelFunnelIdImport } from './routes/sales/funnel/$funne
 
 // Create/Update Routes
 
+const PrivacyPolicyRoute = PrivacyPolicyImport.update({
+  id: '/privacy-policy',
+  path: '/privacy-policy',
+  getParentRoute: () => rootRoute,
+} as any)
+
 const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
@@ -73,9 +81,9 @@ const SalesIndexRoute = SalesIndexImport.update({
 } as any)
 
 const PrivacyPolicyIndexRoute = PrivacyPolicyIndexImport.update({
-  id: '/privacy-policy/',
-  path: '/privacy-policy/',
-  getParentRoute: () => rootRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => PrivacyPolicyRoute,
 } as any)
 
 const PostauthIndexRoute = PostauthIndexImport.update({
@@ -147,6 +155,12 @@ const SalesFunnelIndexRoute = SalesFunnelIndexImport.update({
 const SalesDashboardIndexRoute = SalesDashboardIndexImport.update({
   id: '/sales/dashboard/',
   path: '/sales/dashboard/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const SalesDailyReportsIndexRoute = SalesDailyReportsIndexImport.update({
+  id: '/sales/daily-reports/',
+  path: '/sales/daily-reports/',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -316,6 +330,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
+    '/privacy-policy': {
+      id: '/privacy-policy'
+      path: '/privacy-policy'
+      fullPath: '/privacy-policy'
+      preLoaderRoute: typeof PrivacyPolicyImport
+      parentRoute: typeof rootRoute
+    }
     '/access-denied/': {
       id: '/access-denied/'
       path: '/access-denied'
@@ -353,10 +374,10 @@ declare module '@tanstack/react-router' {
     }
     '/privacy-policy/': {
       id: '/privacy-policy/'
-      path: '/privacy-policy'
-      fullPath: '/privacy-policy'
+      path: '/'
+      fullPath: '/privacy-policy/'
       preLoaderRoute: typeof PrivacyPolicyIndexImport
-      parentRoute: typeof rootRoute
+      parentRoute: typeof PrivacyPolicyImport
     }
     '/sales/': {
       id: '/sales/'
@@ -540,6 +561,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SalesCustomerRanksIndexImport
       parentRoute: typeof rootRoute
     }
+    '/sales/daily-reports/': {
+      id: '/sales/daily-reports/'
+      path: '/sales/daily-reports'
+      fullPath: '/sales/daily-reports'
+      preLoaderRoute: typeof SalesDailyReportsIndexImport
+      parentRoute: typeof rootRoute
+    }
     '/sales/dashboard/': {
       id: '/sales/dashboard/'
       path: '/sales/dashboard'
@@ -594,14 +622,27 @@ declare module '@tanstack/react-router' {
 
 // Create and export the route tree
 
+interface PrivacyPolicyRouteChildren {
+  PrivacyPolicyIndexRoute: typeof PrivacyPolicyIndexRoute
+}
+
+const PrivacyPolicyRouteChildren: PrivacyPolicyRouteChildren = {
+  PrivacyPolicyIndexRoute: PrivacyPolicyIndexRoute,
+}
+
+const PrivacyPolicyRouteWithChildren = PrivacyPolicyRoute._addFileChildren(
+  PrivacyPolicyRouteChildren,
+)
+
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/privacy-policy': typeof PrivacyPolicyRouteWithChildren
   '/access-denied': typeof AccessDeniedIndexRoute
   '/landing': typeof LandingIndexRoute
   '/livestream': typeof LivestreamIndexRoute
   '/marketing-storage': typeof MarketingStorageIndexRoute
   '/postauth': typeof PostauthIndexRoute
-  '/privacy-policy': typeof PrivacyPolicyIndexRoute
+  '/privacy-policy/': typeof PrivacyPolicyIndexRoute
   '/sales': typeof SalesIndexRoute
   '/user': typeof UserIndexRoute
   '/sales/funnel/$funnelId': typeof SalesFunnelFunnelIdRoute
@@ -628,6 +669,7 @@ export interface FileRoutesByFullPath {
   '/marketing-storage/tasks': typeof MarketingStorageTasksIndexRoute
   '/sales/channels': typeof SalesChannelsIndexRoute
   '/sales/customer-ranks': typeof SalesCustomerRanksIndexRoute
+  '/sales/daily-reports': typeof SalesDailyReportsIndexRoute
   '/sales/dashboard': typeof SalesDashboardIndexRoute
   '/sales/funnel': typeof SalesFunnelIndexRoute
   '/sales/items': typeof SalesItemsIndexRoute
@@ -671,6 +713,7 @@ export interface FileRoutesByTo {
   '/marketing-storage/tasks': typeof MarketingStorageTasksIndexRoute
   '/sales/channels': typeof SalesChannelsIndexRoute
   '/sales/customer-ranks': typeof SalesCustomerRanksIndexRoute
+  '/sales/daily-reports': typeof SalesDailyReportsIndexRoute
   '/sales/dashboard': typeof SalesDashboardIndexRoute
   '/sales/funnel': typeof SalesFunnelIndexRoute
   '/sales/items': typeof SalesItemsIndexRoute
@@ -683,6 +726,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
+  '/privacy-policy': typeof PrivacyPolicyRouteWithChildren
   '/access-denied/': typeof AccessDeniedIndexRoute
   '/landing/': typeof LandingIndexRoute
   '/livestream/': typeof LivestreamIndexRoute
@@ -715,6 +759,7 @@ export interface FileRoutesById {
   '/marketing-storage/tasks/': typeof MarketingStorageTasksIndexRoute
   '/sales/channels/': typeof SalesChannelsIndexRoute
   '/sales/customer-ranks/': typeof SalesCustomerRanksIndexRoute
+  '/sales/daily-reports/': typeof SalesDailyReportsIndexRoute
   '/sales/dashboard/': typeof SalesDashboardIndexRoute
   '/sales/funnel/': typeof SalesFunnelIndexRoute
   '/sales/items/': typeof SalesItemsIndexRoute
@@ -728,12 +773,13 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/privacy-policy'
     | '/access-denied'
     | '/landing'
     | '/livestream'
     | '/marketing-storage'
     | '/postauth'
-    | '/privacy-policy'
+    | '/privacy-policy/'
     | '/sales'
     | '/user'
     | '/sales/funnel/$funnelId'
@@ -760,6 +806,7 @@ export interface FileRouteTypes {
     | '/marketing-storage/tasks'
     | '/sales/channels'
     | '/sales/customer-ranks'
+    | '/sales/daily-reports'
     | '/sales/dashboard'
     | '/sales/funnel'
     | '/sales/items'
@@ -802,6 +849,7 @@ export interface FileRouteTypes {
     | '/marketing-storage/tasks'
     | '/sales/channels'
     | '/sales/customer-ranks'
+    | '/sales/daily-reports'
     | '/sales/dashboard'
     | '/sales/funnel'
     | '/sales/items'
@@ -812,6 +860,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/privacy-policy'
     | '/access-denied/'
     | '/landing/'
     | '/livestream/'
@@ -844,6 +893,7 @@ export interface FileRouteTypes {
     | '/marketing-storage/tasks/'
     | '/sales/channels/'
     | '/sales/customer-ranks/'
+    | '/sales/daily-reports/'
     | '/sales/dashboard/'
     | '/sales/funnel/'
     | '/sales/items/'
@@ -856,12 +906,12 @@ export interface FileRouteTypes {
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  PrivacyPolicyRoute: typeof PrivacyPolicyRouteWithChildren
   AccessDeniedIndexRoute: typeof AccessDeniedIndexRoute
   LandingIndexRoute: typeof LandingIndexRoute
   LivestreamIndexRoute: typeof LivestreamIndexRoute
   MarketingStorageIndexRoute: typeof MarketingStorageIndexRoute
   PostauthIndexRoute: typeof PostauthIndexRoute
-  PrivacyPolicyIndexRoute: typeof PrivacyPolicyIndexRoute
   SalesIndexRoute: typeof SalesIndexRoute
   UserIndexRoute: typeof UserIndexRoute
   SalesFunnelFunnelIdRoute: typeof SalesFunnelFunnelIdRoute
@@ -888,6 +938,7 @@ export interface RootRouteChildren {
   MarketingStorageTasksIndexRoute: typeof MarketingStorageTasksIndexRoute
   SalesChannelsIndexRoute: typeof SalesChannelsIndexRoute
   SalesCustomerRanksIndexRoute: typeof SalesCustomerRanksIndexRoute
+  SalesDailyReportsIndexRoute: typeof SalesDailyReportsIndexRoute
   SalesDashboardIndexRoute: typeof SalesDashboardIndexRoute
   SalesFunnelIndexRoute: typeof SalesFunnelIndexRoute
   SalesItemsIndexRoute: typeof SalesItemsIndexRoute
@@ -899,12 +950,12 @@ export interface RootRouteChildren {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  PrivacyPolicyRoute: PrivacyPolicyRouteWithChildren,
   AccessDeniedIndexRoute: AccessDeniedIndexRoute,
   LandingIndexRoute: LandingIndexRoute,
   LivestreamIndexRoute: LivestreamIndexRoute,
   MarketingStorageIndexRoute: MarketingStorageIndexRoute,
   PostauthIndexRoute: PostauthIndexRoute,
-  PrivacyPolicyIndexRoute: PrivacyPolicyIndexRoute,
   SalesIndexRoute: SalesIndexRoute,
   UserIndexRoute: UserIndexRoute,
   SalesFunnelFunnelIdRoute: SalesFunnelFunnelIdRoute,
@@ -933,6 +984,7 @@ const rootRouteChildren: RootRouteChildren = {
   MarketingStorageTasksIndexRoute: MarketingStorageTasksIndexRoute,
   SalesChannelsIndexRoute: SalesChannelsIndexRoute,
   SalesCustomerRanksIndexRoute: SalesCustomerRanksIndexRoute,
+  SalesDailyReportsIndexRoute: SalesDailyReportsIndexRoute,
   SalesDashboardIndexRoute: SalesDashboardIndexRoute,
   SalesFunnelIndexRoute: SalesFunnelIndexRoute,
   SalesItemsIndexRoute: SalesItemsIndexRoute,
@@ -953,12 +1005,12 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
+        "/privacy-policy",
         "/access-denied/",
         "/landing/",
         "/livestream/",
         "/marketing-storage/",
         "/postauth/",
-        "/privacy-policy/",
         "/sales/",
         "/user/",
         "/sales/funnel/$funnelId",
@@ -985,6 +1037,7 @@ export const routeTree = rootRoute
         "/marketing-storage/tasks/",
         "/sales/channels/",
         "/sales/customer-ranks/",
+        "/sales/daily-reports/",
         "/sales/dashboard/",
         "/sales/funnel/",
         "/sales/items/",
@@ -996,6 +1049,12 @@ export const routeTree = rootRoute
     },
     "/": {
       "filePath": "index.tsx"
+    },
+    "/privacy-policy": {
+      "filePath": "privacy-policy.tsx",
+      "children": [
+        "/privacy-policy/"
+      ]
     },
     "/access-denied/": {
       "filePath": "access-denied/index.tsx"
@@ -1013,7 +1072,8 @@ export const routeTree = rootRoute
       "filePath": "postauth/index.tsx"
     },
     "/privacy-policy/": {
-      "filePath": "privacy-policy/index.tsx"
+      "filePath": "privacy-policy/index.tsx",
+      "parent": "/privacy-policy"
     },
     "/sales/": {
       "filePath": "sales/index.tsx"
@@ -1092,6 +1152,9 @@ export const routeTree = rootRoute
     },
     "/sales/customer-ranks/": {
       "filePath": "sales/customer-ranks/index.tsx"
+    },
+    "/sales/daily-reports/": {
+      "filePath": "sales/daily-reports/index.tsx"
     },
     "/sales/dashboard/": {
       "filePath": "sales/dashboard/index.tsx"

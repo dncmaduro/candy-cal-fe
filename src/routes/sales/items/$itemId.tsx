@@ -36,19 +36,6 @@ export const Route = createFileRoute("/sales/items/$itemId")({
   component: RouteComponent
 })
 
-const FACTORY_LABELS: Record<string, string> = {
-  candy: "Xưởng kẹo mút",
-  manufacturing: "Xưởng gia công",
-  position_MongCai: "Kho Móng Cái",
-  jelly: "Xưởng thạch",
-  import: "Hàng nhập khẩu"
-}
-
-const SOURCE_LABELS: Record<string, string> = {
-  inside: "Hàng trong nhà máy",
-  outside: "Hàng ngoài nhà máy"
-}
-
 function RouteComponent() {
   const { itemId } = Route.useParams()
   const navigate = useNavigate()
@@ -122,7 +109,7 @@ function RouteComponent() {
           }}
         />
       ),
-      size: "md"
+      size: "lg"
     })
   }
 
@@ -320,31 +307,35 @@ function RouteComponent() {
                   </div>
                   <div>
                     <Text size="sm" c="dimmed">
-                      Nhà máy
-                    </Text>
-                    <Badge variant="light" size="lg" color="blue">
-                      {FACTORY_LABELS[item.factory] || item.factory}
-                    </Badge>
-                  </div>
-                  <div>
-                    <Text size="sm" c="dimmed">
-                      Nguồn hàng
-                    </Text>
-                    <Badge
-                      variant="light"
-                      size="lg"
-                      color={item.source === "inside" ? "green" : "orange"}
-                    >
-                      {SOURCE_LABELS[item.source] || item.source}
-                    </Badge>
-                  </div>
-                  <div>
-                    <Text size="sm" c="dimmed">
                       Giá bán
                     </Text>
                     <Text fw={600} size="lg" c="blue">
                       {item.price.toLocaleString("vi-VN")}đ
                     </Text>
+                  </div>
+                  <div>
+                    <Text size="sm" c="dimmed">
+                      Kích thước
+                    </Text>
+                    <Text fw={500}>{item.size || "-"}</Text>
+                  </div>
+                  <div>
+                    <Text size="sm" c="dimmed">
+                      Số khối
+                    </Text>
+                    <Text fw={500}>{item.area ? `${item.area} m³` : "-"}</Text>
+                  </div>
+                  <div>
+                    <Text size="sm" c="dimmed">
+                      Khối lượng
+                    </Text>
+                    <Text fw={500}>{item.mass ? `${item.mass} kg` : "-"}</Text>
+                  </div>
+                  <div>
+                    <Text size="sm" c="dimmed">
+                      Quy cách
+                    </Text>
+                    <Text fw={500}>{item.specification || "-"}</Text>
                   </div>
                   <div>
                     <Text size="sm" c="dimmed">
