@@ -108,14 +108,10 @@ export const UserMenu = () => {
               key={app.to}
               leftSection={app.icon}
               fz="sm"
-              component="div"
+              component={Link}
+              to={app.to}
             >
-              <Link
-                to={app.to}
-                style={{ textDecoration: "none", color: "inherit" }}
-              >
-                {app.label}
-              </Link>
+              {app.label}
             </Menu.Item>
           )
         })}
