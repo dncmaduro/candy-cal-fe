@@ -12,7 +12,8 @@ import {
   Grid,
   Alert,
   Accordion,
-  MantineColor
+  MantineColor,
+  Select
 } from "@mantine/core"
 import { DatePickerInput } from "@mantine/dates"
 import { useSalesDailyReports } from "../../../hooks/useSalesDailyReports"
@@ -25,6 +26,7 @@ import { useSalesChannels } from "../../../hooks/useSalesChannels"
 import { useEffect, useMemo } from "react"
 import { IconAlertCircle, IconDeviceFloppy } from "@tabler/icons-react"
 import { DailyReportByText } from "./DailyReportByText"
+import { useUsers } from "../../../hooks/useUsers"
 
 // ────────────────────────────────────────────────────────────
 // Reusable UI helpers (visual only, không đổi logic)
@@ -167,7 +169,8 @@ const MetricCard = ({
 export const CreateSalesDailyReportModal = () => {
   const { createSalesDailyReport, getRevenueForDate, getSalesMonthKpi } =
     useSalesDailyReports()
-  const { getMyChannel } = useSalesChannels()
+  const { getMyChannel, searchSalesChannels } = useSalesChannels()
+  const { getMe } = useUsers()
 
   const { control, handleSubmit, watch, setValue } =
     useForm<CreateSalesDailyReportRequest>({
@@ -215,6 +218,18 @@ export const CreateSalesDailyReportModal = () => {
     select: (data) => data.data
   })
 
+  const { data: meData } = useQuery({
+    queryKey: ["me"],
+    queryFn: getMe
+  })
+
+  const { data: allChannelsData } = useQuery({
+    queryKey: ["salesChannels", "all"],
+    queryFn: () => searchSalesChannels({ page: 1, limit: 999 }),
+    enabled: meData?.data.roles.includes("admin")
+  })
+
+  const isAdmin = meData?.data.roles.includes("admin")
   const hasChannel = !!channelData?.channel
 
   // Get revenue for selected date
@@ -222,7 +237,10 @@ export const CreateSalesDailyReportModal = () => {
     queryKey: ["getRevenueForDate", selectedDate, channelId],
     queryFn: () =>
       getRevenueForDate({
-        date: selectedDate instanceof Date ? selectedDate : new Date(),
+        date:
+          selectedDate instanceof Date
+            ? new Date(selectedDate.setHours(0, 0, 0, 0))
+            : new Date(new Date().setHours(0, 0, 0, 0)),
         channelId: channelId
       }),
     select: (data) => data.data,
@@ -258,12 +276,12 @@ export const CreateSalesDailyReportModal = () => {
     }
   })
 
-  // Auto fill channel when data is loaded
+  // Auto fill channel when data is loaded (only if not admin or channel is empty)
   useEffect(() => {
-    if (channelData?.channel?._id) {
+    if (channelData?.channel?._id && !channelId) {
       setValue("channel", channelData.channel._id)
     }
-  }, [channelData, setValue])
+  }, [channelData, setValue, channelId])
 
   // Auto fill revenue data when loaded
   useEffect(() => {
@@ -384,7 +402,7 @@ export const CreateSalesDailyReportModal = () => {
                 </Group>
               </Box>
 
-              <Box miw={220}>
+              <Stack gap="sm" miw={220}>
                 <Controller
                   name="date"
                   control={control}
@@ -395,13 +413,36 @@ export const CreateSalesDailyReportModal = () => {
                       placeholder="Chọn ngày"
                       valueFormat="DD/MM/YYYY"
                       required
-                      readOnly
+                      readOnly={!isAdmin}
                       size="sm"
                       withAsterisk
                     />
                   )}
                 />
-              </Box>
+                {isAdmin && (
+                  <Controller
+                    name="channel"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        {...field}
+                        label="Kênh"
+                        placeholder="Chọn kênh"
+                        data={
+                          allChannelsData?.data.data.map((ch) => ({
+                            value: ch._id,
+                            label: ch.channelName
+                          })) || []
+                        }
+                        searchable
+                        clearable
+                        size="sm"
+                        withAsterisk
+                      />
+                    )}
+                  />
+                )}
+              </Stack>
             </Group>
           </Paper>
 

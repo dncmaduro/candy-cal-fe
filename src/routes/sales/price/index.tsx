@@ -160,7 +160,7 @@ function RouteComponent() {
       id: "actions",
       header: "Thao tác",
       cell: ({ row }) => (
-        <Can roles={["admin", "sales-leader"]}>
+        <Can roles={["admin", "sales-leader", "sales-emp"]}>
           <div className="flex gap-2">
             <ActionIcon
               variant="light"
@@ -224,7 +224,7 @@ function RouteComponent() {
             initialPageSize={limit}
             pageSizeOptions={[10, 20, 50, 100]}
             extraActions={
-              <Can roles={["admin", "sales-leader"]}>
+              <Can roles={["admin", "sales-leader", "sales-emp"]}>
                 <Button
                   onClick={() => openPriceItemModal()}
                   leftSection={<IconPlus size={16} />}
