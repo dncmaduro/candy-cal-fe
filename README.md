@@ -85,6 +85,22 @@ npm run routes    # Generate router tree
 
 ## 7. Lịch sử cập nhật
 
+### 4.0.0
+
+- **Doanh thu & Dashboard**:
+  - **Stats theo khoảng thời gian**: Hiển thị thống kê tổng doanh thu (trước chiết khấu) và tổng chi phí Ads ngay trên màn hình Doanh thu, phía trên bảng dữ liệu. Stats tự động cập nhật theo bộ lọc ngày đã chọn.
+  - **Chế độ Before/After Discount**: Thêm toggle switch cho phép chuyển đổi giữa 2 chế độ xem số liệu (trước chiết khấu / sau chiết khấu) trong:
+    - RangeStats (thống kê theo khoảng)
+    - MonthGoals (mục tiêu tháng với cột tổng doanh thu và KPI% theo mode)
+    - Dashboard (tổng hợp KPI với mode-specific data)
+  - **Type-safe refactor**: Loại bỏ hoàn toàn việc sử dụng `any`, chuyển sang sử dụng typed variables (selected/selectedChanges) để truy cập dữ liệu mode-specific an toàn hơn.
+  - **Nullish guards**: Thêm guards cho tất cả các lần gọi `.toLocaleString()` để tránh runtime errors trên production.
+- **Chi phí quảng cáo**:
+  - **Lấy dữ liệu ads hôm trước**: Tính năng mới cho phép lấy và sử dụng lại dữ liệu chi phí ads trước 4 giờ chiều của ngày hôm trước khi thêm chi phí quảng cáo mới.
+  - **Accept/Reject workflow**: UI hiển thị dữ liệu ads đã lấy với 2 nút Chấp nhận/Từ chối. Khi chấp nhận, chỉ cần upload 4 file còn lại (thay vì 6 file) và tự động gọi API `createDailyAdsWithSavedAdsCost`.
+  - **Smart UI**: Tự động ẩn/hiện các file input tương ứng, hiển thị Paper full-width với thông tin chi phí ads hoặc trạng thái đã chấp nhận.
+  - **Error handling**: Toast thông báo rõ ràng khi không thể lấy dữ liệu, UI tự động fallback về chế độ upload đầy đủ 6 files.
+
 ### 3.5.1
 
 - Bổ sung màn hình Bảo trì
