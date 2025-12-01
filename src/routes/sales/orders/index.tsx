@@ -411,7 +411,7 @@ function RouteComponent() {
       id: "actions",
       header: "Thao tác",
       cell: ({ row }) => (
-        <Can roles={["admin", "sales-leader"]}>
+        <Can roles={["admin", "sales-leader", "sales-emp"]}>
           <Group gap="xs">
             <ActionIcon
               variant="light"
@@ -707,7 +707,7 @@ function RouteComponent() {
                 >
                   Xuất Excel
                 </Button>
-                <Can roles={["admin", "sales-leader"]}>
+                <Can roles={["admin", "sales-leader", "sales-emp"]}>
                   <Button
                     onClick={handleUploadOrders}
                     leftSection={<IconFileUpload size={16} />}

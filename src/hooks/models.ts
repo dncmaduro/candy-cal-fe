@@ -2430,6 +2430,7 @@ export interface CreateLeadResponse {
   cost?: number
   stage: "lead" | "contacted" | "customer" | "closed"
   funnelSource: "ads" | "seeding" | "referral"
+  fromSystem?: boolean
   createdAt: string
   updatedAt: string
 }
@@ -2468,6 +2469,7 @@ export interface MoveToContactedResponse {
   cost?: number
   stage: "lead" | "contacted" | "customer" | "closed"
   funnelSource: "ads" | "seeding" | "referral"
+  fromSystem?: boolean
   createdAt: string
   updatedAt: string
 }
@@ -2487,6 +2489,7 @@ export interface UpdateFunnelInfoRequest {
   channel?: string
   hasBuyed?: boolean
   funnelSource?: "ads" | "seeding" | "referral"
+  fromSystem?: boolean
 }
 
 /** @interface */
@@ -2516,6 +2519,7 @@ export interface UpdateFunnelInfoResponse {
   cost?: number
   stage: "lead" | "contacted" | "customer" | "closed"
   funnelSource: "ads" | "seeding" | "referral"
+  fromSystem?: boolean
   createdAt: string
   updatedAt: string
 }
@@ -2552,6 +2556,7 @@ export interface GetFunnelByIdResponse {
   cost?: number
   stage: "lead" | "contacted" | "customer" | "closed"
   funnelSource: "ads" | "seeding" | "referral"
+  fromSystem?: boolean
   createdAt: string
   updatedAt: string
 }
@@ -2599,6 +2604,7 @@ export interface SearchFunnelResponse {
     totalIncome: number
     rank: "gold" | "silver" | "bronze"
     funnelSource: "ads" | "seeding" | "referral"
+    fromSystem?: boolean
     createdAt: string
     updatedAt: string
   }[]
@@ -2638,6 +2644,7 @@ export interface GetSalesFunnelByPsidResponse {
   totalIncome: number
   rank: "gold" | "silver" | "bronze"
   funnelSource: "ads" | "seeding" | "referral"
+  fromSystem?: boolean
   createdAt: string
   updatedAt: string
 }
@@ -2676,6 +2683,7 @@ export interface UpdateFunnelCostResponse {
   totalIncome: number
   rank: "gold" | "silver" | "bronze"
   funnelSource: "ads" | "seeding" | "referral"
+  fromSystem?: boolean
   createdAt: string
   updatedAt: string
 }
@@ -2713,6 +2721,7 @@ export interface UpdateFunnelResponsibleUserResponse {
   totalIncome: number
   rank: "gold" | "silver" | "bronze"
   funnelSource: "ads" | "seeding" | "referral"
+  fromSystem?: boolean
   createdAt: string
   updatedAt: string
 }
@@ -2762,6 +2771,7 @@ export interface GetFunnelByUserResponse {
     cost?: number
     stage: "lead" | "contacted" | "customer" | "closed"
     funnelSource: "ads" | "seeding" | "referral"
+    fromSystem?: boolean
     createdAt: string
     updatedAt: string
   }[]
