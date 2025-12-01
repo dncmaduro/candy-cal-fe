@@ -335,7 +335,7 @@ function RouteComponent() {
               navigate({ to: `/sales/items/${row.original._id}` })
             }
             extraActions={
-              <Can roles={["admin", "sales-leader"]}>
+              <Can roles={["admin", "sales-leader", "sales-emp"]}>
                 <Group gap="xs">
                   <Button
                     leftSection={<IconUpload size={16} />}

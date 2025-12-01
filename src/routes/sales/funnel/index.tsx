@@ -737,7 +737,7 @@ function RouteComponent() {
               </>
             }
             extraActions={
-              <Can roles={["admin", "sales-leader"]}>
+              <Can roles={["admin", "sales-leader", "sales-emp"]}>
                 <Group gap="xs">
                   <Button
                     onClick={handleUploadFunnels}
