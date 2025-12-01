@@ -87,19 +87,31 @@ npm run routes    # Generate router tree
 
 ### 4.0.0
 
-- **Doanh thu & Dashboard**:
-  - **Stats theo khoảng thời gian**: Hiển thị thống kê tổng doanh thu (trước chiết khấu) và tổng chi phí Ads ngay trên màn hình Doanh thu, phía trên bảng dữ liệu. Stats tự động cập nhật theo bộ lọc ngày đã chọn.
-  - **Chế độ Before/After Discount**: Thêm toggle switch cho phép chuyển đổi giữa 2 chế độ xem số liệu (trước chiết khấu / sau chiết khấu) trong:
-    - RangeStats (thống kê theo khoảng)
-    - MonthGoals (mục tiêu tháng với cột tổng doanh thu và KPI% theo mode)
-    - Dashboard (tổng hợp KPI với mode-specific data)
-  - **Type-safe refactor**: Loại bỏ hoàn toàn việc sử dụng `any`, chuyển sang sử dụng typed variables (selected/selectedChanges) để truy cập dữ liệu mode-specific an toàn hơn.
-  - **Nullish guards**: Thêm guards cho tất cả các lần gọi `.toLocaleString()` để tránh runtime errors trên production.
-- **Chi phí quảng cáo**:
-  - **Lấy dữ liệu ads hôm trước**: Tính năng mới cho phép lấy và sử dụng lại dữ liệu chi phí ads trước 4 giờ chiều của ngày hôm trước khi thêm chi phí quảng cáo mới.
-  - **Accept/Reject workflow**: UI hiển thị dữ liệu ads đã lấy với 2 nút Chấp nhận/Từ chối. Khi chấp nhận, chỉ cần upload 4 file còn lại (thay vì 6 file) và tự động gọi API `createDailyAdsWithSavedAdsCost`.
-  - **Smart UI**: Tự động ẩn/hiện các file input tương ứng, hiển thị Paper full-width với thông tin chi phí ads hoặc trạng thái đã chấp nhận.
-  - **Error handling**: Toast thông báo rõ ràng khi không thể lấy dữ liệu, UI tự động fallback về chế độ upload đầy đủ 6 files.
+- **Module Sales (Telesales)**: Hệ thống quản lý bán hàng telesales hoàn chỉnh với 8 màn hình chính:
+  - **Funnel khách hàng**:
+    - Quản lý danh sách khách hàng theo 4 giai đoạn (Lead → Đã liên hệ → Khách hàng → Đã đóng)
+    - Upload danh sách khách hàng từ Excel
+    - Phân loại theo nguồn (ads/seeding/referral) và hạng khách hàng (vàng/bạc/đồng)
+    - Cập nhật thông tin, chi phí marketing, chuyển đổi giai đoạn
+    - Lịch sử hoạt động và tạo công việc cho từng khách
+  - **Công việc**: Quản lý task của nhân viên sales với lọc theo loại (call/message/other), trạng thái, người được giao
+  - **Đơn hàng**:
+    - Quản lý đơn hàng sales với phân quyền (sales-emp chỉ thấy đơn của mình)
+    - Tạo đơn từ funnel, upload hàng loạt từ Excel
+    - Lọc theo khách hàng, loại vận chuyển, trạng thái, người phụ trách, ngày
+    - Xuất Excel đơn hàng
+    - Hỗ trợ đơn returning (khách quay lại mua)
+  - **Kênh bán hàng**: Quản lý các kênh (Facebook, Zalo, hotline...) với thông tin page ID, số điện thoại, nhân viên phụ trách
+  - **Mặt hàng**: Quản lý danh mục sản phẩm sales với giá bán, đơn vị, mô tả, upload hàng loạt
+  - **Dashboard chỉ số**:
+    - KPI cards hiển thị tổng doanh thu, số đơn, giá trị đơn trung bình, chi phí marketing
+    - Biểu đồ phân tích theo kênh bán hàng, top sản phẩm, hiệu suất nhân viên
+    - Bảng chi tiết doanh thu theo kênh và theo người dùng
+    - Metrics tháng: tổng quan KPI và chi tiết theo ngày
+  - **Báo cáo hàng ngày**:
+    - Tab "Báo cáo hàng ngày": Tạo và quản lý báo cáo hàng ngày của từng nhân viên sales
+    - Tab "KPI tháng": Quản lý và theo dõi KPI tháng của từng nhân viên
+  - **Hạng khách hàng**: Cấu hình các mức hạng (vàng/bạc/đồng) dựa theo doanh thu tối thiểu
 
 ### 3.5.1
 
