@@ -242,7 +242,8 @@ function RouteComponent() {
             address: funnel.address,
             channel: funnel.channel._id,
             hasBuyed: funnel.hasBuyed,
-            funnelSource: funnel.funnelSource
+            funnelSource: funnel.funnelSource,
+            fromSystem: funnel.fromSystem
           }}
           onSuccess={() => {
             refetch()
@@ -497,6 +498,14 @@ function RouteComponent() {
                     </Text>
                     <Badge color={funnel.hasBuyed ? "green" : "gray"}>
                       {funnel.hasBuyed ? "Có" : "Chưa"}
+                    </Badge>
+                  </div>
+                  <div>
+                    <Text size="sm" c="dimmed" mb={4}>
+                      Khách hàng cũ
+                    </Text>
+                    <Badge color={funnel.fromSystem ? "green" : "gray"}>
+                      {funnel.fromSystem ? "Khách hàng cũ" : "Khách hàng mới"}
                     </Badge>
                   </div>
                   <div>

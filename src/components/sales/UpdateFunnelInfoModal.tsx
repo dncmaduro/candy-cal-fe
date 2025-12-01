@@ -5,7 +5,8 @@ import {
   TextInput,
   Select,
   ActionIcon,
-  Text
+  Text,
+  Switch
 } from "@mantine/core"
 import { IconPlus, IconTrash } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
@@ -35,6 +36,7 @@ interface UpdateFunnelInfoModalProps {
     channel: string
     hasBuyed: boolean
     funnelSource: "ads" | "seeding" | "referral"
+    fromSystem?: boolean
   }
   onSuccess?: () => void
 }
@@ -72,7 +74,8 @@ export const UpdateFunnelInfoModal = ({
       address: currentData.address,
       channel: currentData.channel,
       hasBuyed: currentData.hasBuyed,
-      funnelSource: currentData.funnelSource
+      funnelSource: currentData.funnelSource,
+      fromSystem: currentData.fromSystem || false
     }
   })
 
@@ -220,6 +223,19 @@ export const UpdateFunnelInfoModal = ({
             />
           )}
         />
+
+        <Controller
+          name="fromSystem"
+          control={control}
+          render={({ field }) => (
+            <Switch
+              checked={field.value}
+              onChange={(e) => field.onChange(e.currentTarget.checked)}
+              label="Khách hàng cũ (đã từng mua hàng trước khi vào hệ thống)"
+            />
+          )}
+        />
+
         <Group justify="flex-end" mt="md">
           <Button
             variant="default"
