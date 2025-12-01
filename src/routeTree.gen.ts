@@ -11,6 +11,7 @@
 // Import Routes
 
 import { Route as rootRoute } from "./routes/__root"
+import { Route as TestErrorImport } from "./routes/test-error"
 import { Route as PrivacyPolicyImport } from "./routes/privacy-policy"
 import { Route as IndexImport } from "./routes/index"
 import { Route as UserIndexImport } from "./routes/user/index"
@@ -54,6 +55,7 @@ import { Route as SalesMessagesConversationIdImport } from "./routes/sales/messa
 import { Route as SalesItemsItemIdImport } from "./routes/sales/items/$itemId"
 import { Route as SalesFunnelFunnelIdImport } from "./routes/sales/funnel/$funnelId"
 import { Route as SalesDashboardKpiIdImport } from "./routes/sales/dashboard/$kpiId"
+import { Route as SalesDashboardDailyReportIdImport } from "./routes/sales/dashboard/$dailyReportId"
 
 // Create/Update Routes
 
@@ -332,6 +334,13 @@ const SalesDashboardKpiIdRoute = SalesDashboardKpiIdImport.update({
   getParentRoute: () => rootRoute
 } as any)
 
+const SalesDashboardDailyReportIdRoute =
+  SalesDashboardDailyReportIdImport.update({
+    id: "/sales/dashboard/$dailyReportId",
+    path: "/sales/dashboard/$dailyReportId",
+    getParentRoute: () => rootRoute
+  } as any)
+
 // Populate the FileRoutesByPath interface
 
 declare module "@tanstack/react-router" {
@@ -404,6 +413,13 @@ declare module "@tanstack/react-router" {
       path: "/user"
       fullPath: "/user"
       preLoaderRoute: typeof UserIndexImport
+      parentRoute: typeof rootRoute
+    }
+    "/sales/dashboard/$dailyReportId": {
+      id: "/sales/dashboard/$dailyReportId"
+      path: "/sales/dashboard/$dailyReportId"
+      fullPath: "/sales/dashboard/$dailyReportId"
+      preLoaderRoute: typeof SalesDashboardDailyReportIdImport
       parentRoute: typeof rootRoute
     }
     "/sales/dashboard/$kpiId": {
@@ -657,6 +673,7 @@ const PrivacyPolicyRouteWithChildren = PrivacyPolicyRoute._addFileChildren(
 export interface FileRoutesByFullPath {
   "/": typeof IndexRoute
   "/privacy-policy": typeof PrivacyPolicyRouteWithChildren
+  "/test-error": typeof TestErrorRoute
   "/access-denied": typeof AccessDeniedIndexRoute
   "/landing": typeof LandingIndexRoute
   "/livestream": typeof LivestreamIndexRoute
@@ -665,6 +682,7 @@ export interface FileRoutesByFullPath {
   "/privacy-policy/": typeof PrivacyPolicyIndexRoute
   "/sales": typeof SalesIndexRoute
   "/user": typeof UserIndexRoute
+  "/sales/dashboard/$dailyReportId": typeof SalesDashboardDailyReportIdRoute
   "/sales/dashboard/$kpiId": typeof SalesDashboardKpiIdRoute
   "/sales/funnel/$funnelId": typeof SalesFunnelFunnelIdRoute
   "/sales/items/$itemId": typeof SalesItemsItemIdRoute
@@ -702,6 +720,7 @@ export interface FileRoutesByFullPath {
 
 export interface FileRoutesByTo {
   "/": typeof IndexRoute
+  "/test-error": typeof TestErrorRoute
   "/access-denied": typeof AccessDeniedIndexRoute
   "/landing": typeof LandingIndexRoute
   "/livestream": typeof LivestreamIndexRoute
@@ -710,6 +729,7 @@ export interface FileRoutesByTo {
   "/privacy-policy": typeof PrivacyPolicyIndexRoute
   "/sales": typeof SalesIndexRoute
   "/user": typeof UserIndexRoute
+  "/sales/dashboard/$dailyReportId": typeof SalesDashboardDailyReportIdRoute
   "/sales/dashboard/$kpiId": typeof SalesDashboardKpiIdRoute
   "/sales/funnel/$funnelId": typeof SalesFunnelFunnelIdRoute
   "/sales/items/$itemId": typeof SalesItemsItemIdRoute
@@ -749,6 +769,7 @@ export interface FileRoutesById {
   __root__: typeof rootRoute
   "/": typeof IndexRoute
   "/privacy-policy": typeof PrivacyPolicyRouteWithChildren
+  "/test-error": typeof TestErrorRoute
   "/access-denied/": typeof AccessDeniedIndexRoute
   "/landing/": typeof LandingIndexRoute
   "/livestream/": typeof LivestreamIndexRoute
@@ -757,6 +778,7 @@ export interface FileRoutesById {
   "/privacy-policy/": typeof PrivacyPolicyIndexRoute
   "/sales/": typeof SalesIndexRoute
   "/user/": typeof UserIndexRoute
+  "/sales/dashboard/$dailyReportId": typeof SalesDashboardDailyReportIdRoute
   "/sales/dashboard/$kpiId": typeof SalesDashboardKpiIdRoute
   "/sales/funnel/$funnelId": typeof SalesFunnelFunnelIdRoute
   "/sales/items/$itemId": typeof SalesItemsItemIdRoute
@@ -797,6 +819,7 @@ export interface FileRouteTypes {
   fullPaths:
     | "/"
     | "/privacy-policy"
+    | "/test-error"
     | "/access-denied"
     | "/landing"
     | "/livestream"
@@ -805,6 +828,7 @@ export interface FileRouteTypes {
     | "/privacy-policy/"
     | "/sales"
     | "/user"
+    | "/sales/dashboard/$dailyReportId"
     | "/sales/dashboard/$kpiId"
     | "/sales/funnel/$funnelId"
     | "/sales/items/$itemId"
@@ -841,6 +865,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | "/"
+    | "/test-error"
     | "/access-denied"
     | "/landing"
     | "/livestream"
@@ -849,6 +874,7 @@ export interface FileRouteTypes {
     | "/privacy-policy"
     | "/sales"
     | "/user"
+    | "/sales/dashboard/$dailyReportId"
     | "/sales/dashboard/$kpiId"
     | "/sales/funnel/$funnelId"
     | "/sales/items/$itemId"
@@ -886,6 +912,7 @@ export interface FileRouteTypes {
     | "__root__"
     | "/"
     | "/privacy-policy"
+    | "/test-error"
     | "/access-denied/"
     | "/landing/"
     | "/livestream/"
@@ -894,6 +921,7 @@ export interface FileRouteTypes {
     | "/privacy-policy/"
     | "/sales/"
     | "/user/"
+    | "/sales/dashboard/$dailyReportId"
     | "/sales/dashboard/$kpiId"
     | "/sales/funnel/$funnelId"
     | "/sales/items/$itemId"
@@ -940,6 +968,7 @@ export interface RootRouteChildren {
   PostauthIndexRoute: typeof PostauthIndexRoute
   SalesIndexRoute: typeof SalesIndexRoute
   UserIndexRoute: typeof UserIndexRoute
+  SalesDashboardDailyReportIdRoute: typeof SalesDashboardDailyReportIdRoute
   SalesDashboardKpiIdRoute: typeof SalesDashboardKpiIdRoute
   SalesFunnelFunnelIdRoute: typeof SalesFunnelFunnelIdRoute
   SalesItemsItemIdRoute: typeof SalesItemsItemIdRoute
@@ -985,6 +1014,7 @@ const rootRouteChildren: RootRouteChildren = {
   PostauthIndexRoute: PostauthIndexRoute,
   SalesIndexRoute: SalesIndexRoute,
   UserIndexRoute: UserIndexRoute,
+  SalesDashboardDailyReportIdRoute: SalesDashboardDailyReportIdRoute,
   SalesDashboardKpiIdRoute: SalesDashboardKpiIdRoute,
   SalesFunnelFunnelIdRoute: SalesFunnelFunnelIdRoute,
   SalesItemsItemIdRoute: SalesItemsItemIdRoute,
@@ -1041,6 +1071,7 @@ export const routeTree = rootRoute
         "/postauth/",
         "/sales/",
         "/user/",
+        "/sales/dashboard/$dailyReportId",
         "/sales/dashboard/$kpiId",
         "/sales/funnel/$funnelId",
         "/sales/items/$itemId",
@@ -1109,6 +1140,9 @@ export const routeTree = rootRoute
     },
     "/user/": {
       "filePath": "user/index.tsx"
+    },
+    "/sales/dashboard/$dailyReportId": {
+      "filePath": "sales/dashboard/$dailyReportId.tsx"
     },
     "/sales/dashboard/$kpiId": {
       "filePath": "sales/dashboard/$kpiId.tsx"
