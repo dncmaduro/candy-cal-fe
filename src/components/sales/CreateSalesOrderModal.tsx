@@ -8,7 +8,8 @@ import {
   Stack,
   ActionIcon,
   Divider,
-  Checkbox
+  Checkbox,
+  Switch
 } from "@mantine/core"
 import { DatePickerInput } from "@mantine/dates"
 import { useForm, Controller } from "react-hook-form"
@@ -36,6 +37,7 @@ type CreateSalesOrderFormData = {
   phoneNumber?: string
   address?: string
   funnelSource: "ads" | "seeding" | "referral"
+  fromSystem?: boolean
 }
 
 type ItemInput = {
@@ -91,7 +93,8 @@ export const CreateSalesOrderModal = ({
       province: "",
       phoneNumber: "",
       address: "",
-      funnelSource: "ads"
+      funnelSource: "ads",
+      fromSystem: false
     }
   })
 
@@ -160,7 +163,8 @@ export const CreateSalesOrderModal = ({
           province: data.province,
           phoneNumber: data.phoneNumber,
           secondaryPhoneNumbers: secondaryPhones.filter((p) => p.trim() !== ""),
-          address: data.address
+          address: data.address,
+          fromSystem: data.fromSystem
         })
       }
 
@@ -361,6 +365,18 @@ export const CreateSalesOrderModal = ({
                 searchable
                 required={watchIsNewCustomer}
                 error={errors.funnelSource?.message}
+              />
+            )}
+          />
+
+          <Controller
+            name="fromSystem"
+            control={control}
+            render={({ field }) => (
+              <Switch
+                checked={field.value}
+                onChange={(e) => field.onChange(e.currentTarget.checked)}
+                label="Khách hàng cũ (đã từng mua hàng trước khi vào hệ thống)"
               />
             )}
           />
