@@ -8,7 +8,8 @@ import {
   Alert,
   Flex,
   Divider,
-  Title
+  Title,
+  Switch
 } from "@mantine/core"
 import { DatePickerInput, MonthPickerInput } from "@mantine/dates"
 import { useQuery } from "@tanstack/react-query"
@@ -48,6 +49,8 @@ function RouteComponent() {
   // Month for monthly metrics
   const [selectedMonth, setSelectedMonth] = useState<Date | null>(new Date())
 
+  const [isRange, setIsRange] = useState(false)
+
   // Queries
   const {
     data: revenueData,
@@ -55,7 +58,7 @@ function RouteComponent() {
     error: revenueError,
     refetch: refetchRevenue
   } = useQuery({
-    queryKey: ["salesRevenue", startDate, endDate],
+    queryKey: ["salesRevenue", startDate, endDate, isRange],
     queryFn: () =>
       getSalesRevenue({
         startDate: startDate || startOfMonth(new Date()),
@@ -99,7 +102,7 @@ function RouteComponent() {
       id: "create-sales-daily-report",
       title: <b>Tạo báo cáo hàng ngày</b>,
       children: <CreateSalesDailyReportModal />,
-      size: "lg"
+      size: 960
     })
   }
 
@@ -175,18 +178,37 @@ function RouteComponent() {
               </Box>
 
               <Group gap="sm">
-                <DatePickerInput
-                  type="range"
-                  placeholder="Chọn khoảng ngày"
-                  value={[startDate, endDate]}
-                  onChange={([start, end]) => {
-                    setStartDate(start)
-                    setEndDate(end)
-                  }}
-                  valueFormat="DD/MM/YYYY"
-                  style={{ width: 280 }}
-                  clearable
+                <Switch
+                  label="Xem theo khoảng ngày"
+                  checked={isRange}
+                  onChange={(e) => setIsRange(e.currentTarget.checked)}
                 />
+                {isRange ? (
+                  <DatePickerInput
+                    type="range"
+                    placeholder="Chọn khoảng ngày"
+                    value={[startDate, endDate]}
+                    onChange={([start, end]) => {
+                      setStartDate(start)
+                      setEndDate(end)
+                    }}
+                    valueFormat="DD/MM/YYYY"
+                    style={{ width: 280 }}
+                    clearable
+                  />
+                ) : (
+                  <DatePickerInput
+                    placeholder="Chọn ngày"
+                    value={startDate}
+                    onChange={(value) => {
+                      setStartDate(value)
+                      setEndDate(value)
+                    }}
+                    valueFormat="DD/MM/YYYY"
+                    style={{ width: 180 }}
+                    clearable
+                  />
+                )}
                 <Button onClick={() => refetchRevenue()} variant="filled">
                   Áp dụng
                 </Button>

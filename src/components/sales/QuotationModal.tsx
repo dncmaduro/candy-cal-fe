@@ -16,6 +16,7 @@ import { useMemo, useState, useRef } from "react"
 import html2canvas from "html2canvas"
 import { IconCamera } from "@tabler/icons-react"
 import { CToast } from "../common/CToast"
+import { useSalesChannels } from "../../hooks/useSalesChannels"
 
 interface ItemWithExtendedData {
   code: string
@@ -37,12 +38,19 @@ interface Props {
 
 export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
   const { getSalesOrderById } = useSalesOrders()
+  const { getMyChannel } = useSalesChannels()
   const contentRef = useRef<HTMLDivElement>(null)
   const [isCapturing, setIsCapturing] = useState(false)
 
   const { data: orderData } = useQuery({
     queryKey: ["salesOrder", orderId],
     queryFn: () => getSalesOrderById(orderId)
+  })
+
+  const { data: channelData } = useQuery({
+    queryKey: ["myChannel"],
+    queryFn: () => getMyChannel(),
+    select: (data) => data.data
   })
 
   // Process items with extended calculations
@@ -172,15 +180,12 @@ export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
       <div ref={contentRef}>
         <Group ml={8} mt={8} justify="space-between" align="center">
           <Group>
-            <Image src="/mcd.png" alt="MCD" h={100} />
+            <Image src={channelData?.channel.avatarUrl} alt="MCD" h={100} />
             <Stack gap={4}>
               <Text size="xl" fw={600}>
-                Công ty TNHH My Candy Việt Nam
+                {channelData?.channel.channelName}
               </Text>
-              <Text fw={600}>
-                34-BT6, Foresa 6E, Khu đô thị Xuân Phương, phường Xuân Phương,
-                Hà Nội
-              </Text>
+              <Text fw={600}>{channelData?.channel.address}</Text>
               <Text fw={600}>Sđt: {orderData.data.phoneNumber}</Text>
             </Stack>
           </Group>
@@ -390,7 +395,7 @@ export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
 
             <Stack gap="xs">
               <Group justify="space-between">
-                <Text size="xs">Phí ship:</Text>
+                <Text size="xs">Phí ship (5k/kg):</Text>
                 <Text size="xs" fw={500}>
                   {calculations.shippingCost.toLocaleString("vi-VN")}đ
                 </Text>
@@ -404,7 +409,7 @@ export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
               </Group>
 
               <Group justify="space-between">
-                <Text size="xs">Thuế:</Text>
+                <Text size="xs">Thuế (0.75%):</Text>
                 <Text size="xs" fw={500}>
                   {calculations.tax.toLocaleString("vi-VN")}đ
                 </Text>

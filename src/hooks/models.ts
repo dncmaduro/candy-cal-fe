@@ -2213,6 +2213,8 @@ export interface CreateSalesChannelRequest {
   channelName: string
   assignedTo?: string
   phoneNumber: string
+  address: string
+  avatarUrl: string
 }
 
 /** @interface */
@@ -2220,6 +2222,8 @@ export interface CreateSalesChannelResponse {
   _id: string
   channelName: string
   phoneNumber: string
+  address: string
+  avatarUrl: string
   createdAt: string
   updatedAt: string
   deletedAt?: string
@@ -2230,6 +2234,8 @@ export interface UpdateSalesChannelRequest {
   channelName?: string
   assignedTo?: string
   phoneNumber?: string
+  address?: string
+  avatarUrl?: string
 }
 
 /** @interface */
@@ -2237,6 +2243,8 @@ export interface UpdateSalesChannelResponse {
   _id: string
   channelName: string
   phoneNumber: string
+  address: string
+  avatarUrl: string
   createdAt: string
   updatedAt: string
   deletedAt?: string
@@ -2260,11 +2268,13 @@ export interface SearchSalesChannelResponse {
     _id: string
     channelName: string
     phoneNumber: string
-    assignedTo?: {
-      id: string
+    assignedTo: {
+      _id: string
       name: string
       username: string
     }
+    address: string
+    avatarUrl: string
     createdAt: string
     updatedAt: string
     deletedAt?: string
@@ -2282,11 +2292,13 @@ export interface GetSalesChannelDetailResponse {
   _id: string
   channelName: string
   phoneNumber: string
-  assignedTo?: {
-    id: string
+  assignedTo: {
+    _id: string
     name: string
     username: string
   }
+  address: string
+  avatarUrl: string
   createdAt: string
   updatedAt: string
   deletedAt?: string
@@ -2298,11 +2310,13 @@ export interface GetMyChannelResponse {
     _id: string
     channelName: string
     phoneNumber: string
-    assignedTo?: {
-      id: string
+    assignedTo: {
+      _id: string
       name: string
       username: string
     }
+    address: string
+    avatarUrl: string
     createdAt: string
     updatedAt: string
     deletedAt?: string
@@ -3952,11 +3966,19 @@ export interface GetRevenueForDateRequest {
 /** @interface */
 export interface GetRevenueForDateResponse {
   revenue: number
-  newFunnelRevenue: number
+  newFunnelRevenue: {
+    ads: number
+    other: number
+  }
   returningFunnelRevenue: number
+  newOrder: number
+  returningOrder: number
   accumulatedRevenue: number
   accumulatedAdsCost: number
-  accumulatedNewFunnelRevenue: number
+  accumulatedNewFunnelRevenue: {
+    ads: number
+    other: number
+  }
 }
 
 /** @interface */
@@ -3966,11 +3988,19 @@ export interface CreateSalesDailyReportRequest {
   adsCost: number
   dateKpi: number
   revenue: number
-  newFunnelRevenue: number
+  newFunnelRevenue: {
+    ads: number
+    other: number
+  }
   returningFunnelRevenue: number
+  newOrder: number
+  returningOrder: number
   accumulatedRevenue: number
   accumulatedAdsCost: number
-  accumulatedNewFunnelRevenue: number
+  accumulatedNewFunnelRevenue: {
+    ads: number
+    other: number
+  }
 }
 
 /** @interface */
@@ -3981,11 +4011,19 @@ export interface CreateSalesDailyReportResponse {
   adsCost: number
   dateKpi: number
   revenue: number
-  newFunnelRevenue: number
+  newFunnelRevenue: {
+    ads: number
+    other: number
+  }
   returningFunnelRevenue: number
+  newOrder: number
+  returningOrder: number
   accumulatedRevenue: number
   accumulatedAdsCost: number
-  accumulatedNewFunnelRevenue: number
+  accumulatedNewFunnelRevenue: {
+    ads: number
+    other: number
+  }
   createdAt: string
   updatedAt: string
   deletedAt?: string
@@ -4013,11 +4051,19 @@ export interface GetSalesDailyReportsByMonthResponse {
     adsCost: number
     dateKpi: number
     revenue: number
-    newFunnelRevenue: number
+    newFunnelRevenue: {
+      ads: number
+      other: number
+    }
     returningFunnelRevenue: number
+    newOrder: number
+    returningOrder: number
     accumulatedRevenue: number
     accumulatedAdsCost: number
-    accumulatedNewFunnelRevenue: number
+    accumulatedNewFunnelRevenue: {
+      ads: number
+      other: number
+    }
     createdAt: string
     updatedAt: string
     deletedAt?: string
@@ -4034,15 +4080,27 @@ export interface GetSalesDailyReportDetailRequest {
 export interface GetSalesDailyReportDetailResponse {
   _id: string
   date: string
-  channel: string
+  channel: {
+    _id: string
+    channelName: string
+    phoneNumber: string
+  }
   adsCost: number
   dateKpi: number
   revenue: number
-  newFunnelRevenue: number
+  newFunnelRevenue: {
+    ads: number
+    other: number
+  }
   returningFunnelRevenue: number
+  newOrder: number
+  returningOrder: number
   accumulatedRevenue: number
   accumulatedAdsCost: number
-  accumulatedNewFunnelRevenue: number
+  accumulatedNewFunnelRevenue: {
+    ads: number
+    other: number
+  }
   createdAt: string
   updatedAt: string
   deletedAt?: string
