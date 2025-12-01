@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router"
 import { SalesLayout } from "../../../components/layouts/SalesLayout"
 import { useSalesChannels } from "../../../hooks/useSalesChannels"
 import { useQuery, useMutation } from "@tanstack/react-query"
-import { Box, Button, rem, Text, ActionIcon } from "@mantine/core"
+import { Box, Button, rem, Text, ActionIcon, Image } from "@mantine/core"
 import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
 import { Can } from "../../../components/common/Can"
@@ -94,6 +94,28 @@ function RouteComponent() {
       )
     },
     {
+      accessorKey: "phoneNumber",
+      header: "Số điện thoại",
+      cell: ({ row }) => <Text size="sm">{row.original.phoneNumber}</Text>
+    },
+    {
+      accessorKey: "address",
+      header: "Địa chỉ",
+      cell: ({ row }) => <Text size="sm">{row.original.address}</Text>
+    },
+    {
+      accessorKey: "avatarUrl",
+      header: "Ảnh đại diện",
+      cell: ({ row }) => (
+        <Image
+          src={row.original.avatarUrl}
+          alt={row.original.channelName}
+          h={40}
+          fit="contain"
+        />
+      )
+    },
+    {
       accessorKey: "createdAt",
       header: "Ngày tạo",
       cell: ({ row }) => (
@@ -139,8 +161,6 @@ function RouteComponent() {
       enableSorting: false
     }
   ]
-
-  console.log(channels)
 
   return (
     <SalesLayout>

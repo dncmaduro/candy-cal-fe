@@ -44,8 +44,10 @@ export const SalesChannelModal = ({ channel, refetch }: Props) => {
   } = useForm<FormData>({
     defaultValues: {
       channelName: channel?.channelName || "",
-      assignedTo: channel?.assignedTo?.id || "",
-      phoneNumber: channel?.phoneNumber || ""
+      assignedTo: channel?.assignedTo?._id || "",
+      phoneNumber: channel?.phoneNumber || "",
+      address: channel?.address || "",
+      avatarUrl: channel?.avatarUrl || ""
     }
   })
 
@@ -122,6 +124,32 @@ export const SalesChannelModal = ({ channel, refetch }: Props) => {
               {...field}
               size="md"
               type="tel"
+            />
+          )}
+        />
+
+        <Controller
+          name="address"
+          control={control}
+          render={({ field }) => (
+            <TextInput
+              label="Địa chỉ"
+              placeholder="Nhập địa chỉ"
+              {...field}
+              size="md"
+            />
+          )}
+        />
+
+        <Controller
+          name="avatarUrl"
+          control={control}
+          render={({ field }) => (
+            <TextInput
+              label="URL ảnh đại diện"
+              placeholder="Nhập URL ảnh đại diện"
+              {...field}
+              size="md"
             />
           )}
         />

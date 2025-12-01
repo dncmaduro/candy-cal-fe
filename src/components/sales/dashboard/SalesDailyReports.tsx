@@ -21,6 +21,7 @@ import { CToast } from "../../common/CToast"
 import { modals } from "@mantine/modals"
 import { CDataTable } from "../../common/CDataTable"
 import { CreateSalesDailyReportModal } from "./CreateSalesDailyReportModal"
+import { useNavigate } from "@tanstack/react-router"
 
 type DailyReportItem = {
   _id: string
@@ -29,11 +30,19 @@ type DailyReportItem = {
   adsCost: number
   dateKpi: number
   revenue: number
-  newFunnelRevenue: number
+  newFunnelRevenue: {
+    ads: number
+    other: number
+  }
   returningFunnelRevenue: number
+  newOrder: number
+  returningOrder: number
   accumulatedRevenue: number
   accumulatedAdsCost: number
-  accumulatedNewFunnelRevenue: number
+  accumulatedNewFunnelRevenue: {
+    ads: number
+    other: number
+  }
   createdAt: string
   updatedAt: string
   deletedAt?: string
@@ -44,6 +53,7 @@ export const SalesDailyReports = () => {
     useSalesDailyReports()
   const { getMyChannel, searchSalesChannels } = useSalesChannels()
   const { getMe } = useUsers()
+  const navigate = useNavigate()
 
   const currentDate = new Date()
   const [month, setMonth] = useState<string>(String(currentDate.getMonth() + 1))
@@ -193,9 +203,28 @@ export const SalesDailyReports = () => {
     {
       accessorKey: "newFunnelRevenue",
       header: "DT khách mới",
-      cell: ({ row }) => (
-        <span>{row.original.newFunnelRevenue.toLocaleString("vi-VN")}đ</span>
-      )
+      cell: ({ row }) => {
+        const total =
+          row.original.newFunnelRevenue.ads +
+          row.original.newFunnelRevenue.other
+        return (
+          <Box>
+            <Text size="sm" fw={500}>
+              {total.toLocaleString("vi-VN")}đ
+            </Text>
+            <Group gap={4}>
+              <Text size="xs" c="dimmed">
+                Ads: {row.original.newFunnelRevenue.ads.toLocaleString("vi-VN")}
+                đ
+              </Text>
+              <Text size="xs" c="dimmed">
+                • Khác:{" "}
+                {row.original.newFunnelRevenue.other.toLocaleString("vi-VN")}đ
+              </Text>
+            </Group>
+          </Box>
+        )
+      }
     },
     {
       accessorKey: "returningFunnelRevenue",
@@ -221,31 +250,6 @@ export const SalesDailyReports = () => {
       cell: ({ row }) => (
         <span style={{ fontWeight: 500 }}>
           {row.original.dateKpi.toLocaleString("vi-VN")}đ
-        </span>
-      )
-    },
-    {
-      accessorKey: "accumulatedRevenue",
-      header: "DT tích luỹ",
-      cell: ({ row }) => (
-        <span style={{ color: "#40c057", fontWeight: 600 }}>
-          {row.original.accumulatedRevenue.toLocaleString("vi-VN")}đ
-        </span>
-      )
-    },
-    {
-      accessorKey: "accumulatedAdsCost",
-      header: "Ads tích luỹ",
-      cell: ({ row }) => (
-        <span>{row.original.accumulatedAdsCost.toLocaleString("vi-VN")}đ</span>
-      )
-    },
-    {
-      accessorKey: "accumulatedNewFunnelRevenue",
-      header: "DT KH mới tích luỹ",
-      cell: ({ row }) => (
-        <span>
-          {row.original.accumulatedNewFunnelRevenue.toLocaleString("vi-VN")}đ
         </span>
       )
     },
@@ -288,7 +292,7 @@ export const SalesDailyReports = () => {
       id: "create-sales-daily-report",
       title: <b>Tạo báo cáo hàng ngày</b>,
       children: <CreateSalesDailyReportModal />,
-      size: "lg"
+      size: 960
     })
   }
   return (
@@ -327,6 +331,12 @@ export const SalesDailyReports = () => {
           }}
           isLoading={isLoading}
           hideSearch
+          onRowClick={(row) => {
+            navigate({
+              to: "/sales/dashboard/$dailyReportId",
+              params: { dailyReportId: row.original._id }
+            })
+          }}
           extraFilters={
             <>
               <Select

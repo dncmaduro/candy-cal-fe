@@ -10,7 +10,9 @@ import {
   Divider,
   Badge,
   Grid,
-  Alert
+  Alert,
+  Accordion,
+  MantineColor
 } from "@mantine/core"
 import { DatePickerInput } from "@mantine/dates"
 import { useSalesDailyReports } from "../../../hooks/useSalesDailyReports"
@@ -22,6 +24,145 @@ import { CreateSalesDailyReportRequest } from "../../../hooks/models"
 import { useSalesChannels } from "../../../hooks/useSalesChannels"
 import { useEffect, useMemo } from "react"
 import { IconAlertCircle, IconDeviceFloppy } from "@tabler/icons-react"
+import { DailyReportByText } from "./DailyReportByText"
+
+// ────────────────────────────────────────────────────────────
+// Reusable UI helpers (visual only, không đổi logic)
+// ────────────────────────────────────────────────────────────
+
+type SummaryStatProps = {
+  label: string
+  value: string | number
+  hint?: string
+}
+
+const SummaryStat = ({ label, value, hint }: SummaryStatProps) => (
+  <Stack gap={2}>
+    <Text size="xs" c="dimmed">
+      {label}
+    </Text>
+    <Text fw={600}>{value}</Text>
+    {hint && (
+      <Text size="xs" c="dimmed">
+        {hint}
+      </Text>
+    )}
+  </Stack>
+)
+
+type SectionCardProps = {
+  title: string
+  description?: string
+  badgeLabel?: string
+  badgeColor?: string
+  id?: string
+  bg?: MantineColor
+  children: React.ReactNode
+}
+
+const SectionCard = ({
+  title,
+  description,
+  badgeLabel,
+  badgeColor = "gray",
+  id,
+  bg = "white",
+  children
+}: SectionCardProps) => (
+  <Paper withBorder radius="md" p="md" aria-labelledby={id} bg={bg} shadow="xs">
+    <Group justify="space-between" align="flex-start" mb="sm">
+      <Box>
+        <Text id={id} fw={600} size="md">
+          {title}
+        </Text>
+        {description && (
+          <Text size="sm" c="dimmed" mt={4}>
+            {description}
+          </Text>
+        )}
+      </Box>
+      {badgeLabel && (
+        <Badge size="sm" variant="light" color={badgeColor}>
+          {badgeLabel}
+        </Badge>
+      )}
+    </Group>
+    {children}
+  </Paper>
+)
+
+type MetricCardProps = {
+  title: string
+  badgeLabel: string
+  mainLabel: string
+  mainValue: string | number
+  mainSuffix?: string
+  mainColor?: string
+  detailLabel: string
+  detailValueLeft: string
+  detailValueRight: string
+}
+
+const MetricCard = ({
+  title,
+  badgeLabel,
+  mainLabel,
+  mainValue,
+  mainSuffix = "%",
+  mainColor = "blue",
+  detailLabel,
+  detailValueLeft,
+  detailValueRight
+}: MetricCardProps) => (
+  <Paper
+    withBorder
+    radius="md"
+    p="md"
+    bg="gray.0"
+    shadow="xs"
+    style={{ height: "100%" }}
+  >
+    <Group justify="space-between" mb="sm">
+      <Text fw={600}>{title}</Text>
+      <Badge size="sm" variant="light" color="gray">
+        {badgeLabel}
+      </Badge>
+    </Group>
+    <Stack gap="sm">
+      <Box>
+        <Text size="xs" fw={500} c="dimmed" tt="uppercase" mb={4}>
+          {mainLabel}
+        </Text>
+        <Group gap={4} align="baseline">
+          <Text fw={700} size="xl" c={mainColor}>
+            {mainValue}
+          </Text>
+          <Text size="sm" c="dimmed">
+            {mainSuffix}
+          </Text>
+        </Group>
+      </Box>
+      <Box>
+        <Text size="xs" fw={500} c="dimmed" mb={2}>
+          {detailLabel}
+        </Text>
+        <Text size="xs" c="dimmed">
+          <Text component="span" fw={600} mr={4}>
+            {detailValueLeft}
+          </Text>
+          {" / "}
+          <Text component="span" fw={600} ml={4}>
+            {detailValueRight}
+          </Text>
+        </Text>
+      </Box>
+    </Stack>
+  </Paper>
+)
+
+// ────────────────────────────────────────────────────────────
+// Main component
+// ────────────────────────────────────────────────────────────
 
 export const CreateSalesDailyReportModal = () => {
   const { createSalesDailyReport, getRevenueForDate, getSalesMonthKpi } =
@@ -36,27 +177,42 @@ export const CreateSalesDailyReportModal = () => {
         adsCost: 0,
         dateKpi: 0,
         revenue: 0,
-        newFunnelRevenue: 0,
+        newFunnelRevenue: {
+          ads: 0,
+          other: 0
+        },
         returningFunnelRevenue: 0,
+        newOrder: 0,
+        returningOrder: 0,
         accumulatedRevenue: 0,
         accumulatedAdsCost: 0,
-        accumulatedNewFunnelRevenue: 0
+        accumulatedNewFunnelRevenue: {
+          ads: 0,
+          other: 0
+        }
       }
     })
 
   const selectedDate = watch("date")
   const channelId = watch("channel")
+  const revenue = watch("revenue")
+  const newFunnelRevenueAds = watch("newFunnelRevenue.ads")
+  const newFunnelRevenueOther = watch("newFunnelRevenue.other")
+  const adsCost = watch("adsCost")
   const accumulatedRevenue = watch("accumulatedRevenue")
   const accumulatedAdsCost = watch("accumulatedAdsCost")
-  const accumulatedNewFunnelRevenue = watch("accumulatedNewFunnelRevenue")
+  const accumulatedNewFunnelRevenueAds = watch(
+    "accumulatedNewFunnelRevenue.ads"
+  )
+  const accumulatedNewFunnelRevenueOther = watch(
+    "accumulatedNewFunnelRevenue.other"
+  )
 
   // Get my channel
   const { data: channelData, isLoading: channelLoading } = useQuery({
     queryKey: ["getMyChannel"],
     queryFn: getMyChannel,
-    select: (data) => {
-      return data.data
-    }
+    select: (data) => data.data
   })
 
   const hasChannel = !!channelData?.channel
@@ -87,9 +243,15 @@ export const CreateSalesDailyReportModal = () => {
 
   const { mutate: create, isPending: isCreating } = useMutation({
     mutationFn: createSalesDailyReport,
-    onSuccess: () => {
+    onSuccess: (response) => {
       CToast.success({ title: "Tạo báo cáo hàng ngày thành công" })
       modals.closeAll()
+      modals.open({
+        id: "create-sales-daily-report",
+        title: <b>Tin nhắn báo cáo</b>,
+        children: <DailyReportByText report={response.data} />,
+        size: "lg"
+      })
     },
     onError: () => {
       CToast.error({ title: "Tạo báo cáo hàng ngày thất bại" })
@@ -107,23 +269,29 @@ export const CreateSalesDailyReportModal = () => {
   useEffect(() => {
     if (revenueData) {
       setValue("revenue", revenueData.revenue || 0)
-      setValue("newFunnelRevenue", revenueData.newFunnelRevenue || 0)
+      setValue("newFunnelRevenue.ads", revenueData.newFunnelRevenue?.ads || 0)
+      setValue(
+        "newFunnelRevenue.other",
+        revenueData.newFunnelRevenue?.other || 0
+      )
       setValue(
         "returningFunnelRevenue",
         revenueData.returningFunnelRevenue || 0
       )
+      setValue("newOrder", revenueData.newOrder || 0)
+      setValue("returningOrder", revenueData.returningOrder || 0)
       setValue("accumulatedRevenue", revenueData.accumulatedRevenue || 0)
       setValue("accumulatedAdsCost", revenueData.accumulatedAdsCost || 0)
       setValue(
-        "accumulatedNewFunnelRevenue",
-        revenueData.accumulatedNewFunnelRevenue || 0
+        "accumulatedNewFunnelRevenue.ads",
+        revenueData.accumulatedNewFunnelRevenue?.ads || 0
+      )
+      setValue(
+        "accumulatedNewFunnelRevenue.other",
+        revenueData.accumulatedNewFunnelRevenue?.other || 0
       )
     }
   }, [revenueData, setValue])
-
-  useEffect(() => {
-    console.log(selectedDate, channelId)
-  }, [selectedDate])
 
   const isLoading = channelLoading || revenueLoading || kpiLoading
 
@@ -133,250 +301,632 @@ export const CreateSalesDailyReportModal = () => {
     return ((accumulatedRevenue / kpiData.kpi) * 100).toFixed(2)
   }, [accumulatedRevenue, kpiData])
 
-  // Calculate CAC (Customer Acquisition Cost)
+  // Calculate CAC (Customer Acquisition Cost) in percentage
   const cac = useMemo(() => {
-    if (!accumulatedNewFunnelRevenue || accumulatedNewFunnelRevenue === 0)
+    if (!accumulatedNewFunnelRevenueAds || accumulatedNewFunnelRevenueAds === 0)
       return 0
-    return (accumulatedAdsCost / accumulatedNewFunnelRevenue).toFixed(2)
-  }, [accumulatedAdsCost, accumulatedNewFunnelRevenue])
+    return (
+      (accumulatedAdsCost / accumulatedNewFunnelRevenueAds) *
+      100
+    ).toFixed(2)
+  }, [accumulatedAdsCost, accumulatedNewFunnelRevenueAds])
+
+  // Calculate projected totals (accumulated + today)
+  const projectedRevenue = useMemo(() => {
+    return accumulatedRevenue + revenue
+  }, [accumulatedRevenue, revenue])
+
+  const projectedAdsCost = useMemo(() => {
+    return accumulatedAdsCost + adsCost
+  }, [accumulatedAdsCost, adsCost])
+
+  const projectedNewFunnelRevenueAds = useMemo(() => {
+    return accumulatedNewFunnelRevenueAds + newFunnelRevenueAds
+  }, [accumulatedNewFunnelRevenueAds, newFunnelRevenueAds])
+
+  const projectedNewFunnelRevenueOther = useMemo(() => {
+    return accumulatedNewFunnelRevenueOther + newFunnelRevenueOther
+  }, [accumulatedNewFunnelRevenueOther, newFunnelRevenueOther])
+
+  const projectedKpiPercentage = useMemo(() => {
+    if (!kpiData?.kpi || kpiData.kpi === 0) return 0
+    return ((projectedRevenue / kpiData.kpi) * 100).toFixed(2)
+  }, [projectedRevenue, kpiData])
+
+  const projectedCAC = useMemo(() => {
+    if (!projectedNewFunnelRevenueAds || projectedNewFunnelRevenueAds === 0)
+      return 0
+    return ((projectedAdsCost / projectedNewFunnelRevenueAds) * 100).toFixed(2)
+  }, [projectedAdsCost, projectedNewFunnelRevenueAds])
 
   const onSubmit = (values: CreateSalesDailyReportRequest) => {
     create(values)
   }
 
   return (
-    <Box>
+    <Box component="section">
       {!hasChannel && (
-        <Alert color="yellow" title="Lưu ý" icon={<IconAlertCircle />}>
+        <Alert color="yellow" title="Lưu ý" icon={<IconAlertCircle />} mb="md">
           Tài khoản của bạn không phụ trách kênh sỉ lẻ nào, vui lòng kiểm tra
           lại
         </Alert>
       )}
+
       <form onSubmit={handleSubmit(onSubmit)}>
-        <Stack gap="md">
-          {/* Date Selection */}
-          <Controller
-            name="date"
-            control={control}
-            render={({ field }) => (
-              <DatePickerInput
-                {...field}
-                label="Ngày báo cáo"
-                placeholder="Chọn ngày"
-                valueFormat="DD/MM/YYYY"
-                required
-                readOnly
-              />
-            )}
-          />
+        <Stack gap="lg">
+          {/* Header: Date + Summary */}
+          <Paper withBorder radius="md" p="md" bg="white" shadow="xs">
+            <Group justify="space-between" align="flex-start">
+              <Box>
+                <Text fw={600} size="lg">
+                  Báo cáo doanh thu ngày
+                </Text>
+                <Text size="sm" c="dimmed" mt={4}>
+                  Chọn ngày và nhập KPI, chi phí. Các số liệu doanh thu sẽ được
+                  tự động lấy từ hệ thống.
+                </Text>
+                <Group gap="xl" mt="md" wrap="wrap">
+                  <SummaryStat
+                    label="Kênh phụ trách"
+                    value={channelData?.channel?.channelName || "Chưa được gán"}
+                  />
+                  {kpiData?.kpi && (
+                    <SummaryStat
+                      label="KPI tháng"
+                      value={`${kpiData.kpi.toLocaleString()}đ`}
+                      hint="Dùng để tính % KPI đạt được"
+                    />
+                  )}
+                  <SummaryStat
+                    label="Trạng thái dữ liệu"
+                    value={isLoading ? "Đang tải..." : "Đã cập nhật"}
+                  />
+                </Group>
+              </Box>
+
+              <Box miw={220}>
+                <Controller
+                  name="date"
+                  control={control}
+                  render={({ field }) => (
+                    <DatePickerInput
+                      {...field}
+                      label="Ngày báo cáo"
+                      placeholder="Chọn ngày"
+                      valueFormat="DD/MM/YYYY"
+                      required
+                      readOnly
+                      size="sm"
+                      withAsterisk
+                    />
+                  )}
+                />
+              </Box>
+            </Group>
+          </Paper>
 
           {isLoading && (
-            <Group justify="center" py="xl">
-              <Loader size="md" />
-              <Text c="dimmed">Đang tải dữ liệu...</Text>
+            <Group justify="center" py="lg" aria-live="polite">
+              <Loader size="sm" />
+              <Text c="dimmed" size="sm">
+                Đang tải dữ liệu doanh thu và KPI...
+              </Text>
             </Group>
           )}
 
-          {/* Revenue Data (Auto-filled) */}
+          {/* Manual inputs - always visible */}
+          <SectionCard
+            id="manual-input-section"
+            title="Thông tin cần nhập"
+            description="Nhập chi phí quảng cáo và KPI ngày. Các trường khác được tính tự động từ hệ thống."
+            badgeLabel="Bắt buộc"
+            badgeColor="orange"
+            bg="orange.0"
+          >
+            <Grid gutter="md">
+              <Grid.Col span={{ base: 12, sm: 6 }}>
+                <Controller
+                  name="adsCost"
+                  control={control}
+                  render={({ field }) => (
+                    <NumberInput
+                      {...field}
+                      label="Chi phí quảng cáo"
+                      placeholder="Nhập chi phí ads"
+                      thousandSeparator=","
+                      required
+                      leftSection={<Text size="sm">đ</Text>}
+                      styles={{
+                        input: { fontWeight: 500 }
+                      }}
+                    />
+                  )}
+                />
+              </Grid.Col>
+              <Grid.Col span={{ base: 12, sm: 6 }}>
+                <Controller
+                  name="dateKpi"
+                  control={control}
+                  render={({ field }) => (
+                    <NumberInput
+                      {...field}
+                      label="KPI ngày"
+                      placeholder="Nhập KPI ngày"
+                      thousandSeparator=","
+                      required
+                      leftSection={<Text size="sm">đ</Text>}
+                      styles={{
+                        input: { fontWeight: 500 }
+                      }}
+                    />
+                  )}
+                />
+              </Grid.Col>
+            </Grid>
+          </SectionCard>
+
+          {/* Auto-filled / calculated data as Accordion */}
           {!isLoading && (
             <>
-              <Paper withBorder p="md" radius="md">
-                <Text fw={600} mb="md">
-                  Dữ liệu doanh thu ngày
-                </Text>
-                <Grid gutter="md">
-                  <Grid.Col span={6}>
-                    <Controller
-                      name="revenue"
-                      control={control}
-                      render={({ field }) => (
-                        <NumberInput
-                          {...field}
-                          label="Tổng doanh thu"
-                          placeholder="0"
-                          thousandSeparator=","
-                          readOnly
-                          leftSection={<Text size="sm">đ</Text>}
-                        />
-                      )}
-                    />
-                  </Grid.Col>
-                  <Grid.Col span={6}>
-                    <Controller
-                      name="newFunnelRevenue"
-                      control={control}
-                      render={({ field }) => (
-                        <NumberInput
-                          {...field}
-                          label="DT khách mới"
-                          placeholder="0"
-                          thousandSeparator=","
-                          readOnly
-                          leftSection={<Text size="sm">đ</Text>}
-                        />
-                      )}
-                    />
-                  </Grid.Col>
-                  <Grid.Col span={6}>
-                    <Controller
-                      name="returningFunnelRevenue"
-                      control={control}
-                      render={({ field }) => (
-                        <NumberInput
-                          {...field}
-                          label="DT khách quay lại"
-                          placeholder="0"
-                          thousandSeparator=","
-                          readOnly
-                          leftSection={<Text size="sm">đ</Text>}
-                        />
-                      )}
-                    />
-                  </Grid.Col>
-                </Grid>
-              </Paper>
+              <Accordion
+                variant="separated"
+                radius="md"
+                multiple
+                defaultValue={[]}
+              >
+                {/* Daily revenue */}
+                <Accordion.Item value="daily">
+                  <Accordion.Control>
+                    Dữ liệu doanh thu ngày (tự động)
+                  </Accordion.Control>
+                  <Accordion.Panel>
+                    <SectionCard
+                      title="Dữ liệu doanh thu ngày"
+                      badgeLabel="Tự động"
+                      badgeColor="gray"
+                    >
+                      <Grid gutter="md">
+                        <Grid.Col span={12}>
+                          <Controller
+                            name="revenue"
+                            control={control}
+                            render={({ field }) => (
+                              <NumberInput
+                                {...field}
+                                label="Tổng doanh thu"
+                                placeholder="0"
+                                thousandSeparator=","
+                                readOnly
+                                leftSection={<Text size="sm">đ</Text>}
+                                styles={{
+                                  input: {
+                                    fontWeight: 600,
+                                    fontSize: 16
+                                  }
+                                }}
+                              />
+                            )}
+                          />
+                        </Grid.Col>
 
-              {/* Manual Input Fields */}
-              <Paper withBorder p="md" radius="md" bg={"indigo.0"}>
-                <Text fw={600} mb="md">
-                  Thông tin cần nhập
-                </Text>
-                <Grid gutter="md">
-                  <Grid.Col span={6}>
-                    <Controller
-                      name="adsCost"
-                      control={control}
-                      render={({ field }) => (
-                        <NumberInput
-                          {...field}
-                          label="Chi phí quảng cáo"
-                          placeholder="Nhập chi phí ads"
-                          thousandSeparator=","
-                          required
-                          leftSection={<Text size="sm">đ</Text>}
-                        />
-                      )}
-                    />
-                  </Grid.Col>
-                  <Grid.Col span={6}>
-                    <Controller
-                      name="dateKpi"
-                      control={control}
-                      render={({ field }) => (
-                        <NumberInput
-                          {...field}
-                          label="KPI ngày"
-                          placeholder="Nhập KPI ngày"
-                          thousandSeparator=","
-                          required
-                          leftSection={<Text size="sm">đ</Text>}
-                        />
-                      )}
-                    />
-                  </Grid.Col>
-                </Grid>
-              </Paper>
+                        {/* New funnel revenue */}
+                        <Grid.Col span={12}>
+                          <Paper
+                            withBorder
+                            radius="sm"
+                            p="sm"
+                            bg="gray.0"
+                            shadow="xs"
+                          >
+                            <Text size="sm" fw={500} c="dimmed" mb="xs">
+                              Doanh thu khách mới
+                            </Text>
+                            <Group gap="lg" align="flex-end" wrap="wrap">
+                              <Box style={{ flex: 1, minWidth: 160 }}>
+                                <Text size="xs" c="dimmed" mb={4}>
+                                  Tổng
+                                </Text>
+                                <Text size="lg" fw={600}>
+                                  {(
+                                    newFunnelRevenueAds + newFunnelRevenueOther
+                                  ).toLocaleString()}
+                                  đ
+                                </Text>
+                              </Box>
+                              <Box style={{ flex: 1, minWidth: 160 }}>
+                                <Controller
+                                  name="newFunnelRevenue.ads"
+                                  control={control}
+                                  render={({ field }) => (
+                                    <NumberInput
+                                      {...field}
+                                      label="Từ Ads"
+                                      placeholder="0"
+                                      thousandSeparator=","
+                                      readOnly
+                                      size="sm"
+                                      leftSection={<Text size="xs">đ</Text>}
+                                      styles={{
+                                        label: {
+                                          fontSize: 12,
+                                          color: "var(--mantine-color-dimmed)"
+                                        }
+                                      }}
+                                    />
+                                  )}
+                                />
+                              </Box>
+                              <Box style={{ flex: 1, minWidth: 160 }}>
+                                <Controller
+                                  name="newFunnelRevenue.other"
+                                  control={control}
+                                  render={({ field }) => (
+                                    <NumberInput
+                                      {...field}
+                                      label="Từ nguồn khác"
+                                      placeholder="0"
+                                      thousandSeparator=","
+                                      readOnly
+                                      size="sm"
+                                      leftSection={<Text size="xs">đ</Text>}
+                                      styles={{
+                                        label: {
+                                          fontSize: 12,
+                                          color: "var(--mantine-color-dimmed)"
+                                        }
+                                      }}
+                                    />
+                                  )}
+                                />
+                              </Box>
+                            </Group>
+                          </Paper>
+                        </Grid.Col>
 
-              {/* Accumulated Data (Auto-filled) */}
-              <Paper withBorder p="md" radius="md">
-                <Text fw={600} mb="md">
-                  Dữ liệu tích luỹ tháng
-                </Text>
-                <Grid gutter="md">
-                  <Grid.Col span={4}>
-                    <Controller
-                      name="accumulatedRevenue"
-                      control={control}
-                      render={({ field }) => (
-                        <NumberInput
-                          {...field}
-                          label="Tổng DT tích luỹ"
-                          placeholder="0"
-                          thousandSeparator=","
-                          readOnly
-                          leftSection={<Text size="sm">đ</Text>}
-                        />
-                      )}
-                    />
-                  </Grid.Col>
-                  <Grid.Col span={4}>
-                    <Controller
-                      name="accumulatedAdsCost"
-                      control={control}
-                      render={({ field }) => (
-                        <NumberInput
-                          {...field}
-                          label="Tổng chi phí ads"
-                          placeholder="0"
-                          thousandSeparator=","
-                          readOnly
-                          leftSection={<Text size="sm">đ</Text>}
-                        />
-                      )}
-                    />
-                  </Grid.Col>
-                  <Grid.Col span={4}>
-                    <Controller
-                      name="accumulatedNewFunnelRevenue"
-                      control={control}
-                      render={({ field }) => (
-                        <NumberInput
-                          {...field}
-                          label="DT khách mới tích luỹ"
-                          placeholder="0"
-                          thousandSeparator=","
-                          readOnly
-                          leftSection={<Text size="sm">đ</Text>}
-                        />
-                      )}
-                    />
-                  </Grid.Col>
-                </Grid>
-              </Paper>
+                        <Grid.Col span={{ base: 12, sm: 6 }}>
+                          <Controller
+                            name="newOrder"
+                            control={control}
+                            render={({ field }) => (
+                              <NumberInput
+                                {...field}
+                                label="Số đơn khách mới"
+                                placeholder="0"
+                                readOnly
+                                leftSection={<Text size="sm">#</Text>}
+                              />
+                            )}
+                          />
+                        </Grid.Col>
+                        <Grid.Col span={{ base: 12, sm: 6 }}>
+                          <Controller
+                            name="returningFunnelRevenue"
+                            control={control}
+                            render={({ field }) => (
+                              <NumberInput
+                                {...field}
+                                label="Doanh thu khách cũ"
+                                placeholder="0"
+                                thousandSeparator=","
+                                readOnly
+                                leftSection={<Text size="sm">đ</Text>}
+                              />
+                            )}
+                          />
+                        </Grid.Col>
+                        <Grid.Col span={{ base: 12, sm: 6 }}>
+                          <Controller
+                            name="returningOrder"
+                            control={control}
+                            render={({ field }) => (
+                              <NumberInput
+                                {...field}
+                                label="Số đơn khách cũ"
+                                placeholder="0"
+                                readOnly
+                                leftSection={<Text size="sm">#</Text>}
+                              />
+                            )}
+                          />
+                        </Grid.Col>
+                      </Grid>
+                    </SectionCard>
+                  </Accordion.Panel>
+                </Accordion.Item>
+
+                {/* Accumulated month */}
+                <Accordion.Item value="accumulated">
+                  <Accordion.Control>
+                    Dữ liệu lũy kế tháng (trước ngày hôm nay)
+                  </Accordion.Control>
+                  <Accordion.Panel>
+                    <SectionCard
+                      title="Dữ liệu lũy kế tháng"
+                      badgeLabel="Tự động"
+                      badgeColor="gray"
+                    >
+                      <Grid gutter="md">
+                        <Grid.Col span={{ base: 12, sm: 4 }}>
+                          <Controller
+                            name="accumulatedRevenue"
+                            control={control}
+                            render={({ field }) => (
+                              <NumberInput
+                                {...field}
+                                label="Tổng doanh thu lũy kế"
+                                placeholder="0"
+                                thousandSeparator=","
+                                readOnly
+                                leftSection={<Text size="sm">đ</Text>}
+                                styles={{
+                                  input: { fontWeight: 600 }
+                                }}
+                              />
+                            )}
+                          />
+                        </Grid.Col>
+                        <Grid.Col span={{ base: 12, sm: 4 }}>
+                          <Controller
+                            name="accumulatedAdsCost"
+                            control={control}
+                            render={({ field }) => (
+                              <NumberInput
+                                {...field}
+                                label="Tổng chi phí ads"
+                                placeholder="0"
+                                thousandSeparator=","
+                                readOnly
+                                leftSection={<Text size="sm">đ</Text>}
+                              />
+                            )}
+                          />
+                        </Grid.Col>
+
+                        <Grid.Col span={12}>
+                          <Paper
+                            withBorder
+                            radius="sm"
+                            p="sm"
+                            bg="gray.0"
+                            shadow="xs"
+                          >
+                            <Text size="sm" fw={500} c="dimmed" mb="xs">
+                              Doanh thu khách mới lũy kế
+                            </Text>
+                            <Group gap="lg" align="flex-end" wrap="wrap">
+                              <Box style={{ flex: 1, minWidth: 160 }}>
+                                <Text size="xs" c="dimmed" mb={4}>
+                                  Tổng
+                                </Text>
+                                <Text size="lg" fw={600}>
+                                  {(
+                                    accumulatedNewFunnelRevenueAds +
+                                    accumulatedNewFunnelRevenueOther
+                                  ).toLocaleString()}
+                                  đ
+                                </Text>
+                              </Box>
+                              <Box style={{ flex: 1, minWidth: 160 }}>
+                                <Controller
+                                  name="accumulatedNewFunnelRevenue.ads"
+                                  control={control}
+                                  render={({ field }) => (
+                                    <NumberInput
+                                      {...field}
+                                      label="Từ Ads"
+                                      placeholder="0"
+                                      thousandSeparator=","
+                                      readOnly
+                                      size="sm"
+                                      leftSection={<Text size="xs">đ</Text>}
+                                      styles={{
+                                        label: {
+                                          fontSize: 12,
+                                          color: "var(--mantine-color-dimmed)"
+                                        }
+                                      }}
+                                    />
+                                  )}
+                                />
+                              </Box>
+                              <Box style={{ flex: 1, minWidth: 160 }}>
+                                <Controller
+                                  name="accumulatedNewFunnelRevenue.other"
+                                  control={control}
+                                  render={({ field }) => (
+                                    <NumberInput
+                                      {...field}
+                                      label="Từ nguồn khác"
+                                      placeholder="0"
+                                      thousandSeparator=","
+                                      readOnly
+                                      size="sm"
+                                      leftSection={<Text size="xs">đ</Text>}
+                                      styles={{
+                                        label: {
+                                          fontSize: 12,
+                                          color: "var(--mantine-color-dimmed)"
+                                        }
+                                      }}
+                                    />
+                                  )}
+                                />
+                              </Box>
+                            </Group>
+                          </Paper>
+                        </Grid.Col>
+                      </Grid>
+                    </SectionCard>
+                  </Accordion.Panel>
+                </Accordion.Item>
+
+                {/* Projected (accumulated + today) */}
+                <Accordion.Item value="projected">
+                  <Accordion.Control>
+                    Dữ liệu lũy kế dự báo (bao gồm ngày hôm nay)
+                  </Accordion.Control>
+                  <Accordion.Panel>
+                    <SectionCard
+                      title="Dữ liệu lũy kế dự báo"
+                      badgeLabel="Tự động"
+                      badgeColor="gray"
+                    >
+                      <Grid gutter="md">
+                        <Grid.Col span={{ base: 12, sm: 4 }}>
+                          <NumberInput
+                            value={projectedRevenue}
+                            label="Tổng DT lũy kế (dự báo)"
+                            placeholder="0"
+                            thousandSeparator=","
+                            readOnly
+                            leftSection={<Text size="sm">đ</Text>}
+                            styles={{
+                              input: { fontWeight: 600 }
+                            }}
+                          />
+                        </Grid.Col>
+                        <Grid.Col span={{ base: 12, sm: 4 }}>
+                          <NumberInput
+                            value={projectedAdsCost}
+                            label="Tổng chi phí ads (dự báo)"
+                            placeholder="0"
+                            thousandSeparator=","
+                            readOnly
+                            leftSection={<Text size="sm">đ</Text>}
+                          />
+                        </Grid.Col>
+
+                        <Grid.Col span={12}>
+                          <Paper
+                            withBorder
+                            radius="sm"
+                            p="sm"
+                            bg="gray.0"
+                            shadow="xs"
+                          >
+                            <Text size="sm" fw={500} c="dimmed" mb="xs">
+                              Doanh thu khách mới lũy kế (dự báo)
+                            </Text>
+                            <Group gap="lg" align="flex-end" wrap="wrap">
+                              <Box style={{ flex: 1, minWidth: 160 }}>
+                                <Text size="xs" c="dimmed" mb={4}>
+                                  Tổng
+                                </Text>
+                                <Text size="lg" fw={600}>
+                                  {(
+                                    projectedNewFunnelRevenueAds +
+                                    projectedNewFunnelRevenueOther
+                                  ).toLocaleString()}
+                                  đ
+                                </Text>
+                              </Box>
+                              <Box style={{ flex: 1, minWidth: 160 }}>
+                                <NumberInput
+                                  value={projectedNewFunnelRevenueAds}
+                                  label="Từ Ads"
+                                  placeholder="0"
+                                  thousandSeparator=","
+                                  readOnly
+                                  size="sm"
+                                  leftSection={<Text size="xs">đ</Text>}
+                                  styles={{
+                                    label: {
+                                      fontSize: 12,
+                                      color: "var(--mantine-color-dimmed)"
+                                    }
+                                  }}
+                                />
+                              </Box>
+                              <Box style={{ flex: 1, minWidth: 160 }}>
+                                <NumberInput
+                                  value={projectedNewFunnelRevenueOther}
+                                  label="Từ nguồn khác"
+                                  placeholder="0"
+                                  thousandSeparator=","
+                                  readOnly
+                                  size="sm"
+                                  leftSection={<Text size="xs">đ</Text>}
+                                  styles={{
+                                    label: {
+                                      fontSize: 12,
+                                      color: "var(--mantine-color-dimmed)"
+                                    }
+                                  }}
+                                />
+                              </Box>
+                            </Group>
+                          </Paper>
+                        </Grid.Col>
+                      </Grid>
+                    </SectionCard>
+                  </Accordion.Panel>
+                </Accordion.Item>
+              </Accordion>
 
               <Divider />
 
-              {/* KPI Statistics */}
-              <Paper withBorder p="lg" radius="md" bg="blue.0">
-                <Text fw={600} mb="md" size="lg">
-                  Thống kê KPI tháng
-                </Text>
-                <Grid gutter="xl">
-                  <Grid.Col span={6}>
-                    <Stack gap="xs" align="center">
-                      <Text size="sm" c="dimmed">
-                        % KPI đạt được
-                      </Text>
-                      <Badge size="xl" variant="filled" color="blue">
-                        {kpiPercentage}%
-                      </Badge>
-                      <Text size="xs" c="dimmed">
-                        {accumulatedRevenue.toLocaleString()} /{" "}
-                        {kpiData?.kpi?.toLocaleString() || 0} đ
-                      </Text>
-                    </Stack>
+              {/* KPI overview */}
+              <SectionCard
+                title="Tổng quan KPI"
+                description="So sánh KPI hiện tại và KPI dự báo sau khi tính cả ngày hôm nay."
+              >
+                <Grid gutter="md">
+                  <Grid.Col span={{ base: 12, md: 6 }}>
+                    <MetricCard
+                      title="KPI hiện tại"
+                      badgeLabel="Hiện tại"
+                      mainLabel="% KPI đạt được"
+                      mainValue={kpiPercentage}
+                      mainColor="blue"
+                      detailLabel="Doanh thu lũy kế / KPI tháng"
+                      detailValueLeft={`${accumulatedRevenue.toLocaleString()}đ`}
+                      detailValueRight={`${kpiData?.kpi?.toLocaleString() || 0}đ`}
+                    />
                   </Grid.Col>
-                  <Grid.Col span={6}>
-                    <Stack gap="xs" align="center">
-                      <Text size="sm" c="dimmed">
-                        CAC (Chi phí / DT khách mới)
-                      </Text>
-                      <Badge size="xl" variant="filled" color="orange">
-                        {cac}
-                      </Badge>
-                      <Text size="xs" c="dimmed">
-                        {accumulatedAdsCost.toLocaleString()} /{" "}
-                        {accumulatedNewFunnelRevenue.toLocaleString()} đ
-                      </Text>
-                    </Stack>
+                  <Grid.Col span={{ base: 12, md: 6 }}>
+                    <MetricCard
+                      title="KPI dự báo"
+                      badgeLabel="Dự báo"
+                      mainLabel="% KPI đạt được (dự báo)"
+                      mainValue={projectedKpiPercentage}
+                      mainColor="teal"
+                      detailLabel="DT lũy kế dự báo / KPI tháng"
+                      detailValueLeft={`${projectedRevenue.toLocaleString()}đ`}
+                      detailValueRight={`${kpiData?.kpi?.toLocaleString() || 0}đ`}
+                    />
+                  </Grid.Col>
+                  <Grid.Col span={{ base: 12, md: 6 }}>
+                    <MetricCard
+                      title="CAC hiện tại"
+                      badgeLabel="Hiện tại"
+                      mainLabel="CAC (Chi phí / DT từ Ads)"
+                      mainValue={cac}
+                      mainColor="orange"
+                      detailLabel="Chi phí ads / DT khách mới từ Ads"
+                      detailValueLeft={`${accumulatedAdsCost.toLocaleString()}đ`}
+                      detailValueRight={`${accumulatedNewFunnelRevenueAds.toLocaleString()}đ`}
+                    />
+                  </Grid.Col>
+                  <Grid.Col span={{ base: 12, md: 6 }}>
+                    <MetricCard
+                      title="CAC dự báo"
+                      badgeLabel="Dự báo"
+                      mainLabel="CAC (dự báo)"
+                      mainValue={projectedCAC}
+                      mainColor="orange"
+                      detailLabel="Chi phí ads dự báo / DT khách mới từ Ads (dự báo)"
+                      detailValueLeft={`${projectedAdsCost.toLocaleString()}đ`}
+                      detailValueRight={`${projectedNewFunnelRevenueAds.toLocaleString()}đ`}
+                    />
                   </Grid.Col>
                 </Grid>
-              </Paper>
+              </SectionCard>
 
-              {/* Submit Button */}
-              <Group justify="flex-end" mt="md">
+              {/* Actions */}
+              <Group justify="flex-end" mt="sm">
                 <Button
-                  variant="default"
+                  type="button"
+                  variant="subtle"
                   onClick={() => modals.closeAll()}
                   disabled={isCreating}
                 >
