@@ -397,7 +397,13 @@ export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
 
             <Stack gap="xs">
               <Group justify="space-between">
-                <Text size="xs">Phí ship (5k/kg):</Text>
+                <Text size="xs">
+                  Phí ship ({calculations.totalWeight.toFixed(2)} kg
+                  {calculations.totalWeight < 10
+                    ? " < 10kg → 45k"
+                    : ` ≥ 10kg → ${calculations.totalWeight.toFixed(2)}kg × 5k`}
+                  ):
+                </Text>
                 <Text size="xs" fw={500}>
                   {calculations.shippingCost.toLocaleString("vi-VN")}đ
                 </Text>
