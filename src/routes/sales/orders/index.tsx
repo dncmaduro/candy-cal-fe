@@ -42,7 +42,8 @@ export const Route = createFileRoute("/sales/orders/")({
       createNew: search.createNew as string | undefined,
       funnelId: search.funnelId as string | undefined,
       items: search.items as string | undefined,
-      discount: search.discount as string | undefined,
+      orderDiscount: search.orderDiscount as string | undefined,
+      otherDiscount: search.otherDiscount as string | undefined,
       deposit: search.deposit as string | undefined
     }
   }
@@ -207,7 +208,8 @@ function RouteComponent() {
   const handleCreateOrder = (
     funnelId?: string,
     initialItems?: { code: string; quantity: number }[],
-    initialDiscount?: number,
+    initialOrderDiscount?: number,
+    initialOtherDiscount?: number,
     initialDeposit?: number
   ) => {
     modals.open({
@@ -216,7 +218,8 @@ function RouteComponent() {
         <CreateSalesOrderModal
           salesFunnelId={funnelId}
           initialItems={initialItems}
-          initialDiscount={initialDiscount}
+          initialOrderDiscount={initialOrderDiscount}
+          initialOtherDiscount={initialOtherDiscount}
           initialDeposit={initialDeposit}
           onSuccess={() => {
             refetch()
@@ -245,7 +248,7 @@ function RouteComponent() {
 
   const handleUpdateItems = (item: SalesOrderItem) => {
     modals.open({
-      title: <b>Cập nhật sản phẩm</b>,
+      title: <b>Cập nhật sản phẩm, chiết khấu & tiền cọc</b>,
       children: (
         <UpdateOrderItemsModal
           orderId={item._id}
@@ -254,7 +257,8 @@ function RouteComponent() {
             quantity: si.quantity,
             note: si.note
           }))}
-          currentDiscount={item.discount}
+          currentOrderDiscount={item.orderDiscount}
+          currentOtherDiscount={item.otherDiscount}
           currentDeposit={item.deposit}
           onSuccess={() => {
             refetch()
@@ -315,7 +319,7 @@ function RouteComponent() {
       accessorKey: "items",
       header: "Số SP",
       cell: ({ row }) => (
-        <Badge variant="light" color="blue" size="lg">
+        <Badge variant="light" color="blue" size="sm">
           {row.original.items.length}
         </Badge>
       )
@@ -330,28 +334,21 @@ function RouteComponent() {
       )
     },
     {
-      accessorKey: "discount",
-      header: "Chiết khấu/thùng",
-      cell: ({ row }) =>
-        row.original.discount ? (
-          <div>
-            <Text size="sm" c="orange" fw={600}>
-              {row.original.discount.toLocaleString("vi-VN")}đ/thùng
-            </Text>
-            <Text size="xs" c="dimmed">
-              Tổng:{" "}
-              {(
-                row.original.discount *
-                row.original.items.reduce((sum, item) => sum + item.quantity, 0)
-              ).toLocaleString("vi-VN")}
-              đ
-            </Text>
-          </div>
+      accessorKey: "orderDiscount",
+      header: "Chiết khấu",
+      cell: ({ row }) => {
+        const orderDiscount = row.original.orderDiscount || 0
+        const otherDiscount = row.original.otherDiscount || 0
+        const totalDiscount = orderDiscount + otherDiscount
+
+        return totalDiscount > 0 ? (
+          <Text size="sm">{totalDiscount.toLocaleString("vi-VN")}đ</Text>
         ) : (
           <Text size="sm" c="dimmed">
             -
           </Text>
         )
+      }
     },
     {
       accessorKey: "status",

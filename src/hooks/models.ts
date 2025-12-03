@@ -2785,7 +2785,8 @@ export interface CreateSalesOrderRequest {
   items: { code: string; quantity: number; note?: string }[]
   storage: "position_HaNam" | "position_MKT"
   date: Date
-  discount?: number
+  orderDiscount?: number
+  otherDiscount?: number
   deposit?: number
 }
 
@@ -2814,7 +2815,8 @@ export interface CreateSalesOrderResponse {
   tax?: number
   shippingCost?: number
   deposit?: number
-  discount?: number
+  orderDiscount?: number
+  otherDiscount?: number
   status: "draft" | "official"
   phoneNumber: string
   address: string
@@ -2833,7 +2835,8 @@ export interface UpdateSalesOrderItemsRequest {
     quantity: number
     note?: string
   }[]
-  discount?: number
+  orderDiscount?: number
+  otherDiscount?: number
   deposit?: number
 }
 
@@ -2890,7 +2893,8 @@ export interface UpdateSalesOrderItemsResponse {
   tax?: number
   shippingCost?: number
   deposit?: number
-  discount?: number
+  orderDiscount?: number
+  otherDiscount?: number
   status: "draft" | "official"
   phoneNumber: string
   address: string
@@ -3029,7 +3033,8 @@ export interface GetSalesOrderByIdResponse {
   cost?: number
   date: string
   total: number
-  discount?: number
+  orderDiscount?: number
+  otherDiscount?: number
   deposit?: number
   tax?: number
   shippingCost?: number
@@ -3127,7 +3132,8 @@ export interface SearchSalesOrderResponse {
     cost?: number
     date: string
     total: number
-    discount?: number
+    orderDiscount?: number
+    otherDiscount?: number
     deposit?: number
     status: "draft" | "official"
     phoneNumber: string
