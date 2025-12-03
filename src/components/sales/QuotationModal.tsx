@@ -99,9 +99,10 @@ export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
       (sum, item) => sum + item.price * item.quantity,
       0
     )
-    const discount = orderData?.data.discount || 0
-    const discountTotal = discount * totalQuantity // Multiply discount by total quantity
-    const subtotalAfterDiscount = subtotal - discountTotal
+    const orderDiscount = orderData?.data.orderDiscount || 0
+    const otherDiscount = orderData?.data.otherDiscount || 0
+    const totalDiscount = orderDiscount + otherDiscount
+    const subtotalAfterDiscount = subtotal - totalDiscount
     const tax = orderData?.data.tax || 0
     const deposit = orderData?.data.deposit || 0
     const totalAmount = subtotalAfterDiscount + tax + shippingCost
@@ -114,15 +115,16 @@ export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
       totalSquareMeters,
       shippingCost,
       subtotal,
-      discount,
-      discountTotal,
+      orderDiscount,
+      otherDiscount,
+      totalDiscount,
       subtotalAfterDiscount,
       tax,
       deposit,
       totalAmount,
       remainingAmount
     }
-  }, [itemsWithExtendedData, orderData?.data])
+  }, [itemsWithExtendedData, orderData?.data, shippingCost])
 
   const handleCaptureScreenshot = async () => {
     if (!contentRef.current) return
@@ -401,12 +403,23 @@ export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
                 </Text>
               </Group>
 
-              <Group justify="space-between">
-                <Text size="xs">Giảm giá:</Text>
-                <Text size="xs" fw={500}>
-                  -{calculations.discountTotal.toLocaleString("vi-VN")}đ
-                </Text>
-              </Group>
+              {calculations.orderDiscount > 0 && (
+                <Group justify="space-between">
+                  <Text size="xs">Chiết khấu đơn hàng:</Text>
+                  <Text size="xs" fw={500} c="orange">
+                    -{calculations.orderDiscount.toLocaleString("vi-VN")}đ
+                  </Text>
+                </Group>
+              )}
+
+              {calculations.otherDiscount > 0 && (
+                <Group justify="space-between">
+                  <Text size="xs">Chiết khấu 2:</Text>
+                  <Text size="xs" fw={500} c="pink">
+                    -{calculations.otherDiscount.toLocaleString("vi-VN")}đ
+                  </Text>
+                </Group>
+              )}
 
               <Group justify="space-between">
                 <Text size="xs">Thuế (0.75%):</Text>

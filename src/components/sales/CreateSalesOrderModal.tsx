@@ -27,7 +27,8 @@ type CreateSalesOrderFormData = {
   salesFunnelId: string
   storage: "position_HaNam" | "position_MKT"
   date: Date
-  discount?: number
+  orderDiscount?: number
+  otherDiscount?: number
   deposit?: number
   // New customer info
   isNewCustomer?: boolean
@@ -50,7 +51,8 @@ type CreateSalesOrderModalProps = {
   onSuccess: () => void
   salesFunnelId?: string
   initialItems?: { code: string; quantity: number }[]
-  initialDiscount?: number
+  initialOrderDiscount?: number
+  initialOtherDiscount?: number
   initialDeposit?: number
 }
 
@@ -58,7 +60,8 @@ export const CreateSalesOrderModal = ({
   onSuccess,
   salesFunnelId,
   initialItems,
-  initialDiscount,
+  initialOrderDiscount,
+  initialOtherDiscount,
   initialDeposit
 }: CreateSalesOrderModalProps) => {
   const { createSalesOrder } = useSalesOrders()
@@ -85,7 +88,8 @@ export const CreateSalesOrderModal = ({
       salesFunnelId: salesFunnelId || "",
       storage: "position_HaNam",
       date: new Date(),
-      discount: initialDiscount ?? 0,
+      orderDiscount: initialOrderDiscount ?? 0,
+      otherDiscount: initialOtherDiscount ?? 0,
       deposit: initialDeposit ?? 0,
       isNewCustomer: false,
       newCustomerName: "",
@@ -174,7 +178,8 @@ export const CreateSalesOrderModal = ({
         items: validItems,
         storage: data.storage,
         date: data.date,
-        discount: data.discount,
+        orderDiscount: data.orderDiscount,
+        otherDiscount: data.otherDiscount,
         deposit: data.deposit
       })
     },
@@ -488,26 +493,55 @@ export const CreateSalesOrderModal = ({
       />
 
       <Controller
-        name="discount"
+        name="orderDiscount"
         control={control}
         render={({ field }) => (
           <NumberInput
             {...field}
             label={
               <Text fw={700} size="md" c="orange">
-                Chiết khấu mỗi thùng
+                Chiết khấu đơn hàng
               </Text>
             }
-            placeholder="Nhập số tiền chiết khấu mỗi thùng"
-            description="Số tiền chiết khấu cho mỗi thùng hàng (sẽ nhân với tổng số lượng)"
-            error={errors.discount?.message}
+            placeholder="Nhập số tiền chiết khấu đơn hàng"
+            description="Số tiền chiết khấu áp dụng trực tiếp cho đơn hàng"
+            error={errors.orderDiscount?.message}
             mb="md"
             min={0}
             thousandSeparator=","
-            suffix=" đ/thùng"
+            suffix=" đ"
             styles={{
               input: {
                 borderColor: "orange",
+                borderWidth: 2,
+                fontWeight: 600
+              }
+            }}
+          />
+        )}
+      />
+
+      <Controller
+        name="otherDiscount"
+        control={control}
+        render={({ field }) => (
+          <NumberInput
+            {...field}
+            label={
+              <Text fw={700} size="md" c="pink">
+                Chiết khấu 2
+              </Text>
+            }
+            placeholder="Nhập số tiền chiết khấu 2"
+            description="Chiết khấu bổ sung (khuyến mãi, voucher,...)"
+            error={errors.otherDiscount?.message}
+            mb="md"
+            min={0}
+            thousandSeparator=","
+            suffix=" đ"
+            styles={{
+              input: {
+                borderColor: "pink",
                 borderWidth: 2,
                 fontWeight: 600
               }
