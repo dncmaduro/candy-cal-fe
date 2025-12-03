@@ -85,6 +85,11 @@ npm run routes    # Generate router tree
 
 ## 7. Lịch sử cập nhật
 
+### 4.0.1
+
+- Cập nhật logic phí vận chuyển, chiết khấu 2 level
+- Cho phép chọn ngày khi tạo báo cáo
+
 ### 4.0.0
 
 - **Module Sales (Telesales)**: Hệ thống quản lý bán hàng telesales hoàn chỉnh với 8 màn hình chính:

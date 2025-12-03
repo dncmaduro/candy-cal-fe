@@ -88,7 +88,9 @@ export const ConvertToOfficialModal = ({
   }
 
   const applyShipping = () => {
-    setValue("shippingCost", Math.ceil(weight) * 5000)
+    // Nếu khối lượng < 10kg thì 45k, >= 10kg thì 5k/kg (không làm tròn khối lượng)
+    const shippingCost = weight < 10 ? 45000 : weight * 5000
+    setValue("shippingCost", Math.round(shippingCost))
   }
 
   return (
@@ -175,6 +177,11 @@ export const ConvertToOfficialModal = ({
             {...field}
             label="Phí vận chuyển"
             placeholder="Nhập phí vận chuyển"
+            description={
+              weight < 10
+                ? `Khối lượng ${weight.toFixed(2)}kg < 10kg → Phí cố định 45.000đ`
+                : `Khối lượng ${weight.toFixed(2)}kg ≥ 10kg → ${weight.toFixed(2)}kg × 5.000đ = ${(weight * 5000).toLocaleString("vi-VN")}đ`
+            }
             error={errors.shippingCost?.message}
             mb="md"
             min={0}
@@ -184,7 +191,7 @@ export const ConvertToOfficialModal = ({
               section: {
                 display: "flex",
                 justifyContent: "space-between",
-                width: "85px"
+                width: "100px"
               }
             }}
             rightSection={
@@ -195,7 +202,7 @@ export const ConvertToOfficialModal = ({
                   variant="light"
                   onClick={() => applyShipping()}
                 >
-                  Phí 5k/kg
+                  Áp dụng
                 </Button>
               </>
             }
