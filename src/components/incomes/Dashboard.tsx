@@ -250,17 +250,9 @@ export const Dashboard = () => {
     mode
   )
 
-  // For ads ratio calculation, always use beforeDiscount values
-  const liveVideoBeforeDiscount = pickMode<{ live: number; shop: number }>(
-    liveVideoIncomeMonthData?.totalIncome,
-    "beforeDiscount"
-  )
-
   // Only use the selected mode values — the backend now nests live/video under beforeDiscount/afterDiscount
   const monthlyLiveIncome = liveVideoSelected?.live
   const monthlyShopIncome = liveVideoSelected?.shop
-  const monthlyLiveIncomeBeforeDiscount = liveVideoBeforeDiscount?.live
-  const monthlyShopIncomeBeforeDiscount = liveVideoBeforeDiscount?.shop
 
   const adsCostSelected = pickMode<{
     liveAdsCost: number
@@ -273,12 +265,9 @@ export const Dashboard = () => {
     typeof n === "number" ? n.toLocaleString() : "..."
 
   // Calculate ads ratio based on beforeDiscount revenue
-  const calculateAdsRatio = (
-    adsCost: number,
-    revenueBeforeDiscount: number
-  ) => {
-    if (!revenueBeforeDiscount || revenueBeforeDiscount <= 0) return 0
-    return (adsCost / revenueBeforeDiscount) * 100
+  const calculateAdsRatio = (adsCost: number, revenue: number) => {
+    if (!revenue || revenue <= 0) return 0
+    return (adsCost / revenue) * 100
   }
 
   return (
@@ -596,7 +585,7 @@ export const Dashboard = () => {
                     value={fmtPercent(
                       calculateAdsRatio(
                         monthlyLiveAdsCost || 0,
-                        monthlyLiveIncomeBeforeDiscount || 0
+                        monthlyLiveIncome || 0
                       )
                     )}
                     color="indigo"
@@ -667,7 +656,7 @@ export const Dashboard = () => {
                     value={fmtPercent(
                       calculateAdsRatio(
                         monthlyShopAdsCost || 0,
-                        monthlyShopIncomeBeforeDiscount || 0
+                        monthlyShopIncome || 0
                       )
                     )}
                     color="grape"
@@ -777,8 +766,7 @@ export const Dashboard = () => {
                     value={fmtPercent(
                       calculateAdsRatio(
                         (monthlyLiveAdsCost || 0) + (monthlyShopAdsCost || 0),
-                        (monthlyLiveIncomeBeforeDiscount || 0) +
-                          (monthlyShopIncomeBeforeDiscount || 0)
+                        (monthlyLiveIncome || 0) + (monthlyShopIncome || 0)
                       )
                     )}
                     color="dark"
