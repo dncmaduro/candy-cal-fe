@@ -301,12 +301,6 @@ function RouteComponent() {
                   </div>
                   <div>
                     <Text size="sm" c="dimmed">
-                      Tên tiếng Trung
-                    </Text>
-                    <Text fw={500}>{item.name.cn}</Text>
-                  </div>
-                  <div>
-                    <Text size="sm" c="dimmed">
                       Giá bán
                     </Text>
                     <Text fw={600} size="lg" c="blue">
