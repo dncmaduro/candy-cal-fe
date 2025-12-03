@@ -878,7 +878,10 @@ function RouteComponent() {
                     <Group justify="space-between">
                       <Text size="sm">
                         Phí vận chuyển (
-                        {enhancedCalculations.totalWeight.toFixed(1)} kg):
+                        {enhancedCalculations.totalWeight < 10
+                          ? "45k"
+                          : `5k/kg`}
+                        ):
                       </Text>
                       <Text size="sm">
                         {order.shippingCost?.toLocaleString("vi-VN")}đ

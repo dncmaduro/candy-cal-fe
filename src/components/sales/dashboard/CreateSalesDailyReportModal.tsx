@@ -413,7 +413,6 @@ export const CreateSalesDailyReportModal = () => {
                       placeholder="Chọn ngày"
                       valueFormat="DD/MM/YYYY"
                       required
-                      readOnly={!isAdmin}
                       size="sm"
                       withAsterisk
                     />
