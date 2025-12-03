@@ -3413,7 +3413,6 @@ export interface CreateSalesItemRequest {
   code: string
   name: {
     vn: string
-    cn: string
   }
   size?: string
   area?: number
@@ -3430,7 +3429,6 @@ export interface CreateSalesItemResponse {
   code: string
   name: {
     vn: string
-    cn: string
   }
   size?: string
   area?: number
@@ -3447,7 +3445,6 @@ export interface CreateSalesItemResponse {
 export interface UpdateSalesItemRequest {
   name?: {
     vn: string
-    cn: string
   }
   size?: string
   area?: number
@@ -3464,7 +3461,6 @@ export interface UpdateSalesItemResponse {
   code: string
   name: {
     vn: string
-    cn: string
   }
   size?: string
   area?: number
@@ -3493,7 +3489,6 @@ export interface GetSalesItemDetailResponse {
   code: string
   name: {
     vn: string
-    cn: string
   }
   size?: string
   area?: number
