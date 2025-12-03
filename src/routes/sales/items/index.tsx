@@ -160,15 +160,6 @@ function RouteComponent() {
       )
     },
     {
-      accessorKey: "name.cn",
-      header: "Tên (CN)",
-      cell: ({ row }) => (
-        <Text size="sm" lineClamp={2}>
-          {row.original.name.cn}
-        </Text>
-      )
-    },
-    {
       accessorKey: "size",
       header: "Kích thước",
       cell: ({ row }) => <Text size="sm">{row.original.size || "-"}</Text>

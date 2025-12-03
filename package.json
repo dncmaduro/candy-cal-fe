@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "routes": "npx @tanstack/router-cli generate",
-    "up:staging": "docker buildx build --platform linux/amd64 -f Dockerfile.staging -t gunnyrealer9/candy-cal-fe:staging $(grep -E '^VITE_' .env.staging | sed 's/^/--build-arg /') --push ."
+    "up:staging": "docker buildx build --platform linux/amd64 -f Dockerfile.staging -t gunnyrealer9/candy-cal-fe:staging $(grep -E '^VITE_' .env.staging | sed 's/^/--build-arg /') --push .",
+    "prepare": "husky"
   },
   "dependencies": {
     "@mantine/carousel": "^7.17.2",
