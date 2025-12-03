@@ -23,7 +23,8 @@ type ItemInput = {
 type UpdateOrderItemsModalProps = {
   orderId: string
   currentItems: { code: string; quantity: number }[]
-  currentDiscount?: number
+  currentOrderDiscount?: number
+  currentOtherDiscount?: number
   currentDeposit?: number
   onSuccess: () => void
 }
@@ -31,7 +32,8 @@ type UpdateOrderItemsModalProps = {
 export const UpdateOrderItemsModal = ({
   orderId,
   currentItems,
-  currentDiscount,
+  currentOrderDiscount,
+  currentOtherDiscount,
   currentDeposit,
   onSuccess
 }: UpdateOrderItemsModalProps) => {
@@ -43,7 +45,12 @@ export const UpdateOrderItemsModal = ({
       ? currentItems
       : [{ code: "", quantity: 1, note: "" }]
   )
-  const [discount, setDiscount] = useState<number>(currentDiscount || 0)
+  const [orderDiscount, setOrderDiscount] = useState<number>(
+    currentOrderDiscount || 0
+  )
+  const [otherDiscount, setOtherDiscount] = useState<number>(
+    currentOtherDiscount || 0
+  )
   const [deposit, setDeposit] = useState<number>(currentDeposit || 0)
 
   const { handleSubmit } = useForm()
@@ -69,7 +76,8 @@ export const UpdateOrderItemsModal = ({
 
       return updateSalesOrderItems(orderId, {
         items: validItems,
-        discount: discount,
+        orderDiscount: orderDiscount,
+        otherDiscount: otherDiscount,
         deposit: deposit
       })
     },
@@ -114,39 +122,56 @@ export const UpdateOrderItemsModal = ({
       label: `${item.code} - ${item.name.vn}`
     })) || []
 
-  const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0)
-  const totalDiscount = discount * totalQuantity
-
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <NumberInput
         label={
           <Text fw={700} size="md" c="orange">
-            Chiết khấu mỗi thùng
+            Chiết khấu đơn hàng
           </Text>
         }
-        placeholder="Nhập số tiền chiết khấu mỗi thùng"
+        placeholder="Nhập số tiền chiết khấu đơn hàng"
         description={
           <Text size="xs" c="dimmed">
-            Số tiền chiết khấu cho mỗi thùng hàng • Tổng số lượng:{" "}
-            <Text component="span" fw={600} c="blue">
-              {totalQuantity} thùng
-            </Text>{" "}
-            • Tổng chiết khấu:{" "}
-            <Text component="span" fw={700} c="orange">
-              {totalDiscount.toLocaleString("vi-VN")}đ
-            </Text>
+            Số tiền chiết khấu áp dụng trực tiếp cho đơn hàng
           </Text>
         }
-        value={discount}
-        onChange={(value) => setDiscount(Number(value) || 0)}
+        value={orderDiscount}
+        onChange={(value) => setOrderDiscount(Number(value) || 0)}
         mb="md"
         min={0}
         thousandSeparator=","
-        suffix=" đ/thùng"
+        suffix=" đ"
         styles={{
           input: {
             borderColor: "orange",
+            borderWidth: 2,
+            fontWeight: 600
+          }
+        }}
+      />
+
+      <NumberInput
+        label={
+          <Text fw={700} size="md" c="pink">
+            Chiết khấu 2
+          </Text>
+        }
+        placeholder="Nhập số tiền chiết khấu 2"
+        description={
+          <Text size="xs" c="dimmed">
+            Chiết khấu bổ sung (khuyến mãi, voucher,...)
+          </Text>
+        }
+        value={otherDiscount}
+        onChange={(value) => setOtherDiscount(Number(value) || 0)}
+        mb="md"
+        min={0}
+        thousandSeparator=","
+        suffix=" đ"
+        styles={{
+          input: {
+            borderColor: "pink",
             borderWidth: 2,
             fontWeight: 600
           }

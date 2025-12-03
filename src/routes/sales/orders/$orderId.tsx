@@ -167,9 +167,10 @@ function RouteComponent() {
       0
     )
 
-    const discount = order?.discount || 0
-    const discountTotal = discount * totalQuantity
-    const subtotalAfterDiscount = subtotal - discountTotal
+    const orderDiscount = order?.orderDiscount || 0
+    const otherDiscount = order?.otherDiscount || 0
+    const totalDiscount = orderDiscount + otherDiscount
+    const subtotalAfterDiscount = subtotal - totalDiscount
 
     const shippingCost = order?.shippingCost || 0
     const tax = order?.tax || 0
@@ -183,8 +184,9 @@ function RouteComponent() {
       totalWeight,
       totalSquareMeters,
       subtotal,
-      discount,
-      discountTotal,
+      orderDiscount,
+      otherDiscount,
+      totalDiscount,
       subtotalAfterDiscount,
       shippingCost,
       tax,
@@ -194,7 +196,8 @@ function RouteComponent() {
     }
   }, [
     extendedItems,
-    order?.discount,
+    order?.orderDiscount,
+    order?.otherDiscount,
     order?.tax,
     order?.deposit,
     order?.shippingCost
@@ -354,7 +357,8 @@ function RouteComponent() {
             quantity: si.quantity,
             note: si.note
           }))}
-          currentDiscount={order.discount}
+          currentOrderDiscount={order.orderDiscount}
+          currentOtherDiscount={order.otherDiscount}
           currentDeposit={order.deposit}
           onSuccess={() => {
             refetch()
@@ -408,7 +412,8 @@ function RouteComponent() {
               quantity: item.quantity
             }))
           ),
-          discount: order.discount?.toString(),
+          orderDiscount: order.orderDiscount?.toString(),
+          otherDiscount: order.otherDiscount?.toString(),
           deposit: order.deposit?.toString()
         }
       })
@@ -844,18 +849,25 @@ function RouteComponent() {
                       </Text>
                     </Group>
 
-                    {enhancedCalculations.discount > 0 && (
+                    {enhancedCalculations.orderDiscount > 0 && (
                       <Group justify="space-between">
-                        <Text size="sm">
-                          Chiết khấu (
-                          {enhancedCalculations.discount.toLocaleString(
+                        <Text size="sm">Chiết khấu đơn hàng:</Text>
+                        <Text size="sm" c="orange" fw={500}>
+                          -
+                          {enhancedCalculations.orderDiscount.toLocaleString(
                             "vi-VN"
                           )}
-                          đ/thùng × {enhancedCalculations.totalQuantity} thùng):
+                          đ
                         </Text>
-                        <Text size="sm">
+                      </Group>
+                    )}
+
+                    {enhancedCalculations.otherDiscount > 0 && (
+                      <Group justify="space-between">
+                        <Text size="sm">Chiết khấu 2:</Text>
+                        <Text size="sm" c="pink" fw={500}>
                           -
-                          {enhancedCalculations.discountTotal.toLocaleString(
+                          {enhancedCalculations.otherDiscount.toLocaleString(
                             "vi-VN"
                           )}
                           đ
