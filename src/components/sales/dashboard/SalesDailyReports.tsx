@@ -7,7 +7,6 @@ import {
   rem,
   Button,
   Select,
-  Switch,
   Text,
   ActionIcon,
   Tooltip,
@@ -59,7 +58,7 @@ export const SalesDailyReports = () => {
   const [month, setMonth] = useState<string>(String(currentDate.getMonth() + 1))
   const [year, setYear] = useState<string>(String(currentDate.getFullYear()))
   const [channelId, setChannelId] = useState<string>("")
-  const [showDeleted, setShowDeleted] = useState(false)
+  const [showDeleted] = useState(false)
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(10)
 
@@ -373,7 +372,7 @@ export const SalesDailyReports = () => {
                   clearable
                 />
               )}
-              <Switch
+              {/* <Switch
                 label="Hiển thị đã xoá"
                 checked={showDeleted}
                 onChange={(event) => {
@@ -381,7 +380,7 @@ export const SalesDailyReports = () => {
                   setPage(1)
                 }}
                 mt="xl"
-              />
+              /> */}
             </>
           }
           extraActions={

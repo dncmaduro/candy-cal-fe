@@ -2433,6 +2433,7 @@ export interface CreateLeadResponse {
   fromSystem?: boolean
   createdAt: string
   updatedAt: string
+  deletedAt?: string
 }
 
 /** @interface */
@@ -2472,6 +2473,7 @@ export interface MoveToContactedResponse {
   fromSystem?: boolean
   createdAt: string
   updatedAt: string
+  deletedAt?: string
 }
 
 /** @interface */
@@ -2522,6 +2524,7 @@ export interface UpdateFunnelInfoResponse {
   fromSystem?: boolean
   createdAt: string
   updatedAt: string
+  deletedAt?: string
 }
 
 /** @interface */
@@ -2560,6 +2563,7 @@ export interface GetFunnelByIdResponse {
   fromSystem?: boolean
   createdAt: string
   updatedAt: string
+  deletedAt?: string
 }
 
 /** @interface */
@@ -2572,6 +2576,7 @@ export interface SearchFunnelRequest {
   searchText?: string
   noActivityDays?: number
   funnelSource?: "ads" | "seeding" | "referral"
+  deleted?: boolean
   page: number
   limit: number
 }
@@ -2608,6 +2613,7 @@ export interface SearchFunnelResponse {
     fromSystem?: boolean
     createdAt: string
     updatedAt: string
+    deletedAt?: string
   }[]
   total: number
 }
@@ -2648,6 +2654,7 @@ export interface GetSalesFunnelByPsidResponse {
   fromSystem?: boolean
   createdAt: string
   updatedAt: string
+  deletedAt?: string
 }
 
 /** @interface */
@@ -2687,6 +2694,7 @@ export interface UpdateFunnelCostResponse {
   fromSystem?: boolean
   createdAt: string
   updatedAt: string
+  deletedAt?: string
 }
 
 /** @interface */
@@ -2725,6 +2733,7 @@ export interface UpdateFunnelResponsibleUserResponse {
   fromSystem?: boolean
   createdAt: string
   updatedAt: string
+  deletedAt?: string
 }
 
 /** @interface */
@@ -2775,7 +2784,16 @@ export interface GetFunnelByUserResponse {
     fromSystem?: boolean
     createdAt: string
     updatedAt: string
+    deletedAt?: string
   }[]
+}
+
+export interface DeleteFunnelRequest {
+  id: string
+}
+
+export interface RestoreFunnelRequest {
+  id: string
 }
 
 // -------------------- SALES ORDERS --------------------

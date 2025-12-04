@@ -8,7 +8,8 @@ import {
   Text,
   Select,
   ActionIcon,
-  Tooltip
+  Tooltip,
+  Switch
 } from "@mantine/core"
 import { useQuery } from "@tanstack/react-query"
 import { useMemo, useState, useEffect } from "react"
@@ -22,7 +23,8 @@ import {
   IconCash,
   IconFileUpload,
   IconHistory,
-  IconChecklist
+  IconChecklist,
+  IconTrash
 } from "@tabler/icons-react"
 import { SalesLayout } from "../../../components/layouts/SalesLayout"
 import { Can } from "../../../components/common/Can"
@@ -39,6 +41,8 @@ import { UploadFunnelsModal } from "../../../components/sales/UploadFunnelsModal
 import { SalesActivitiesDrawer } from "../../../components/sales/SalesActivitiesDrawer"
 import { CreateTaskModal } from "../../../components/sales/CreateTaskModal"
 import { ColumnDef } from "@tanstack/react-table"
+import { useMutation } from "@tanstack/react-query"
+import { notifications } from "@mantine/notifications"
 // import { useMetaServices } from "../../../hooks/useMetaServices"
 
 export const Route = createFileRoute("/sales/funnel/")({
@@ -75,6 +79,7 @@ type FunnelItem = {
   funnelSource: "ads" | "seeding" | "referral"
   createdAt: string
   updatedAt: string
+  deletedAt?: string
 }
 
 const STAGE_BADGE_COLOR: Record<string, string> = {
@@ -105,7 +110,7 @@ const RANK_COLORS: Record<string, string> = {
 
 function RouteComponent() {
   const navigate = useNavigate()
-  const { searchFunnel } = useSalesFunnel()
+  const { searchFunnel, deleteFunnel } = useSalesFunnel()
   const { getProvinces } = useProvinces()
   const { publicSearchUser, getMe } = useUsers()
   const { searchSalesChannels, getMyChannel } = useSalesChannels()
@@ -126,6 +131,7 @@ function RouteComponent() {
   const [funnelSourceFilter, setFunnelSourceFilter] = useState<
     "ads" | "seeding" | "referral" | undefined
   >(undefined)
+  const [showDeleted, setShowDeleted] = useState(false)
 
   // const { mutate: goToMessage } = useMutation({
   //   mutationFn: async (psid: string) => {
@@ -178,7 +184,8 @@ function RouteComponent() {
       userFilter,
       rankFilter,
       noActivityDaysFilter,
-      funnelSourceFilter
+      funnelSourceFilter,
+      showDeleted
     ],
     queryFn: () =>
       searchFunnel({
@@ -197,7 +204,8 @@ function RouteComponent() {
         noActivityDays: noActivityDaysFilter
           ? Number(noActivityDaysFilter)
           : undefined,
-        funnelSource: funnelSourceFilter
+        funnelSource: funnelSourceFilter,
+        deleted: showDeleted
       })
   })
 
@@ -344,6 +352,40 @@ function RouteComponent() {
     })
   }
 
+  const { mutate: handleDeleteFunnel, isPending: isDeleting } = useMutation({
+    mutationFn: (id: string) => deleteFunnel({ id }),
+    onSuccess: () => {
+      notifications.show({
+        title: "Thành công",
+        message: "Xóa funnel thành công",
+        color: "green"
+      })
+      refetch()
+    },
+    onError: () => {
+      notifications.show({
+        title: "Lỗi",
+        message: "Xóa funnel thất bại",
+        color: "red"
+      })
+    }
+  })
+
+  const confirmDelete = (id: string, name: string) => {
+    modals.openConfirmModal({
+      title: <b>Xác nhận xóa</b>,
+      children: (
+        <Text size="sm">
+          Bạn có chắc chắn muốn xóa funnel <b>{name}</b> không? Hành động này
+          không thể hoàn tác.
+        </Text>
+      ),
+      labels: { confirm: "Xóa", cancel: "Hủy" },
+      confirmProps: { color: "red" },
+      onConfirm: () => handleDeleteFunnel(id)
+    })
+  }
+
   // const handleSendMessage = (item: EnrichedFunnelItem) => {
   //   goToMessage(item.psid)
   // }
@@ -385,7 +427,7 @@ function RouteComponent() {
       accessorKey: "name",
       header: "Tên",
       cell: ({ row }) => (
-        <Text fw={500} size="sm">
+        <Text fw={500} size="sm" c={row.original.deletedAt ? "red" : undefined}>
           {row.original.name}
         </Text>
       )
@@ -528,6 +570,22 @@ function RouteComponent() {
                 <IconCash size={16} />
               </ActionIcon>
             </Tooltip>
+            {(isAdmin || isSalesLeader) && (
+              <Tooltip label="Xóa funnel" withArrow>
+                <ActionIcon
+                  variant="light"
+                  color="red"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    confirmDelete(item._id, item.name)
+                  }}
+                  loading={isDeleting}
+                >
+                  <IconTrash size={16} />
+                </ActionIcon>
+              </Tooltip>
+            )}
             {/* <Tooltip label="Nhắn tin" withArrow>
               <ActionIcon
                 variant="light"
@@ -716,6 +774,16 @@ function RouteComponent() {
                   }
                   clearable
                   style={{ width: 180 }}
+                />
+
+                <Switch
+                  label="Hiển thị đã xóa"
+                  checked={showDeleted}
+                  onChange={(event) =>
+                    setShowDeleted(event.currentTarget.checked)
+                  }
+                  color="red"
+                  styles={{ body: { alignItems: "center" } }}
                 />
               </>
             }

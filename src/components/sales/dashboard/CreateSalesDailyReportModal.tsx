@@ -175,7 +175,7 @@ export const CreateSalesDailyReportModal = () => {
   const { control, handleSubmit, watch, setValue } =
     useForm<CreateSalesDailyReportRequest>({
       defaultValues: {
-        date: new Date(),
+        date: new Date(new Date().setHours(0, 0, 0, 0)),
         channel: "",
         adsCost: 0,
         dateKpi: 0,
