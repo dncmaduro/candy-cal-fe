@@ -5,6 +5,7 @@ import {
   CheckPermissionOnFunnelResponse,
   CreateLeadRequest,
   CreateLeadResponse,
+  DeleteFunnelRequest,
   GetFunnelByIdRequest,
   GetFunnelByIdResponse,
   GetFunnelByUserRequest,
@@ -13,6 +14,7 @@ import {
   GetSalesFunnelByPsidResponse,
   MoveToContactedRequest,
   MoveToContactedResponse,
+  RestoreFunnelRequest,
   SearchFunnelRequest,
   SearchFunnelResponse,
   UpdateFunnelCostRequest,
@@ -166,6 +168,22 @@ export const useSalesFunnel = () => {
     })
   }
 
+  const deleteFunnel = async (req: DeleteFunnelRequest) => {
+    return callApi<never, never>({
+      path: `/v1/salesfunnel/${req.id}/delete`,
+      method: "PATCH",
+      token: accessToken
+    })
+  }
+
+  const restoreFunnel = async (req: RestoreFunnelRequest) => {
+    return callApi<never, never>({
+      path: `/v1/salesfunnel/${req.id}/restore`,
+      method: "PATCH",
+      token: accessToken
+    })
+  }
+
   return {
     createLead,
     moveToContacted,
@@ -179,6 +197,8 @@ export const useSalesFunnel = () => {
     checkPermissionOnFunnel,
     uploadFunnelsByXlsx,
     downloadFunnelTemplate,
-    getFunnelByUser
+    getFunnelByUser,
+    deleteFunnel,
+    restoreFunnel
   }
 }
