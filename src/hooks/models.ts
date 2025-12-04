@@ -2550,6 +2550,7 @@ export interface GetFunnelByIdResponse {
   }
   user: {
     _id: string
+    username: string
     name: string
   }
   hasBuyed: boolean

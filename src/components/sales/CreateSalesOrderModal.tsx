@@ -245,7 +245,7 @@ export const CreateSalesOrderModal = ({
   const funnelOptions =
     funnelData?.data.data.map((item) => ({
       value: item._id,
-      label: `${item.name}${item.phoneNumber ? ` - ${item.phoneNumber}` : ""}`
+      label: `${item.stage === "closed" ? "[ĐÃ ĐÓNG]" : ""}${item.name}${item.phoneNumber ? ` - ${item.phoneNumber}` : ""}`
     })) || []
 
   const salesItemOptions =
@@ -307,7 +307,6 @@ export const CreateSalesOrderModal = ({
               data={funnelOptions}
               searchable
               required={!watchIsNewCustomer}
-              readOnly={!!salesFunnelId}
               error={errors.salesFunnelId?.message}
               mb="md"
             />
