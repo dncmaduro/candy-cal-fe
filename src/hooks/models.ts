@@ -3065,6 +3065,7 @@ export interface SearchSalesOrderRequest {
   shippingType?: "shipping_vtp" | "shipping_cargo"
   status?: "draft" | "official"
   rank?: "gold" | "silver" | "bronze"
+  channelId?: string
   page: number
   limit: number
 }
