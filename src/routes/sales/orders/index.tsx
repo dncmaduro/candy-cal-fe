@@ -34,6 +34,7 @@ import { UpdateOrderItemsModal } from "../../../components/sales/UpdateOrderItem
 import { UploadSalesOrdersModal } from "../../../components/sales/UploadSalesOrdersModal"
 import { CToast } from "../../../components/common/CToast"
 import { SearchSalesOrderResponse } from "../../../hooks/models"
+import { useSalesChannels } from "../../../hooks/useSalesChannels"
 
 export const Route = createFileRoute("/sales/orders/")({
   component: RouteComponent,
@@ -59,6 +60,7 @@ function RouteComponent() {
     useSalesOrders()
   const { searchFunnel, getFunnelByUser } = useSalesFunnel()
   const { getMe } = useUsers()
+  const { searchSalesChannels } = useSalesChannels()
 
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(10)
@@ -70,11 +72,17 @@ function RouteComponent() {
   const [startDate, setStartDate] = useState<Date | null>(null)
   const [endDate, setEndDate] = useState<Date | null>(null)
   const [userIdFilter, setUserIdFilter] = useState<string>("")
+  const [channelIdFilter, setChannelIdFilter] = useState<string>("")
 
   // Get current user info
   const { data: meData } = useQuery({
     queryKey: ["getMe"],
     queryFn: getMe
+  })
+
+  const { data: channelsData } = useQuery({
+    queryKey: ["salesChannels", "all"],
+    queryFn: () => searchSalesChannels({ page: 1, limit: 999 })
   })
 
   const me = meData?.data
@@ -127,7 +135,8 @@ function RouteComponent() {
       statusFilter,
       startDate,
       endDate,
-      userIdFilter
+      userIdFilter,
+      channelIdFilter
     ],
     queryFn: () =>
       searchSalesOrders({
@@ -147,7 +156,8 @@ function RouteComponent() {
             : (statusFilter as "draft" | "official"),
         startDate: startDate ? format(startDate, "yyyy-MM-dd") : undefined,
         endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
-        userId: userIdFilter || undefined
+        userId: userIdFilter || undefined,
+        channelId: channelIdFilter || undefined
       })
   })
 
@@ -204,6 +214,12 @@ function RouteComponent() {
     search.discount,
     search.deposit
   ])
+
+  const channelOptions =
+    channelsData?.data.data.map((channel) => ({
+      value: channel._id,
+      label: channel.channelName
+    })) || []
 
   const handleCreateOrder = (
     funnelId?: string,
@@ -539,6 +555,20 @@ function RouteComponent() {
                   onChange={(value) => setStatusFilter(value || "")}
                   clearable
                   style={{ width: 180 }}
+                />
+
+                <Select
+                  label="Kênh"
+                  placeholder="Tất cả kênh"
+                  data={[
+                    { value: "", label: "Tất cả kênh" },
+                    ...channelOptions
+                  ]}
+                  value={channelIdFilter}
+                  onChange={(value) => setChannelIdFilter(value || "")}
+                  searchable
+                  clearable
+                  style={{ width: 200 }}
                 />
 
                 <DatePickerInput
