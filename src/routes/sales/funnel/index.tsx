@@ -17,7 +17,6 @@ import { format } from "date-fns"
 import {
   IconPlus,
   IconEdit,
-  IconArrowRight,
   IconProgress,
   // IconMessage,
   IconCash,
@@ -33,7 +32,6 @@ import { useProvinces } from "../../../hooks/useProvinces"
 import { useUsers } from "../../../hooks/useUsers"
 import { useSalesChannels } from "../../../hooks/useSalesChannels"
 import { CreateLeadModal } from "../../../components/sales/CreateLeadModal"
-import { MoveToContactedModal } from "../../../components/sales/MoveToContactedModal"
 import { UpdateStageModal } from "../../../components/sales/UpdateStageModal"
 import { UpdateFunnelInfoModal } from "../../../components/sales/UpdateFunnelInfoModal"
 import { UpdateFunnelCostModal } from "../../../components/sales/UpdateFunnelCostModal"
@@ -244,22 +242,6 @@ function RouteComponent() {
         />
       ),
       size: "md"
-    })
-  }
-
-  const handleMoveToContacted = (funnelId: string) => {
-    modals.open({
-      title: <b>Chuyển sang Đã liên hệ</b>,
-      children: (
-        <MoveToContactedModal
-          funnelId={funnelId}
-          onSuccess={() => {
-            refetch()
-            modals.closeAll()
-          }}
-        />
-      ),
-      size: "lg"
     })
   }
 
@@ -500,18 +482,6 @@ function RouteComponent() {
                   onClick={() => handleCreateTask(item._id, item.name)}
                 >
                   <IconChecklist size={16} />
-                </ActionIcon>
-              </Tooltip>
-            )}
-            {item.stage === "lead" && (
-              <Tooltip label="Chuyển sang Đã liên hệ" withArrow>
-                <ActionIcon
-                  variant="light"
-                  color="cyan"
-                  size="sm"
-                  onClick={() => handleMoveToContacted(item._id)}
-                >
-                  <IconArrowRight size={16} />
                 </ActionIcon>
               </Tooltip>
             )}
