@@ -33,7 +33,11 @@ function RouteComponent() {
   const [limit, setLimit] = useState(10)
   const [searchText, setSearchText] = useState("")
 
-  const { data: channelsData, refetch } = useQuery({
+  const {
+    data: channelsData,
+    refetch,
+    isLoading
+  } = useQuery({
     queryKey: ["searchLivestreamChannels", page, limit, searchText],
     queryFn: () =>
       searchLivestreamChannels({
@@ -199,6 +203,7 @@ function RouteComponent() {
             onPageSizeChange={setLimit}
             initialPageSize={limit}
             pageSizeOptions={[10, 20, 50, 100]}
+            isLoading={isLoading}
             extraActions={
               <Can roles={["admin", "sales-leader"]}>
                 <Button
