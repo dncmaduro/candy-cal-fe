@@ -12,9 +12,10 @@ import {
   Divider,
   ActionIcon,
   Tooltip,
-  Pagination
+  Pagination,
+  Button
 } from "@mantine/core"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useMutation } from "@tanstack/react-query"
 import { format } from "date-fns"
 import {
   IconArrowLeft,
@@ -26,9 +27,11 @@ import {
   IconPlus,
   IconPhone,
   IconMessage,
-  IconDots
+  IconDots,
+  IconTrash
 } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
+import { notifications } from "@mantine/notifications"
 import { useMemo, useEffect, useState } from "react"
 import { ColumnDef } from "@tanstack/react-table"
 import { SalesLayout } from "../../../components/layouts/SalesLayout"
@@ -64,7 +67,8 @@ const STAGE_LABEL: Record<string, string> = {
 function RouteComponent() {
   const { funnelId } = Route.useParams()
   const navigate = useNavigate()
-  const { getFunnelById, checkPermissionOnFunnel } = useSalesFunnel()
+  const { getFunnelById, checkPermissionOnFunnel, deleteFunnel } =
+    useSalesFunnel()
   const { getOrdersByFunnel } = useSalesOrders()
   const { getSalesActivities } = useSalesActivities()
   const { getMe } = useUsers()
@@ -308,6 +312,41 @@ function RouteComponent() {
     })
   }
 
+  const { mutate: handleDeleteFunnel, isPending: isDeleting } = useMutation({
+    mutationFn: (id: string) => deleteFunnel({ id }),
+    onSuccess: () => {
+      notifications.show({
+        title: "Thành công",
+        message: "Xóa funnel thành công",
+        color: "green"
+      })
+      navigate({ to: "/sales/funnel" })
+    },
+    onError: () => {
+      notifications.show({
+        title: "Lỗi",
+        message: "Xóa funnel thất bại",
+        color: "red"
+      })
+    }
+  })
+
+  const confirmDelete = () => {
+    if (!funnel) return
+    modals.openConfirmModal({
+      title: <b>Xác nhận xóa</b>,
+      children: (
+        <Text size="sm">
+          Bạn có chắc chắn muốn xóa funnel <b>{funnel.name}</b> không? Hành động
+          này không thể hoàn tác.
+        </Text>
+      ),
+      labels: { confirm: "Xóa", cancel: "Hủy" },
+      confirmProps: { color: "red" },
+      onConfirm: () => handleDeleteFunnel(funnel._id)
+    })
+  }
+
   if (isCheckingPermission || !funnel) {
     return (
       <SalesLayout>
@@ -353,7 +392,10 @@ function RouteComponent() {
                 <IconArrowLeft size={20} />
               </ActionIcon>
               <div>
-                <Title order={2}>Chi tiết Funnel</Title>
+                <Title order={2} c={funnel.deletedAt ? "red" : undefined}>
+                  Chi tiết Funnel
+                  {funnel.deletedAt && " (Đã xóa)"}
+                </Title>
                 <Text c="dimmed" size="sm">
                   Thông tin chi tiết của khách hàng
                 </Text>
@@ -361,7 +403,7 @@ function RouteComponent() {
             </Group>
             {canPerformActions && (
               <Group>
-                {funnel.stage === "lead" && (
+                {funnel.stage === "lead" && !funnel.deletedAt && (
                   <Tooltip label="Chuyển sang Đã liên hệ" withArrow>
                     <ActionIcon
                       variant="light"
@@ -373,36 +415,53 @@ function RouteComponent() {
                     </ActionIcon>
                   </Tooltip>
                 )}
-                <Tooltip label="Cập nhật thông tin" withArrow>
-                  <ActionIcon
-                    variant="light"
-                    color="indigo"
-                    size="lg"
-                    onClick={handleUpdateInfo}
-                  >
-                    <IconEdit size={20} />
-                  </ActionIcon>
-                </Tooltip>
-                <Tooltip label="Cập nhật giai đoạn" withArrow>
-                  <ActionIcon
-                    variant="light"
-                    color="violet"
-                    size="lg"
-                    onClick={handleUpdateStage}
-                  >
-                    <IconProgress size={20} />
-                  </ActionIcon>
-                </Tooltip>
-                <Tooltip label="Cập nhật chi phí marketing" withArrow>
-                  <ActionIcon
-                    variant="light"
-                    color="yellow"
-                    size="lg"
-                    onClick={handleUpdateCost}
-                  >
-                    <IconCash size={20} />
-                  </ActionIcon>
-                </Tooltip>
+                {!funnel.deletedAt && (
+                  <>
+                    <Tooltip label="Cập nhật thông tin" withArrow>
+                      <ActionIcon
+                        variant="light"
+                        color="indigo"
+                        size="lg"
+                        onClick={handleUpdateInfo}
+                      >
+                        <IconEdit size={20} />
+                      </ActionIcon>
+                    </Tooltip>
+                    <Tooltip label="Cập nhật giai đoạn" withArrow>
+                      <ActionIcon
+                        variant="light"
+                        color="violet"
+                        size="lg"
+                        onClick={handleUpdateStage}
+                      >
+                        <IconProgress size={20} />
+                      </ActionIcon>
+                    </Tooltip>
+                    <Tooltip label="Cập nhật chi phí marketing" withArrow>
+                      <ActionIcon
+                        variant="light"
+                        color="yellow"
+                        size="lg"
+                        onClick={handleUpdateCost}
+                      >
+                        <IconCash size={20} />
+                      </ActionIcon>
+                    </Tooltip>
+                  </>
+                )}
+                {(isAdmin || me?.roles?.includes("sales-leader")) && (
+                  <Tooltip label="Xóa funnel" withArrow>
+                    <Button
+                      variant="light"
+                      color="red"
+                      leftSection={<IconTrash size={18} />}
+                      onClick={confirmDelete}
+                      loading={isDeleting}
+                    >
+                      Xóa
+                    </Button>
+                  </Tooltip>
+                )}
               </Group>
             )}
           </Group>
@@ -534,6 +593,16 @@ function RouteComponent() {
                       {format(new Date(funnel.updatedAt), "dd/MM/yyyy HH:mm")}
                     </Text>
                   </div>
+                  {funnel.deletedAt && (
+                    <div>
+                      <Text size="sm" c="dimmed" mb={4}>
+                        Đã xóa lúc
+                      </Text>
+                      <Text c="red" fw={500}>
+                        {format(new Date(funnel.deletedAt), "dd/MM/yyyy HH:mm")}
+                      </Text>
+                    </div>
+                  )}
                 </Stack>
               </Paper>
             </Grid.Col>
