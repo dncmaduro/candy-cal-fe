@@ -41,7 +41,11 @@ export const SalesKPI = () => {
   const [yearFilter, setYearFilter] = useState<string>("")
   const [channelFilter, setChannelFilter] = useState<string>("")
 
-  const { data: kpisData, refetch } = useQuery({
+  const {
+    data: kpisData,
+    refetch,
+    isLoading
+  } = useQuery({
     queryKey: [
       "getMonthKpis",
       page,
@@ -181,6 +185,7 @@ export const SalesKPI = () => {
           initialPageSize={limit}
           pageSizeOptions={[10, 20, 50]}
           hideSearch
+          isLoading={isLoading}
           onRowClick={(row) => {
             navigate({ to: `/sales/dashboard/kpi/${row.original._id}` })
           }}

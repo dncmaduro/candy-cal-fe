@@ -43,7 +43,7 @@ function RouteComponent() {
   const [debouncedSearchText] = useDebouncedValue(searchText, 500)
 
   // Load sales items data
-  const { data, refetch } = useQuery({
+  const { data, refetch, isLoading } = useQuery({
     queryKey: ["salesItems", page, pageSize, debouncedSearchText],
     queryFn: () =>
       searchSalesItems({
@@ -309,7 +309,7 @@ function RouteComponent() {
           <CDataTable
             columns={columns}
             data={data?.data.data || []}
-            isLoading={!data}
+            isLoading={isLoading}
             page={page}
             totalPages={Math.ceil((data?.data.total || 0) / pageSize)}
             onPageChange={setPage}

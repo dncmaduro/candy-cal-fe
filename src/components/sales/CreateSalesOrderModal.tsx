@@ -87,7 +87,7 @@ export const CreateSalesOrderModal = ({
     defaultValues: {
       salesFunnelId: salesFunnelId || "",
       storage: "position_HaNam",
-      date: new Date(),
+      date: new Date(new Date().setHours(0, 0, 0, 0)),
       orderDiscount: initialOrderDiscount ?? 0,
       otherDiscount: initialOtherDiscount ?? 0,
       deposit: initialDeposit ?? 0,
@@ -101,6 +101,8 @@ export const CreateSalesOrderModal = ({
       fromSystem: false
     }
   })
+
+  console.log(new Date(new Date().setHours(0, 0, 0, 0)))
 
   const watchIsNewCustomer = watch("isNewCustomer")
 
