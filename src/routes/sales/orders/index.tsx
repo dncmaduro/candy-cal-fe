@@ -136,7 +136,7 @@ function RouteComponent() {
   })
 
   // Load orders data with filters
-  const { data, refetch } = useQuery({
+  const { data, refetch, isLoading } = useQuery({
     queryKey: [
       "salesOrders",
       page,
@@ -509,6 +509,7 @@ function RouteComponent() {
             onPageSizeChange={setLimit}
             initialPageSize={limit}
             pageSizeOptions={[10, 20, 50, 100]}
+            isLoading={isLoading}
             onRowClick={(row) =>
               navigate({ to: `/sales/orders/${row.original._id}` })
             }
