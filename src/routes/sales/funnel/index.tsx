@@ -108,7 +108,7 @@ function RouteComponent() {
   const { searchFunnel } = useSalesFunnel()
   const { getProvinces } = useProvinces()
   const { publicSearchUser, getMe } = useUsers()
-  const { searchSalesChannels } = useSalesChannels()
+  const { searchSalesChannels, getMyChannel } = useSalesChannels()
   // const { getConversationIdByPsid } = useMetaServices()
 
   const [page, setPage] = useState(1)
@@ -156,6 +156,13 @@ function RouteComponent() {
   const { data: usersData } = useQuery({
     queryKey: ["users", "public", "all"],
     queryFn: () => publicSearchUser({ page: 1, limit: 999 })
+  })
+
+  const { data: myChannelData } = useQuery({
+    queryKey: ["getMyChannel"],
+    queryFn: getMyChannel,
+    select: (data) => data.data,
+    enabled: !!meData?.data
   })
 
   // Load funnel data with filters
@@ -214,6 +221,12 @@ function RouteComponent() {
       value: user._id,
       label: user.name ?? "Anonymous"
     })) || []
+
+  useEffect(() => {
+    if (myChannelData?.channel?._id) {
+      setChannelFilter(myChannelData.channel._id)
+    }
+  }, [myChannelData])
 
   const handleCreateLead = () => {
     modals.open({
