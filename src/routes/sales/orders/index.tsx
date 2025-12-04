@@ -60,7 +60,7 @@ function RouteComponent() {
     useSalesOrders()
   const { searchFunnel, getFunnelByUser } = useSalesFunnel()
   const { getMe } = useUsers()
-  const { searchSalesChannels } = useSalesChannels()
+  const { searchSalesChannels, getMyChannel } = useSalesChannels()
 
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(10)
@@ -84,6 +84,19 @@ function RouteComponent() {
     queryKey: ["salesChannels", "all"],
     queryFn: () => searchSalesChannels({ page: 1, limit: 999 })
   })
+
+  const { data: myChannelData } = useQuery({
+    queryKey: ["getMyChannel"],
+    queryFn: getMyChannel,
+    select: (data) => data.data,
+    enabled: !!meData?.data
+  })
+
+  useEffect(() => {
+    if (myChannelData?.channel?._id) {
+      setChannelIdFilter(myChannelData.channel._id)
+    }
+  }, [myChannelData])
 
   const me = meData?.data
 
