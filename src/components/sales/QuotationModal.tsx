@@ -89,7 +89,7 @@ const QuotationCaptureContent = ({
         </Text>
 
         <Text size="sm" fw={600}>
-          {format(new Date(order.createdAt), "dd/MM/yyyy")}
+          {format(new Date(order.date), "dd/MM/yyyy")}
         </Text>
 
         <Text size="sm" fw={700} c="red" ta="right">
@@ -334,7 +334,7 @@ const WarehouseOrderCaptureContent = ({
         </Text>
 
         <Text size="sm" fw={600}>
-          {format(new Date(order.createdAt), "dd/MM/yyyy")}
+          {format(new Date(order.date), "dd/MM/yyyy")}
         </Text>
 
         <Text size="sm" fw={600} ta="right">
@@ -666,7 +666,7 @@ export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
                     Ngày xuất hàng (ngày đặt):
                   </Text>
                   <Text size="sm">
-                    {format(new Date(order.createdAt), "dd/MM/yyyy")}
+                    {format(new Date(order.date), "dd/MM/yyyy")}
                   </Text>
                 </Group>
               </Group>
