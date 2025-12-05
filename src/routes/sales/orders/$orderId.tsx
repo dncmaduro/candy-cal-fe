@@ -544,6 +544,16 @@ function RouteComponent() {
                 >
                   Báo giá cho khách
                 </Button>
+                <Tooltip label="Cập nhật vận chuyển & thuế" withArrow>
+                  <ActionIcon
+                    variant="light"
+                    color="blue"
+                    size="lg"
+                    onClick={handleUpdateShippingInfo}
+                  >
+                    <IconTruck size={20} />
+                  </ActionIcon>
+                </Tooltip>
                 {order.status === "draft" && (
                   <>
                     <Button
@@ -554,16 +564,7 @@ function RouteComponent() {
                     >
                       Chuyển sang chính thức
                     </Button>
-                    <Tooltip label="Cập nhật vận chuyển & thuế" withArrow>
-                      <ActionIcon
-                        variant="light"
-                        color="blue"
-                        size="lg"
-                        onClick={handleUpdateShippingInfo}
-                      >
-                        <IconTruck size={20} />
-                      </ActionIcon>
-                    </Tooltip>
+
                     <Tooltip label="Cập nhật sản phẩm" withArrow>
                       <ActionIcon
                         variant="light"

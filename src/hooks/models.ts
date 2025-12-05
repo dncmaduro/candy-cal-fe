@@ -3238,6 +3238,8 @@ export interface UpdateSalesOrderTaxShippingResponse {
 
 /** @interface */
 export interface MoveSalesOrderToOfficialRequest {
+  shippingCode: string
+  shippingType: "shipping_vtp" | "shipping_cargo"
   tax: number
   shippingCost: number
 }
