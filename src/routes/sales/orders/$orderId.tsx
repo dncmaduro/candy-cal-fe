@@ -225,25 +225,6 @@ function RouteComponent() {
         cell: ({ row }) => <Text size="sm">{row.original.quantity}</Text>
       },
       {
-        accessorKey: "price",
-        header: "Đơn giá",
-        cell: ({ row }) => (
-          <Text size="sm">{row.original.price.toLocaleString("vi-VN")}đ</Text>
-        )
-      },
-      {
-        id: "total",
-        header: "Thành tiền",
-        cell: ({ row }) => (
-          <Text fw={500} size="sm">
-            {(row.original.price * row.original.quantity).toLocaleString(
-              "vi-VN"
-            )}
-            đ
-          </Text>
-        )
-      },
-      {
         id: "squareMetersPerItem",
         header: "m³/sp",
         cell: ({ row }) => (
@@ -270,6 +251,25 @@ function RouteComponent() {
         header: "Quy cách",
         cell: ({ row }) => (
           <Text size="sm">{row.original.specification || "-"}</Text>
+        )
+      },
+      {
+        accessorKey: "price",
+        header: "Đơn giá",
+        cell: ({ row }) => (
+          <Text size="sm">{row.original.price.toLocaleString("vi-VN")}đ</Text>
+        )
+      },
+      {
+        id: "total",
+        header: "Thành tiền",
+        cell: ({ row }) => (
+          <Text fw={500} size="sm">
+            {(row.original.price * row.original.quantity).toLocaleString(
+              "vi-VN"
+            )}
+            đ
+          </Text>
         )
       },
       {
