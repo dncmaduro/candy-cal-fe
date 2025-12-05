@@ -6,6 +6,7 @@ import {
   NumberInput,
   Text
 } from "@mantine/core"
+import { DateInput } from "@mantine/dates"
 import { useForm, Controller } from "react-hook-form"
 import { useMutation } from "@tanstack/react-query"
 import { CToast } from "../common/CToast"
@@ -16,6 +17,7 @@ type ConvertToOfficialFormData = {
   shippingType: "shipping_vtp" | "shipping_cargo"
   tax: number
   shippingCost: number
+  receivedDate?: Date
 }
 
 type ConvertToOfficialModalProps = {
@@ -24,6 +26,7 @@ type ConvertToOfficialModalProps = {
   currentShippingType?: "shipping_vtp" | "shipping_cargo"
   currentTax?: number
   currentShippingCost?: number
+  currentReceivedDate?: Date
   total: number
   weight: number
   onSuccess: () => void
@@ -35,6 +38,7 @@ export const ConvertToOfficialModal = ({
   currentShippingType,
   currentTax,
   currentShippingCost,
+  currentReceivedDate,
   total,
   weight,
   onSuccess
@@ -51,7 +55,8 @@ export const ConvertToOfficialModal = ({
       shippingCode: currentShippingCode || "",
       shippingType: currentShippingType || undefined,
       tax: currentTax || undefined,
-      shippingCost: currentShippingCost || undefined
+      shippingCost: currentShippingCost || undefined,
+      receivedDate: currentReceivedDate || undefined
     }
   })
 
@@ -62,7 +67,8 @@ export const ConvertToOfficialModal = ({
         tax: data.tax ?? 0,
         shippingCost: data.shippingCost ?? 0,
         shippingCode: data.shippingCode ?? "",
-        shippingType: data.shippingType ?? "shipping_vtp"
+        shippingType: data.shippingType ?? "shipping_vtp",
+        receivedDate: data.receivedDate?.toISOString()
       }
       return moveSalesOrderToOfficial(orderId, requestData)
     },
@@ -206,6 +212,22 @@ export const ConvertToOfficialModal = ({
                 </Button>
               </>
             }
+          />
+        )}
+      />
+
+      <Controller
+        name="receivedDate"
+        control={control}
+        render={({ field }) => (
+          <DateInput
+            {...field}
+            label="Ngày thu tiền"
+            placeholder="Chọn ngày thu tiền"
+            error={errors.receivedDate?.message}
+            mb="md"
+            clearable
+            valueFormat="DD/MM/YYYY"
           />
         )}
       />

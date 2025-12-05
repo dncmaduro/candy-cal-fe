@@ -333,6 +333,9 @@ function RouteComponent() {
           currentShippingType={order.shippingType}
           currentTax={order.tax}
           currentShippingCost={order.shippingCost}
+          currentReceivedDate={
+            order.receivedDate ? new Date(order.receivedDate) : undefined
+          }
           total={order.total}
           weight={enhancedCalculations.totalWeight}
           onSuccess={() => {
@@ -381,6 +384,9 @@ function RouteComponent() {
           currentShippingType={order.shippingType}
           currentTax={order.tax}
           currentShippingCost={order.shippingCost}
+          currentReceivedDate={
+            order.receivedDate ? new Date(order.receivedDate) : undefined
+          }
           total={order.total}
           weight={enhancedCalculations.totalWeight}
           onSuccess={() => {
@@ -800,6 +806,16 @@ function RouteComponent() {
                           )}
                         </Text>
                       </div>
+                      {order.receivedDate && (
+                        <div>
+                          <Text size="sm" c={"dimmed"}>
+                            Ngày thu tiền
+                          </Text>
+                          <Text>
+                            {format(new Date(order.receivedDate), "dd/MM/yyyy")}
+                          </Text>
+                        </div>
+                      )}
                     </Stack>
                   </Grid.Col>
                 </Grid>
