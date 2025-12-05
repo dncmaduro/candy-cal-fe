@@ -54,6 +54,7 @@ type CreateSalesOrderModalProps = {
   initialOrderDiscount?: number
   initialOtherDiscount?: number
   initialDeposit?: number
+  channelId?: string
 }
 
 export const CreateSalesOrderModal = ({
@@ -62,7 +63,8 @@ export const CreateSalesOrderModal = ({
   initialItems,
   initialOrderDiscount,
   initialOtherDiscount,
-  initialDeposit
+  initialDeposit,
+  channelId
 }: CreateSalesOrderModalProps) => {
   const { createSalesOrder } = useSalesOrders()
   const { searchFunnel, createLead, updateFunnelInfo } = useSalesFunnel()
@@ -113,7 +115,8 @@ export const CreateSalesOrderModal = ({
       searchFunnel({
         page: 1,
         limit: 999,
-        deleted: false
+        deleted: false,
+        channel: channelId
       })
   })
 
