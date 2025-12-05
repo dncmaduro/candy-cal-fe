@@ -12,10 +12,10 @@ import { CToast } from "../common/CToast"
 import { useSalesOrders } from "../../hooks/useSalesOrders"
 
 type ConvertToOfficialFormData = {
-  shippingCode?: string
-  shippingType?: "shipping_vtp" | "shipping_cargo"
-  tax?: number
-  shippingCost?: number
+  shippingCode: string
+  shippingType: "shipping_vtp" | "shipping_cargo"
+  tax: number
+  shippingCost: number
 }
 
 type ConvertToOfficialModalProps = {
@@ -61,8 +61,8 @@ export const ConvertToOfficialModal = ({
       const requestData = {
         tax: data.tax ?? 0,
         shippingCost: data.shippingCost ?? 0,
-        shippingCode: data.shippingCode,
-        shippingType: data.shippingType
+        shippingCode: data.shippingCode ?? "",
+        shippingType: data.shippingType ?? "shipping_vtp"
       }
       return moveSalesOrderToOfficial(orderId, requestData)
     },
