@@ -187,7 +187,7 @@ export const SalesItemModal = ({ item, onSuccess }: SalesItemModalProps) => {
               label="Số khối (m³)"
               placeholder="Nhập số khối"
               min={0}
-              decimalScale={2}
+              decimalScale={4}
               hideControls
             />
           )}
