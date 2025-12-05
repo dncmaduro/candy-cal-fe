@@ -254,7 +254,7 @@ export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
               <Group justify="center" align="center">
                 <Group gap="4">
                   <Text size="sm" fw={600}>
-                    Ngày tạo:
+                    Ngày xuất hàng (ngày đặt):
                   </Text>
                   <Text size="sm">
                     {format(new Date(orderData.data.createdAt), "dd/MM/yyyy")}
