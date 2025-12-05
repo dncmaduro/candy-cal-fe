@@ -232,7 +232,7 @@ function RouteComponent() {
     search.items,
     search.discount,
     search.deposit,
-    myChannelData?.channel._id
+    myChannelData
   ])
 
   const channelOptions =

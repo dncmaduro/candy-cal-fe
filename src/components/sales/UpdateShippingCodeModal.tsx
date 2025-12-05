@@ -1,4 +1,5 @@
 import { Button, Group, TextInput, Select, NumberInput } from "@mantine/core"
+import { DateInput } from "@mantine/dates"
 import { useForm, Controller } from "react-hook-form"
 import { useMutation } from "@tanstack/react-query"
 import { CToast } from "../common/CToast"
@@ -9,6 +10,7 @@ type UpdateShippingInfoFormData = {
   shippingType?: "shipping_vtp" | "shipping_cargo"
   tax?: number
   shippingCost?: number
+  receivedDate?: Date
 }
 
 type UpdateShippingInfoModalProps = {
@@ -17,6 +19,7 @@ type UpdateShippingInfoModalProps = {
   currentShippingType?: "shipping_vtp" | "shipping_cargo"
   currentTax?: number
   currentShippingCost?: number
+  currentReceivedDate?: Date
   total: number
   weight: number
   onSuccess: () => void
@@ -28,6 +31,7 @@ export const UpdateShippingInfoModal = ({
   currentShippingType,
   currentTax,
   currentShippingCost,
+  currentReceivedDate,
   total,
   weight,
   onSuccess
@@ -44,7 +48,8 @@ export const UpdateShippingInfoModal = ({
       shippingCode: currentShippingCode || "",
       shippingType: currentShippingType || undefined,
       tax: currentTax || undefined,
-      shippingCost: currentShippingCost || undefined
+      shippingCost: currentShippingCost || undefined,
+      receivedDate: currentReceivedDate || undefined
     }
   })
 
@@ -187,6 +192,22 @@ export const UpdateShippingInfoModal = ({
                 </Button>
               </>
             }
+          />
+        )}
+      />
+
+      <Controller
+        name="receivedDate"
+        control={control}
+        render={({ field }) => (
+          <DateInput
+            {...field}
+            label="Ngày thu tiền"
+            placeholder="Chọn ngày thu tiền"
+            error={errors.receivedDate?.message}
+            mb="md"
+            clearable
+            valueFormat="DD/MM/YYYY"
           />
         )}
       />

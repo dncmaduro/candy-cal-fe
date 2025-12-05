@@ -2843,6 +2843,7 @@ export interface CreateSalesOrderResponse {
     id: string
     name: string
   }
+  receivedDate?: string
   createdAt: string
   updatedAt: string
 }
@@ -2921,6 +2922,7 @@ export interface UpdateSalesOrderItemsResponse {
     id: string
     name: string
   }
+  receivedDate?: string
   createdAt: string
   updatedAt: string
 }
@@ -2931,6 +2933,7 @@ export interface UpdateShippingInfoRequest {
   shippingType?: "shipping_vtp" | "shipping_cargo"
   tax?: number
   shippingCost?: number
+  receivedDate?: Date
 }
 
 /** @interface */
@@ -2994,6 +2997,7 @@ export interface UpdateShippingInfoResponse {
     id: string
     name: string
   }
+  receivedDate?: string
   createdAt: string
   updatedAt: string
 }
@@ -3064,6 +3068,7 @@ export interface GetSalesOrderByIdResponse {
     id: string
     name: string
   }
+  receivedDate?: string
   createdAt: string
   updatedAt: string
 }
@@ -3162,6 +3167,7 @@ export interface SearchSalesOrderResponse {
       id: string
       name: string
     }
+    receivedDate?: string
     createdAt: string
     updatedAt: string
   }[]
@@ -3232,6 +3238,7 @@ export interface UpdateSalesOrderTaxShippingResponse {
     id: string
     name: string
   }
+  receivedDate?: string
   createdAt: string
   updatedAt: string
 }
@@ -3242,6 +3249,7 @@ export interface MoveSalesOrderToOfficialRequest {
   shippingType: "shipping_vtp" | "shipping_cargo"
   tax: number
   shippingCost: number
+  receivedDate?: string
 }
 
 /** @interface */
@@ -3264,6 +3272,7 @@ export interface MoveSalesOrderToOfficialResponse {
   total: number
   tax: number
   shippingCost: number
+  receivedDate?: string
   createdAt: string
   updatedAt: string
 }
@@ -3302,6 +3311,7 @@ export interface GetOrdersByFunnelResponse {
       id: string
       name: string
     }
+    receivedDate?: string
     createdAt: string
     updatedAt: string
   }[]
