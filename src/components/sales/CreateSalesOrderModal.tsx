@@ -112,7 +112,8 @@ export const CreateSalesOrderModal = ({
     queryFn: () =>
       searchFunnel({
         page: 1,
-        limit: 999
+        limit: 999,
+        deleted: false
       })
   })
 
