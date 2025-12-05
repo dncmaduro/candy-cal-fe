@@ -85,6 +85,14 @@ npm run routes    # Generate router tree
 
 ## 7. Lịch sử cập nhật
 
+### 4.0.2
+
+- Cập nhật logic cho đơn hàng, báo giá
+- Cho sao chép ảnh tạo lệnh xuất hàng gửi kho
+- Cập nhật UI tạo đơn hàng
+- Cập nhật logic và UI báo cáo hàng ngày
+- Fix các lỗi UI trên các bảng
+
 ### 4.0.1
 
 - Cập nhật logic phí vận chuyển, chiết khấu 2 level
