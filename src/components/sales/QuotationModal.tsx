@@ -9,7 +9,8 @@ import {
   Divider,
   Box,
   Button,
-  Image
+  Image,
+  Paper
 } from "@mantine/core"
 import { format } from "date-fns"
 import { useMemo, useState, useRef } from "react"
@@ -40,7 +41,9 @@ export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
   const { getSalesOrderById } = useSalesOrders()
   const { getMyChannel } = useSalesChannels()
   const contentRef = useRef<HTMLDivElement>(null)
+  const warehouseOrderRef = useRef<HTMLDivElement>(null)
   const [isCapturing, setIsCapturing] = useState(false)
+  const [isCapturingWarehouse, setIsCapturingWarehouse] = useState(false)
 
   const { data: orderData } = useQuery({
     queryKey: ["salesOrder", orderId],
@@ -162,12 +165,57 @@ export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
     }
   }
 
+  const handleCaptureWarehouseOrder = async () => {
+    if (!warehouseOrderRef.current) return
+
+    setIsCapturingWarehouse(true)
+    try {
+      const canvas = await html2canvas(warehouseOrderRef.current, {
+        scale: 2,
+        backgroundColor: "#ffffff",
+        logging: false,
+        useCORS: true
+      })
+
+      // Convert canvas to blob and copy to clipboard
+      canvas.toBlob(async (blob) => {
+        if (blob) {
+          try {
+            await navigator.clipboard.write([
+              new ClipboardItem({
+                "image/png": blob
+              })
+            ])
+            CToast.success({ title: "Đã sao chép lệnh gửi kho vào clipboard" })
+          } catch (clipboardError) {
+            console.error("Error copying to clipboard:", clipboardError)
+            CToast.error({ title: "Không thể sao chép ảnh vào clipboard" })
+          }
+        }
+      })
+    } catch (error) {
+      console.error("Error capturing screenshot:", error)
+      CToast.error({ title: "Có lỗi xảy ra khi chụp ảnh" })
+    } finally {
+      setIsCapturingWarehouse(false)
+    }
+  }
+
   if (!orderData?.data) return null
 
   return (
     <Stack gap="md">
-      {/* Capture Button */}
+      {/* Capture Buttons */}
       <Group justify="flex-end">
+        <Button
+          leftSection={<IconCamera size={16} />}
+          onClick={handleCaptureWarehouseOrder}
+          loading={isCapturingWarehouse}
+          variant="light"
+          color="green"
+        >
+          Sao chép lệnh gửi kho
+        </Button>
         <Button
           leftSection={<IconCamera size={16} />}
           onClick={handleCaptureScreenshot}
@@ -260,19 +308,19 @@ export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
                     SL
                   </Table.Th>
                   <Table.Th ta="center" fw={500}>
+                    m³/sp
+                  </Table.Th>
+                  <Table.Th ta="center" fw={500}>
+                    Tổng m³
+                  </Table.Th>
+                  <Table.Th ta="center" fw={500}>
+                    Quy cách
+                  </Table.Th>
+                  <Table.Th ta="center" fw={500}>
                     Đơn giá
                   </Table.Th>
                   <Table.Th ta="center" fw={500}>
                     Thành tiền
-                  </Table.Th>
-                  <Table.Th ta="center" fw={500}>
-                    m²/sp
-                  </Table.Th>
-                  <Table.Th ta="center" fw={500}>
-                    Tổng m²
-                  </Table.Th>
-                  <Table.Th ta="center" fw={500}>
-                    Quy cách
                   </Table.Th>
                   <Table.Th ta="center" fw={500}>
                     kg/sp
@@ -308,16 +356,6 @@ export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
                     </Table.Td>
                     <Table.Td ta="center">
                       <Text size="xs">
-                        {item.price.toLocaleString("vi-VN")}đ
-                      </Text>
-                    </Table.Td>
-                    <Table.Td ta="center">
-                      <Text size="xs" fw={500}>
-                        {(item.price * item.quantity).toLocaleString("vi-VN")}đ
-                      </Text>
-                    </Table.Td>
-                    <Table.Td ta="center">
-                      <Text size="xs">
                         {item.squareMetersPerItem > 0
                           ? `${item.squareMetersPerItem.toFixed(2)} m³`
                           : "-"}
@@ -325,11 +363,21 @@ export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
                     </Table.Td>
                     <Table.Td ta="center">
                       <Text size="xs">
-                        {item.totalSquareMeters.toFixed(2)} m²
+                        {item.totalSquareMeters.toFixed(2)} m³
                       </Text>
                     </Table.Td>
                     <Table.Td ta="center">
                       <Text size="xs">{item.specification || "-"}</Text>
+                    </Table.Td>
+                    <Table.Td ta="center">
+                      <Text size="xs">
+                        {item.price.toLocaleString("vi-VN")}đ
+                      </Text>
+                    </Table.Td>
+                    <Table.Td ta="center">
+                      <Text size="xs" fw={500}>
+                        {(item.price * item.quantity).toLocaleString("vi-VN")}đ
+                      </Text>
                     </Table.Td>
                     <Table.Td ta="center">
                       <Text size="xs">
@@ -473,6 +521,225 @@ export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
           </Box>
         </Stack>
       </div>
+
+      {/* Warehouse Order Content (Hidden) */}
+      <Box
+        ref={warehouseOrderRef}
+        style={{ position: "absolute", left: "-9999px", top: 0 }}
+      >
+        <Paper
+          withBorder
+          radius="md"
+          p="md"
+          w={780}
+          bg="white"
+          shadow="xs"
+          style={{ boxSizing: "border-box" }}
+        >
+          {/* Header */}
+          <Group justify="space-between" align="flex-start" mb="md">
+            <Group align="flex-start" gap="sm">
+              <Image
+                src={channelData?.channel.avatarUrl}
+                alt="MCD"
+                h={60}
+                w="auto"
+                radius="sm"
+              />
+              <Stack gap={2}>
+                <Text size="lg" fw={700}>
+                  {channelData?.channel.channelName}
+                </Text>
+                <Text size="sm" c="dimmed">
+                  {channelData?.channel.address}
+                </Text>
+                <Text size="sm">
+                  Sđt:{" "}
+                  <Text component="span" fw={600}>
+                    {orderData.data.phoneNumber}
+                  </Text>
+                </Text>
+              </Stack>
+            </Group>
+
+            <Stack gap={2} align="flex-end">
+              <Text size="xs" c="dimmed">
+                Ngày tạo
+              </Text>
+              <Text size="sm" fw={600}>
+                {format(new Date(orderData.data.createdAt), "dd/MM/yyyy")}
+              </Text>
+            </Stack>
+          </Group>
+
+          <Divider mb="md" />
+
+          {/* Title */}
+          <Group justify="center" mb="sm">
+            <Title order={3} fw={700}>
+              LỆNH XUẤT HÀNG
+            </Title>
+          </Group>
+
+          {/* Customer info */}
+          <Box
+            p="sm"
+            mb="md"
+            style={{
+              borderRadius: 8,
+              border: "1px solid #dee2e6",
+              backgroundColor: "#f8f9fa"
+            }}
+          >
+            <Stack gap={4}>
+              <Text size="sm">
+                <Text component="span" fw={600}>
+                  Khách hàng:
+                </Text>{" "}
+                {orderData.data.salesFunnelId.name}
+              </Text>
+              <Text size="sm">
+                <Text component="span" fw={600}>
+                  Địa chỉ:
+                </Text>{" "}
+                {orderData.data.address}, {orderData.data.province.name}
+              </Text>
+              <Text size="sm">
+                <Text component="span" fw={600}>
+                  Số điện thoại:
+                </Text>{" "}
+                {orderData.data.salesFunnelId.phoneNumber}
+                {orderData.data.salesFunnelId.secondaryPhoneNumbers &&
+                  (orderData.data.salesFunnelId.secondaryPhoneNumbers.length > 0
+                    ? "/" +
+                      orderData.data.salesFunnelId.secondaryPhoneNumbers.join(
+                        "/"
+                      )
+                    : "")}
+              </Text>
+            </Stack>
+          </Box>
+
+          {/* Simple Items Table */}
+          <Box
+            p="sm"
+            style={{
+              borderRadius: 8,
+              border: "1px solid #dee2e6"
+            }}
+          >
+            <Group justify="space-between" mb="xs">
+              <Title order={5} fw={600}>
+                Danh sách sản phẩm ({itemsWithExtendedData.length} sản phẩm)
+              </Title>
+              <Text size="xs" c="dimmed">
+                Tổng SL:{" "}
+                <Text component="span" fw={600}>
+                  {calculations.totalQuantity}
+                </Text>
+              </Text>
+            </Group>
+
+            <Table
+              striped
+              highlightOnHover
+              verticalSpacing="xs"
+              horizontalSpacing="xs"
+              withTableBorder
+              withColumnBorders
+              style={{ fontSize: "11px" }}
+            >
+              <Table.Thead bg="gray.1">
+                <Table.Tr>
+                  <Table.Th ta="center" fw={600}>
+                    STT
+                  </Table.Th>
+                  <Table.Th ta="center" fw={600}>
+                    Mã SP
+                  </Table.Th>
+                  <Table.Th ta="center" fw={600}>
+                    Tên sản phẩm
+                  </Table.Th>
+                  <Table.Th ta="right" fw={600}>
+                    Số lượng
+                  </Table.Th>
+                  <Table.Th ta="right" fw={600}>
+                    m³/sp
+                  </Table.Th>
+                  <Table.Th ta="right" fw={600}>
+                    Tổng m³
+                  </Table.Th>
+                  <Table.Th ta="center" fw={600}>
+                    Quy cách
+                  </Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {itemsWithExtendedData.map((item, index) => (
+                  <Table.Tr key={item.code}>
+                    <Table.Td ta="center">
+                      <Text size="xs" fw={500}>
+                        {index + 1}
+                      </Text>
+                    </Table.Td>
+                    <Table.Td ta="center">
+                      <Text size="xs" fw={500}>
+                        {item.code}
+                      </Text>
+                    </Table.Td>
+                    <Table.Td>
+                      <Text size="xs">{item.name}</Text>
+                    </Table.Td>
+                    <Table.Td ta="right">
+                      <Text size="xs" fw={500}>
+                        {item.quantity}
+                      </Text>
+                    </Table.Td>
+                    <Table.Td ta="right">
+                      <Text size="xs">
+                        {item.squareMetersPerItem > 0
+                          ? `${item.squareMetersPerItem.toFixed(2)} m³`
+                          : "-"}
+                      </Text>
+                    </Table.Td>
+                    <Table.Td ta="right">
+                      <Text size="xs">
+                        {item.totalSquareMeters.toFixed(2)} m³
+                      </Text>
+                    </Table.Td>
+                    <Table.Td ta="center">
+                      <Text size="xs">{item.specification || "-"}</Text>
+                    </Table.Td>
+                  </Table.Tr>
+                ))}
+
+                {/* Totals Row */}
+                <Table.Tr bg="gray.0">
+                  <Table.Td ta="center">
+                    <Text size="xs" fw={700}>
+                      TỔNG
+                    </Text>
+                  </Table.Td>
+                  <Table.Td />
+                  <Table.Td />
+                  <Table.Td ta="right">
+                    <Text size="xs" fw={700}>
+                      {calculations.totalQuantity}
+                    </Text>
+                  </Table.Td>
+                  <Table.Td />
+                  <Table.Td ta="right">
+                    <Text size="xs" fw={700}>
+                      {calculations.totalSquareMeters.toFixed(2)} m³
+                    </Text>
+                  </Table.Td>
+                  <Table.Td />
+                </Table.Tr>
+              </Table.Tbody>
+            </Table>
+          </Box>
+        </Paper>
+      </Box>
     </Stack>
   )
 }
