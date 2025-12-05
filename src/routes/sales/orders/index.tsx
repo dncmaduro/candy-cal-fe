@@ -210,7 +210,13 @@ function RouteComponent() {
           ? parseFloat(search.discount)
           : undefined
         const deposit = search.deposit ? parseFloat(search.deposit) : undefined
-        handleCreateOrder(search.funnelId, parsedItems, discount, deposit)
+        handleCreateOrder(
+          myChannelData?.channel._id,
+          search.funnelId,
+          parsedItems,
+          discount,
+          deposit
+        )
         // Clear search params
         navigate({
           to: "/sales/orders",
@@ -225,7 +231,8 @@ function RouteComponent() {
     search.funnelId,
     search.items,
     search.discount,
-    search.deposit
+    search.deposit,
+    myChannelData?.channel._id
   ])
 
   const channelOptions =
@@ -235,6 +242,7 @@ function RouteComponent() {
     })) || []
 
   const handleCreateOrder = (
+    channelId?: string,
     funnelId?: string,
     initialItems?: { code: string; quantity: number }[],
     initialOrderDiscount?: number,
@@ -254,6 +262,7 @@ function RouteComponent() {
             refetch()
             modals.closeAll()
           }}
+          channelId={channelId}
         />
       ),
       size: "xl"
@@ -759,7 +768,9 @@ function RouteComponent() {
                     Upload XLSX
                   </Button>
                   <Button
-                    onClick={() => handleCreateOrder()}
+                    onClick={() =>
+                      handleCreateOrder(myChannelData?.channel._id)
+                    }
                     leftSection={<IconPlus size={16} />}
                     size="sm"
                     radius="md"

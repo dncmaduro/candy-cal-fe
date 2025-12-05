@@ -405,6 +405,7 @@ function RouteComponent() {
         to: "/sales/orders",
         search: {
           createNew: "true",
+          channelId: order.salesFunnelId.channel._id,
           funnelId: order.salesFunnelId._id,
           items: JSON.stringify(
             order.items.map((item) => ({
