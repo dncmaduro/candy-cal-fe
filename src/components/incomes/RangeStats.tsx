@@ -14,8 +14,7 @@ import {
   Group,
   Select,
   Badge,
-  SegmentedControl,
-  ActionIcon
+  SegmentedControl
 } from "@mantine/core"
 import {
   format,
@@ -30,11 +29,8 @@ import type { GetRangeStatsResponse } from "../../hooks/models"
 import { LiveAndVideoStats } from "./LiveAndVideoStats"
 import { SourcesStats } from "./SourcesStats"
 import { CDashboardLayout } from "../common/CDashboardLayout"
-import {
-  IconCalendarStats,
-  IconFilter,
-  IconFilterOff
-} from "@tabler/icons-react"
+import { IconCalendarStats, IconFilter } from "@tabler/icons-react"
+import { useLivestreamChannel } from "../../context/LivestreamChannelContext"
 
 type RangeType = "day" | "week" | "month"
 type DiscountMode = "beforeDiscount" | "afterDiscount"
@@ -48,10 +44,7 @@ const RangeSelector = ({
   weekDate,
   setWeekDate,
   monthValue,
-  setMonthValue,
-  channelId,
-  setChannelId,
-  channelsData
+  setMonthValue
 }: {
   rangeType: RangeType
   onChangeRangeType: (r: RangeType) => void
@@ -61,9 +54,6 @@ const RangeSelector = ({
   setWeekDate: (d: Date | null) => void
   monthValue: string
   setMonthValue: (v: string) => void
-  channelId: string | null
-  setChannelId: (id: string | null) => void
-  channelsData: any[]
 }) => {
   // last 24 months for selection
   const months = useMemo(() => {
@@ -148,35 +138,6 @@ const RangeSelector = ({
           w={160}
         />
       )}
-
-      <Select
-        label="Kênh livestream"
-        placeholder="Tất cả kênh"
-        value={channelId}
-        onChange={setChannelId}
-        data={[
-          ...channelsData.map((channel) => ({
-            label: channel.name,
-            value: channel._id
-          }))
-        ]}
-        size="sm"
-        w={180}
-        clearable
-        leftSection={<IconFilter size={16} />}
-      />
-
-      {channelId && (
-        <ActionIcon
-          variant="subtle"
-          color="gray"
-          size="sm"
-          onClick={() => setChannelId(null)}
-          title="Xóa bộ lọc kênh"
-        >
-          <IconFilterOff size={16} />
-        </ActionIcon>
-      )}
     </Group>
   )
 }
@@ -185,10 +146,10 @@ export const RangeStats = () => {
   const { getRangeStats } = useIncomes()
   const { getGoal } = useMonthGoals()
   const { searchLivestreamChannels } = useLivestream()
+  const { selectedChannelId } = useLivestreamChannel()
 
   const [rangeType, setRangeType] = useState<RangeType>("day")
   const [mode, setMode] = useState<DiscountMode>("afterDiscount")
-  const [channelId, setChannelId] = useState<string | null>(null)
   const [day, setDay] = useState<Date | null>(() => {
     const d = new Date()
     d.setDate(d.getDate() - 1)
@@ -268,14 +229,14 @@ export const RangeStats = () => {
       "getRangeStats",
       range?.start ?? null,
       range?.end ?? null,
-      channelId
+      selectedChannelId
     ],
     queryFn: async () => {
-      if (!range) return null
+      if (!range || !selectedChannelId) return null
       const res = await getRangeStats({
         startDate: range.start,
         endDate: range.end,
-        channelId: channelId || undefined
+        channelId: selectedChannelId
       })
       return res.data as GetRangeStatsResponse
     },
@@ -318,9 +279,6 @@ export const RangeStats = () => {
             setWeekDate={setWeekDate}
             monthValue={monthValue}
             setMonthValue={setMonthValue}
-            channelId={channelId}
-            setChannelId={setChannelId}
-            channelsData={channelsData}
           />
           <SegmentedControl
             value={mode}
@@ -336,7 +294,7 @@ export const RangeStats = () => {
       content={
         <>
           {/* Filter Summary */}
-          {(channelId || range) && (
+          {(selectedChannelId || range) && (
             <Paper withBorder p="md" radius="md" mb="lg" bg="blue.0">
               <Group gap="md" align="center">
                 <IconFilter size={16} color="var(--mantine-color-blue-6)" />
@@ -348,10 +306,10 @@ export const RangeStats = () => {
                     {range.label}
                   </Badge>
                 )}
-                {channelId && (
+                {selectedChannelId && (
                   <Badge variant="light" color="green" size="sm">
-                    {channelsData.find((c) => c._id === channelId)?.name ||
-                      "Kênh đã chọn"}
+                    {channelsData.find((c) => c._id === selectedChannelId)
+                      ?.name || "Kênh đã chọn"}
                   </Badge>
                 )}
               </Group>
