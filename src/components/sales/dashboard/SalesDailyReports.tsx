@@ -12,7 +12,11 @@ import {
   Tooltip,
   Group
 } from "@mantine/core"
-import { IconTrash, IconReportAnalytics } from "@tabler/icons-react"
+import {
+  IconTrash,
+  IconReportAnalytics,
+  IconMessage
+} from "@tabler/icons-react"
 import { useUsers } from "../../../hooks/useUsers"
 import { useSalesDailyReports } from "../../../hooks/useSalesDailyReports"
 import { useSalesChannels } from "../../../hooks/useSalesChannels"
@@ -20,6 +24,7 @@ import { CToast } from "../../common/CToast"
 import { modals } from "@mantine/modals"
 import { CDataTable } from "../../common/CDataTable"
 import { CreateSalesDailyReportModal } from "./CreateSalesDailyReportModal"
+import { DailyReportByText } from "./DailyReportByText"
 import { useNavigate } from "@tanstack/react-router"
 
 type DailyReportItem = {
@@ -180,6 +185,15 @@ export const SalesDailyReports = () => {
     })
   }
 
+  const openMessageModal = (report: DailyReportItem) => {
+    modals.open({
+      id: "daily-report-message",
+      title: <b>Tin nhắn báo cáo</b>,
+      children: <DailyReportByText report={report} />,
+      size: "lg"
+    })
+  }
+
   const columns: ColumnDef<DailyReportItem>[] = [
     {
       accessorKey: "date",
@@ -269,12 +283,28 @@ export const SalesDailyReports = () => {
 
         return (
           <Group gap="xs">
+            <Tooltip label="Xem tin nhắn báo cáo" withArrow>
+              <ActionIcon
+                variant="light"
+                color="blue"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  openMessageModal(item)
+                }}
+              >
+                <IconMessage size={16} />
+              </ActionIcon>
+            </Tooltip>
             <Tooltip label="Xóa báo cáo" withArrow>
               <ActionIcon
                 variant="light"
                 color="red"
                 size="sm"
-                onClick={() => handleDeleteReport(item._id, item.date)}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleDeleteReport(item._id, item.date)
+                }}
               >
                 <IconTrash size={16} />
               </ActionIcon>
