@@ -1,22 +1,16 @@
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { useIncomes } from "../../hooks/useIncomes"
 import {
   Box,
   Divider,
-  Flex,
-  Loader,
-  Pagination,
-  Table,
   Text,
   Group,
-  ScrollArea,
   Button,
-  NumberInput,
-  TextInput,
   Select,
   Badge,
-  Paper
+  Paper,
+  rem
 } from "@mantine/core"
 import { DatePickerInput } from "@mantine/dates"
 import { format } from "date-fns"
@@ -25,21 +19,42 @@ import { InsertIncomeModalV2 } from "./InsertIncomeModalV2"
 import { DailyAdsModal } from "./DailyAdsModal"
 import { IconDownload, IconPlus, IconX } from "@tabler/icons-react"
 import { DeleteIncomeModal } from "./DeleteIncomeModal"
-import { useProducts } from "../../hooks/useProducts"
 import { useLivestream } from "../../hooks/useLivestream"
-import { PackingRulesBoxTypes } from "../../constants/rules"
 import { ExportXlsxIncomesRequest } from "../../hooks/models"
 import { CToast } from "../common/CToast"
 import { Can } from "../common/Can"
+import { CDataTable } from "../common/CDataTable"
+import { ColumnDef } from "@tanstack/react-table"
+
+interface IncomeRow {
+  _id: string
+  date: string
+  orderId: string
+  customer: string
+  province: string
+  shippingProvider: string
+  channel: { _id: string; name: string } | null
+  products: Array<{
+    code: string
+    source: string
+    quantity: number
+    price?: number
+    platformDiscount?: number
+    sellerDiscount?: number
+    priceAfterDiscount?: number
+  }>
+  totalProducts: number
+  totalRevenue: number
+  totalDiscount: number
+}
 import { useLivestreamChannel } from "../../context/LivestreamChannelContext"
 
 export const Incomes = () => {
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(10)
-  const [orderId, setOrderId] = useState<string>()
-  const [productCode, setProductCode] = useState<string>()
-  const [productSource, setProductSource] = useState<string>()
-  const [channelFilter, setChannelFilter] = useState<string>()
+  const [searchText, setSearchText] = useState("")
+  const [productSource, setProductSource] = useState<string>("")
+  const [channelFilter, setChannelFilter] = useState<string>("")
   const [startDate, setStartDate] = useState<Date | null>(() => {
     const d = new Date()
     d.setDate(d.getDate() - 30)
@@ -48,7 +63,6 @@ export const Incomes = () => {
   const [endDate, setEndDate] = useState<Date | null>(new Date())
   const { getIncomesByDateRange, exportXlsxIncomes, getRangeStats } =
     useIncomes()
-  const { searchProducts } = useProducts()
   const { searchLivestreamChannels } = useLivestream()
   const { selectedChannelId } = useLivestreamChannel()
 
@@ -75,8 +89,7 @@ export const Incomes = () => {
       limit,
       startDate,
       endDate,
-      orderId,
-      productCode,
+      searchText,
       productSource,
       channelFilter
     ],
@@ -88,17 +101,10 @@ export const Incomes = () => {
           ? startOfDayISO(startDate)
           : startOfDayISO(new Date()),
         endDate: endDate ? endOfDayISO(endDate) : endOfDayISO(new Date()),
-        orderId,
-        productCode,
+        orderId: searchText || undefined,
         productSource,
-        channelId: channelFilter
+        channelId: channelFilter || undefined
       }),
-    select: (data) => data.data
-  })
-
-  const { data: productsData } = useQuery({
-    queryKey: ["searchProducts", ""],
-    queryFn: () => searchProducts({ searchText: "", deleted: false }),
     select: (data) => data.data
   })
 
@@ -113,7 +119,7 @@ export const Incomes = () => {
   })
 
   const { data: rangeStatsData } = useQuery({
-    queryKey: ["getRangeStats", startDate, endDate],
+    queryKey: ["getRangeStats", startDate, endDate, selectedChannelId],
     queryFn: () => {
       if (!startDate || !endDate || !selectedChannelId) return null
       return getRangeStats({
@@ -135,9 +141,7 @@ export const Incomes = () => {
       link.download = `Báo cáo doanh thu_${format(new Date(), "dd-MM-yyyy")}_${format(args.startDate, "ddMMyyyy")}_${format(
         args.endDate,
         "ddMMyyyy"
-      )}_${args.orderId ?? ""}_${args.productCode ?? ""}_${
-        args.productSource ?? ""
-      }.xlsx`
+      )}_${args.productSource ?? ""}.xlsx`
       link.click()
       URL.revokeObjectURL(url)
       CToast.success({ title: "Xuất file Excel thành công" })
@@ -146,17 +150,6 @@ export const Incomes = () => {
       CToast.error({ title: "Có lỗi xảy ra khi xuất file Excel" })
     }
   })
-
-  const productCodeOptions = useMemo(() => {
-    return (
-      productsData?.map((prod) => {
-        return {
-          value: prod.name,
-          label: prod.name
-        }
-      }) || []
-    )
-  }, [productsData])
 
   const channelOptions = useMemo(() => {
     return (
@@ -169,57 +162,169 @@ export const Incomes = () => {
 
   const sourceOptions = useMemo(() => {
     return [
-      {
-        label: "Affiliate",
-        value: "affiliate"
-      },
-      {
-        label: "Affiliate Ads",
-        value: "affiliate-ads"
-      },
-      {
-        label: "Ads",
-        value: "ads"
-      },
-      {
-        label: "Khác",
-        value: "other"
-      }
+      { label: "Tất cả nguồn", value: "" },
+      { label: "Affiliate", value: "affiliate" },
+      { label: "Affiliate Ads", value: "affiliate-ads" },
+      { label: "Ads", value: "ads" },
+      { label: "Khác", value: "other" }
     ]
   }, [])
 
-  const columns = [
-    { label: "Ngày xuất đơn", key: "date", width: 110 },
-    { label: "Mã đơn hàng", key: "orderId", width: 130 },
-    { label: "Khách hàng", key: "customer", width: 140 },
-    { label: "Tỉnh thành", key: "province", width: 120 },
-    { label: "Đơn vị vận chuyển", key: "shippingProvider", width: 150 },
-    { label: "Kênh", key: "channel", width: 120 },
-    { label: "Mã sản phẩm", key: "code", width: 110 },
-    // { label: "Tên sản phẩm", key: "name", width: 160 },
-    { label: "Nguồn", key: "source", width: 140 },
-    { label: "Số lượng", key: "quantity", width: 80 },
-    { label: "Báo giá", key: "quotation", width: 90 },
-    { label: "Giá bán", key: "price", width: 90 },
-    { label: "Chiết khấu Platform", key: "platformDiscount", width: 120 },
-    { label: "Chiết khấu Seller", key: "sellerDiscount", width: 120 },
-    { label: "Giá sau chiết khấu", key: "priceAfterDiscount", width: 130 },
-    { label: "Loại nội dung", key: "content", width: 110 },
-    { label: "Quy cách đóng hộp", key: "box", width: 60 },
-    { label: "Nhà sáng tạo", key: "creator", width: 90 },
-    { label: "Phần trăm Affiliate", key: "affiliateAdsPercentage", width: 100 },
-    { label: "Số tiền Affiliate", key: "affiliateAdsAmount", width: 100 },
-    {
-      label: "Phần trăm Affiliate tiêu chuẩn",
-      key: "standardAffPercentage",
-      width: 100
-    },
-    {
-      label: "Số tiền Affiliate tiêu chuẩn",
-      key: "standardAffAmount",
-      width: 100
-    }
-  ]
+  // Transform data for table
+  const tableData: IncomeRow[] = useMemo(() => {
+    return (
+      incomesData?.incomes.map((item) => {
+        const totalProducts = item.products.length
+        const totalRevenue = item.products.reduce(
+          (sum, p) => sum + (p.priceAfterDiscount || 0) * p.quantity,
+          0
+        )
+        const totalDiscount = item.products.reduce(
+          (sum, p) =>
+            sum + ((p.platformDiscount || 0) + (p.sellerDiscount || 0)),
+          0
+        )
+
+        return {
+          _id: item._id,
+          date:
+            typeof item.date === "string" ? item.date : item.date.toISOString(),
+          orderId: item.orderId,
+          customer: item.customer,
+          province: item.province,
+          shippingProvider: item.shippingProvider || "-",
+          channel: item.channel || null,
+          products: item.products,
+          totalProducts,
+          totalRevenue,
+          totalDiscount
+        }
+      }) || []
+    )
+  }, [incomesData])
+
+  const sourceColors: Record<string, string> = {
+    ads: "green",
+    affiliate: "red",
+    "affiliate-ads": "violet",
+    other: "blue"
+  }
+
+  const columns: ColumnDef<IncomeRow>[] = useMemo(
+    () => [
+      {
+        accessorKey: "date",
+        header: "Ngày",
+        size: 110,
+        cell: ({ getValue }) => (
+          <Text size="sm">
+            {format(new Date(getValue<string>()), "dd/MM/yyyy")}
+          </Text>
+        )
+      },
+      {
+        accessorKey: "orderId",
+        header: "Mã đơn hàng",
+        size: 130,
+        cell: ({ getValue }) => (
+          <Text size="sm" fw={500}>
+            {getValue<string>()}
+          </Text>
+        )
+      },
+      {
+        accessorKey: "customer",
+        header: "Khách hàng",
+        size: 150,
+        cell: ({ row }) => (
+          <div>
+            <Text size="sm" fw={500} lineClamp={1}>
+              {row.original.customer}
+            </Text>
+            <Text size="xs" c="dimmed">
+              {row.original.province}
+            </Text>
+          </div>
+        )
+      },
+      {
+        accessorKey: "channel",
+        header: "Kênh",
+        size: 120,
+        cell: ({ row }) => (
+          <Text size="sm">{row.original.channel?.name || "-"}</Text>
+        )
+      },
+      {
+        accessorKey: "totalProducts",
+        header: "Số SP",
+        size: 80,
+        cell: ({ getValue }) => (
+          <Badge variant="light" color="blue" size="sm">
+            {getValue<number>()} SP
+          </Badge>
+        )
+      },
+      {
+        accessorKey: "products",
+        header: "Nguồn",
+        size: 120,
+        cell: ({ row }) => {
+          const sources = Array.from(
+            new Set(row.original.products.map((p) => p.source))
+          )
+          return (
+            <Group gap={4}>
+              {sources.map((source) => (
+                <Badge
+                  key={source}
+                  color={sourceColors[source] || "gray"}
+                  variant="light"
+                  size="xs"
+                >
+                  {source}
+                </Badge>
+              ))}
+            </Group>
+          )
+        }
+      },
+      {
+        accessorKey: "totalRevenue",
+        header: "Doanh thu",
+        size: 120,
+        cell: ({ getValue }) => (
+          <Text size="sm" fw={600} c="green.7">
+            {getValue<number>().toLocaleString("vi-VN")}đ
+          </Text>
+        )
+      },
+      {
+        accessorKey: "totalDiscount",
+        header: "Chiết khấu",
+        size: 110,
+        cell: ({ getValue }) => {
+          const discount = getValue<number>()
+          return discount > 0 ? (
+            <Text size="sm" c="orange.7">
+              {discount.toLocaleString("vi-VN")}đ
+            </Text>
+          ) : (
+            <Text size="sm" c="dimmed">
+              -
+            </Text>
+          )
+        }
+      },
+      {
+        accessorKey: "shippingProvider",
+        header: "Vận chuyển",
+        size: 120,
+        cell: ({ getValue }) => <Text size="sm">{getValue<string>()}</Text>
+      }
+    ],
+    []
+  )
 
   const openIncomeModal = () => {
     modals.closeAll()
@@ -231,15 +336,72 @@ export const Incomes = () => {
     })
   }
 
-  useEffect(() => {
-    setPage(1)
-  }, [startDate, endDate, orderId, productCode, productSource, channelFilter])
-
-  const sourceColors = {
-    ads: "green",
-    affiliate: "red",
-    "affiliate-ads": "violet",
-    other: "blue"
+  const handleExportExcel = () => {
+    modals.openConfirmModal({
+      title: <b>Xác nhận xuất file Excel</b>,
+      children: (
+        <Box>
+          <Text mb="md">
+            Bạn có chắc chắn muốn xuất file Excel với các bộ lọc hiện tại?
+          </Text>
+          <Box
+            style={{
+              background: "#f8f9fa",
+              padding: "12px",
+              borderRadius: "8px"
+            }}
+          >
+            <Text size="sm" fw={600} mb="xs">
+              Thông tin xuất:
+            </Text>
+            <Text size="sm" mb={4}>
+              • Tổng số đơn: <strong>{incomesData?.total || 0}</strong> đơn
+            </Text>
+            {searchText && (
+              <Text size="sm" mb={4}>
+                • Mã đơn hàng: <strong>{searchText}</strong>
+              </Text>
+            )}
+            {productSource && (
+              <Text size="sm" mb={4}>
+                • Nguồn: <strong>{productSource}</strong>
+              </Text>
+            )}
+            {channelFilter && (
+              <Text size="sm" mb={4}>
+                • Kênh:{" "}
+                <strong>
+                  {channelOptions.find((c) => c.value === channelFilter)?.label}
+                </strong>
+              </Text>
+            )}
+            {startDate && (
+              <Text size="sm" mb={4}>
+                • Từ ngày: <strong>{format(startDate, "dd/MM/yyyy")}</strong>
+              </Text>
+            )}
+            {endDate && (
+              <Text size="sm" mb={4}>
+                • Đến ngày: <strong>{format(endDate, "dd/MM/yyyy")}</strong>
+              </Text>
+            )}
+          </Box>
+        </Box>
+      ),
+      labels: { confirm: "Xuất Excel", cancel: "Hủy" },
+      confirmProps: { color: "green" },
+      onConfirm: () => {
+        exportXlsx({
+          startDate: startDate
+            ? startOfDayISO(startDate)
+            : startOfDayISO(new Date()),
+          endDate: endDate ? endOfDayISO(endDate) : endOfDayISO(new Date()),
+          orderId: searchText || undefined,
+          productSource,
+          channel: channelFilter || undefined
+        })
+      }
+    })
   }
 
   return (
@@ -250,182 +412,25 @@ export const Incomes = () => {
       w="100%"
       style={{
         background: "rgba(255,255,255,0.97)",
-        borderRadius: 20,
+        borderRadius: rem(20),
         boxShadow: "0 4px 32px 0 rgba(60,80,180,0.07)",
         border: "1px solid #ececec"
       }}
     >
       {/* Header Section */}
-      <Flex
-        align="center"
-        justify="space-between"
-        pt={32}
-        pb={16}
-        px={{ base: 8, md: 28 }}
-        direction={{ base: "column", sm: "row" }}
-        gap={12}
-      >
-        <Box>
-          <Text fw={700} fz="xl" mb={2}>
-            Quản lý doanh thu
-          </Text>
-          <Text c="dimmed" fz="sm">
-            Quản lý và theo dõi dữ liệu doanh thu bán hàng
-          </Text>
-        </Box>
-
-        {/* Quick Actions */}
-        <Group gap={8} align="center" w={{ base: "100%", sm: "auto" }}>
-          <Can roles={["admin", "accounting-emp"]}>
-            <Button
-              onClick={openIncomeModal}
-              size="md"
-              radius="xl"
-              leftSection={<IconPlus size={16} />}
-            >
-              Thêm doanh thu
-            </Button>
-          </Can>
-          <Can roles={["admin", "accounting-emp"]}>
-            <Button
-              onClick={() =>
-                modals.open({
-                  title: <b>Thêm chi phí quảng cáo</b>,
-                  children: <DailyAdsModal refetch={refetch} />,
-                  size: "xl"
-                })
-              }
-              size="md"
-              radius="xl"
-              leftSection={<IconPlus size={16} />}
-              color="teal"
-            >
-              Thêm chi phí ads
-            </Button>
-          </Can>
-          <Can roles={["admin", "accounting-emp"]}>
-            <Button
-              leftSection={<IconX size={16} />}
-              color="red"
-              variant="outline"
-              size="md"
-              radius={"xl"}
-              onClick={() =>
-                modals.open({
-                  title: <b>Xoá doanh thu</b>,
-                  children: <DeleteIncomeModal />,
-                  size: "lg"
-                })
-              }
-            >
-              Xoá doanh thu
-            </Button>
-          </Can>
-        </Group>
-      </Flex>
+      <Box pt={32} pb={16} px={{ base: 8, md: 28 }}>
+        <Text fw={700} fz="xl" mb={2}>
+          Quản lý doanh thu
+        </Text>
+        <Text c="dimmed" fz="sm">
+          Quản lý và theo dõi dữ liệu doanh thu bán hàng
+        </Text>
+      </Box>
       <Divider my={0} />
 
-      {/* Content */}
-      <Box pt={16} pb={8} px={{ base: 8, md: 28 }}>
-        <Group justify="space-between" align="center" mb={16}>
-          <Text fw={600} fz="lg">
-            Danh sách doanh thu bán hàng
-          </Text>
-        </Group>
-
-        {/* Date Range and Filters */}
-        <Paper withBorder p="md" radius="md" mb={16}>
-          <Group justify="flex-end" align="end" gap={12} wrap="wrap">
-            <DatePickerInput
-              value={startDate}
-              onChange={setStartDate}
-              label="Từ ngày"
-              placeholder="Chọn ngày bắt đầu"
-              valueFormat="DD/MM/YYYY"
-              size="md"
-              radius="md"
-              clearable
-              style={{ minWidth: 160 }}
-            />
-            <DatePickerInput
-              value={endDate}
-              onChange={setEndDate}
-              label="Đến ngày"
-              placeholder="Chọn ngày kết thúc"
-              valueFormat="DD/MM/YYYY"
-              size="md"
-              radius="md"
-              clearable
-              style={{ minWidth: 160 }}
-            />
-            <TextInput
-              label="ID Đơn hàng"
-              value={orderId}
-              size="md"
-              placeholder="Tìm kiếm theo ID đơn hàng"
-              onChange={(e) => setOrderId(e.target.value ?? undefined)}
-              style={{ minWidth: 180 }}
-            />
-            <Select
-              label="Sản phẩm"
-              data={productCodeOptions}
-              value={productCode}
-              onChange={(val) => setProductCode(val ?? undefined)}
-              size="md"
-              searchable
-              placeholder="Tìm kiếm theo mã sản phẩm"
-              clearable
-              style={{ minWidth: 180 }}
-            />
-            <Select
-              label="Nguồn sản phẩm"
-              data={sourceOptions}
-              value={productSource}
-              onChange={(val) => setProductSource(val ?? undefined)}
-              size="md"
-              placeholder="Tìm kiếm theo nguồn sản phẩm"
-              clearable
-              style={{ minWidth: 160 }}
-            />
-            <Select
-              label="Kênh"
-              data={channelOptions}
-              value={channelFilter}
-              onChange={(val) => setChannelFilter(val ?? undefined)}
-              size="md"
-              searchable
-              placeholder="Tìm kiếm theo kênh"
-              clearable
-              style={{ minWidth: 180 }}
-            />
-            <Button
-              color="green"
-              size="md"
-              leftSection={<IconDownload size={16} />}
-              onClick={() => {
-                exportXlsx({
-                  startDate: startDate
-                    ? startOfDayISO(startDate)
-                    : startOfDayISO(new Date()),
-                  endDate: endDate
-                    ? endOfDayISO(endDate)
-                    : endOfDayISO(new Date()),
-                  orderId,
-                  productCode,
-                  productSource,
-                  channel: channelFilter
-                })
-              }}
-              variant="light"
-              style={{ alignSelf: "end" }}
-            >
-              Xuất Excel
-            </Button>
-          </Group>
-        </Paper>
-
-        {/* Stats Display */}
-        {rangeStatsData && (
+      {/* Stats Display */}
+      {rangeStatsData && (
+        <Box px={{ base: 8, md: 28 }} pt={16}>
           <Paper withBorder p="lg" radius="md" mb={16} bg="blue.0">
             <Group justify="space-around" align="center" gap="xl" wrap="wrap">
               <Box style={{ textAlign: "center" }}>
@@ -454,170 +459,136 @@ export const Incomes = () => {
               </Box>
             </Group>
           </Paper>
-        )}
-      </Box>
+        </Box>
+      )}
 
-      {/* Data Table */}
-      <Box px={{ base: 4, md: 28 }} py={20} maw={"100%"}>
-        <ScrollArea.Autosize scrollbars="x" offsetScrollbars>
-          <Table
-            highlightOnHover
-            withTableBorder
-            withColumnBorders
-            verticalSpacing="sm"
-            horizontalSpacing="md"
-            stickyHeader
-            className="rounded-xl"
-            miw={2520}
-          >
-            <Table.Thead>
-              <Table.Tr>
-                {columns.map((col) => (
-                  <Table.Th key={col.key} style={{ width: col.width }}>
-                    {col.label}
-                  </Table.Th>
-                ))}
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {isLoading ? (
-                <Table.Tr>
-                  <Table.Td colSpan={columns.length}>
-                    <Flex justify="center" align="center" h={60}>
-                      <Loader />
-                    </Flex>
-                  </Table.Td>
-                </Table.Tr>
-              ) : (incomesData?.incomes || []).length > 0 ? (
-                incomesData?.incomes.map((item) => {
-                  const productLen = item.products.length
-                  return item.products.map((prod, idx) => (
-                    <Table.Tr key={item._id + "_" + prod.code + "_" + idx}>
-                      {idx === 0 && (
-                        <>
-                          <Table.Td
-                            rowSpan={productLen}
-                            style={{ verticalAlign: "middle" }}
-                          >
-                            {format(new Date(item.date), "dd/MM/yyyy")}
-                          </Table.Td>
-                          <Table.Td
-                            rowSpan={productLen}
-                            style={{ verticalAlign: "middle" }}
-                          >
-                            {item.orderId}
-                          </Table.Td>
-                          <Table.Td
-                            rowSpan={productLen}
-                            style={{ verticalAlign: "middle" }}
-                          >
-                            {item.customer}
-                          </Table.Td>
-                          <Table.Td
-                            rowSpan={productLen}
-                            style={{ verticalAlign: "middle" }}
-                          >
-                            {item.province}
-                          </Table.Td>
-                          <Table.Td
-                            rowSpan={productLen}
-                            style={{ verticalAlign: "middle" }}
-                          >
-                            {item.shippingProvider || "-"}
-                          </Table.Td>
-                          <Table.Td
-                            rowSpan={productLen}
-                            style={{ verticalAlign: "middle" }}
-                          >
-                            {item.channel?.name || "-"}
-                          </Table.Td>
-                        </>
-                      )}
-                      <Table.Td>
-                        <span>{prod.code}</span>
-                      </Table.Td>
-                      <Table.Td>
-                        <Badge
-                          color={sourceColors[prod.source]}
-                          variant="outline"
-                          size="xs"
-                        >
-                          {prod.source}
-                        </Badge>
-                      </Table.Td>
-                      <Table.Td>{prod.quantity}</Table.Td>
-                      <Table.Td>{prod.quotation?.toLocaleString()}</Table.Td>
-                      <Table.Td>{prod.price?.toLocaleString()}</Table.Td>
-                      <Table.Td>
-                        {prod.platformDiscount?.toLocaleString() || "0"}
-                      </Table.Td>
-                      <Table.Td>
-                        {prod.sellerDiscount?.toLocaleString() || "0"}
-                      </Table.Td>
-                      <Table.Td>
-                        {prod.priceAfterDiscount?.toLocaleString() || "0"}
-                      </Table.Td>
-                      <Table.Td>
-                        <span
-                          style={{
-                            display: "inline-block",
-                            maxWidth: 100,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap"
-                          }}
-                        >
-                          {prod.content ?? "-"}
-                        </span>
-                      </Table.Td>
-                      <Table.Td>
-                        {PackingRulesBoxTypes.find((r) => r.value === prod.box)
-                          ?.label ?? "-"}
-                      </Table.Td>
-                      <Table.Td>{prod.creator ?? "-"}</Table.Td>
-                      <Table.Td>{prod.affiliateAdsPercentage ?? "-"}</Table.Td>
-                      <Table.Td>
-                        {prod.affiliateAdsAmount?.toLocaleString()}
-                      </Table.Td>
-                      <Table.Td>{prod.standardAffPercentage ?? "-"}</Table.Td>
-                      <Table.Td>
-                        {prod.standardAffAmount?.toLocaleString()}
-                      </Table.Td>
-                    </Table.Tr>
-                  ))
-                })
-              ) : (
-                <Table.Tr>
-                  <Table.Td colSpan={columns.length}>
-                    <Flex justify="center" align="center" h={60}>
-                      <Text c="dimmed">Không có đơn thu nhập nào</Text>
-                    </Flex>
-                  </Table.Td>
-                </Table.Tr>
-              )}
-            </Table.Tbody>
-          </Table>
-        </ScrollArea.Autosize>
-        <Flex justify="space-between" mt={8} align={"center"}>
-          <Text c="dimmed" mr={8}>
-            Tổng số dòng: {incomesData?.total}
-          </Text>
-          <Pagination
-            total={Math.ceil((incomesData?.total || 0) / limit)}
-            value={page}
-            onChange={setPage}
-          />
-          <Group gap={4}>
-            <Text>Số dòng/trang </Text>
-            <NumberInput
-              value={limit}
-              onChange={(val) => setLimit(Number(val))}
-              min={10}
-              max={100}
-              w={120}
-            />
-          </Group>
-        </Flex>
+      {/* Content */}
+      <Box px={{ base: 4, md: 28 }} pb={20}>
+        <CDataTable
+          columns={columns}
+          data={tableData}
+          enableGlobalFilter={true}
+          globalFilterValue={searchText}
+          onGlobalFilterChange={setSearchText}
+          page={page}
+          totalPages={Math.ceil((incomesData?.total || 0) / limit)}
+          onPageChange={setPage}
+          onPageSizeChange={setLimit}
+          initialPageSize={limit}
+          pageSizeOptions={[10, 20, 50, 100]}
+          isLoading={isLoading}
+          onRowClick={(row) => {
+            // TODO: Navigate to detail page when implemented
+            console.log("Navigate to income detail:", row.original._id)
+          }}
+          extraFilters={
+            <>
+              <DatePickerInput
+                value={startDate}
+                onChange={setStartDate}
+                label="Từ ngày"
+                placeholder="Chọn ngày bắt đầu"
+                valueFormat="DD/MM/YYYY"
+                size="sm"
+                radius="md"
+                clearable
+                style={{ width: 160 }}
+              />
+              <DatePickerInput
+                value={endDate}
+                onChange={setEndDate}
+                label="Đến ngày"
+                placeholder="Chọn ngày kết thúc"
+                valueFormat="DD/MM/YYYY"
+                size="sm"
+                radius="md"
+                clearable
+                style={{ width: 160 }}
+              />
+              <Select
+                label="Nguồn sản phẩm"
+                data={sourceOptions}
+                value={productSource}
+                onChange={(val) => setProductSource(val || "")}
+                size="sm"
+                placeholder="Chọn nguồn"
+                clearable
+                style={{ width: 180 }}
+              />
+              <Select
+                label="Kênh"
+                data={[{ label: "Tất cả kênh", value: "" }, ...channelOptions]}
+                value={channelFilter}
+                onChange={(val) => setChannelFilter(val || "")}
+                size="sm"
+                searchable
+                placeholder="Chọn kênh"
+                clearable
+                style={{ width: 180 }}
+              />
+            </>
+          }
+          extraActions={
+            <>
+              <Button
+                color="green"
+                size="sm"
+                leftSection={<IconDownload size={16} />}
+                onClick={handleExportExcel}
+                variant="light"
+                radius="md"
+              >
+                Xuất Excel
+              </Button>
+              <Can roles={["admin", "accounting-emp"]}>
+                <Button
+                  onClick={() =>
+                    modals.open({
+                      title: <b>Thêm chi phí quảng cáo</b>,
+                      children: <DailyAdsModal refetch={refetch} />,
+                      size: "xl"
+                    })
+                  }
+                  size="sm"
+                  radius="md"
+                  leftSection={<IconPlus size={16} />}
+                  color="teal"
+                  variant="light"
+                >
+                  Thêm chi phí ads
+                </Button>
+              </Can>
+              <Can roles={["admin", "accounting-emp"]}>
+                <Button
+                  leftSection={<IconX size={16} />}
+                  color="red"
+                  variant="light"
+                  size="sm"
+                  radius="md"
+                  onClick={() =>
+                    modals.open({
+                      title: <b>Xoá doanh thu</b>,
+                      children: <DeleteIncomeModal />,
+                      size: "lg"
+                    })
+                  }
+                >
+                  Xoá doanh thu
+                </Button>
+              </Can>
+              <Can roles={["admin", "accounting-emp"]}>
+                <Button
+                  onClick={openIncomeModal}
+                  size="sm"
+                  radius="md"
+                  leftSection={<IconPlus size={16} />}
+                >
+                  Thêm doanh thu
+                </Button>
+              </Can>
+            </>
+          }
+        />
       </Box>
     </Box>
   )
