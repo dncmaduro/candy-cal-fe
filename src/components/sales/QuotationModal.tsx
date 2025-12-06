@@ -133,9 +133,6 @@ const QuotationCaptureContent = ({
                 Sản phẩm
               </Table.Th>
               <Table.Th ta="center" fw={700}>
-                Tên TQ
-              </Table.Th>
-              <Table.Th ta="center" fw={700}>
                 Số lượng
               </Table.Th>
               <Table.Th ta="center" fw={700}>
@@ -176,9 +173,6 @@ const QuotationCaptureContent = ({
                 </Table.Td>
                 <Table.Td>
                   <Text>{item.name}</Text>
-                </Table.Td>
-                <Table.Td ta="center">
-                  <Text>{/* nếu có tên TQ thì fill vào đây */}</Text>
                 </Table.Td>
                 <Table.Td ta="center">
                   <Text fw={600}>{item.quantity}</Text>
