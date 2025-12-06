@@ -724,6 +724,8 @@ function RouteComponent() {
                           page: 1,
                           limit: 9999,
                           searchText: searchText || undefined,
+                          channelId: channelIdFilter || undefined,
+                          userId: userIdFilter || undefined,
                           returning:
                             returningFilter === ""
                               ? undefined

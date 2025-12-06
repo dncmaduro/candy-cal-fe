@@ -3097,6 +3097,8 @@ export interface SearchSalesOrderRequest {
 /** @interface */
 export interface ExportXlsxSalesOrderRequest {
   salesFunnelId?: string
+  userId?: string
+  channelId?: string
   returning?: boolean
   startDate?: string
   endDate?: string
