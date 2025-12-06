@@ -123,13 +123,13 @@ const QuotationCaptureContent = ({
         >
           <Table.Thead>
             <Table.Tr>
-              <Table.Th ta="center" fw={700}>
+              <Table.Th ta="center" fw={700} w={50}>
                 STT
               </Table.Th>
-              <Table.Th ta="center" fw={700}>
+              <Table.Th ta="center" fw={700} w={120}>
                 Mã SP
               </Table.Th>
-              <Table.Th ta="center" fw={700}>
+              <Table.Th ta="center" fw={700} w={350}>
                 Sản phẩm
               </Table.Th>
               <Table.Th ta="center" fw={700}>
@@ -154,7 +154,7 @@ const QuotationCaptureContent = ({
                 Cân nặng (kg/sp)
               </Table.Th>
               <Table.Th ta="center" fw={700}>
-                Tổng trọng lượng
+                Tổng kg
               </Table.Th>
               <Table.Th ta="center" fw={700}>
                 Ghi chú
@@ -217,7 +217,6 @@ const QuotationCaptureContent = ({
               <Table.Td c="red" fw={700}>
                 Tổng
               </Table.Td>
-              <Table.Td />
               <Table.Td ta="center" fw={700} c="red">
                 {calculations.totalQuantity}
               </Table.Td>
