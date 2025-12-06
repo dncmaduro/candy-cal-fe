@@ -18,6 +18,8 @@ import { SalesLayout } from "../../../components/layouts/SalesLayout"
 import { useSalesDailyReports } from "../../../hooks/useSalesDailyReports"
 import { useNavigate } from "@tanstack/react-router"
 import { ReactNode } from "react"
+import { DailyReportByText } from "../../../components/sales/dashboard/DailyReportByText"
+import { modals } from "@mantine/modals"
 
 export const Route = createFileRoute("/sales/dashboard/$dailyReportId")({
   component: RouteComponent
@@ -149,6 +151,35 @@ function RouteComponent() {
   //     ? ((projectedNewFunnelRevenueAds / projectedAdsCost) * 100).toFixed(2)
   //     : "0.00"
 
+  const openMessageModal = () => {
+    if (!report) return
+
+    const convertedReport = {
+      _id: report._id,
+      date: report.date,
+      channel: report.channel._id,
+      adsCost: report.adsCost,
+      dateKpi: report.dateKpi,
+      revenue: report.revenue,
+      newFunnelRevenue: report.newFunnelRevenue,
+      returningFunnelRevenue: report.returningFunnelRevenue,
+      newOrder: report.newOrder,
+      returningOrder: report.returningOrder,
+      accumulatedRevenue: report.accumulatedRevenue,
+      accumulatedAdsCost: report.accumulatedAdsCost,
+      accumulatedNewFunnelRevenue: report.accumulatedNewFunnelRevenue,
+      createdAt: report.createdAt,
+      updatedAt: report.updatedAt
+    }
+
+    modals.open({
+      id: "create-sales-daily-report",
+      title: <b>Tin nhắn báo cáo</b>,
+      children: <DailyReportByText report={convertedReport} />,
+      size: "lg"
+    })
+  }
+
   return (
     <SalesLayout>
       <Box pos="relative" mih={400}>
@@ -169,11 +200,18 @@ function RouteComponent() {
             >
               Quay lại
             </Button>
-            {report && (
-              <Badge size="md" variant="outline" color="blue">
-                {format(new Date(report.date), "dd/MM/yyyy")}
-              </Badge>
-            )}
+            <Group gap="sm">
+              {report && (
+                <Button variant="light" color="blue" onClick={openMessageModal}>
+                  Xem tin nhắn báo cáo
+                </Button>
+              )}
+              {report && (
+                <Badge size="md" variant="outline" color="blue">
+                  {format(new Date(report.date), "dd/MM/yyyy")}
+                </Badge>
+              )}
+            </Group>
           </Group>
 
           {report && (

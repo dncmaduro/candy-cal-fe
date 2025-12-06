@@ -84,9 +84,16 @@ const QuotationCaptureContent = ({
     >
       {/* HEADER NGANG KIỂU EXCEL */}
       <Group justify="space-between" align="flex-start" mb="sm">
-        <Text size="sm" fw={700} c="red">
-          Phiếu xuất hàng dự kiến - {channel?.channel.channelName}
-        </Text>
+        <Group>
+          <Text size="sm" fw={700} c="red">
+            Phiếu xuất hàng dự kiến - {channel?.channel.channelName}
+          </Text>
+          <Image
+            src={channel?.channel.avatarUrl}
+            alt={channel?.channel.channelName}
+            h={20}
+          />
+        </Group>
 
         <Text size="sm" fw={600}>
           {format(new Date(order.date), "dd/MM/yyyy")}
@@ -241,12 +248,18 @@ const QuotationCaptureContent = ({
               <Table.Td />
               <Table.Td />
               <Table.Td colSpan={5}>
-                <Text size="xs">Phí ship 5k/kg</Text>
+                <Text size="xs">
+                  Phí ship ({calculations.totalWeight < 10 ? "45k" : `5k/kg`})
+                </Text>
               </Table.Td>
               <Table.Td />
               <Table.Td ta="right">
                 <Text size="xs">
-                  {calculations.shippingCost > 0 ? "5.000" : ""}
+                  {calculations.shippingCost > 0
+                    ? calculations.totalWeight < 10
+                      ? "45.000"
+                      : "5.000"
+                    : ""}
                 </Text>
               </Table.Td>
               <Table.Td ta="right">
@@ -258,6 +271,44 @@ const QuotationCaptureContent = ({
               <Table.Td />
               <Table.Td />
             </Table.Tr>
+
+            {/* HÀNG CHIẾT KHẤU ĐƠN HÀNG */}
+            {calculations.orderDiscount > 0 && (
+              <Table.Tr>
+                <Table.Td />
+                <Table.Td />
+                <Table.Td colSpan={7}>
+                  <Text size="xs" c="orange">
+                    Chiết khấu đơn hàng
+                  </Text>
+                </Table.Td>
+                <Table.Td ta="right" fw={600} c="orange">
+                  - {calculations.orderDiscount.toLocaleString("vi-VN")}
+                </Table.Td>
+                <Table.Td />
+                <Table.Td />
+                <Table.Td />
+              </Table.Tr>
+            )}
+
+            {/* HÀNG CHIẾT KHẤU 2 */}
+            {calculations.otherDiscount > 0 && (
+              <Table.Tr>
+                <Table.Td />
+                <Table.Td />
+                <Table.Td colSpan={7}>
+                  <Text size="xs" c="pink">
+                    Chiết khấu 2
+                  </Text>
+                </Table.Td>
+                <Table.Td ta="right" fw={600} c="pink">
+                  - {calculations.otherDiscount.toLocaleString("vi-VN")}
+                </Table.Td>
+                <Table.Td />
+                <Table.Td />
+                <Table.Td />
+              </Table.Tr>
+            )}
 
             {/* HÀNG THUẾ */}
             <Table.Tr>
@@ -274,13 +325,28 @@ const QuotationCaptureContent = ({
               <Table.Td />
             </Table.Tr>
 
-            {/* HÀNG TỔNG CỘNG ĐƠN HÀNG */}
+            {/* HÀNG TIỀN CỌC */}
+            <Table.Tr>
+              <Table.Td />
+              <Table.Td />
+              <Table.Td colSpan={7} ta="right">
+                <Text size="xs">Tiền cọc</Text>
+              </Table.Td>
+              <Table.Td ta="right" fw={600}>
+                - {calculations.deposit.toLocaleString("vi-VN")}
+              </Table.Td>
+              <Table.Td />
+              <Table.Td />
+              <Table.Td />
+            </Table.Tr>
+
+            {/* HÀNG TỔNG CỘNG CẦN TRẢ */}
             <Table.Tr>
               <Table.Td />
               <Table.Td />
               <Table.Td colSpan={7} ta="right">
                 <Text fw={700} c="red">
-                  Tổng cộng đơn hàng
+                  Tổng cộng cần trả
                 </Text>
               </Table.Td>
               <Table.Td ta="right">
