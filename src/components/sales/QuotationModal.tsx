@@ -323,7 +323,7 @@ const QuotationCaptureContent = ({
             <Table.Tr>
               <Table.Td />
               <Table.Td />
-              <Table.Td colSpan={7} ta="right">
+              <Table.Td colSpan={7} ta="left">
                 <Text size="xs">Tiền cọc</Text>
               </Table.Td>
               <Table.Td ta="right" fw={600}>
