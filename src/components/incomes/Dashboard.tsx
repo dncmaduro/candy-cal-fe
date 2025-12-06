@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { useState, useMemo } from "react"
 import { useIncomes } from "../../hooks/useIncomes"
-import { useLivestream } from "../../hooks/useLivestream"
 import {
   Box,
   Flex,
@@ -12,7 +11,6 @@ import {
   Paper,
   Divider,
   Select,
-  ActionIcon,
   Badge
 } from "@mantine/core"
 import { modals } from "@mantine/modals"
@@ -28,8 +26,7 @@ import {
   IconBuilding,
   IconAnalyze,
   IconTrophy,
-  IconFilter,
-  IconFilterOff
+  IconFilter
 } from "@tabler/icons-react"
 import { useMonthGoals } from "../../hooks/useMonthGoals"
 import { KPIBox } from "./KPIBox"
@@ -38,12 +35,13 @@ import { fmtPercent } from "../../utils/fmt"
 import { SegmentedControl } from "@mantine/core"
 import { CDashboardLayout } from "../common/CDashboardLayout"
 import { format } from "date-fns"
+import { useLivestreamChannel } from "../../context/LivestreamChannelContext"
 
 export const Dashboard = () => {
   const [kpiView, setKpiView] = useState<"live" | "shop" | "total">("live")
   type DiscountMode = "beforeDiscount" | "afterDiscount"
   const [mode, setMode] = useState<DiscountMode>("afterDiscount")
-  const [channelId, setChannelId] = useState<string | null>(null)
+  const { selectedChannelId, channels } = useLivestreamChannel()
   const [selectedMonth, setSelectedMonth] = useState<string>(() => {
     const now = new Date()
     return new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
@@ -58,19 +56,6 @@ export const Dashboard = () => {
   } = useIncomes()
 
   const { getGoal } = useMonthGoals()
-  const { searchLivestreamChannels } = useLivestream()
-
-  // Fetch livestream channels for the filter
-  const { data: channelsData = [] } = useQuery({
-    queryKey: ["searchLivestreamChannels", "all"],
-    queryFn: () =>
-      searchLivestreamChannels({
-        page: 1,
-        limit: 100
-      }),
-    select: (data) => data.data.data || [],
-    staleTime: 5 * 60 * 1000 // Cache for 5 minutes
-  })
 
   // Generate list of last 24 months for selection
   const monthOptions = useMemo(() => {
@@ -86,48 +71,55 @@ export const Dashboard = () => {
     return options
   }, [])
 
-  // Generate channel options from livestream channels
-  const channelOptions = useMemo(() => {
-    return channelsData.map((channel) => ({
-      value: channel._id,
-      label: channel.name
-    }))
-  }, [channelsData])
-
   // Parse selected month
   const selectedDate = new Date(selectedMonth)
   const currentMonth = selectedDate.getMonth()
   const currentYear = selectedDate.getFullYear()
 
   const { data: KPIPercentageData } = useQuery({
-    queryKey: ["getKPIPercentageByMonth", currentMonth, currentYear, channelId],
+    queryKey: [
+      "getKPIPercentageByMonth",
+      currentMonth,
+      currentYear,
+      selectedChannelId
+    ],
     queryFn: () =>
       getKPIPercentageByMonth({
         month: currentMonth,
         year: currentYear,
-        channelId: channelId || undefined
+        channelId: selectedChannelId || undefined
       }),
     select: (data) => data.data
   })
 
   const { data: totalQuantityData } = useQuery({
-    queryKey: ["getTotalQuantityByMonth", currentMonth, currentYear, channelId],
+    queryKey: [
+      "getTotalQuantityByMonth",
+      currentMonth,
+      currentYear,
+      selectedChannelId
+    ],
     queryFn: () =>
       getTotalQuantityByMonth({
         month: currentMonth,
         year: currentYear,
-        channelId: channelId || undefined
+        channelId: selectedChannelId || undefined
       }),
     select: (data) => data.data
   })
 
   const { data: totalIncomesData } = useQuery({
-    queryKey: ["getTotalIncomesByMonth", currentMonth, currentYear, channelId],
+    queryKey: [
+      "getTotalIncomesByMonth",
+      currentMonth,
+      currentYear,
+      selectedChannelId
+    ],
     queryFn: () =>
       getTotalIncomesByMonth({
         month: currentMonth,
         year: currentYear,
-        channelId: channelId || undefined
+        channelId: selectedChannelId || undefined
       }),
     select: (data) => data.data
   })
@@ -137,24 +129,29 @@ export const Dashboard = () => {
       "getLiveShopIncomeByMonth",
       currentMonth,
       currentYear,
-      channelId
+      selectedChannelId
     ],
     queryFn: () =>
       getLiveShopIncomeByMonth({
         month: currentMonth,
         year: currentYear,
-        channelId: channelId || undefined
+        channelId: selectedChannelId || undefined
       }),
     select: (data) => data.data
   })
 
   const { data: adsCostSplitMonthData } = useQuery({
-    queryKey: ["getAdsCostSplitByMonth", currentMonth, currentYear, channelId],
+    queryKey: [
+      "getAdsCostSplitByMonth",
+      currentMonth,
+      currentYear,
+      selectedChannelId
+    ],
     queryFn: () =>
       getAdsCostSplitByMonth({
         month: currentMonth,
         year: currentYear,
-        channelId: channelId || undefined
+        channelId: selectedChannelId || undefined
       }),
     select: (data) => data.data
   })
@@ -285,31 +282,6 @@ export const Dashboard = () => {
             size="sm"
             w={140}
           />
-          <Group gap="xs">
-            <Select
-              label="Kênh livestream"
-              placeholder="Tất cả kênh"
-              value={channelId}
-              onChange={setChannelId}
-              data={channelOptions}
-              size="sm"
-              w={200}
-              clearable
-              searchable
-            />
-            {channelId && (
-              <ActionIcon
-                color="gray"
-                variant="subtle"
-                size="sm"
-                onClick={() => setChannelId(null)}
-                title="Xóa lọc kênh"
-                mt="xl"
-              >
-                <IconFilterOff size={16} />
-              </ActionIcon>
-            )}
-          </Group>
           <Button
             color="grape"
             variant="gradient"
@@ -382,14 +354,14 @@ export const Dashboard = () => {
                 year: "numeric"
               })}
             </Text>
-            {channelId && (
+            {selectedChannelId && (
               <Badge
                 color="violet"
                 variant="light"
                 leftSection={<IconFilter size={14} />}
                 size="lg"
               >
-                {channelOptions.find((c) => c.value === channelId)?.label ||
+                {channels.find((c) => c._id === selectedChannelId)?.name ||
                   "Kênh đã chọn"}
               </Badge>
             )}
