@@ -1373,7 +1373,7 @@ export interface GetInformationSystemLogsRespomse {
 export interface GetRangeStatsRequest {
   startDate: string
   endDate: string
-  channelId?: string
+  channelId: string
 }
 
 /** @interface */

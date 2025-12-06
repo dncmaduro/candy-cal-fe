@@ -31,6 +31,7 @@ import { PackingRulesBoxTypes } from "../../constants/rules"
 import { ExportXlsxIncomesRequest } from "../../hooks/models"
 import { CToast } from "../common/CToast"
 import { Can } from "../common/Can"
+import { useLivestreamChannel } from "../../context/LivestreamChannelContext"
 
 export const Incomes = () => {
   const [page, setPage] = useState(1)
@@ -49,6 +50,7 @@ export const Incomes = () => {
     useIncomes()
   const { searchProducts } = useProducts()
   const { searchLivestreamChannels } = useLivestream()
+  const { selectedChannelId } = useLivestreamChannel()
 
   const startOfDayISO = (d: Date) => {
     const dt = new Date(d)
@@ -112,14 +114,15 @@ export const Incomes = () => {
 
   const { data: rangeStatsData } = useQuery({
     queryKey: ["getRangeStats", startDate, endDate],
-    queryFn: () =>
-      getRangeStats({
-        startDate: startDate
-          ? startOfDayISO(startDate)
-          : startOfDayISO(new Date()),
-        endDate: endDate ? endOfDayISO(endDate) : endOfDayISO(new Date())
-      }),
-    select: (data) => data.data,
+    queryFn: () => {
+      if (!startDate || !endDate || !selectedChannelId) return null
+      return getRangeStats({
+        startDate: startOfDayISO(startDate),
+        endDate: endOfDayISO(endDate),
+        channelId: selectedChannelId
+      })
+    },
+    select: (data) => (data ? data.data : null),
     enabled: !!startDate && !!endDate
   })
 
