@@ -100,8 +100,8 @@ const QuotationCaptureContent = ({
         </Text>
 
         <Text size="sm" fw={700} c="red" ta="right">
-          {order.salesFunnelId.name} - {order.address} -{" "}
-          {order.salesFunnelId.phoneNumber}
+          {order.salesFunnelId.name} - {order.salesFunnelId.phoneNumber} -{" "}
+          {order.address}
         </Text>
       </Group>
 
@@ -402,8 +402,8 @@ const WarehouseOrderCaptureContent = ({
         </Text>
 
         <Text size="sm" fw={600} ta="right">
-          {order.salesFunnelId.name} - {order.address} -{" "}
-          {order.salesFunnelId.phoneNumber}
+          {order.salesFunnelId.name} - {order.salesFunnelId.phoneNumber} -{" "}
+          {order.address}
         </Text>
       </Group>
 

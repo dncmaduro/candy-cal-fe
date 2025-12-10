@@ -1425,6 +1425,9 @@ export interface GetRangeStatsResponse {
       avgDiscountPerOrder: number
       discountPercentage: number
     }
+    productsQuantity: {
+      [code: string]: number
+    }
   }
   changes?: {
     beforeDiscount: {
