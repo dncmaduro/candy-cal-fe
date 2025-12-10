@@ -17,7 +17,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { CToast } from "../../components/common/CToast"
 import { Controller, useForm } from "react-hook-form"
 import { IconCamera } from "@tabler/icons-react"
-import { useAuthGuard } from "../../hooks/useAuthGuard"
 import { modals } from "@mantine/modals"
 import { AvatarCropModal } from "../../components/user/AvatarCropModal"
 import { ChangePasswordModal } from "../../components/user/ChangePasswordModal"
@@ -28,7 +27,6 @@ export const Route = createFileRoute("/user/")({
 })
 
 function RouteComponent() {
-  useAuthGuard(["admin"])
   const queryClient = useQueryClient()
   const { getMe, updateUser } = useUsers()
 
