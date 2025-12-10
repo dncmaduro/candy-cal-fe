@@ -3,6 +3,7 @@ import {
   IconAppWindow,
   IconPackages,
   IconPower,
+  IconSettings,
   IconShoppingBag,
   IconUser,
   IconVideo
@@ -37,22 +38,32 @@ export const UserMenu = () => {
     {
       to: "/marketing-storage",
       label: "Kho vận",
-      icon: <IconPackages size={18} />
+      icon: <IconPackages size={18} />,
+      roles: ["admin", "order-emp", "accounting-emp", "system-emp"]
     },
     {
       to: "/landing",
       label: "Landing Page",
-      icon: <IconAppWindow size={18} />
+      icon: <IconAppWindow size={18} />,
+      roles: ["admin"]
     },
     {
       to: "/livestream",
       label: "Livestream",
-      icon: <IconVideo size={18} />
+      icon: <IconVideo size={18} />,
+      roles: ["admin", "system-emp", "livestream-leader", "livestream-emp"]
     },
     {
       to: "/sales",
       label: "Sales",
-      icon: <IconShoppingBag size={18} />
+      icon: <IconShoppingBag size={18} />,
+      roles: ["admin", "system-emp", "sales-leader", "sales-emp"]
+    },
+    {
+      to: "/admin",
+      label: "Quản trị",
+      icon: <IconSettings size={18} />,
+      roles: ["admin"]
     }
   ]
 
@@ -111,6 +122,10 @@ export const UserMenu = () => {
         <Menu.Divider my={0} />
         <Menu.Label>Các ứng dụng</Menu.Label>
         {APPS.map((app) => {
+          const hasPermission = app.roles.some((role) =>
+            meData?.roles.includes(role)
+          )
+
           return (
             <Menu.Item
               key={app.to}
@@ -118,6 +133,7 @@ export const UserMenu = () => {
               fz="sm"
               component={Link}
               to={app.to}
+              hidden={!hasPermission}
             >
               {app.label}
             </Menu.Item>

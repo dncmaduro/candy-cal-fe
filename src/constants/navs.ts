@@ -6,6 +6,8 @@ export const LANDING_NAVS_URL = "/landing"
 export const LIVESTREAM_NAVS_URL = "/livestream"
 /** @constant */
 export const SALES_NAVS_URL = "/sales"
+/** @constant */
+export const ADMIN_NAVS_URL = "/admin"
 
 /** @constant */
 export const NAVS = [
@@ -53,19 +55,6 @@ export const NAVS = [
     label: "Doanh thu",
     icon: "IconCoin",
     roles: ["accounting-emp", "order-emp", "system-emp"]
-  },
-  {
-    to: `${NAVS_URL}/system-logs`,
-    label: "Lịch sử hệ thống",
-    icon: "IconAutomaticGearbox",
-    roles: ["admin", "system-emp"]
-  },
-  {
-    to: `${NAVS_URL}/tasks`,
-    label: "Công việc",
-    icon: "IconClipboardList",
-    roles: ["admin"],
-    beta: true
   }
 ]
 
@@ -173,5 +162,28 @@ export const SALES_NAVS = [
     label: "Hạng khách hàng",
     roles: ["admin", "sales-emp", "system-emp"],
     icon: "IconDeviceTabletStar"
+  }
+]
+
+/** @constant */
+export const ADMIN_NAVS = [
+  {
+    to: `${ADMIN_NAVS_URL}/users`,
+    label: "Quản lý người dùng",
+    roles: ["admin"],
+    icon: "IconUsers"
+  },
+  {
+    to: `${NAVS_URL}/system-logs`,
+    label: "Lịch sử hệ thống",
+    icon: "IconAutomaticGearbox",
+    roles: ["admin"]
+  },
+  {
+    to: `${NAVS_URL}/tasks`,
+    label: "Công việc",
+    icon: "IconClipboardList",
+    roles: ["admin"],
+    beta: true
   }
 ]
