@@ -25,6 +25,8 @@ import { CToast } from "../common/CToast"
 import { Can } from "../common/Can"
 import { CDataTable } from "../common/CDataTable"
 import { ColumnDef } from "@tanstack/react-table"
+import { useNavigate } from "@tanstack/react-router"
+import { useLivestreamChannel } from "../../context/LivestreamChannelContext"
 
 interface IncomeRow {
   _id: string
@@ -47,9 +49,9 @@ interface IncomeRow {
   totalRevenue: number
   totalDiscount: number
 }
-import { useLivestreamChannel } from "../../context/LivestreamChannelContext"
 
 export const Incomes = () => {
+  const navigate = useNavigate()
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(10)
   const [searchText, setSearchText] = useState("")
@@ -478,8 +480,10 @@ export const Incomes = () => {
           pageSizeOptions={[10, 20, 50, 100]}
           isLoading={isLoading}
           onRowClick={(row) => {
-            // TODO: Navigate to detail page when implemented
-            console.log("Navigate to income detail:", row.original._id)
+            navigate({
+              to: "/marketing-storage/incomes/$incomeId",
+              params: { incomeId: row.original.orderId }
+            })
           }}
           extraFilters={
             <>
