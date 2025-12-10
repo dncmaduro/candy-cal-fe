@@ -131,7 +131,7 @@ function RouteComponent() {
     setSelectedChannelId(value)
     navigate({
       to: `${NAVS_URL}/incomes`,
-      search: { channel: value, tab: "dashboard" } // Reset to dashboard when changing channel
+      search: { channel: value, tab } // Reset to dashboard when changing channel
     })
   }
 

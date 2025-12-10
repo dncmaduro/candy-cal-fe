@@ -19,7 +19,6 @@ import { InsertIncomeModalV2 } from "./InsertIncomeModalV2"
 import { DailyAdsModal } from "./DailyAdsModal"
 import { IconDownload, IconPlus, IconX } from "@tabler/icons-react"
 import { DeleteIncomeModal } from "./DeleteIncomeModal"
-import { useLivestream } from "../../hooks/useLivestream"
 import { ExportXlsxIncomesRequest } from "../../hooks/models"
 import { CToast } from "../common/CToast"
 import { Can } from "../common/Can"
@@ -56,7 +55,6 @@ export const Incomes = () => {
   const [limit, setLimit] = useState(10)
   const [searchText, setSearchText] = useState("")
   const [productSource, setProductSource] = useState<string>("")
-  const [channelFilter, setChannelFilter] = useState<string>("")
   const [startDate, setStartDate] = useState<Date | null>(() => {
     const d = new Date()
     d.setDate(d.getDate() - 30)
@@ -65,7 +63,6 @@ export const Incomes = () => {
   const [endDate, setEndDate] = useState<Date | null>(new Date())
   const { getIncomesByDateRange, exportXlsxIncomes, getRangeStats } =
     useIncomes()
-  const { searchLivestreamChannels } = useLivestream()
   const { selectedChannelId } = useLivestreamChannel()
 
   const startOfDayISO = (d: Date) => {
@@ -93,7 +90,7 @@ export const Incomes = () => {
       endDate,
       searchText,
       productSource,
-      channelFilter
+      selectedChannelId
     ],
     queryFn: () =>
       getIncomesByDateRange({
@@ -105,17 +102,7 @@ export const Incomes = () => {
         endDate: endDate ? endOfDayISO(endDate) : endOfDayISO(new Date()),
         orderId: searchText || undefined,
         productSource,
-        channelId: channelFilter || undefined
-      }),
-    select: (data) => data.data
-  })
-
-  const { data: channelsData } = useQuery({
-    queryKey: ["searchLivestreamChannels"],
-    queryFn: () =>
-      searchLivestreamChannels({
-        page: 1,
-        limit: 100
+        channelId: selectedChannelId || undefined
       }),
     select: (data) => data.data
   })
@@ -152,15 +139,6 @@ export const Incomes = () => {
       CToast.error({ title: "Có lỗi xảy ra khi xuất file Excel" })
     }
   })
-
-  const channelOptions = useMemo(() => {
-    return (
-      channelsData?.data.map((channel) => ({
-        value: channel._id,
-        label: channel.name
-      })) || []
-    )
-  }, [channelsData])
 
   const sourceOptions = useMemo(() => {
     return [
@@ -369,14 +347,6 @@ export const Incomes = () => {
                 • Nguồn: <strong>{productSource}</strong>
               </Text>
             )}
-            {channelFilter && (
-              <Text size="sm" mb={4}>
-                • Kênh:{" "}
-                <strong>
-                  {channelOptions.find((c) => c.value === channelFilter)?.label}
-                </strong>
-              </Text>
-            )}
             {startDate && (
               <Text size="sm" mb={4}>
                 • Từ ngày: <strong>{format(startDate, "dd/MM/yyyy")}</strong>
@@ -400,7 +370,7 @@ export const Incomes = () => {
           endDate: endDate ? endOfDayISO(endDate) : endOfDayISO(new Date()),
           orderId: searchText || undefined,
           productSource,
-          channel: channelFilter || undefined
+          channel: selectedChannelId || undefined
         })
       }
     })
@@ -516,17 +486,6 @@ export const Incomes = () => {
                 onChange={(val) => setProductSource(val || "")}
                 size="sm"
                 placeholder="Chọn nguồn"
-                clearable
-                style={{ width: 180 }}
-              />
-              <Select
-                label="Kênh"
-                data={[{ label: "Tất cả kênh", value: "" }, ...channelOptions]}
-                value={channelFilter}
-                onChange={(val) => setChannelFilter(val || "")}
-                size="sm"
-                searchable
-                placeholder="Chọn kênh"
                 clearable
                 style={{ width: 180 }}
               />
