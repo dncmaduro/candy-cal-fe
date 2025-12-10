@@ -245,7 +245,6 @@ const QuotationCaptureContent = ({
                   Phí ship ({calculations.totalWeight < 10 ? "45k" : `5k/kg`})
                 </Text>
               </Table.Td>
-              <Table.Td />
               <Table.Td ta="right">
                 <Text size="xs">
                   {calculations.shippingCost > 0
@@ -260,6 +259,7 @@ const QuotationCaptureContent = ({
                   {calculations.shippingCost.toLocaleString("vi-VN")}
                 </Text>
               </Table.Td>
+              <Table.Td></Table.Td>
               <Table.Td />
               <Table.Td />
               <Table.Td />
@@ -270,7 +270,7 @@ const QuotationCaptureContent = ({
               <Table.Tr>
                 <Table.Td />
                 <Table.Td />
-                <Table.Td colSpan={7}>
+                <Table.Td colSpan={6}>
                   <Text size="xs" c="orange">
                     Chiết khấu đơn hàng
                   </Text>
@@ -278,6 +278,7 @@ const QuotationCaptureContent = ({
                 <Table.Td ta="right" fw={600} c="orange">
                   - {calculations.orderDiscount.toLocaleString("vi-VN")}
                 </Table.Td>
+                <Table.Td />
                 <Table.Td />
                 <Table.Td />
                 <Table.Td />
@@ -289,7 +290,7 @@ const QuotationCaptureContent = ({
               <Table.Tr>
                 <Table.Td />
                 <Table.Td />
-                <Table.Td colSpan={7}>
+                <Table.Td colSpan={6}>
                   <Text size="xs" c="pink">
                     Chiết khấu 2
                   </Text>
@@ -300,6 +301,7 @@ const QuotationCaptureContent = ({
                 <Table.Td />
                 <Table.Td />
                 <Table.Td />
+                <Table.Td />
               </Table.Tr>
             )}
 
@@ -307,12 +309,13 @@ const QuotationCaptureContent = ({
             <Table.Tr>
               <Table.Td />
               <Table.Td />
-              <Table.Td colSpan={7}>
+              <Table.Td colSpan={6}>
                 <Text size="xs">Thuế 0.75%</Text>
               </Table.Td>
               <Table.Td ta="right" fw={600}>
                 {calculations.tax.toLocaleString("vi-VN")}
               </Table.Td>
+              <Table.Td />
               <Table.Td />
               <Table.Td />
               <Table.Td />
@@ -322,12 +325,13 @@ const QuotationCaptureContent = ({
             <Table.Tr>
               <Table.Td />
               <Table.Td />
-              <Table.Td colSpan={7} ta="left">
+              <Table.Td colSpan={6} ta="left">
                 <Text size="xs">Tiền cọc</Text>
               </Table.Td>
               <Table.Td ta="right" fw={600}>
                 - {calculations.deposit.toLocaleString("vi-VN")}
               </Table.Td>
+              <Table.Td />
               <Table.Td />
               <Table.Td />
               <Table.Td />
@@ -337,7 +341,7 @@ const QuotationCaptureContent = ({
             <Table.Tr>
               <Table.Td />
               <Table.Td />
-              <Table.Td colSpan={7} ta="right">
+              <Table.Td colSpan={6} ta="right">
                 <Text fw={700} c="red">
                   Tổng cộng cần trả
                 </Text>
@@ -347,6 +351,7 @@ const QuotationCaptureContent = ({
                   {calculations.remainingAmount.toLocaleString("vi-VN")}
                 </Text>
               </Table.Td>
+              <Table.Td />
               <Table.Td />
               <Table.Td />
               <Table.Td />
