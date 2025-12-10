@@ -1,41 +1,144 @@
 import { useQuery } from "@tanstack/react-query"
 import { usePackingRules } from "../../hooks/usePackingRules"
 import { useDebouncedValue } from "@mantine/hooks"
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { PackingRulesBoxTypes } from "../../constants/rules"
-import {
-  Box,
-  Button,
-  Divider,
-  Flex,
-  Group,
-  Loader,
-  ScrollArea,
-  Select,
-  Table,
-  Text,
-  TextInput
-} from "@mantine/core"
-import { IconPlus, IconSearch } from "@tabler/icons-react"
+import { Box, Button, Divider, Group, Text, Badge } from "@mantine/core"
+import { IconEdit, IconPlus } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
 import { PackingRuleModal } from "./PackingRuleModal"
 import { Can } from "../common/Can"
+import { CDataTable } from "../common/CDataTable"
+import { ColumnDef } from "@tanstack/react-table"
+
+type PackingRuleProduct = {
+  productCode: string
+  minQuantity: number | null
+  maxQuantity: number | null
+}
+
+type PackingRuleRow = {
+  _id: string
+  packingType: string
+  products: PackingRuleProduct[]
+  productCode: string
+  minQuantity: number | null
+  maxQuantity: number | null
+}
 
 export const PackingRules = () => {
   const { searchRules } = usePackingRules()
   const [searchText, setSearchText] = useState<string>("")
   const debouncedSearchText = useDebouncedValue(searchText, 300)[0]
-  const [packingType, setPackingType] = useState<string | null>(null)
 
   const { data: rulesData, refetch } = useQuery({
-    queryKey: ["searchPackingRules", debouncedSearchText, packingType],
+    queryKey: ["searchPackingRules", debouncedSearchText],
     queryFn: () =>
       searchRules({
-        searchText: debouncedSearchText,
-        packingType: packingType ?? undefined
+        searchText: debouncedSearchText
       }),
     select: (data) => data.data
   })
+
+  // Transform rules data to flat structure for table
+  const tableData = useMemo<PackingRuleRow[]>(() => {
+    if (!rulesData?.rules) return []
+
+    return rulesData.rules.flatMap((rule, ruleIndex) =>
+      rule.products.map((product, index) => ({
+        _id: `${rule.packingType}-${ruleIndex}-${index}`,
+        packingType: rule.packingType,
+        products: rule.products,
+        productCode: product.productCode,
+        minQuantity: product.minQuantity,
+        maxQuantity: product.maxQuantity,
+        isFirstProduct: index === 0,
+        rowSpan: rule.products.length
+      }))
+    )
+  }, [rulesData])
+
+  const columns = useMemo<ColumnDef<PackingRuleRow>[]>(
+    () => [
+      {
+        accessorKey: "productCode",
+        header: "Mã sản phẩm",
+        size: 180,
+        cell: ({ getValue }) => (
+          <Text size="sm" fw={600}>
+            {getValue<string>()}
+          </Text>
+        )
+      },
+      {
+        id: "quantity",
+        header: "Số lượng (Min / Max)",
+        size: 220,
+        cell: ({ row }) => (
+          <Text size="sm">
+            Min:{" "}
+            {row.original.minQuantity != null ? row.original.minQuantity : "-"}{" "}
+            / Max:{" "}
+            {row.original.maxQuantity != null ? row.original.maxQuantity : "-"}
+          </Text>
+        )
+      },
+      {
+        accessorKey: "packingType",
+        header: "Loại hộp",
+        size: 150,
+        cell: ({ getValue }) => {
+          const packingTypeLabel = PackingRulesBoxTypes.find(
+            (r) => r.value === getValue<string>()
+          )?.label
+          return (
+            <Badge color="blue" variant="light" size="sm">
+              {packingTypeLabel || getValue<string>()}
+            </Badge>
+          )
+        }
+      },
+      {
+        id: "actions",
+        header: "",
+        size: 100,
+        cell: ({ row }) => {
+          // Find the original rule
+          const rule = rulesData?.rules.find(
+            (r) =>
+              r.packingType === row.original.packingType &&
+              r.products.some((p) => p.productCode === row.original.productCode)
+          )
+
+          return (
+            <Can roles={["admin", "accounting-emp"]}>
+              <Button
+                variant="light"
+                color="indigo"
+                size="xs"
+                radius="xl"
+                leftSection={<IconEdit size={16} />}
+                onClick={() =>
+                  modals.open({
+                    size: "lg",
+                    title: (
+                      <Text fw={700} fz="md">
+                        Chỉnh sửa quy tắc đóng hàng
+                      </Text>
+                    ),
+                    children: <PackingRuleModal rule={rule} refetch={refetch} />
+                  })
+                }
+              >
+                Chỉnh sửa
+              </Button>
+            </Can>
+          )
+        }
+      }
+    ],
+    [rulesData, refetch]
+  )
 
   return (
     <Box
@@ -50,47 +153,19 @@ export const PackingRules = () => {
         border: "1px solid #ececec"
       }}
     >
-      <Flex
-        align="center"
-        justify="space-between"
-        pt={32}
-        pb={8}
-        px={{ base: 8, md: 28 }}
-      >
-        <Box>
-          <Text fw={700} fz="xl" mb={2}>
-            Quy cách đóng hàng
-          </Text>
-          <Text c="dimmed" fz="sm">
-            Quản lý các quy cách đóng hàng để sử dụng trong đơn hàng
-          </Text>
-        </Box>
-        <Group align="flex-end">
-          <TextInput
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            leftSection={<IconSearch size={16} />}
-            placeholder="Tìm kiếm sản phẩm..."
-            size="md"
-            w={{ base: "100%", sm: 260 }}
-            radius="md"
-            styles={{
-              input: { background: "#f4f6fb", border: "1px solid #ececec" }
-            }}
-          />
-          <Select
-            data={PackingRulesBoxTypes}
-            label="Loại hộp"
-            size="md"
-            w={200}
-            radius="md"
-            value={packingType}
-            clearable
-            onChange={(value) => setPackingType(value)}
-          />
+      <Box pt={32} pb={16} px={{ base: 8, md: 28 }}>
+        <Group justify="space-between" align="flex-start" mb="md">
+          <Box>
+            <Text fw={700} fz="xl" mb={2}>
+              Quy cách đóng hàng
+            </Text>
+            <Text c="dimmed" fz="sm">
+              Quản lý các quy cách đóng hàng để sử dụng trong đơn hàng
+            </Text>
+          </Box>
           <Can roles={["admin", "accounting-emp"]}>
             <Button
-              radius={"xl"}
+              radius="xl"
               size="md"
               leftSection={<IconPlus size={16} />}
               onClick={() =>
@@ -105,123 +180,22 @@ export const PackingRules = () => {
             </Button>
           </Can>
         </Group>
-      </Flex>
+      </Box>
       <Divider my={0} />
       <Box px={{ base: 4, md: 28 }} py={20}>
-        <ScrollArea w="100%" type="auto" scrollbars="x" offsetScrollbars>
-          <Table
-            highlightOnHover
-            withTableBorder
-            withColumnBorders
-            verticalSpacing="sm"
-            horizontalSpacing="md"
-            stickyHeader
-            className="rounded-xl"
-            miw={700}
-          >
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th style={{ width: 180 }}>Mã sản phẩm</Table.Th>
-                <Table.Th style={{ width: 220 }}>Số lượng (Min / Max)</Table.Th>
-                <Table.Th style={{ width: 150 }}>Loại hộp</Table.Th>
-                <Table.Th style={{ width: 100 }}></Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {!rulesData ? (
-                <Table.Tr>
-                  <Table.Td colSpan={4}>
-                    <Flex justify="center" align="center" h={60}>
-                      <Loader />
-                    </Flex>
-                  </Table.Td>
-                </Table.Tr>
-              ) : rulesData.rules.length > 0 ? (
-                rulesData.rules.flatMap((rule, ruleIdx) => {
-                  const packingTypeLabel = PackingRulesBoxTypes.find(
-                    (r) => r.value === rule.packingType
-                  )?.label
-
-                  return rule.products.map((product, productIdx) => (
-                    <Table.Tr
-                      key={`rule-${ruleIdx}-${productIdx}-${product.productCode}`}
-                    >
-                      <Table.Td style={{ fontWeight: 600 }}>
-                        {product.productCode}
-                      </Table.Td>
-
-                      <Table.Td>
-                        {`Min: ${product.minQuantity != null ? product.minQuantity : "-"} / Max: ${product.maxQuantity != null ? product.maxQuantity : "-"}`}
-                      </Table.Td>
-
-                      {productIdx === 0 && (
-                        <Table.Td
-                          rowSpan={rule.products.length}
-                          style={{
-                            verticalAlign: "middle",
-                            border: "1px solid #ececec"
-                          }}
-                        >
-                          {packingTypeLabel}
-                        </Table.Td>
-                      )}
-
-                      {productIdx === 0 && (
-                        <Table.Td
-                          rowSpan={rule.products.length}
-                          style={{
-                            verticalAlign: "middle",
-                            border: "1px solid #ececec"
-                          }}
-                        >
-                          <Can roles={["admin", "accounting-emp"]}>
-                            <Button
-                              variant="light"
-                              color="indigo"
-                              size="xs"
-                              radius="xl"
-                              onClick={() =>
-                                modals.open({
-                                  size: "lg",
-                                  title: (
-                                    <Text
-                                      fw={700}
-                                      className="!font-bold"
-                                      fz="md"
-                                    >
-                                      Chỉnh sửa quy tắc đóng hàng
-                                    </Text>
-                                  ),
-                                  children: (
-                                    <PackingRuleModal
-                                      rule={rule}
-                                      refetch={refetch}
-                                    />
-                                  )
-                                })
-                              }
-                              style={{ fontWeight: 500 }}
-                            >
-                              Chỉnh sửa
-                            </Button>
-                          </Can>
-                        </Table.Td>
-                      )}
-                    </Table.Tr>
-                  ))
-                })
-              ) : (
-                <Table.Tr>
-                  <Table.Td colSpan={4}>
-                    <Flex justify="center" align="center" h={60}>
-                      <Text c="dimmed">Không có quy cách nào</Text>
-                    </Flex>
-                  </Table.Td>
-                </Table.Tr>
-              )}
-            </Table.Tbody>
-          </Table>
-        </ScrollArea>
+        <CDataTable
+          columns={columns}
+          data={tableData}
+          enableGlobalFilter={true}
+          globalFilterValue={searchText}
+          onGlobalFilterChange={setSearchText}
+          page={1}
+          totalPages={1}
+          onPageChange={() => {}}
+          onPageSizeChange={() => {}}
+          initialPageSize={100}
+          pageSizeOptions={[50, 100, 200]}
+        />
       </Box>
     </Box>
   )
