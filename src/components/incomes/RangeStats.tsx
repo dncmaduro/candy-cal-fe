@@ -1,103 +1,84 @@
 import { useState, useMemo } from "react"
 import { useIncomes } from "../../hooks/useIncomes"
-import { useMonthGoals } from "../../hooks/useMonthGoals"
 import { useLivestream } from "../../hooks/useLivestream"
 import { DatePickerInput } from "@mantine/dates"
 import {
   Flex,
   Loader,
   Stack,
-  Table,
   Text,
   Paper,
   Divider,
   Group,
   Select,
   Badge,
-  SegmentedControl
+  SegmentedControl,
+  ActionIcon
 } from "@mantine/core"
-import {
-  format,
-  startOfWeek,
-  endOfWeek,
-  startOfMonth,
-  endOfMonth
-} from "date-fns"
+import { format } from "date-fns"
 import { useQuery } from "@tanstack/react-query"
 import { fmtPercent } from "../../utils/fmt"
 import type { GetRangeStatsResponse } from "../../hooks/models"
 import { LiveAndVideoStats } from "./LiveAndVideoStats"
 import { SourcesStats } from "./SourcesStats"
+import { ProductsQuantityStats } from "./ProductsQuantityStats"
+import { ShippingProvidersStats } from "./ShippingProvidersStats"
+import { BoxesStats } from "./BoxesStats"
 import { CDashboardLayout } from "../common/CDashboardLayout"
-import { IconCalendarStats, IconFilter } from "@tabler/icons-react"
+import {
+  IconCalendarStats,
+  IconFilter,
+  IconFilterOff
+} from "@tabler/icons-react"
 import { useLivestreamChannel } from "../../context/LivestreamChannelContext"
 
-type RangeType = "day" | "week" | "month"
+type RangeType = "day" | "range"
 type DiscountMode = "beforeDiscount" | "afterDiscount"
 
-// Range selector UI
-const RangeSelector = ({
-  rangeType,
-  onChangeRangeType,
-  day,
-  setDay,
-  weekDate,
-  setWeekDate,
-  monthValue,
-  setMonthValue
-}: {
-  rangeType: RangeType
-  onChangeRangeType: (r: RangeType) => void
-  day: Date | null
-  setDay: (d: Date | null) => void
-  weekDate: Date | null
-  setWeekDate: (d: Date | null) => void
-  monthValue: string
-  setMonthValue: (v: string) => void
-}) => {
-  // last 24 months for selection
-  const months = useMemo(() => {
-    const now = new Date()
-    const arr = [] as { label: string; value: string }[]
-    for (let i = 0; i < 24; i++) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-      arr.push({ label: format(d, "MM/yyyy"), value: d.toISOString() })
-    }
-    return arr
-  }, [])
+type RangeSelectorProps = {
+  startDate: Date | null
+  endDate: Date | null
+  onChangeStartDate: (d: Date | null) => void
+  onChangeEndDate: (d: Date | null) => void
+  channelId: string | null
+  setChannelId: (id: string | null) => void
+  channelsData: any[]
+}
 
-  // recent weeks (last 52 weeks)
-  const weeks = useMemo(() => {
-    const now = new Date()
-    const arr = [] as { label: string; value: string }[]
-    for (let i = 0; i < 52; i++) {
-      const ref = new Date(
-        now.getFullYear(),
-        now.getMonth(),
-        now.getDate() - i * 7
-      )
-      const s = startOfWeek(ref, { weekStartsOn: 1 })
-      const e = endOfWeek(ref, { weekStartsOn: 1 })
-      // normalize
-      s.setHours(0, 0, 0, 0)
-      e.setHours(23, 59, 59, 999)
-      arr.push({
-        label: `${format(s, "dd/MM")} - ${format(e, "dd/MM/yyyy")}`,
-        value: s.toISOString()
-      })
+const RangeSelector = ({
+  startDate,
+  endDate,
+  onChangeStartDate,
+  onChangeEndDate,
+  channelId,
+  setChannelId,
+  channelsData
+}: RangeSelectorProps) => {
+  const [rangeType, setRangeType] = useState<RangeType>("day")
+
+  // value cho DatePickerInput type="range"
+  const rangeValue: [Date | null, Date | null] | undefined =
+    startDate || endDate ? [startDate, endDate] : undefined
+
+  const handleRangeTypeChange = (newType: RangeType) => {
+    setRangeType(newType)
+    // Khi chuyển sang mode "range", reset end date để user chọn lại
+    if (newType === "range" && startDate && endDate) {
+      const sameDay = startDate.toDateString() === endDate.toDateString()
+      if (sameDay) {
+        onChangeEndDate(null)
+      }
     }
-    return arr
-  }, [])
+  }
 
   return (
     <Group align="flex-end" gap={12} wrap="nowrap">
       <Select
         value={rangeType}
-        onChange={(v) => onChangeRangeType((v as RangeType) || "day")}
+        onChange={(v) => handleRangeTypeChange((v as RangeType) || "day")}
         data={[
           { label: "Ngày", value: "day" },
-          { label: "Tuần", value: "week" },
-          { label: "Tháng", value: "month" }
+          { label: "Khoảng ngày", value: "range" }
         ]}
         size="sm"
         w={140}
@@ -107,36 +88,68 @@ const RangeSelector = ({
       {rangeType === "day" && (
         <DatePickerInput
           label="Ngày"
-          value={day}
-          onChange={setDay}
+          type="default"
+          value={startDate}
+          onChange={(date) => {
+            onChangeStartDate(date)
+            onChangeEndDate(date)
+          }}
           valueFormat="DD/MM/YYYY"
           size="sm"
           radius="md"
           maxDate={new Date()}
           w={160}
+          placeholder="Chọn ngày"
+          clearable
         />
       )}
 
-      {rangeType === "week" && (
-        <Select
-          label="Tuần"
-          value={weekDate ? weekDate.toISOString() : ""}
-          onChange={(v) => setWeekDate(v ? new Date(v) : null)}
-          data={weeks}
+      {rangeType === "range" && (
+        <DatePickerInput
+          label="Khoảng ngày"
+          type="range"
+          value={rangeValue}
+          onChange={(value) => {
+            const [start, end] = value || [null, null]
+            onChangeStartDate(start)
+            // Chỉ set end khi user thực sự chọn ngày thứ 2, không force = start
+            onChangeEndDate(end)
+          }}
+          valueFormat="DD/MM/YYYY"
           size="sm"
-          w={220}
+          radius="md"
+          maxDate={new Date()}
+          w={260}
+          placeholder="Chọn khoảng ngày"
+          clearable
         />
       )}
 
-      {rangeType === "month" && (
-        <Select
-          label="Tháng"
-          value={monthValue}
-          onChange={(v) => setMonthValue(v || "")}
-          data={months}
+      <Select
+        label="Kênh livestream"
+        placeholder="Tất cả kênh"
+        value={channelId}
+        onChange={setChannelId}
+        data={channelsData.map((channel) => ({
+          label: channel.name,
+          value: channel._id
+        }))}
+        size="sm"
+        w={180}
+        clearable
+        leftSection={<IconFilter size={16} />}
+      />
+
+      {channelId && (
+        <ActionIcon
+          variant="subtle"
+          color="gray"
           size="sm"
-          w={160}
-        />
+          onClick={() => setChannelId(null)}
+          title="Xóa bộ lọc kênh"
+        >
+          <IconFilterOff size={16} />
+        </ActionIcon>
       )}
     </Group>
   )
@@ -144,85 +157,59 @@ const RangeSelector = ({
 
 export const RangeStats = () => {
   const { getRangeStats } = useIncomes()
-  const { getGoal } = useMonthGoals()
   const { searchLivestreamChannels } = useLivestream()
   const { selectedChannelId } = useLivestreamChannel()
 
-  const [rangeType, setRangeType] = useState<RangeType>("day")
   const [mode, setMode] = useState<DiscountMode>("afterDiscount")
-  const [day, setDay] = useState<Date | null>(() => {
-    const d = new Date()
-    d.setDate(d.getDate() - 1)
-    return d
-  })
-  const [weekDate, setWeekDate] = useState<Date | null>(() => {
-    const d = new Date()
-    d.setDate(d.getDate() - 1)
-    return d
-  })
-  const [monthValue, setMonthValue] = useState<string>(() =>
-    new Date().toISOString()
-  )
+  const [channelId, setChannelId] = useState<string | null>(null)
 
-  // Fetch livestream channels for the filter
+  // mặc định: hôm qua
+  const [startDate, setStartDate] = useState<Date | null>(() => {
+    const d = new Date()
+    d.setDate(d.getDate() - 1)
+    d.setHours(0, 0, 0, 0)
+    return d
+  })
+  const [endDate, setEndDate] = useState<Date | null>(() => {
+    const d = new Date()
+    d.setDate(d.getDate() - 1)
+    d.setHours(23, 59, 59, 999)
+    return d
+  })
+
+  // Fetch livestream channels cho filter
   const { data: channelsData = [] } = useQuery({
     queryKey: ["searchLivestreamChannels", "all"],
     queryFn: () =>
       searchLivestreamChannels({
         page: 1,
-        limit: 100 // Get all channels
+        limit: 100
       }),
     select: (data) => data.data.data || [],
-    staleTime: 5 * 60 * 1000 // Cache for 5 minutes
+    staleTime: 5 * 60 * 1000
   })
 
-  // derived objects for the selected discount mode (before/after)
-  // (we access current via (current as any)[mode] inline below)
-
   const range = useMemo(() => {
-    if (rangeType === "day") {
-      const s = day ? new Date(day.getTime()) : null
-      if (!s) return null
-      s.setHours(0, 0, 0, 0)
-      const e = new Date(s.getTime())
-      e.setHours(1, 0, 0, 0)
-      return {
-        start: s.toISOString(),
-        end: e.toISOString(),
-        label: format(s, "dd/MM/yyyy")
-      }
-    }
+    if (!startDate || !endDate) return null
 
-    if (rangeType === "week") {
-      const d = weekDate ? new Date(weekDate.getTime()) : null
-      if (!d) return null
-      const s = startOfWeek(d, { weekStartsOn: 1 })
-      const e = endOfWeek(d, { weekStartsOn: 1 })
-      s.setHours(0, 0, 0, 0)
-      e.setHours(1, 0, 0, 0)
-      return {
-        start: s.toISOString(),
-        end: e.toISOString(),
-        label: `${format(s, "dd/MM")} - ${format(e, "dd/MM/yyyy")}`
-      }
-    }
+    const s = new Date(startDate.getTime())
+    const e = new Date(endDate.getTime())
 
-    // month
-    if (rangeType === "month") {
-      const d = monthValue ? new Date(monthValue) : new Date()
-      const s = startOfMonth(d)
-      const e = endOfMonth(d)
-      s.setHours(0, 0, 0, 0)
-      e.setHours(1, 0, 0, 0)
-      return {
-        start: s.toISOString(),
-        end: e.toISOString(),
-        label: format(s, "MM/yyyy")
-      }
-    }
+    // chuẩn hóa: start 00:00, end 23:59
+    s.setHours(0, 0, 0, 0)
+    e.setHours(23, 59, 59, 999)
 
-    return null
-  }, [rangeType, day, weekDate, monthValue])
+    const sameDay = s.toDateString() === e.toDateString()
+    const label = sameDay
+      ? format(s, "dd/MM/yyyy")
+      : `${format(s, "dd/MM/yyyy")} - ${format(e, "dd/MM/yyyy")}`
+
+    return {
+      start: s.toISOString(),
+      end: e.toISOString(),
+      label
+    }
+  }, [startDate, endDate])
 
   const { data, isLoading, error } = useQuery({
     queryKey: [
@@ -244,22 +231,6 @@ export const RangeStats = () => {
     staleTime: 60 * 1000
   })
 
-  // Fetch month goal for KPI % ads when in month mode
-  const { data: monthGoalData } = useQuery({
-    queryKey: ["getGoal", range?.start, rangeType],
-    queryFn: async () => {
-      if (rangeType !== "month" || !range?.start) return null
-      const date = new Date(range.start)
-      const res = await getGoal({
-        month: date.getMonth(),
-        year: date.getFullYear()
-      })
-      return res.data
-    },
-    enabled: rangeType === "month" && !!range?.start,
-    staleTime: 60 * 1000
-  })
-
   const current = data?.current
   const changes = data?.changes
 
@@ -267,18 +238,17 @@ export const RangeStats = () => {
     <CDashboardLayout
       icon={<IconCalendarStats size={28} color="#1971c2" />}
       title="Thống kê theo khoảng"
-      subheader="Xem thống kê doanh thu theo khoảng thời gian (ngày/tuần/tháng)"
+      subheader="Xem thống kê doanh thu theo khoảng thời gian (ngày/khoảng ngày)"
       rightHeader={
         <>
           <RangeSelector
-            rangeType={rangeType}
-            onChangeRangeType={setRangeType}
-            day={day}
-            setDay={setDay}
-            weekDate={weekDate}
-            setWeekDate={setWeekDate}
-            monthValue={monthValue}
-            setMonthValue={setMonthValue}
+            startDate={startDate}
+            endDate={endDate}
+            onChangeStartDate={setStartDate}
+            onChangeEndDate={setEndDate}
+            channelId={channelId}
+            setChannelId={setChannelId}
+            channelsData={channelsData}
           />
           <SegmentedControl
             value={mode}
@@ -380,7 +350,6 @@ export const RangeStats = () => {
                       adsCost={current.ads.liveAdsCost}
                       adsCostChangePct={changes?.ads?.liveAdsCostPct}
                       adsSharePctDiff={changes?.ads?.liveAdsToLiveIncomePctDiff}
-                      kpiAdsPercentage={monthGoalData?.liveAdsPercentageGoal}
                       flex={1}
                     />
                     <LiveAndVideoStats
@@ -395,68 +364,39 @@ export const RangeStats = () => {
                       ownVideoIncome={current[mode].ownVideoIncome}
                       otherVideoIncome={current[mode].otherVideoIncome}
                       otherIncome={current[mode].otherIncome}
-                      kpiAdsPercentage={monthGoalData?.shopAdsPercentageGoal}
                       flex={2}
                     />
                   </Group>
                 </Stack>
               </Paper>
 
-              {current[mode].sources && (
-                <SourcesStats
-                  sources={current[mode].sources}
-                  changes={changes?.[mode]?.sources}
-                />
+              {current[mode].sources && current.productsQuantity && (
+                <Group gap={12} align="stretch" grow>
+                  <SourcesStats
+                    sources={current[mode].sources}
+                    changes={changes?.[mode]?.sources}
+                  />
+                  {current.productsQuantity &&
+                    Object.keys(current.productsQuantity).length > 0 && (
+                      <ProductsQuantityStats
+                        productsQuantity={current.productsQuantity}
+                      />
+                    )}
+                </Group>
               )}
 
-              {current.shippingProviders &&
-                current.shippingProviders.length > 0 && (
-                  <Paper withBorder p="lg" radius="lg">
-                    <Text fw={600} mb={8}>
-                      Theo đơn vị vận chuyển
-                    </Text>
-                    <Table
-                      withColumnBorders
-                      withTableBorder
-                      striped
-                      verticalSpacing="xs"
-                      horizontalSpacing="md"
-                      miw={300}
-                    >
-                      <Table.Thead>
-                        <Table.Tr>
-                          <Table.Th style={{ width: 220 }}>Đơn vị</Table.Th>
-                          <Table.Th style={{ width: 120 }}>Số đơn</Table.Th>
-                          <Table.Th style={{ width: 100 }}>Tỉ lệ</Table.Th>
-                        </Table.Tr>
-                      </Table.Thead>
-                      <Table.Tbody>
-                        {(() => {
-                          const items = current.shippingProviders
-                          const total =
-                            items.reduce((s, it) => s + (it?.orders ?? 0), 0) ||
-                            1
-                          return items.map((sp) => (
-                            <Table.Tr key={sp.provider}>
-                              <Table.Td>{sp.provider || "-"}</Table.Td>
-                              <Table.Td>
-                                {sp.orders?.toLocaleString?.() ?? sp.orders}
-                              </Table.Td>
-                              <Table.Td>
-                                {Math.round(
-                                  (((sp.orders || 0) / total) * 100 +
-                                    Number.EPSILON) *
-                                    100
-                                ) / 100}
-                                %
-                              </Table.Td>
-                            </Table.Tr>
-                          ))
-                        })()}
-                      </Table.Tbody>
-                    </Table>
-                  </Paper>
-                )}
+              {(((current as any).boxes && (current as any).boxes.length > 0) ||
+                current.shippingProviders) && (
+                <Group gap={12} align="stretch" grow>
+                  {current.shippingProviders &&
+                    current.shippingProviders.length > 0 && (
+                      <ShippingProvidersStats
+                        shippingProviders={current.shippingProviders}
+                      />
+                    )}
+                  <BoxesStats boxes={(current as any).boxes} />
+                </Group>
+              )}
 
               {/* Discount Statistics */}
               {current.discounts && (
@@ -697,41 +637,6 @@ export const RangeStats = () => {
                 </Paper>
               )}
 
-              <Table
-                withTableBorder
-                withColumnBorders
-                striped
-                verticalSpacing="xs"
-                horizontalSpacing="md"
-                miw={300}
-              >
-                <Table.Thead>
-                  <Table.Tr>
-                    <Table.Th style={{ width: 200 }}>
-                      Quy cách đóng hộp
-                    </Table.Th>
-                    <Table.Th style={{ width: 100 }}>Số lượng</Table.Th>
-                  </Table.Tr>
-                </Table.Thead>
-                <Table.Tbody>
-                  {(current as any).boxes.length ? (
-                    (current as any).boxes.map((b: any) => (
-                      <Table.Tr key={b.box}>
-                        <Table.Td>{b.box || "-"}</Table.Td>
-                        <Table.Td>{b.quantity}</Table.Td>
-                      </Table.Tr>
-                    ))
-                  ) : (
-                    <Table.Tr>
-                      <Table.Td colSpan={2}>
-                        <Text c="dimmed" ta="center">
-                          Không có dữ liệu
-                        </Text>
-                      </Table.Td>
-                    </Table.Tr>
-                  )}
-                </Table.Tbody>
-              </Table>
               <Text c="dimmed" fz="xs">
                 Cập nhật: {format(new Date(), "dd/MM/yyyy HH:mm:ss")}
               </Text>

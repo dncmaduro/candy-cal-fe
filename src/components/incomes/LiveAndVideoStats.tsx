@@ -22,7 +22,6 @@ type Props = {
   ownVideoIncome?: number
   otherVideoIncome?: number
   otherIncome?: number
-  kpiAdsPercentage?: number
   flex?: number
 }
 
@@ -35,7 +34,6 @@ export const LiveAndVideoStats = ({
   ownVideoIncome,
   otherVideoIncome,
   otherIncome,
-  kpiAdsPercentage,
   flex = 1
 }: Props) => {
   const [mode, setMode] = useState<"table" | "chart">("table")
@@ -144,25 +142,6 @@ export const LiveAndVideoStats = ({
               )}
             </Group>
           </Group>
-          {typeof kpiAdsPercentage === "number" && (
-            <Group justify="space-between">
-              <Text c="dimmed" fz="sm">
-                KPI % Ads
-              </Text>
-              <Group gap={8} align="center">
-                <Text c="dimmed" fw={600} fz="sm">
-                  {kpiAdsPercentage}%
-                </Text>
-                <Badge
-                  color={adsShare >= kpiAdsPercentage ? "green" : "red"}
-                  variant="light"
-                  size="sm"
-                >
-                  {adsShare >= kpiAdsPercentage ? "Đạt" : "Chưa đạt"}
-                </Badge>
-              </Group>
-            </Group>
-          )}
         </Stack>
       ) : (
         <Group justify="space-between" align="center">
