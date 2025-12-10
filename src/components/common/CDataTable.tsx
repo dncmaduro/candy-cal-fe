@@ -200,7 +200,6 @@ export function CDataTable<TData, TValue>({
             leftSection={<IconSearch size={16} />}
             value={gf}
             onChange={(e) => setGf(e.currentTarget.value)}
-            disabled={isLoading}
           />
         )}
 

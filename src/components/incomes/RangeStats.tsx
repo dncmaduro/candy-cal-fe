@@ -12,8 +12,7 @@ import {
   Group,
   Select,
   Badge,
-  SegmentedControl,
-  ActionIcon
+  SegmentedControl
 } from "@mantine/core"
 import { format } from "date-fns"
 import { useQuery } from "@tanstack/react-query"
@@ -25,11 +24,7 @@ import { ProductsQuantityStats } from "./ProductsQuantityStats"
 import { ShippingProvidersStats } from "./ShippingProvidersStats"
 import { BoxesStats } from "./BoxesStats"
 import { CDashboardLayout } from "../common/CDashboardLayout"
-import {
-  IconCalendarStats,
-  IconFilter,
-  IconFilterOff
-} from "@tabler/icons-react"
+import { IconCalendarStats, IconFilter } from "@tabler/icons-react"
 import { useLivestreamChannel } from "../../context/LivestreamChannelContext"
 
 type RangeType = "day" | "range"
@@ -49,10 +44,7 @@ const RangeSelector = ({
   startDate,
   endDate,
   onChangeStartDate,
-  onChangeEndDate,
-  channelId,
-  setChannelId,
-  channelsData
+  onChangeEndDate
 }: RangeSelectorProps) => {
   const [rangeType, setRangeType] = useState<RangeType>("day")
 
@@ -123,33 +115,6 @@ const RangeSelector = ({
           placeholder="Chọn khoảng ngày"
           clearable
         />
-      )}
-
-      <Select
-        label="Kênh livestream"
-        placeholder="Tất cả kênh"
-        value={channelId}
-        onChange={setChannelId}
-        data={channelsData.map((channel) => ({
-          label: channel.name,
-          value: channel._id
-        }))}
-        size="sm"
-        w={180}
-        clearable
-        leftSection={<IconFilter size={16} />}
-      />
-
-      {channelId && (
-        <ActionIcon
-          variant="subtle"
-          color="gray"
-          size="sm"
-          onClick={() => setChannelId(null)}
-          title="Xóa bộ lọc kênh"
-        >
-          <IconFilterOff size={16} />
-        </ActionIcon>
       )}
     </Group>
   )
