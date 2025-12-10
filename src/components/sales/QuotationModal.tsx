@@ -129,19 +129,19 @@ const QuotationCaptureContent = ({
               <Table.Th ta="center" fw={700} w={120}>
                 Mã SP
               </Table.Th>
-              <Table.Th ta="center" fw={700} w={350}>
+              <Table.Th ta="center" fw={700} w={320}>
                 Sản phẩm
               </Table.Th>
               <Table.Th ta="center" fw={700}>
                 Số lượng
               </Table.Th>
               <Table.Th ta="center" fw={700}>
-                Số m³ / 1 thùng
+                m³ / thùng
               </Table.Th>
               <Table.Th ta="center" fw={700}>
                 Tổng m³
               </Table.Th>
-              <Table.Th ta="center" fw={700}>
+              <Table.Th ta="center" fw={700} w={180}>
                 Quy cách
               </Table.Th>
               <Table.Th ta="center" fw={700}>

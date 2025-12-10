@@ -531,7 +531,7 @@ function RouteComponent() {
                 </Text>
               </div>
             </Group>
-            <Can roles={["admin", "sales-leader", "sales-emp"]}>
+            <Can roles={["sales-leader", "sales-emp"]}>
               <Group>
                 <Button
                   color="gray"
