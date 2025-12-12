@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { useLivestream } from "../../hooks/useLivestream"
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { Stack, Button, Group, Switch, Text, Select } from "@mantine/core"
+import { Stack, Button, Group, Select } from "@mantine/core"
 import { TimeInput } from "@mantine/dates"
 import { modals } from "@mantine/modals"
 import { CToast } from "../common/CToast"
@@ -32,7 +32,7 @@ export const LivestreamPeriodModal = ({ period, refetch }: Props) => {
     select: (data) =>
       data.data.data.map((channel) => ({
         label: channel.name,
-        value: channel.name
+        value: channel._id
       }))
   })
 
@@ -60,8 +60,10 @@ export const LivestreamPeriodModal = ({ period, refetch }: Props) => {
       ? formatTimeValue(period.endTime.hour, period.endTime.minute)
       : "00:00"
   )
-  const [channel, setChannel] = useState(period?.channel || "")
-  const [noon, setNoon] = useState(period?.noon || false)
+  const [channel, setChannel] = useState(period?.channel._id || "")
+  const [forRole, setForRole] = useState<"host" | "assistant">(
+    period?.for || "host"
+  )
 
   const { mutate: createPeriod, isPending: creating } = useMutation({
     mutationFn: (req: CreateLivestreamPeriodRequest) =>
@@ -120,7 +122,7 @@ export const LivestreamPeriodModal = ({ period, refetch }: Props) => {
           startTime: startTimeParsed,
           endTime: endTimeParsed,
           channel: channel.trim(),
-          noon
+          for: forRole
         }
       })
     } else {
@@ -129,7 +131,7 @@ export const LivestreamPeriodModal = ({ period, refetch }: Props) => {
         startTime: startTimeParsed,
         endTime: endTimeParsed,
         channel: channel.trim(),
-        noon
+        for: forRole
       })
     }
   }
@@ -171,24 +173,19 @@ export const LivestreamPeriodModal = ({ period, refetch }: Props) => {
         searchable
       />
 
-      <Stack gap={8}>
-        <Text fw={500} fz="sm">
-          Loại khung giờ
-        </Text>
-        <Switch
-          label={noon ? "Khung giờ trưa" : "Khung giờ thường"}
-          checked={noon}
-          onChange={(e) => setNoon(e.currentTarget.checked)}
-          disabled={isPending}
-          size="md"
-          color="green"
-        />
-        {noon && (
-          <Text fz="xs" c="dimmed">
-            Khung giờ trưa sẽ được tô màu xanh trong bảng
-          </Text>
-        )}
-      </Stack>
+      <Select
+        label="Dành cho"
+        placeholder="Chọn vai trò"
+        value={forRole}
+        onChange={(value) => setForRole(value as "host" | "assistant")}
+        data={[
+          { label: "Host", value: "host" },
+          { label: "Trợ live", value: "assistant" }
+        ]}
+        required
+        disabled={isPending}
+        size="md"
+      />
 
       <Group justify="flex-end" mt={16}>
         <Button

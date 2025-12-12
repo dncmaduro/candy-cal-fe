@@ -12,6 +12,8 @@ import {
   DeleteLivestreamEmployeeRequest,
   DeleteLivestreamMonthGoalRequest,
   DeleteLivestreamPeriodRequest,
+  GetAggregatedMetricsRequest,
+  GetAggregatedMetricsResponse,
   GetAllLivestreamPeriodsResponse,
   GetDetailLivestreamEmployeeRequest,
   GetDetailLivestreamPeriodRequest,
@@ -25,11 +27,15 @@ import {
   GetLivestreamStatsResponse,
   GetMonthlyTotalsLivestreamRequest,
   GetMonthlyTotalsLivestreamResponse,
+  ReportLivestreamRequest,
+  ReportLivestreamResponse,
   SearchLivestreamChannelsRequest,
   SearchLivestreamChannelsResponse,
   SearchLivestreamEmployeesRequest,
   SearchLivestreamEmployeesResponse,
   SetMetricsRequest,
+  SyncSnapshotRequest,
+  SyncSnapshotResponse,
   UpdateLivestreamChannelRequest,
   UpdateLivestreamEmployeeRequest,
   UpdateLivestreamMonthGoalRequest,
@@ -319,6 +325,38 @@ export const useLivestream = () => {
     })
   }
 
+  const syncSnapshot = async (req: SyncSnapshotRequest) => {
+    return callApi<SyncSnapshotRequest, SyncSnapshotResponse>({
+      method: "POST",
+      path: `/v1/livestreams/sync-snapshots`,
+      data: req,
+      token: accessToken
+    })
+  }
+
+  const reportLivestream = async (
+    livestreamId: string,
+    snapshotId: string,
+    req: ReportLivestreamRequest
+  ) => {
+    return callApi<ReportLivestreamRequest, ReportLivestreamResponse>({
+      method: "PATCH",
+      path: `/v1/livestreams/${livestreamId}/snapshots/${snapshotId}/report`,
+      data: req,
+      token: accessToken
+    })
+  }
+
+  const getAggregatedMetrics = async (req: GetAggregatedMetricsRequest) => {
+    const query = toQueryString(req)
+
+    return callApi<GetAggregatedMetricsRequest, GetAggregatedMetricsResponse>({
+      method: "GET",
+      path: `/v1/livestreams/aggregated-metrics?${query}`,
+      token: accessToken
+    })
+  }
+
   return {
     createLivestreamEmployee,
     updateLivestreamEmployee,
@@ -345,6 +383,9 @@ export const useLivestream = () => {
     searchLivestreamChannels,
     getLivestreamChannelDetail,
     updateLivestreamChannel,
-    deleteLivestreamChannel
+    deleteLivestreamChannel,
+    syncSnapshot,
+    reportLivestream,
+    getAggregatedMetrics
   }
 }
