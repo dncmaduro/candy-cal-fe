@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { useAuthGuard } from "../../../hooks/useAuthGuard"
-import { AppLayout } from "../../../components/layouts/AppLayout"
 import { useSystemLogs } from "../../../hooks/useSystemLogs"
 import { useQuery } from "@tanstack/react-query"
 import { useMemo, useState } from "react"
@@ -23,13 +22,14 @@ import { DatePickerInput } from "@mantine/dates"
 import { format } from "date-fns"
 import { modals } from "@mantine/modals"
 import { Helmet } from "react-helmet-async"
+import { AdminLayout } from "../../../components/layouts/AdminLayout"
 
-export const Route = createFileRoute("/marketing-storage/system-logs/")({
+export const Route = createFileRoute("/admin/system-logs/")({
   component: RouteComponent
 })
 
 function RouteComponent() {
-  useAuthGuard(["admin", "system-emp"]) // Chỉ admin được xem nhật ký hệ thống
+  useAuthGuard(["admin"])
 
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(10)
@@ -157,7 +157,7 @@ function RouteComponent() {
   const colCount = 9
 
   return (
-    <AppLayout>
+    <AdminLayout>
       <Helmet>
         <title>Hệ thống - Nhật ký | MyCandy</title>
       </Helmet>
@@ -430,6 +430,6 @@ function RouteComponent() {
           </Flex>
         </Box>
       </Box>
-    </AppLayout>
+    </AdminLayout>
   )
 }

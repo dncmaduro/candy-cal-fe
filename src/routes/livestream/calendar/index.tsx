@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { LivestreamLayout } from "../../../components/layouts/LivestreamLayout"
 import { useLivestream } from "../../../hooks/useLivestream"
+import { useUsers } from "../../../hooks/useUsers"
 import { useQuery, useMutation } from "@tanstack/react-query"
 import {
   Box,
@@ -11,470 +12,373 @@ import {
   Loader,
   rem,
   Text,
-  Badge,
-  ActionIcon,
   Select,
   Paper,
-  NumberInput,
-  Table,
-  Tooltip
+  Stack,
+  Center,
+  SegmentedControl,
+  ActionIcon
 } from "@mantine/core"
 import {
-  IconEdit,
   IconPlus,
-  IconChevronDown,
-  IconChevronUp,
-  IconCheck,
-  IconX
+  IconChevronLeft,
+  IconChevronRight,
+  IconRefresh
 } from "@tabler/icons-react"
-import { modals } from "@mantine/modals"
-import { Can } from "../../../components/common/Can"
+import { notifications } from "@mantine/notifications"
 import { CToast } from "../../../components/common/CToast"
-import { LivestreamRangeModal } from "../../../components/livestream/LivestreamRangeModal"
-import { InlineEditableSnapshotsTable } from "../../../components/livestream/InlineEditableSnapshotsTable"
+import { LivestreamCalendarTable } from "../../../components/livestream/LivestreamCalendarTable"
+import { openLivestreamReportModal } from "../../../components/livestream/LivestreamReportModal"
 import { useState, useMemo } from "react"
-import {
-  format,
-  startOfWeek,
-  endOfWeek,
-  startOfMonth,
-  endOfMonth,
-  parseISO,
-  isToday
-} from "date-fns"
-import type { GetLivestreamByDateRangeResponse } from "../../../hooks/models"
-
-type ViewType = "week" | "month"
-
-type LivestreamData = GetLivestreamByDateRangeResponse["livestreams"][0]
+import { format, startOfWeek, endOfWeek, eachDayOfInterval } from "date-fns"
 
 export const Route = createFileRoute("/livestream/calendar/")({
   component: RouteComponent
 })
 
 function RouteComponent() {
-  const { getLivestreamsByDateRange, setMetrics } = useLivestream()
+  const {
+    getLivestreamsByDateRange,
+    searchLivestreamChannels,
+    createLivestreamRange,
+    addLivestreamSnapshot,
+    updateLivestreamSnapshot,
+    syncSnapshot,
+    reportLivestream
+  } = useLivestream()
+  const { publicSearchUser } = useUsers()
 
-  const [viewType, setViewType] = useState<ViewType>("week")
   const [weekDate, setWeekDate] = useState<Date | null>(new Date())
-  const [monthValue, setMonthValue] = useState<string>(() => {
-    const d = new Date()
-    return new Date(d.getFullYear(), d.getMonth(), 1).toISOString()
+  const [channelId, setChannelId] = useState<string | null>(null)
+  const [viewMode, setViewMode] = useState<"assign" | "schedule">("schedule")
+
+  // Calculate week range
+  const weekRange = useMemo(() => {
+    if (!weekDate) return null
+    const start = startOfWeek(weekDate, { weekStartsOn: 1 })
+    const end = endOfWeek(weekDate, { weekStartsOn: 1 })
+    start.setHours(0, 0, 0, 0)
+    end.setHours(23, 59, 59, 999)
+    return { start, end }
+  }, [weekDate])
+
+  // Get all days in the week
+  const weekDays = useMemo(() => {
+    if (!weekRange) return []
+    return eachDayOfInterval({ start: weekRange.start, end: weekRange.end })
+  }, [weekRange])
+
+  // Fetch channels
+  const { data: channelsData } = useQuery({
+    queryKey: ["searchLivestreamChannels"],
+    queryFn: async () => {
+      const response = await searchLivestreamChannels({ page: 1, limit: 100 })
+      return response.data.data
+    }
   })
-  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
-  const [editingMetrics, setEditingMetrics] = useState<{
-    livestreamId: string
-    totalOrders: number
-    ads: number
-  } | null>(null)
 
-  // Calculate date range based on view type
-  const dateRange = useMemo(() => {
-    if (viewType === "week" && weekDate) {
-      const start = startOfWeek(weekDate, { weekStartsOn: 1 })
-      const end = endOfWeek(weekDate, { weekStartsOn: 1 })
-      start.setHours(0, 0, 0, 0)
-      end.setHours(23, 59, 59, 999)
-      return { start, end }
-    } else if (viewType === "month" && monthValue) {
-      const monthDate = new Date(monthValue)
-      const start = startOfMonth(monthDate)
-      const end = endOfMonth(monthDate)
-      start.setHours(0, 0, 0, 0)
-      end.setHours(23, 59, 59, 999)
-      return { start, end }
+  // Auto-select first channel
+  useMemo(() => {
+    if (channelsData && channelsData.length > 0 && !channelId) {
+      setChannelId(channelsData[0]._id)
     }
-    return null
-  }, [viewType, weekDate, monthValue])
+  }, [channelsData, channelId])
 
-  // Generate weeks for selection
-  const weeks = useMemo(() => {
-    const now = new Date()
-    const arr = [] as { label: string; value: string }[]
-    for (let i = 0; i < 52; i++) {
-      const ref = new Date(
-        now.getFullYear(),
-        now.getMonth(),
-        now.getDate() - i * 7
-      )
-      const s = startOfWeek(ref, { weekStartsOn: 1 })
-      const e = endOfWeek(ref, { weekStartsOn: 1 })
-      s.setHours(0, 0, 0, 0)
-      e.setHours(23, 59, 59, 999)
-      arr.push({
-        label: `${format(s, "dd/MM")} - ${format(e, "dd/MM/yyyy")}`,
-        value: s.toISOString()
-      })
-    }
-    return arr
-  }, [])
+  // Fetch livestream employees
+  const { data: livestreamEmpData } = useQuery({
+    queryKey: ["livestreamEmployees"],
+    queryFn: () =>
+      publicSearchUser({
+        page: 1,
+        limit: 100,
+        role: "livestream-emp"
+      }),
+    select: (data) => data.data.data
+  })
 
-  // Generate months for selection
-  const months = useMemo(() => {
-    const now = new Date()
-    const arr = [] as { label: string; value: string }[]
-    for (let i = 0; i < 24; i++) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-      arr.push({ label: format(d, "MM/yyyy"), value: d.toISOString() })
-    }
-    return arr
-  }, [])
+  const { data: livestreamLeaderData } = useQuery({
+    queryKey: ["livestreamLeaders"],
+    queryFn: () =>
+      publicSearchUser({
+        page: 1,
+        limit: 100,
+        role: "livestream-leader"
+      }),
+    select: (data) => data.data.data
+  })
 
-  // Fetch livestream data
+  // filter duplicate employees
+  const employeesData = useMemo(() => {
+    const emps = [...(livestreamEmpData || []), ...(livestreamLeaderData || [])]
+    return emps.filter((emp, index, self) => {
+      return self.findIndex((e) => e._id === emp._id) === index
+    })
+  }, [livestreamEmpData, livestreamLeaderData])
+
+  // Fetch livestream data for the week
   const {
     data: livestreamData,
     isLoading,
     refetch
   } = useQuery({
-    queryKey: ["getLivestreamsByDateRange", dateRange?.start, dateRange?.end],
+    queryKey: [
+      "getLivestreamsByDateRange",
+      weekRange?.start,
+      weekRange?.end,
+      channelId
+    ],
     queryFn: async () => {
-      if (!dateRange) return { data: { livestreams: [] } }
-      return await getLivestreamsByDateRange({
-        startDate: format(dateRange.start, "yyyy-MM-dd"),
-        endDate: format(dateRange.end, "yyyy-MM-dd")
+      if (!weekRange) return []
+      const response = await getLivestreamsByDateRange({
+        startDate: format(weekRange.start, "yyyy-MM-dd"),
+        endDate: format(weekRange.end, "yyyy-MM-dd"),
+        ...(channelId && { channel: channelId })
       })
+      return response.data.livestreams
     },
-    select: (data: any) => data.data.livestreams as LivestreamData[],
-    enabled: !!dateRange
+    enabled: !!weekRange
   })
 
-  const { mutate: updateMetrics } = useMutation({
-    mutationFn: ({
-      id,
-      data
-    }: {
-      id: string
-      data: { totalOrders?: number; ads?: number }
-    }) => setMetrics(id, data),
+  // Create week range mutation
+  const { mutate: createWeekRange, isPending: isCreating } = useMutation({
+    mutationFn: async () => {
+      if (!weekRange) return
+      if (channelId) {
+        await createLivestreamRange({
+          startDate: weekRange.start,
+          endDate: weekRange.end,
+          channel: channelId
+        })
+      }
+    },
     onSuccess: () => {
-      CToast.success({ title: "Cập nhật số liệu thành công" })
+      CToast.success({ title: "Tạo lịch tuần thành công" })
       refetch()
     },
     onError: () => {
-      CToast.error({ title: "Có lỗi xảy ra khi cập nhật số liệu" })
+      CToast.error({ title: "Có lỗi khi tạo lịch tuần" })
     }
   })
 
-  const openRangeModal = () => {
-    modals.open({
-      title: <b>Tạo lịch livestream mới</b>,
-      children: <LivestreamRangeModal refetch={refetch} />,
-      size: "lg"
-    })
-  }
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND"
-    }).format(amount)
-  }
-
-  const toggleRowExpansion = (livestreamId: string) => {
-    setExpandedRows((prev) => {
-      const newSet = new Set(prev)
-      if (newSet.has(livestreamId)) {
-        newSet.delete(livestreamId)
+  // Assign employee to snapshot mutation
+  const { mutate: assignEmployee } = useMutation({
+    mutationFn: async ({
+      livestreamId,
+      snapshotId,
+      periodId,
+      userId
+    }: {
+      livestreamId: string
+      snapshotId?: string
+      periodId: string
+      userId: string
+      role: "host" | "assistant"
+    }) => {
+      if (snapshotId) {
+        // Update existing snapshot
+        await updateLivestreamSnapshot(livestreamId, snapshotId, {
+          assignee: userId
+        })
       } else {
-        newSet.add(livestreamId)
+        // Create new snapshot
+        await addLivestreamSnapshot(livestreamId, {
+          period: periodId,
+          assignee: userId,
+          goal: 0
+        })
       }
-      return newSet
-    })
-  }
+    },
+    onSuccess: () => {
+      CToast.success({ title: "Cập nhật ca làm việc thành công" })
+      refetch()
+    },
+    onError: () => {
+      CToast.error({ title: "Có lỗi khi cập nhật ca làm việc" })
+    }
+  })
 
-  const startEditingMetrics = (livestream: LivestreamData) => {
-    setEditingMetrics({
-      livestreamId: livestream._id,
-      totalOrders: livestream.totalOrders,
-      ads: livestream.ads
-    })
-  }
+  // Unassign employee from snapshot mutation
+  const { mutate: unassignEmployee } = useMutation({
+    mutationFn: async ({
+      livestreamId,
+      snapshotId
+    }: {
+      livestreamId: string
+      snapshotId: string
+    }) => {
+      await updateLivestreamSnapshot(livestreamId, snapshotId, {
+        assignee: undefined
+      })
+    },
+    onSuccess: () => {
+      CToast.success({ title: "Cập nhật ca làm việc thành công" })
+      refetch()
+    },
+    onError: () => {
+      CToast.error({ title: "Có lỗi khi cập nhật ca làm việc" })
+    }
+  })
 
-  const cancelEditingMetrics = () => {
-    setEditingMetrics(null)
-  }
+  // Sync snapshot mutation
+  const { mutate: syncSnapshotMutation, isPending: isSyncing } = useMutation({
+    mutationFn: async () => {
+      if (!weekRange || !channelId) {
+        throw new Error("Vui lòng chọn tuần và kênh")
+      }
+      return await syncSnapshot({
+        startDate: weekRange.start,
+        endDate: weekRange.end,
+        channel: channelId
+      })
+    },
+    onSuccess: (response) => {
+      notifications.show({
+        title: "Đồng bộ thành công",
+        message:
+          response.data.message || `Đã cập nhật ${response.data.updated} ca`,
+        color: "green"
+      })
+      refetch()
+    },
+    onError: (error: any) => {
+      notifications.show({
+        title: "Đồng bộ thất bại",
+        message:
+          error?.response?.data?.message || "Có lỗi khi đồng bộ snapshot",
+        color: "red"
+      })
+    }
+  })
 
-  const saveMetricsChanges = () => {
-    if (!editingMetrics) return
-
-    updateMetrics({
-      id: editingMetrics.livestreamId,
-      data: {
-        totalOrders: editingMetrics.totalOrders,
-        ads: editingMetrics.ads
+  // Handle opening report modal
+  const handleOpenReport = (livestreamId: string, snapshot: any) => {
+    openLivestreamReportModal({
+      snapshot,
+      onSubmit: async (reportData: {
+        income: number
+        adsCost?: number
+        clickRate: number
+        avgViewingDuration: number
+        comments: number
+        ordersNote: string
+        rating?: string
+      }) => {
+        try {
+          await reportLivestream(livestreamId, snapshot._id, reportData)
+          notifications.show({
+            title: "Báo cáo thành công",
+            message: "Đã lưu báo cáo ca livestream",
+            color: "green"
+          })
+          refetch()
+        } catch (error: any) {
+          notifications.show({
+            title: "Báo cáo thất bại",
+            message: error?.response?.data?.message || "Có lỗi khi lưu báo cáo",
+            color: "red"
+          })
+        }
       }
     })
-    setEditingMetrics(null)
   }
 
-  const renderCalendarView = () => {
+  // Week navigation functions
+  const goToPreviousWeek = () => {
+    if (!weekDate) return
+    const newDate = new Date(weekDate)
+    newDate.setDate(newDate.getDate() - 7)
+    setWeekDate(newDate)
+  }
+
+  const goToNextWeek = () => {
+    if (!weekDate) return
+    const newDate = new Date(weekDate)
+    newDate.setDate(newDate.getDate() + 7)
+    setWeekDate(newDate)
+  }
+
+  const weekLabel = useMemo(() => {
+    if (!weekRange) return ""
+    return `${format(weekRange.start, "dd/MM")} - ${format(
+      weekRange.end,
+      "dd/MM/yyyy"
+    )}`
+  }, [weekRange])
+
+  // Prepare channel options
+  const channelOptions = useMemo(() => {
+    if (!channelsData) return []
+    return channelsData.map((channel) => ({
+      label: channel.name,
+      value: channel._id
+    }))
+  }, [channelsData])
+
+  // Check if week has any livestream data
+  const hasLivestreams = livestreamData && livestreamData.length > 0
+
+  const renderCalendarGrid = () => {
+    if (!channelId) {
+      return (
+        <Center h={400}>
+          <Text c="dimmed">Vui lòng chọn kênh để xem lịch</Text>
+        </Center>
+      )
+    }
+
     if (isLoading) {
       return (
-        <Flex justify="center" align="center" h={400}>
+        <Center h={400}>
           <Loader />
-        </Flex>
+        </Center>
       )
     }
 
-    if (!livestreamData || livestreamData.length === 0) {
+    if (!hasLivestreams) {
       return (
-        <Flex justify="center" align="center" h={400}>
-          <Text c="dimmed">
-            Không có dữ liệu livestream trong khoảng thời gian này
-          </Text>
-        </Flex>
+        <Center h={400}>
+          <Stack align="center" gap="md">
+            <Text c="dimmed" size="lg">
+              Chưa có lịch livestream trong tuần này
+            </Text>
+            <Button
+              onClick={() => createWeekRange()}
+              leftSection={<IconPlus size={16} />}
+              loading={isCreating}
+              size="md"
+            >
+              Tạo lịch live trong tuần này
+            </Button>
+          </Stack>
+        </Center>
       )
     }
 
-    const colCount = 8
-
+    // Render 2 separate tables for Host and Assistant
     return (
-      <Table
-        withColumnBorders
-        withTableBorder
-        verticalSpacing="sm"
-        horizontalSpacing="md"
-        stickyHeader
-        className="rounded-xl"
-        miw={800}
-      >
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th>Ngày</Table.Th>
-            <Table.Th>Tổng doanh thu</Table.Th>
-            <Table.Th>Tổng đơn hàng</Table.Th>
-            <Table.Th>Chi phí quảng cáo</Table.Th>
-            <Table.Th>
-              <Tooltip label="Doanh thu trung bình trên mỗi đơn hàng">
-                <Text>Doanh thu/đơn</Text>
-              </Tooltip>
-            </Table.Th>
-            <Table.Th>
-              <Tooltip label="Tỷ lệ phần trăm chi phí quảng cáo so với doanh thu">
-                <Text>Chi phí/doanh thu</Text>
-              </Tooltip>
-            </Table.Th>
-            <Table.Th>
-              <Tooltip label="Chi phí quảng cáo trung bình trên mỗi đơn hàng">
-                <Text>Chi phí/đơn</Text>
-              </Tooltip>
-            </Table.Th>
-            <Table.Th style={{ width: 120 }}>Hành động</Table.Th>
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          {livestreamData.map((livestream: LivestreamData) => {
-            const isExpanded = expandedRows.has(livestream._id)
-            const isCurrentDay = isToday(parseISO(livestream.date))
+      <Stack gap="xl">
+        <LivestreamCalendarTable
+          role="host"
+          weekDays={weekDays}
+          employeesData={employeesData || []}
+          livestreamData={livestreamData || []}
+          onAssignEmployee={assignEmployee}
+          onUnassignEmployee={unassignEmployee}
+          viewMode={viewMode}
+          onOpenReport={handleOpenReport}
+        />
 
-            // Calculate metrics with proper fallbacks
-            const revenuePerOrder =
-              livestream.totalOrders > 0
-                ? Math.round(livestream.totalIncome / livestream.totalOrders)
-                : 0
-
-            const costToRevenueRatio =
-              livestream.totalIncome > 0
-                ? (livestream.ads / livestream.totalIncome) * 100
-                : 0
-
-            const costPerOrder =
-              livestream.totalOrders > 0
-                ? Math.round(livestream.ads / livestream.totalOrders)
-                : 0
-
-            return (
-              <>
-                <Table.Tr
-                  key={livestream._id}
-                  // style={{
-                  //   backgroundColor: isCurrentDay
-                  //     ? "var(--mantine-color-blue-0)"
-                  //     : undefined
-                  // }}
-                >
-                  <Table.Td>
-                    <Group gap="xs">
-                      <ActionIcon
-                        variant="subtle"
-                        size="sm"
-                        onClick={() => toggleRowExpansion(livestream._id)}
-                        disabled={
-                          editingMetrics?.livestreamId === livestream._id
-                        }
-                      >
-                        {isExpanded ? (
-                          <IconChevronUp size={16} />
-                        ) : (
-                          <IconChevronDown size={16} />
-                        )}
-                      </ActionIcon>
-                      <div>
-                        <Group gap="xs" align="center">
-                          <Text fw={600}>
-                            {format(parseISO(livestream.date), "dd/MM/yyyy")}
-                          </Text>
-                          {isCurrentDay && (
-                            <Badge color="blue" size="xs">
-                              Hôm nay
-                            </Badge>
-                          )}
-                        </Group>
-                      </div>
-                    </Group>
-                  </Table.Td>
-                  <Table.Td>
-                    <Text fw={600} c="green">
-                      {formatCurrency(livestream.totalIncome)}
-                    </Text>
-                  </Table.Td>
-                  <Table.Td>
-                    {editingMetrics?.livestreamId === livestream._id ? (
-                      <NumberInput
-                        value={editingMetrics.totalOrders}
-                        onChange={(value) =>
-                          setEditingMetrics({
-                            ...editingMetrics,
-                            totalOrders: Number(value) || 0
-                          })
-                        }
-                        size="sm"
-                        min={0}
-                        w={100}
-                      />
-                    ) : (
-                      <Text fw={500}>{livestream.totalOrders}</Text>
-                    )}
-                  </Table.Td>
-                  <Table.Td>
-                    {editingMetrics?.livestreamId === livestream._id ? (
-                      <NumberInput
-                        value={editingMetrics.ads}
-                        onChange={(value) =>
-                          setEditingMetrics({
-                            ...editingMetrics,
-                            ads: Number(value) || 0
-                          })
-                        }
-                        size="sm"
-                        min={0}
-                        thousandSeparator=","
-                        w={120}
-                      />
-                    ) : (
-                      <Text c="red">{formatCurrency(livestream.ads)}</Text>
-                    )}
-                  </Table.Td>
-                  <Table.Td>
-                    <Tooltip
-                      label={
-                        revenuePerOrder > 0
-                          ? `Trung bình ${formatCurrency(revenuePerOrder)} mỗi đơn`
-                          : "Chưa có đơn hàng"
-                      }
-                      position="top"
-                    >
-                      <Text fw={500} c="blue">
-                        {revenuePerOrder > 0
-                          ? formatCurrency(revenuePerOrder)
-                          : "-"}
-                      </Text>
-                    </Tooltip>
-                  </Table.Td>
-                  <Table.Td>
-                    <Tooltip
-                      label={
-                        costToRevenueRatio > 0
-                          ? `Chi phí chiếm ${costToRevenueRatio.toFixed(1)}% doanh thu`
-                          : "Chưa có chi phí hoặc doanh thu"
-                      }
-                      position="top"
-                    >
-                      <Text
-                        fw={500}
-                        c={
-                          costToRevenueRatio > 50
-                            ? "red"
-                            : costToRevenueRatio > 30
-                              ? "orange"
-                              : "green"
-                        }
-                      >
-                        {costToRevenueRatio > 0
-                          ? `${costToRevenueRatio.toFixed(1)}%`
-                          : "-"}
-                      </Text>
-                    </Tooltip>
-                  </Table.Td>
-                  <Table.Td>
-                    <Tooltip
-                      label={
-                        costPerOrder > 0
-                          ? `Chi phí trung bình ${formatCurrency(costPerOrder)} mỗi đơn`
-                          : "Chưa có chi phí hoặc đơn hàng"
-                      }
-                      position="top"
-                    >
-                      <Text fw={500} c="purple">
-                        {costPerOrder > 0 ? formatCurrency(costPerOrder) : "-"}
-                      </Text>
-                    </Tooltip>
-                  </Table.Td>
-                  <Table.Td>
-                    <Group gap={8}>
-                      <Can roles={["admin", "livestream-leader"]}>
-                        {editingMetrics?.livestreamId === livestream._id ? (
-                          <>
-                            <ActionIcon
-                              variant="light"
-                              color="green"
-                              size="sm"
-                              onClick={saveMetricsChanges}
-                            >
-                              <IconCheck size={16} />
-                            </ActionIcon>
-                            <ActionIcon
-                              variant="light"
-                              color="gray"
-                              size="sm"
-                              onClick={cancelEditingMetrics}
-                            >
-                              <IconX size={16} />
-                            </ActionIcon>
-                          </>
-                        ) : (
-                          <ActionIcon
-                            variant="light"
-                            color="indigo"
-                            size="sm"
-                            onClick={() => startEditingMetrics(livestream)}
-                          >
-                            <IconEdit size={16} />
-                          </ActionIcon>
-                        )}
-                      </Can>
-                    </Group>
-                  </Table.Td>
-                </Table.Tr>
-
-                {/* Expanded row with snapshots details */}
-                {isExpanded && (
-                  <Table.Tr>
-                    <Table.Td colSpan={colCount}>
-                      <InlineEditableSnapshotsTable
-                        livestreamId={livestream._id}
-                        livestreamDate={livestream.date}
-                        snapshots={livestream.snapshots}
-                        refetch={refetch}
-                      />
-                    </Table.Td>
-                  </Table.Tr>
-                )}
-              </>
-            )
-          })}
-        </Table.Tbody>
-      </Table>
+        <LivestreamCalendarTable
+          role="assistant"
+          weekDays={weekDays}
+          employeesData={employeesData || []}
+          livestreamData={livestreamData || []}
+          onAssignEmployee={assignEmployee}
+          onUnassignEmployee={unassignEmployee}
+          viewMode={viewMode}
+          onOpenReport={handleOpenReport}
+        />
+      </Stack>
     )
   }
 
@@ -506,65 +410,139 @@ function RouteComponent() {
               Lịch Livestream
             </Text>
             <Text c="dimmed" fz="sm">
-              Quản lý lịch phát sóng livestream và theo dõi số liệu
+              Quản lý lịch phát sóng livestream theo tuần
             </Text>
           </Box>
-          <Can roles={["admin", "livestream-leader"]}>
-            <Button
-              onClick={openRangeModal}
-              leftSection={<IconPlus size={16} />}
-              size="md"
-              radius={"xl"}
-            >
-              Tạo lịch mới
-            </Button>
-          </Can>
         </Flex>
 
         <Divider my={0} />
 
         <Box px={{ base: 4, md: 28 }} py={20}>
           {/* Filter Controls */}
-          <Paper p="md" mb="lg" withBorder radius="md">
-            <Group align="flex-end" gap={12}>
-              <Select
-                label="Hiển thị theo"
-                value={viewType}
-                onChange={(v) => setViewType((v as ViewType) || "week")}
-                data={[
-                  { label: "Tuần", value: "week" },
-                  { label: "Tháng", value: "month" }
-                ]}
-                size="sm"
-                w={140}
-              />
+          <Paper
+            p="md"
+            mb="lg"
+            radius="md"
+            withBorder
+            style={{
+              background: "var(--mantine-color-body)",
+              borderColor: "var(--mantine-color-gray-3)"
+            }}
+          >
+            <Stack gap="md">
+              {/* Row 1: Week navigation + View mode + Sync button */}
+              <Flex
+                direction={{ base: "column", md: "row" }}
+                justify="space-between"
+                gap="md"
+                align={{ base: "stretch", md: "flex-end" }}
+              >
+                {/* Week Navigation */}
+                <Stack gap={4} style={{ flex: 1, minWidth: 0 }}>
+                  <Text size="xs" fw={600} c="dimmed" tt="uppercase">
+                    Tuần hiển thị
+                  </Text>
+                  <Group gap="xs" wrap="nowrap">
+                    <ActionIcon
+                      variant="subtle"
+                      size="lg"
+                      onClick={goToPreviousWeek}
+                    >
+                      <IconChevronLeft size={18} />
+                    </ActionIcon>
 
-              {viewType === "week" && (
-                <Select
-                  label="Tuần"
-                  value={weekDate ? weekDate.toISOString() : ""}
-                  onChange={(v) => setWeekDate(v ? new Date(v) : null)}
-                  data={weeks}
-                  size="sm"
-                  w={220}
-                />
-              )}
+                    <Paper
+                      p="sm"
+                      radius="md"
+                      withBorder
+                      style={{
+                        flex: 1,
+                        minWidth: 0,
+                        borderColor: "var(--mantine-color-gray-3)"
+                      }}
+                    >
+                      <Text
+                        ta="center"
+                        fw={600}
+                        size="sm"
+                        c="gray.8"
+                        style={{ whiteSpace: "nowrap" }}
+                      >
+                        {weekLabel}
+                      </Text>
+                    </Paper>
 
-              {viewType === "month" && (
-                <Select
-                  label="Tháng"
-                  value={monthValue}
-                  onChange={(v) => setMonthValue(v || "")}
-                  data={months}
+                    <ActionIcon
+                      variant="subtle"
+                      size="lg"
+                      onClick={goToNextWeek}
+                    >
+                      <IconChevronRight size={18} />
+                    </ActionIcon>
+                  </Group>
+                </Stack>
+
+                {/* View Mode */}
+                <Stack
+                  gap={4}
+                  style={{
+                    flexBasis: "260px",
+                    flexShrink: 0
+                  }}
+                >
+                  <Text size="xs" fw={600} c="dimmed" tt="uppercase">
+                    Chế độ xem
+                  </Text>
+                  <SegmentedControl
+                    value={viewMode}
+                    onChange={(value) =>
+                      setViewMode(value as "assign" | "schedule")
+                    }
+                    size="sm"
+                    radius="md"
+                    fullWidth
+                    color="indigo"
+                    data={[
+                      { label: "Phân ca", value: "assign" },
+                      { label: "Xem lịch đã đặt", value: "schedule" }
+                    ]}
+                  />
+                </Stack>
+
+                {/* Sync Button */}
+                <Button
+                  leftSection={<IconRefresh size={16} />}
+                  onClick={() => syncSnapshotMutation()}
+                  loading={isSyncing}
+                  disabled={!channelId || !weekRange}
                   size="sm"
-                  w={160}
+                  variant="light"
+                  color="indigo"
+                  style={{ flexShrink: 0 }}
+                >
+                  Đồng bộ
+                </Button>
+              </Flex>
+
+              {/* Row 2: Channel select */}
+              <Stack gap={4}>
+                <Text size="xs" fw={600} c="dimmed" tt="uppercase">
+                  Kênh livestream
+                </Text>
+                <Select
+                  placeholder="Chọn kênh"
+                  value={channelId || ""}
+                  onChange={(v) => setChannelId(v || null)}
+                  data={channelOptions}
+                  size="sm"
+                  radius="md"
                 />
-              )}
-            </Group>
+              </Stack>
+            </Stack>
           </Paper>
 
-          {/* Calendar View */}
-          {renderCalendarView()}
+          {/* Calendar Grid */}
+          {renderCalendarGrid()}
         </Box>
       </Box>
     </LivestreamLayout>

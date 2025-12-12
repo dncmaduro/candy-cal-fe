@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useAuthGuard } from "../../../hooks/useAuthGuard"
 import { useEffect } from "react"
 import { Helmet } from "react-helmet-async"
-import { AppLayout } from "../../../components/layouts/AppLayout"
+import { AdminLayout } from "../../../components/layouts/AdminLayout"
 import { ScrollArea, Tabs } from "@mantine/core"
 import { Tasks } from "../../../components/tasks/Tasks"
 import { UsersTasks } from "../../../components/tasks/UsersTasks"
@@ -11,7 +11,7 @@ type StorageTab = {
   tab: string
 }
 
-export const Route = createFileRoute("/marketing-storage/tasks/")({
+export const Route = createFileRoute("/admin/tasks/")({
   component: RouteComponent,
   validateSearch: (search: Record<string, unknown>): StorageTab => {
     return {
@@ -37,12 +37,12 @@ function RouteComponent() {
   ]
 
   const handleChange = (value: string | null) => {
-    navigate({ to: `/marketing-storage/tasks?tab=${value ?? "tasks"}` })
+    navigate({ to: `/admin/tasks?tab=${value ?? "tasks"}` })
   }
 
   useEffect(() => {
     if (!tab) {
-      navigate({ to: `/marketing-storage/tasks`, search: { tab: "tasks" } })
+      navigate({ to: `/admin/tasks`, search: { tab: "tasks" } })
     }
   }, [])
 
@@ -51,7 +51,7 @@ function RouteComponent() {
       <Helmet>
         <title>Công việc hàng ngày | MyCandy</title>
       </Helmet>
-      <AppLayout>
+      <AdminLayout>
         <Tabs
           orientation="horizontal"
           defaultValue={tab}
@@ -76,7 +76,7 @@ function RouteComponent() {
             </Tabs.Panel>
           </ScrollArea.Autosize>
         </Tabs>
-      </AppLayout>
+      </AdminLayout>
     </>
   )
 }

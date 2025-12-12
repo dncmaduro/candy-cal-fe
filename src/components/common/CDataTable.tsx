@@ -56,6 +56,7 @@ export type DataTableProps<TData, TValue> = {
   getRowId?: (originalRow: TData, index: number, parent?: Row<TData>) => string
   onRowSelectionChange?: (selectedRows: TData[]) => void
   onRowClick?: (row: Row<TData>) => void
+  getRowClassName?: (row: Row<TData>) => string
 }
 
 export function CDataTable<TData, TValue>({
@@ -83,7 +84,8 @@ export function CDataTable<TData, TValue>({
   onPageSizeChange,
   getRowId,
   onRowSelectionChange,
-  onRowClick
+  onRowClick,
+  getRowClassName
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnVisibility, setColumnVisibility] =
@@ -330,7 +332,8 @@ export function CDataTable<TData, TValue>({
                       enableRowSelection &&
                         row.getIsSelected() &&
                         "bg-blue-50/60",
-                      isLoading && "pointer-events-none"
+                      isLoading && "pointer-events-none",
+                      getRowClassName && getRowClassName(row)
                     )}
                     onClick={
                       !isLoading && onRowClick

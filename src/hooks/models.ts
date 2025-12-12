@@ -1844,7 +1844,7 @@ export interface CreateLivestreamPeriodRequest {
     minute: number
   }
   channel: string
-  noon?: boolean
+  for: "host" | "assistant"
 }
 
 /** @interface */
@@ -1859,8 +1859,11 @@ export interface GetAllLivestreamPeriodsResponse {
       hour: number
       minute: number
     }
-    channel: string
-    noon?: boolean
+    channel: {
+      _id: string
+      name: string
+    }
+    for: "host" | "assistant"
   }[]
 }
 
@@ -1880,8 +1883,11 @@ export interface GetDetailLivestreamPeriodResponse {
     hour: number
     minute: number
   }
-  channel: string
-  noon?: boolean
+  channel: {
+    _id: string
+    name: string
+  }
+  for: "host" | "assistant"
 }
 
 /** @interface */
@@ -1895,7 +1901,7 @@ export interface UpdateLivestreamPeriodRequest {
     minute: number
   }
   channel?: string
-  noon?: boolean
+  for?: "host" | "assistant"
 }
 
 /** @interface */
@@ -1909,27 +1915,24 @@ export interface DeleteLivestreamPeriodRequest {
 export interface CreateLivestreamRangeRequest {
   startDate: Date
   endDate: Date
+  channel?: string
   snapshots?: string[]
 }
 
 /** @interface */
 export interface AddLivestreamSnapshotRequest {
   period: string
-  host: string
-  assistant: string
+  assignee: string
   goal: number
   income?: number
-  noon?: boolean
 }
 
 /** @interface */
 export interface UpdateLivestreamSnapshotRequest {
   period?: string
-  host?: string
-  assistant?: string
+  assignee?: string
   goal?: number
   income?: number
-  noon?: boolean
 }
 
 /** @interface */
@@ -1945,9 +1948,25 @@ export interface SetMetricsRequest {
 }
 
 /** @interface */
+export interface SyncSnapshotRequest {
+  startDate: Date
+  endDate: Date
+  channel: string
+}
+
+/** @interface */
+export interface SyncSnapshotResponse {
+  updated: number
+  message: string
+}
+
+/** @interface */
 export interface GetLivestreamByDateRangeRequest {
   startDate: string
   endDate: string
+  channel?: string
+  for?: "host" | "assistant"
+  assignee?: string
 }
 
 /** @interface */
@@ -1961,19 +1980,74 @@ export interface GetLivestreamByDateRangeResponse {
         _id?: string
         startTime: { hour: number; minute: number }
         endTime: { hour: number; minute: number }
-        channel: string
-        noon?: boolean
+        channel: {
+          _id: string
+          name: string
+        }
+        for: "host" | "assistant"
       }
-      host: string
-      assistant: string
-      goal: number
+      assignee?: {
+        _id: string
+        username: string
+        name: string
+      }
       income?: number
-      noon?: boolean
+      adsCost?: number
+      clickRate?: number
+      avgViewingDuration?: number
+      comments?: number
+      ordersNote?: string
+      rating?: string
     }[]
     totalOrders: number
     totalIncome: number
     ads: number
   }[]
+}
+
+/** @interface */
+export interface ReportLivestreamRequest {
+  income: number
+  adsCost?: number
+  clickRate: number
+  avgViewingDuration: number
+  comments: number
+  ordersNote: string
+  rating?: string
+}
+
+/** @interface */
+export interface ReportLivestreamResponse {
+  _id: string
+  date: string
+  snapshots: {
+    _id: string
+    period: {
+      _id?: string
+      startTime: { hour: number; minute: number }
+      endTime: { hour: number; minute: number }
+      channel: {
+        _id: string
+        name: string
+      }
+      for: "host" | "assistant"
+    }
+    assignee?: {
+      _id: string
+      username: string
+      name: string
+    }
+    income?: number
+    adsCost?: number
+    clickRate?: number
+    avgViewingDuration?: number
+    comments?: number
+    ordersNote?: string
+    rating?: string
+  }[]
+  totalOrders: number
+  totalIncome: number
+  ads: number
 }
 
 /** @interface */
@@ -2003,6 +2077,22 @@ export interface GetLivestreamStatsResponse {
   totalExpenses: number
   totalOrders: number
   incomeByHost: { hostId: string; income: number }[]
+}
+
+/** @interface */
+export interface GetAggregatedMetricsRequest {
+  startDate: Date
+  endDate: Date
+  channel: string
+  for: "host" | "assistant"
+  assignee?: string
+}
+
+/** @interface */
+export interface GetAggregatedMetricsResponse {
+  totalIncome: number
+  totalAdsCost: number
+  totalComments: number
 }
 
 // -------------------- SHOPEE PRODUCTS --------------------

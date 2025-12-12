@@ -2,17 +2,14 @@ import { createFileRoute } from "@tanstack/react-router"
 import { LivestreamLayout } from "../../../components/layouts/LivestreamLayout"
 import { useLivestream } from "../../../hooks/useLivestream"
 import { useQuery, useMutation } from "@tanstack/react-query"
+import { useMemo } from "react"
 import {
   Box,
   Button,
   Divider,
-  Flex,
   Group,
-  Loader,
   rem,
-  Table,
   Text,
-  Badge,
   ActionIcon
 } from "@mantine/core"
 import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react"
@@ -20,6 +17,8 @@ import { modals } from "@mantine/modals"
 import { Can } from "../../../components/common/Can"
 import { LivestreamPeriodModal } from "../../../components/livestream/LivestreamPeriodModal"
 import { CToast } from "../../../components/common/CToast"
+import { CDataTable } from "../../../components/common/CDataTable"
+import { ColumnDef } from "@tanstack/react-table"
 import type { GetAllLivestreamPeriodsResponse } from "../../../hooks/models"
 
 type LivestreamPeriod = GetAllLivestreamPeriodsResponse["periods"][0]
@@ -85,7 +84,7 @@ function RouteComponent() {
         <Text size="sm">
           Bạn có chắc chắn muốn xóa khoảng thời gian{" "}
           <strong>{formatTimeRange(period.startTime, period.endTime)}</strong>{" "}
-          trên kênh <strong>{period.channel}</strong>?
+          trên kênh <strong>{period.channel.name}</strong>?
         </Text>
       ),
       labels: { confirm: "Xóa", cancel: "Hủy" },
@@ -94,7 +93,77 @@ function RouteComponent() {
     })
   }
 
-  const colCount = 4
+  // Sort periods by start time
+  const sortedPeriods = useMemo(() => {
+    if (!periodsData) return []
+    return [...periodsData].sort((a, b) => {
+      if (a.startTime.hour !== b.startTime.hour) {
+        return a.startTime.hour - b.startTime.hour
+      }
+      return a.startTime.minute - b.startTime.minute
+    })
+  }, [periodsData])
+
+  const columns = useMemo<ColumnDef<LivestreamPeriod>[]>(
+    () => [
+      {
+        accessorKey: "startTime",
+        header: "Khoảng thời gian",
+        size: 200,
+        cell: ({ row }) => (
+          <Text size="sm" fw={600}>
+            {formatTimeRange(row.original.startTime, row.original.endTime)}
+          </Text>
+        )
+      },
+      {
+        accessorKey: "channel",
+        header: "Kênh",
+        size: 200,
+        cell: ({ row }) => <Text size="sm">{row.original.channel.name}</Text>
+      },
+      {
+        accessorKey: "for",
+        header: "Dành cho",
+        size: 120,
+        cell: ({ row }) => (
+          <Text size="sm" tt="capitalize">
+            {row.original.for === "host" ? "Host" : "Trợ live"}
+          </Text>
+        )
+      },
+      {
+        id: "actions",
+        header: "Hành động",
+        size: 120,
+        cell: ({ row }) => (
+          <Group gap={8}>
+            <Can roles={["admin", "livestream-leader"]}>
+              <ActionIcon
+                variant="light"
+                color="indigo"
+                size="sm"
+                onClick={() => openPeriodModal(row.original)}
+              >
+                <IconEdit size={16} />
+              </ActionIcon>
+            </Can>
+            <Can roles={["admin", "livestream-leader"]}>
+              <ActionIcon
+                variant="light"
+                color="red"
+                size="sm"
+                onClick={() => handleDelete(row.original)}
+              >
+                <IconTrash size={16} />
+              </ActionIcon>
+            </Can>
+          </Group>
+        )
+      }
+    ],
+    [refetch]
+  )
 
   return (
     <LivestreamLayout>
@@ -110,15 +179,7 @@ function RouteComponent() {
           border: "1px solid #ececec"
         }}
       >
-        <Flex
-          align="flex-start"
-          justify="space-between"
-          pt={32}
-          pb={8}
-          px={{ base: 8, md: 28 }}
-          direction="row"
-          gap={8}
-        >
+        <Box pt={32} pb={16} px={{ base: 8, md: 28 }}>
           <Box>
             <Text fw={700} fz="xl" mb={2}>
               Quản lý khoảng thời gian livestream
@@ -127,119 +188,32 @@ function RouteComponent() {
               Quản lý các khung giờ phát sóng livestream trên các kênh
             </Text>
           </Box>
-          <Can roles={["admin", "livestream-leader"]}>
-            <Button
-              onClick={() => openPeriodModal()}
-              leftSection={<IconPlus size={16} />}
-              size="md"
-              radius={"xl"}
-            >
-              Thêm khung giờ
-            </Button>
-          </Can>
-        </Flex>
+        </Box>
         <Divider my={0} />
 
         <Box px={{ base: 4, md: 28 }} py={20}>
-          <Table
-            highlightOnHover
-            striped
-            withColumnBorders
-            withTableBorder
-            verticalSpacing="sm"
-            horizontalSpacing="md"
-            stickyHeader
-            className="rounded-xl"
-            miw={600}
-          >
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Khoảng thời gian</Table.Th>
-                <Table.Th>Kênh</Table.Th>
-                <Table.Th>Loại</Table.Th>
-                <Table.Th style={{ width: 120 }}>Hành động</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {isLoading ? (
-                <Table.Tr>
-                  <Table.Td colSpan={colCount}>
-                    <Flex justify="center" align="center" h={60}>
-                      <Loader />
-                    </Flex>
-                  </Table.Td>
-                </Table.Tr>
-              ) : periodsData && periodsData.length > 0 ? (
-                periodsData
-                  .sort((a: LivestreamPeriod, b: LivestreamPeriod) => {
-                    // Sort by start time (hour then minute)
-                    if (a.startTime.hour !== b.startTime.hour) {
-                      return a.startTime.hour - b.startTime.hour
-                    }
-                    return a.startTime.minute - b.startTime.minute
-                  })
-                  .map((period: LivestreamPeriod) => (
-                    <Table.Tr
-                      key={period._id}
-                      style={{
-                        backgroundColor: period.noon
-                          ? "var(--mantine-color-green-0)"
-                          : undefined
-                      }}
-                    >
-                      <Table.Td>
-                        <Text fw={600}>
-                          {formatTimeRange(period.startTime, period.endTime)}
-                        </Text>
-                      </Table.Td>
-                      <Table.Td>
-                        <Text>{period.channel}</Text>
-                      </Table.Td>
-                      <Table.Td>
-                        <Badge
-                          color={period.noon ? "green" : "blue"}
-                          variant="light"
-                        >
-                          {period.noon ? "Khung giờ trưa" : "Khung giờ thường"}
-                        </Badge>
-                      </Table.Td>
-                      <Table.Td>
-                        <Group gap={8}>
-                          <Can roles={["admin", "livestream-leader"]}>
-                            <ActionIcon
-                              variant="light"
-                              color="indigo"
-                              size="sm"
-                              onClick={() => openPeriodModal(period)}
-                            >
-                              <IconEdit size={16} />
-                            </ActionIcon>
-                          </Can>
-                          <Can roles={["admin", "livestream-leader"]}>
-                            <ActionIcon
-                              variant="light"
-                              color="red"
-                              size="sm"
-                              onClick={() => handleDelete(period)}
-                            >
-                              <IconTrash size={16} />
-                            </ActionIcon>
-                          </Can>
-                        </Group>
-                      </Table.Td>
-                    </Table.Tr>
-                  ))
-              ) : (
-                <Table.Tr>
-                  <Table.Td colSpan={colCount}>
-                    <Flex justify="center" align="center" h={60}>
-                      <Text c="dimmed">Không có khoảng thời gian nào</Text>
-                    </Flex>
-                  </Table.Td>
-                </Table.Tr>
-              )}
-            </Table.Tbody>
-          </Table>
+          <CDataTable
+            columns={columns}
+            data={sortedPeriods}
+            isLoading={isLoading}
+            page={1}
+            totalPages={1}
+            onPageChange={() => {}}
+            onPageSizeChange={() => {}}
+            initialPageSize={100}
+            pageSizeOptions={[50, 100]}
+            extraActions={
+              <Can roles={["admin", "livestream-leader"]}>
+                <Button
+                  onClick={() => openPeriodModal()}
+                  leftSection={<IconPlus size={16} />}
+                  size="sm"
+                >
+                  Thêm khung giờ
+                </Button>
+              </Can>
+            }
+          />
         </Box>
       </Box>
     </LivestreamLayout>
