@@ -75,12 +75,12 @@ export const LIVESTREAM_NAVS = [
     roles: ["admin", "livestream-leader", "livestream-emp", "system-emp"],
     icon: "IconCalendar"
   },
-  {
-    to: `${LIVESTREAM_NAVS_URL}/members`,
-    label: "Nhân sự",
-    roles: ["admin", "livestream-leader", "system-emp"],
-    icon: "IconUsers"
-  },
+  // {
+  //   to: `${LIVESTREAM_NAVS_URL}/members`,
+  //   label: "Nhân sự",
+  //   roles: ["admin", "livestream-leader", "system-emp"],
+  //   icon: "IconUsers"
+  // },
   {
     to: `${LIVESTREAM_NAVS_URL}/periods`,
     label: "Kỳ livestream",
@@ -93,18 +93,18 @@ export const LIVESTREAM_NAVS = [
     roles: ["admin", "livestream-leader", "accounting-emp", "system-emp"],
     icon: "IconReportAnalytics"
   },
-  {
-    to: `${LIVESTREAM_NAVS_URL}/stats`,
-    label: "Chỉ số",
-    roles: ["admin", "livestream-leader", "accounting-emp", "system-emp"],
-    icon: "IconChartBar"
-  },
-  {
-    to: `${LIVESTREAM_NAVS_URL}/goals`,
-    label: "Mục tiêu",
-    roles: ["admin", "livestream-leader", "accounting-emp", "system-emp"],
-    icon: "IconTarget"
-  },
+  // {
+  //   to: `${LIVESTREAM_NAVS_URL}/stats`,
+  //   label: "Chỉ số",
+  //   roles: ["admin", "livestream-leader", "accounting-emp", "system-emp"],
+  //   icon: "IconChartBar"
+  // },
+  // {
+  //   to: `${LIVESTREAM_NAVS_URL}/goals`,
+  //   label: "Mục tiêu",
+  //   roles: ["admin", "livestream-leader", "accounting-emp", "system-emp"],
+  //   icon: "IconTarget"
+  // },
   {
     to: `${LIVESTREAM_NAVS_URL}/channels`,
     label: "Kênh livestream",
@@ -168,19 +168,13 @@ export const SALES_NAVS = [
 /** @constant */
 export const ADMIN_NAVS = [
   {
-    to: `${ADMIN_NAVS_URL}/users`,
-    label: "Quản lý người dùng",
-    roles: ["admin"],
-    icon: "IconUsers"
-  },
-  {
-    to: `${NAVS_URL}/system-logs`,
+    to: `${ADMIN_NAVS_URL}/system-logs`,
     label: "Lịch sử hệ thống",
     icon: "IconAutomaticGearbox",
     roles: ["admin"]
   },
   {
-    to: `${NAVS_URL}/tasks`,
+    to: `${ADMIN_NAVS_URL}/tasks`,
     label: "Công việc",
     icon: "IconClipboardList",
     roles: ["admin"],

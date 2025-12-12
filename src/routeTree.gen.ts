@@ -21,6 +21,7 @@ import { Route as PostauthIndexImport } from './routes/postauth/index'
 import { Route as MarketingStorageIndexImport } from './routes/marketing-storage/index'
 import { Route as LivestreamIndexImport } from './routes/livestream/index'
 import { Route as LandingIndexImport } from './routes/landing/index'
+import { Route as AdminIndexImport } from './routes/admin/index'
 import { Route as AccessDeniedIndexImport } from './routes/access-denied/index'
 import { Route as SalesTasksIndexImport } from './routes/sales/tasks/index'
 import { Route as SalesPriceIndexImport } from './routes/sales/price/index'
@@ -32,8 +33,6 @@ import { Route as SalesDashboardIndexImport } from './routes/sales/dashboard/ind
 import { Route as SalesDailyReportsIndexImport } from './routes/sales/daily-reports/index'
 import { Route as SalesCustomerRanksIndexImport } from './routes/sales/customer-ranks/index'
 import { Route as SalesChannelsIndexImport } from './routes/sales/channels/index'
-import { Route as MarketingStorageTasksIndexImport } from './routes/marketing-storage/tasks/index'
-import { Route as MarketingStorageSystemLogsIndexImport } from './routes/marketing-storage/system-logs/index'
 import { Route as MarketingStorageStorageIndexImport } from './routes/marketing-storage/storage/index'
 import { Route as MarketingStorageOrdersLogsIndexImport } from './routes/marketing-storage/orders-logs/index'
 import { Route as MarketingStorageOldLogsIndexImport } from './routes/marketing-storage/old-logs/index'
@@ -44,12 +43,15 @@ import { Route as MarketingStorageCalfileIndexImport } from './routes/marketing-
 import { Route as MarketingStorageCalIndexImport } from './routes/marketing-storage/cal/index'
 import { Route as MarketingStorageAccountingStorageIndexImport } from './routes/marketing-storage/accounting-storage/index'
 import { Route as LivestreamStatsIndexImport } from './routes/livestream/stats/index'
+import { Route as LivestreamReportsIndexImport } from './routes/livestream/reports/index'
 import { Route as LivestreamPeriodsIndexImport } from './routes/livestream/periods/index'
 import { Route as LivestreamMembersIndexImport } from './routes/livestream/members/index'
 import { Route as LivestreamGoalsIndexImport } from './routes/livestream/goals/index'
 import { Route as LivestreamChannelsIndexImport } from './routes/livestream/channels/index'
 import { Route as LivestreamCalendarIndexImport } from './routes/livestream/calendar/index'
 import { Route as LandingLandingPageIndexImport } from './routes/landing/landing-page/index'
+import { Route as AdminTasksIndexImport } from './routes/admin/tasks/index'
+import { Route as AdminSystemLogsIndexImport } from './routes/admin/system-logs/index'
 import { Route as SalesOrdersOrderIdImport } from './routes/sales/orders/$orderId'
 import { Route as SalesMessagesConversationIdImport } from './routes/sales/messages/$conversationId'
 import { Route as SalesItemsItemIdImport } from './routes/sales/items/$itemId'
@@ -120,6 +122,12 @@ const LandingIndexRoute = LandingIndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const AdminIndexRoute = AdminIndexImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => rootRoute,
+} as any)
+
 const AccessDeniedIndexRoute = AccessDeniedIndexImport.update({
   id: '/access-denied/',
   path: '/access-denied/',
@@ -185,21 +193,6 @@ const SalesChannelsIndexRoute = SalesChannelsIndexImport.update({
   path: '/sales/channels/',
   getParentRoute: () => rootRoute,
 } as any)
-
-const MarketingStorageTasksIndexRoute = MarketingStorageTasksIndexImport.update(
-  {
-    id: '/marketing-storage/tasks/',
-    path: '/marketing-storage/tasks/',
-    getParentRoute: () => rootRoute,
-  } as any,
-)
-
-const MarketingStorageSystemLogsIndexRoute =
-  MarketingStorageSystemLogsIndexImport.update({
-    id: '/marketing-storage/system-logs/',
-    path: '/marketing-storage/system-logs/',
-    getParentRoute: () => rootRoute,
-  } as any)
 
 const MarketingStorageStorageIndexRoute =
   MarketingStorageStorageIndexImport.update({
@@ -268,6 +261,12 @@ const LivestreamStatsIndexRoute = LivestreamStatsIndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const LivestreamReportsIndexRoute = LivestreamReportsIndexImport.update({
+  id: '/livestream/reports/',
+  path: '/livestream/reports/',
+  getParentRoute: () => rootRoute,
+} as any)
+
 const LivestreamPeriodsIndexRoute = LivestreamPeriodsIndexImport.update({
   id: '/livestream/periods/',
   path: '/livestream/periods/',
@@ -301,6 +300,18 @@ const LivestreamCalendarIndexRoute = LivestreamCalendarIndexImport.update({
 const LandingLandingPageIndexRoute = LandingLandingPageIndexImport.update({
   id: '/landing/landing-page/',
   path: '/landing/landing-page/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const AdminTasksIndexRoute = AdminTasksIndexImport.update({
+  id: '/admin/tasks/',
+  path: '/admin/tasks/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const AdminSystemLogsIndexRoute = AdminSystemLogsIndexImport.update({
+  id: '/admin/system-logs/',
+  path: '/admin/system-logs/',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -379,6 +390,13 @@ declare module '@tanstack/react-router' {
       path: '/access-denied'
       fullPath: '/access-denied'
       preLoaderRoute: typeof AccessDeniedIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminIndexImport
       parentRoute: typeof rootRoute
     }
     '/landing/': {
@@ -479,6 +497,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SalesOrdersOrderIdImport
       parentRoute: typeof rootRoute
     }
+    '/admin/system-logs/': {
+      id: '/admin/system-logs/'
+      path: '/admin/system-logs'
+      fullPath: '/admin/system-logs'
+      preLoaderRoute: typeof AdminSystemLogsIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/admin/tasks/': {
+      id: '/admin/tasks/'
+      path: '/admin/tasks'
+      fullPath: '/admin/tasks'
+      preLoaderRoute: typeof AdminTasksIndexImport
+      parentRoute: typeof rootRoute
+    }
     '/landing/landing-page/': {
       id: '/landing/landing-page/'
       path: '/landing/landing-page'
@@ -519,6 +551,13 @@ declare module '@tanstack/react-router' {
       path: '/livestream/periods'
       fullPath: '/livestream/periods'
       preLoaderRoute: typeof LivestreamPeriodsIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/livestream/reports/': {
+      id: '/livestream/reports/'
+      path: '/livestream/reports'
+      fullPath: '/livestream/reports'
+      preLoaderRoute: typeof LivestreamReportsIndexImport
       parentRoute: typeof rootRoute
     }
     '/livestream/stats/': {
@@ -589,20 +628,6 @@ declare module '@tanstack/react-router' {
       path: '/marketing-storage/storage'
       fullPath: '/marketing-storage/storage'
       preLoaderRoute: typeof MarketingStorageStorageIndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/marketing-storage/system-logs/': {
-      id: '/marketing-storage/system-logs/'
-      path: '/marketing-storage/system-logs'
-      fullPath: '/marketing-storage/system-logs'
-      preLoaderRoute: typeof MarketingStorageSystemLogsIndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/marketing-storage/tasks/': {
-      id: '/marketing-storage/tasks/'
-      path: '/marketing-storage/tasks'
-      fullPath: '/marketing-storage/tasks'
-      preLoaderRoute: typeof MarketingStorageTasksIndexImport
       parentRoute: typeof rootRoute
     }
     '/sales/channels/': {
@@ -697,6 +722,7 @@ export interface FileRoutesByFullPath {
   '/privacy-policy': typeof PrivacyPolicyRouteWithChildren
   '/test-error': typeof TestErrorRoute
   '/access-denied': typeof AccessDeniedIndexRoute
+  '/admin': typeof AdminIndexRoute
   '/landing': typeof LandingIndexRoute
   '/livestream': typeof LivestreamIndexRoute
   '/marketing-storage': typeof MarketingStorageIndexRoute
@@ -711,12 +737,15 @@ export interface FileRoutesByFullPath {
   '/sales/items/$itemId': typeof SalesItemsItemIdRoute
   '/sales/messages/$conversationId': typeof SalesMessagesConversationIdRoute
   '/sales/orders/$orderId': typeof SalesOrdersOrderIdRoute
+  '/admin/system-logs': typeof AdminSystemLogsIndexRoute
+  '/admin/tasks': typeof AdminTasksIndexRoute
   '/landing/landing-page': typeof LandingLandingPageIndexRoute
   '/livestream/calendar': typeof LivestreamCalendarIndexRoute
   '/livestream/channels': typeof LivestreamChannelsIndexRoute
   '/livestream/goals': typeof LivestreamGoalsIndexRoute
   '/livestream/members': typeof LivestreamMembersIndexRoute
   '/livestream/periods': typeof LivestreamPeriodsIndexRoute
+  '/livestream/reports': typeof LivestreamReportsIndexRoute
   '/livestream/stats': typeof LivestreamStatsIndexRoute
   '/marketing-storage/accounting-storage': typeof MarketingStorageAccountingStorageIndexRoute
   '/marketing-storage/cal': typeof MarketingStorageCalIndexRoute
@@ -727,8 +756,6 @@ export interface FileRoutesByFullPath {
   '/marketing-storage/old-logs': typeof MarketingStorageOldLogsIndexRoute
   '/marketing-storage/orders-logs': typeof MarketingStorageOrdersLogsIndexRoute
   '/marketing-storage/storage': typeof MarketingStorageStorageIndexRoute
-  '/marketing-storage/system-logs': typeof MarketingStorageSystemLogsIndexRoute
-  '/marketing-storage/tasks': typeof MarketingStorageTasksIndexRoute
   '/sales/channels': typeof SalesChannelsIndexRoute
   '/sales/customer-ranks': typeof SalesCustomerRanksIndexRoute
   '/sales/daily-reports': typeof SalesDailyReportsIndexRoute
@@ -745,6 +772,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/test-error': typeof TestErrorRoute
   '/access-denied': typeof AccessDeniedIndexRoute
+  '/admin': typeof AdminIndexRoute
   '/landing': typeof LandingIndexRoute
   '/livestream': typeof LivestreamIndexRoute
   '/marketing-storage': typeof MarketingStorageIndexRoute
@@ -759,12 +787,15 @@ export interface FileRoutesByTo {
   '/sales/items/$itemId': typeof SalesItemsItemIdRoute
   '/sales/messages/$conversationId': typeof SalesMessagesConversationIdRoute
   '/sales/orders/$orderId': typeof SalesOrdersOrderIdRoute
+  '/admin/system-logs': typeof AdminSystemLogsIndexRoute
+  '/admin/tasks': typeof AdminTasksIndexRoute
   '/landing/landing-page': typeof LandingLandingPageIndexRoute
   '/livestream/calendar': typeof LivestreamCalendarIndexRoute
   '/livestream/channels': typeof LivestreamChannelsIndexRoute
   '/livestream/goals': typeof LivestreamGoalsIndexRoute
   '/livestream/members': typeof LivestreamMembersIndexRoute
   '/livestream/periods': typeof LivestreamPeriodsIndexRoute
+  '/livestream/reports': typeof LivestreamReportsIndexRoute
   '/livestream/stats': typeof LivestreamStatsIndexRoute
   '/marketing-storage/accounting-storage': typeof MarketingStorageAccountingStorageIndexRoute
   '/marketing-storage/cal': typeof MarketingStorageCalIndexRoute
@@ -775,8 +806,6 @@ export interface FileRoutesByTo {
   '/marketing-storage/old-logs': typeof MarketingStorageOldLogsIndexRoute
   '/marketing-storage/orders-logs': typeof MarketingStorageOrdersLogsIndexRoute
   '/marketing-storage/storage': typeof MarketingStorageStorageIndexRoute
-  '/marketing-storage/system-logs': typeof MarketingStorageSystemLogsIndexRoute
-  '/marketing-storage/tasks': typeof MarketingStorageTasksIndexRoute
   '/sales/channels': typeof SalesChannelsIndexRoute
   '/sales/customer-ranks': typeof SalesCustomerRanksIndexRoute
   '/sales/daily-reports': typeof SalesDailyReportsIndexRoute
@@ -795,6 +824,7 @@ export interface FileRoutesById {
   '/privacy-policy': typeof PrivacyPolicyRouteWithChildren
   '/test-error': typeof TestErrorRoute
   '/access-denied/': typeof AccessDeniedIndexRoute
+  '/admin/': typeof AdminIndexRoute
   '/landing/': typeof LandingIndexRoute
   '/livestream/': typeof LivestreamIndexRoute
   '/marketing-storage/': typeof MarketingStorageIndexRoute
@@ -809,12 +839,15 @@ export interface FileRoutesById {
   '/sales/items/$itemId': typeof SalesItemsItemIdRoute
   '/sales/messages/$conversationId': typeof SalesMessagesConversationIdRoute
   '/sales/orders/$orderId': typeof SalesOrdersOrderIdRoute
+  '/admin/system-logs/': typeof AdminSystemLogsIndexRoute
+  '/admin/tasks/': typeof AdminTasksIndexRoute
   '/landing/landing-page/': typeof LandingLandingPageIndexRoute
   '/livestream/calendar/': typeof LivestreamCalendarIndexRoute
   '/livestream/channels/': typeof LivestreamChannelsIndexRoute
   '/livestream/goals/': typeof LivestreamGoalsIndexRoute
   '/livestream/members/': typeof LivestreamMembersIndexRoute
   '/livestream/periods/': typeof LivestreamPeriodsIndexRoute
+  '/livestream/reports/': typeof LivestreamReportsIndexRoute
   '/livestream/stats/': typeof LivestreamStatsIndexRoute
   '/marketing-storage/accounting-storage/': typeof MarketingStorageAccountingStorageIndexRoute
   '/marketing-storage/cal/': typeof MarketingStorageCalIndexRoute
@@ -825,8 +858,6 @@ export interface FileRoutesById {
   '/marketing-storage/old-logs/': typeof MarketingStorageOldLogsIndexRoute
   '/marketing-storage/orders-logs/': typeof MarketingStorageOrdersLogsIndexRoute
   '/marketing-storage/storage/': typeof MarketingStorageStorageIndexRoute
-  '/marketing-storage/system-logs/': typeof MarketingStorageSystemLogsIndexRoute
-  '/marketing-storage/tasks/': typeof MarketingStorageTasksIndexRoute
   '/sales/channels/': typeof SalesChannelsIndexRoute
   '/sales/customer-ranks/': typeof SalesCustomerRanksIndexRoute
   '/sales/daily-reports/': typeof SalesDailyReportsIndexRoute
@@ -846,6 +877,7 @@ export interface FileRouteTypes {
     | '/privacy-policy'
     | '/test-error'
     | '/access-denied'
+    | '/admin'
     | '/landing'
     | '/livestream'
     | '/marketing-storage'
@@ -860,12 +892,15 @@ export interface FileRouteTypes {
     | '/sales/items/$itemId'
     | '/sales/messages/$conversationId'
     | '/sales/orders/$orderId'
+    | '/admin/system-logs'
+    | '/admin/tasks'
     | '/landing/landing-page'
     | '/livestream/calendar'
     | '/livestream/channels'
     | '/livestream/goals'
     | '/livestream/members'
     | '/livestream/periods'
+    | '/livestream/reports'
     | '/livestream/stats'
     | '/marketing-storage/accounting-storage'
     | '/marketing-storage/cal'
@@ -876,8 +911,6 @@ export interface FileRouteTypes {
     | '/marketing-storage/old-logs'
     | '/marketing-storage/orders-logs'
     | '/marketing-storage/storage'
-    | '/marketing-storage/system-logs'
-    | '/marketing-storage/tasks'
     | '/sales/channels'
     | '/sales/customer-ranks'
     | '/sales/daily-reports'
@@ -893,6 +926,7 @@ export interface FileRouteTypes {
     | '/'
     | '/test-error'
     | '/access-denied'
+    | '/admin'
     | '/landing'
     | '/livestream'
     | '/marketing-storage'
@@ -907,12 +941,15 @@ export interface FileRouteTypes {
     | '/sales/items/$itemId'
     | '/sales/messages/$conversationId'
     | '/sales/orders/$orderId'
+    | '/admin/system-logs'
+    | '/admin/tasks'
     | '/landing/landing-page'
     | '/livestream/calendar'
     | '/livestream/channels'
     | '/livestream/goals'
     | '/livestream/members'
     | '/livestream/periods'
+    | '/livestream/reports'
     | '/livestream/stats'
     | '/marketing-storage/accounting-storage'
     | '/marketing-storage/cal'
@@ -923,8 +960,6 @@ export interface FileRouteTypes {
     | '/marketing-storage/old-logs'
     | '/marketing-storage/orders-logs'
     | '/marketing-storage/storage'
-    | '/marketing-storage/system-logs'
-    | '/marketing-storage/tasks'
     | '/sales/channels'
     | '/sales/customer-ranks'
     | '/sales/daily-reports'
@@ -941,6 +976,7 @@ export interface FileRouteTypes {
     | '/privacy-policy'
     | '/test-error'
     | '/access-denied/'
+    | '/admin/'
     | '/landing/'
     | '/livestream/'
     | '/marketing-storage/'
@@ -955,12 +991,15 @@ export interface FileRouteTypes {
     | '/sales/items/$itemId'
     | '/sales/messages/$conversationId'
     | '/sales/orders/$orderId'
+    | '/admin/system-logs/'
+    | '/admin/tasks/'
     | '/landing/landing-page/'
     | '/livestream/calendar/'
     | '/livestream/channels/'
     | '/livestream/goals/'
     | '/livestream/members/'
     | '/livestream/periods/'
+    | '/livestream/reports/'
     | '/livestream/stats/'
     | '/marketing-storage/accounting-storage/'
     | '/marketing-storage/cal/'
@@ -971,8 +1010,6 @@ export interface FileRouteTypes {
     | '/marketing-storage/old-logs/'
     | '/marketing-storage/orders-logs/'
     | '/marketing-storage/storage/'
-    | '/marketing-storage/system-logs/'
-    | '/marketing-storage/tasks/'
     | '/sales/channels/'
     | '/sales/customer-ranks/'
     | '/sales/daily-reports/'
@@ -991,6 +1028,7 @@ export interface RootRouteChildren {
   PrivacyPolicyRoute: typeof PrivacyPolicyRouteWithChildren
   TestErrorRoute: typeof TestErrorRoute
   AccessDeniedIndexRoute: typeof AccessDeniedIndexRoute
+  AdminIndexRoute: typeof AdminIndexRoute
   LandingIndexRoute: typeof LandingIndexRoute
   LivestreamIndexRoute: typeof LivestreamIndexRoute
   MarketingStorageIndexRoute: typeof MarketingStorageIndexRoute
@@ -1004,12 +1042,15 @@ export interface RootRouteChildren {
   SalesItemsItemIdRoute: typeof SalesItemsItemIdRoute
   SalesMessagesConversationIdRoute: typeof SalesMessagesConversationIdRoute
   SalesOrdersOrderIdRoute: typeof SalesOrdersOrderIdRoute
+  AdminSystemLogsIndexRoute: typeof AdminSystemLogsIndexRoute
+  AdminTasksIndexRoute: typeof AdminTasksIndexRoute
   LandingLandingPageIndexRoute: typeof LandingLandingPageIndexRoute
   LivestreamCalendarIndexRoute: typeof LivestreamCalendarIndexRoute
   LivestreamChannelsIndexRoute: typeof LivestreamChannelsIndexRoute
   LivestreamGoalsIndexRoute: typeof LivestreamGoalsIndexRoute
   LivestreamMembersIndexRoute: typeof LivestreamMembersIndexRoute
   LivestreamPeriodsIndexRoute: typeof LivestreamPeriodsIndexRoute
+  LivestreamReportsIndexRoute: typeof LivestreamReportsIndexRoute
   LivestreamStatsIndexRoute: typeof LivestreamStatsIndexRoute
   MarketingStorageAccountingStorageIndexRoute: typeof MarketingStorageAccountingStorageIndexRoute
   MarketingStorageCalIndexRoute: typeof MarketingStorageCalIndexRoute
@@ -1020,8 +1061,6 @@ export interface RootRouteChildren {
   MarketingStorageOldLogsIndexRoute: typeof MarketingStorageOldLogsIndexRoute
   MarketingStorageOrdersLogsIndexRoute: typeof MarketingStorageOrdersLogsIndexRoute
   MarketingStorageStorageIndexRoute: typeof MarketingStorageStorageIndexRoute
-  MarketingStorageSystemLogsIndexRoute: typeof MarketingStorageSystemLogsIndexRoute
-  MarketingStorageTasksIndexRoute: typeof MarketingStorageTasksIndexRoute
   SalesChannelsIndexRoute: typeof SalesChannelsIndexRoute
   SalesCustomerRanksIndexRoute: typeof SalesCustomerRanksIndexRoute
   SalesDailyReportsIndexRoute: typeof SalesDailyReportsIndexRoute
@@ -1039,6 +1078,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyPolicyRoute: PrivacyPolicyRouteWithChildren,
   TestErrorRoute: TestErrorRoute,
   AccessDeniedIndexRoute: AccessDeniedIndexRoute,
+  AdminIndexRoute: AdminIndexRoute,
   LandingIndexRoute: LandingIndexRoute,
   LivestreamIndexRoute: LivestreamIndexRoute,
   MarketingStorageIndexRoute: MarketingStorageIndexRoute,
@@ -1052,12 +1092,15 @@ const rootRouteChildren: RootRouteChildren = {
   SalesItemsItemIdRoute: SalesItemsItemIdRoute,
   SalesMessagesConversationIdRoute: SalesMessagesConversationIdRoute,
   SalesOrdersOrderIdRoute: SalesOrdersOrderIdRoute,
+  AdminSystemLogsIndexRoute: AdminSystemLogsIndexRoute,
+  AdminTasksIndexRoute: AdminTasksIndexRoute,
   LandingLandingPageIndexRoute: LandingLandingPageIndexRoute,
   LivestreamCalendarIndexRoute: LivestreamCalendarIndexRoute,
   LivestreamChannelsIndexRoute: LivestreamChannelsIndexRoute,
   LivestreamGoalsIndexRoute: LivestreamGoalsIndexRoute,
   LivestreamMembersIndexRoute: LivestreamMembersIndexRoute,
   LivestreamPeriodsIndexRoute: LivestreamPeriodsIndexRoute,
+  LivestreamReportsIndexRoute: LivestreamReportsIndexRoute,
   LivestreamStatsIndexRoute: LivestreamStatsIndexRoute,
   MarketingStorageAccountingStorageIndexRoute:
     MarketingStorageAccountingStorageIndexRoute,
@@ -1070,8 +1113,6 @@ const rootRouteChildren: RootRouteChildren = {
   MarketingStorageOldLogsIndexRoute: MarketingStorageOldLogsIndexRoute,
   MarketingStorageOrdersLogsIndexRoute: MarketingStorageOrdersLogsIndexRoute,
   MarketingStorageStorageIndexRoute: MarketingStorageStorageIndexRoute,
-  MarketingStorageSystemLogsIndexRoute: MarketingStorageSystemLogsIndexRoute,
-  MarketingStorageTasksIndexRoute: MarketingStorageTasksIndexRoute,
   SalesChannelsIndexRoute: SalesChannelsIndexRoute,
   SalesCustomerRanksIndexRoute: SalesCustomerRanksIndexRoute,
   SalesDailyReportsIndexRoute: SalesDailyReportsIndexRoute,
@@ -1098,6 +1139,7 @@ export const routeTree = rootRoute
         "/privacy-policy",
         "/test-error",
         "/access-denied/",
+        "/admin/",
         "/landing/",
         "/livestream/",
         "/marketing-storage/",
@@ -1111,12 +1153,15 @@ export const routeTree = rootRoute
         "/sales/items/$itemId",
         "/sales/messages/$conversationId",
         "/sales/orders/$orderId",
+        "/admin/system-logs/",
+        "/admin/tasks/",
         "/landing/landing-page/",
         "/livestream/calendar/",
         "/livestream/channels/",
         "/livestream/goals/",
         "/livestream/members/",
         "/livestream/periods/",
+        "/livestream/reports/",
         "/livestream/stats/",
         "/marketing-storage/accounting-storage/",
         "/marketing-storage/cal/",
@@ -1127,8 +1172,6 @@ export const routeTree = rootRoute
         "/marketing-storage/old-logs/",
         "/marketing-storage/orders-logs/",
         "/marketing-storage/storage/",
-        "/marketing-storage/system-logs/",
-        "/marketing-storage/tasks/",
         "/sales/channels/",
         "/sales/customer-ranks/",
         "/sales/daily-reports/",
@@ -1155,6 +1198,9 @@ export const routeTree = rootRoute
     },
     "/access-denied/": {
       "filePath": "access-denied/index.tsx"
+    },
+    "/admin/": {
+      "filePath": "admin/index.tsx"
     },
     "/landing/": {
       "filePath": "landing/index.tsx"
@@ -1199,6 +1245,12 @@ export const routeTree = rootRoute
     "/sales/orders/$orderId": {
       "filePath": "sales/orders/$orderId.tsx"
     },
+    "/admin/system-logs/": {
+      "filePath": "admin/system-logs/index.tsx"
+    },
+    "/admin/tasks/": {
+      "filePath": "admin/tasks/index.tsx"
+    },
     "/landing/landing-page/": {
       "filePath": "landing/landing-page/index.tsx"
     },
@@ -1216,6 +1268,9 @@ export const routeTree = rootRoute
     },
     "/livestream/periods/": {
       "filePath": "livestream/periods/index.tsx"
+    },
+    "/livestream/reports/": {
+      "filePath": "livestream/reports/index.tsx"
     },
     "/livestream/stats/": {
       "filePath": "livestream/stats/index.tsx"
@@ -1246,12 +1301,6 @@ export const routeTree = rootRoute
     },
     "/marketing-storage/storage/": {
       "filePath": "marketing-storage/storage/index.tsx"
-    },
-    "/marketing-storage/system-logs/": {
-      "filePath": "marketing-storage/system-logs/index.tsx"
-    },
-    "/marketing-storage/tasks/": {
-      "filePath": "marketing-storage/tasks/index.tsx"
     },
     "/sales/channels/": {
       "filePath": "sales/channels/index.tsx"
