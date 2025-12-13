@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router"
 import { LivestreamLayout } from "../../../components/layouts/LivestreamLayout"
 import { useLivestream } from "../../../hooks/useLivestream"
 import { useUsers } from "../../../hooks/useUsers"
@@ -17,26 +17,45 @@ import {
   Stack,
   Center,
   SegmentedControl,
-  ActionIcon
+  ActionIcon,
+  Tooltip
 } from "@mantine/core"
 import {
   IconPlus,
   IconChevronLeft,
   IconChevronRight,
-  IconRefresh
+  IconRefresh,
+  IconLock,
+  IconLockOpen
 } from "@tabler/icons-react"
 import { notifications } from "@mantine/notifications"
 import { CToast } from "../../../components/common/CToast"
 import { LivestreamCalendarTable } from "../../../components/livestream/LivestreamCalendarTable"
 import { openLivestreamReportModal } from "../../../components/livestream/LivestreamReportModal"
-import { useState, useMemo } from "react"
-import { format, startOfWeek, endOfWeek, eachDayOfInterval } from "date-fns"
+import { useState, useMemo, useEffect } from "react"
+import {
+  format,
+  startOfWeek,
+  endOfWeek,
+  eachDayOfInterval,
+  parseISO
+} from "date-fns"
+import { Can } from "../../../components/common/Can"
 
 export const Route = createFileRoute("/livestream/calendar/")({
-  component: RouteComponent
+  component: RouteComponent,
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      date: search.date as string | undefined,
+      channel: search.channel as string | undefined
+    }
+  }
 })
 
 function RouteComponent() {
+  const navigate = useNavigate()
+  const searchParams = useSearch({ from: "/livestream/calendar/" })
+
   const {
     getLivestreamsByDateRange,
     searchLivestreamChannels,
@@ -44,13 +63,46 @@ function RouteComponent() {
     addLivestreamSnapshot,
     updateLivestreamSnapshot,
     syncSnapshot,
-    reportLivestream
+    reportLivestream,
+    fixLivestream,
+    updateSnapshotAltRequest,
+    createAltRequest,
+    updateAltRequests,
+    getAltRequestBySnapshot,
+    updateAltRequestStatus,
+    deleteAltRequest
   } = useLivestream()
   const { publicSearchUser } = useUsers()
+  const { getMe } = useUsers()
+  const { data: me } = useQuery({
+    queryKey: ["getMe"],
+    queryFn: () => getMe(),
+    select: (data) => data.data
+  })
 
-  const [weekDate, setWeekDate] = useState<Date | null>(new Date())
-  const [channelId, setChannelId] = useState<string | null>(null)
+  // Initialize from URL params or defaults
+  const [weekDate, setWeekDate] = useState<Date | null>(() => {
+    if (searchParams.date) {
+      try {
+        return parseISO(searchParams.date)
+      } catch {
+        return new Date()
+      }
+    }
+    return new Date()
+  })
+  const [channelId, setChannelId] = useState<string | null>(
+    searchParams.channel || null
+  )
   const [viewMode, setViewMode] = useState<"assign" | "schedule">("schedule")
+  const [isWeekFixed, setIsWeekFixed] = useState(false)
+
+  // Force schedule mode when week is fixed
+  useMemo(() => {
+    if (isWeekFixed && viewMode === "assign") {
+      setViewMode("schedule")
+    }
+  }, [isWeekFixed, viewMode])
 
   // Calculate week range
   const weekRange = useMemo(() => {
@@ -80,9 +132,29 @@ function RouteComponent() {
   // Auto-select first channel
   useMemo(() => {
     if (channelsData && channelsData.length > 0 && !channelId) {
-      setChannelId(channelsData[0]._id)
+      const firstChannelId = channelsData[0]._id
+      setChannelId(firstChannelId)
     }
   }, [channelsData, channelId])
+
+  // Update URL when filters change
+  useEffect(() => {
+    const params: Record<string, string> = {}
+
+    if (weekDate) {
+      params.date = format(weekDate, "yyyy-MM-dd")
+    }
+
+    if (channelId) {
+      params.channel = channelId
+    }
+
+    navigate({
+      to: "/livestream/calendar",
+      search: params as any,
+      replace: true
+    })
+  }, [weekDate, channelId, navigate])
 
   // Fetch livestream employees
   const { data: livestreamEmpData } = useQuery({
@@ -134,6 +206,11 @@ function RouteComponent() {
         endDate: format(weekRange.end, "yyyy-MM-dd"),
         ...(channelId && { channel: channelId })
       })
+
+      // Check if any day in week is fixed
+      const hasFixedDay = response.data.livestreams.some((ls) => ls.fixed)
+      setIsWeekFixed(hasFixedDay)
+
       return response.data.livestreams
     },
     enabled: !!weekRange
@@ -245,6 +322,35 @@ function RouteComponent() {
         title: "Đồng bộ thất bại",
         message:
           error?.response?.data?.message || "Có lỗi khi đồng bộ snapshot",
+        color: "red"
+      })
+    }
+  })
+
+  // Fix livestream mutation
+  const { mutate: fixLivestreamMutation, isPending: isFixing } = useMutation({
+    mutationFn: async () => {
+      if (!weekRange || !channelId) {
+        throw new Error("Vui lòng chọn tuần và kênh")
+      }
+      return await fixLivestream({
+        startDate: weekRange.start,
+        endDate: weekRange.end,
+        channel: channelId
+      })
+    },
+    onSuccess: () => {
+      notifications.show({
+        title: "Chốt lịch thành công",
+        message: "Đã chốt lịch livestream cho tuần này",
+        color: "green"
+      })
+      refetch()
+    },
+    onError: (error: any) => {
+      notifications.show({
+        title: "Chốt lịch thất bại",
+        message: error?.response?.data?.message || "Có lỗi khi chốt lịch",
         color: "red"
       })
     }
@@ -366,6 +472,15 @@ function RouteComponent() {
           onUnassignEmployee={unassignEmployee}
           viewMode={viewMode}
           onOpenReport={handleOpenReport}
+          isWeekFixed={isWeekFixed}
+          currentUser={me}
+          onUpdateAlt={updateSnapshotAltRequest}
+          onCreateRequest={createAltRequest}
+          onUpdateRequest={updateAltRequests}
+          onDeleteRequest={deleteAltRequest}
+          onUpdateRequestStatus={updateAltRequestStatus}
+          onGetRequest={getAltRequestBySnapshot}
+          onRefetch={refetch}
         />
 
         <LivestreamCalendarTable
@@ -377,6 +492,15 @@ function RouteComponent() {
           onUnassignEmployee={unassignEmployee}
           viewMode={viewMode}
           onOpenReport={handleOpenReport}
+          isWeekFixed={isWeekFixed}
+          currentUser={me}
+          onUpdateAlt={updateSnapshotAltRequest}
+          onCreateRequest={createAltRequest}
+          onUpdateRequest={updateAltRequests}
+          onDeleteRequest={deleteAltRequest}
+          onUpdateRequestStatus={updateAltRequestStatus}
+          onGetRequest={getAltRequestBySnapshot}
+          onRefetch={refetch}
         />
       </Stack>
     )
@@ -483,45 +607,116 @@ function RouteComponent() {
                 </Stack>
 
                 {/* View Mode */}
-                <Stack
-                  gap={4}
-                  style={{
-                    flexBasis: "260px",
-                    flexShrink: 0
-                  }}
-                >
-                  <Text size="xs" fw={600} c="dimmed" tt="uppercase">
-                    Chế độ xem
-                  </Text>
-                  <SegmentedControl
-                    value={viewMode}
-                    onChange={(value) =>
-                      setViewMode(value as "assign" | "schedule")
-                    }
-                    size="sm"
-                    radius="md"
-                    fullWidth
-                    color="indigo"
-                    data={[
-                      { label: "Phân ca", value: "assign" },
-                      { label: "Xem lịch đã đặt", value: "schedule" }
-                    ]}
-                  />
-                </Stack>
+                <Can roles={["admin", "livestream-leader"]}>
+                  <Stack
+                    gap={4}
+                    style={{
+                      flexBasis: "260px",
+                      flexShrink: 0
+                    }}
+                  >
+                    <Text size="xs" fw={600} c="dimmed" tt="uppercase">
+                      Chế độ xem
+                    </Text>
+                    <Tooltip
+                      label="Không thể phân ca do đã chốt lịch"
+                      disabled={!isWeekFixed}
+                      position="bottom"
+                    >
+                      <SegmentedControl
+                        value={viewMode}
+                        onChange={(value) =>
+                          setViewMode(value as "assign" | "schedule")
+                        }
+                        size="sm"
+                        radius="md"
+                        fullWidth
+                        color="indigo"
+                        disabled={isWeekFixed}
+                        data={[
+                          { label: "Phân ca", value: "assign" },
+                          { label: "Xem lịch đã đặt", value: "schedule" }
+                        ]}
+                        styles={{
+                          root: {
+                            opacity: isWeekFixed ? 0.6 : 1,
+                            cursor: isWeekFixed ? "not-allowed" : "pointer"
+                          }
+                        }}
+                      />
+                    </Tooltip>
+                  </Stack>
 
-                {/* Sync Button */}
-                <Button
-                  leftSection={<IconRefresh size={16} />}
-                  onClick={() => syncSnapshotMutation()}
-                  loading={isSyncing}
-                  disabled={!channelId || !weekRange}
-                  size="sm"
-                  variant="light"
-                  color="indigo"
-                  style={{ flexShrink: 0 }}
-                >
-                  Đồng bộ
-                </Button>
+                  {/* Sync Button */}
+                  <Group gap="xs" style={{ flexShrink: 0 }}>
+                    <Tooltip
+                      label={
+                        isWeekFixed
+                          ? "Không thể đồng bộ do đã chốt lịch"
+                          : !channelId || !weekRange
+                            ? "Vui lòng chọn kênh và tuần"
+                            : ""
+                      }
+                      disabled={!isWeekFixed && !!channelId && !!weekRange}
+                      position="bottom"
+                    >
+                      <Button
+                        leftSection={<IconRefresh size={16} />}
+                        onClick={() => syncSnapshotMutation()}
+                        loading={isSyncing}
+                        disabled={!channelId || !weekRange || isWeekFixed}
+                        size="sm"
+                        variant="light"
+                        color="indigo"
+                      >
+                        Đồng bộ
+                      </Button>
+                    </Tooltip>
+
+                    {!isWeekFixed ? (
+                      <Tooltip
+                        label={
+                          !channelId || !weekRange
+                            ? "Vui lòng chọn kênh và tuần"
+                            : !hasLivestreams
+                              ? "Chưa có lịch livestream"
+                              : ""
+                        }
+                        disabled={
+                          !!channelId && !!weekRange && !!hasLivestreams
+                        }
+                        position="bottom"
+                      >
+                        <Button
+                          leftSection={<IconLock size={16} />}
+                          onClick={() => fixLivestreamMutation()}
+                          loading={isFixing}
+                          disabled={!channelId || !weekRange || !hasLivestreams}
+                          size="sm"
+                          variant="light"
+                          color="orange"
+                        >
+                          Chốt lịch
+                        </Button>
+                      </Tooltip>
+                    ) : (
+                      <Tooltip
+                        label="Lịch tuần này đã được chốt"
+                        position="bottom"
+                      >
+                        <Button
+                          leftSection={<IconLockOpen size={16} />}
+                          size="sm"
+                          variant="light"
+                          color="gray"
+                          disabled
+                        >
+                          Đã chốt
+                        </Button>
+                      </Tooltip>
+                    )}
+                  </Group>
+                </Can>
               </Flex>
 
               {/* Row 2: Channel select */}
