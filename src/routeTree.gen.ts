@@ -49,6 +49,7 @@ import { Route as LivestreamMembersIndexImport } from './routes/livestream/membe
 import { Route as LivestreamGoalsIndexImport } from './routes/livestream/goals/index'
 import { Route as LivestreamChannelsIndexImport } from './routes/livestream/channels/index'
 import { Route as LivestreamCalendarIndexImport } from './routes/livestream/calendar/index'
+import { Route as LivestreamAltRequestsIndexImport } from './routes/livestream/alt-requests/index'
 import { Route as LandingLandingPageIndexImport } from './routes/landing/landing-page/index'
 import { Route as AdminTasksIndexImport } from './routes/admin/tasks/index'
 import { Route as AdminSystemLogsIndexImport } from './routes/admin/system-logs/index'
@@ -297,6 +298,14 @@ const LivestreamCalendarIndexRoute = LivestreamCalendarIndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const LivestreamAltRequestsIndexRoute = LivestreamAltRequestsIndexImport.update(
+  {
+    id: '/livestream/alt-requests/',
+    path: '/livestream/alt-requests/',
+    getParentRoute: () => rootRoute,
+  } as any,
+)
+
 const LandingLandingPageIndexRoute = LandingLandingPageIndexImport.update({
   id: '/landing/landing-page/',
   path: '/landing/landing-page/',
@@ -516,6 +525,13 @@ declare module '@tanstack/react-router' {
       path: '/landing/landing-page'
       fullPath: '/landing/landing-page'
       preLoaderRoute: typeof LandingLandingPageIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/livestream/alt-requests/': {
+      id: '/livestream/alt-requests/'
+      path: '/livestream/alt-requests'
+      fullPath: '/livestream/alt-requests'
+      preLoaderRoute: typeof LivestreamAltRequestsIndexImport
       parentRoute: typeof rootRoute
     }
     '/livestream/calendar/': {
@@ -740,6 +756,7 @@ export interface FileRoutesByFullPath {
   '/admin/system-logs': typeof AdminSystemLogsIndexRoute
   '/admin/tasks': typeof AdminTasksIndexRoute
   '/landing/landing-page': typeof LandingLandingPageIndexRoute
+  '/livestream/alt-requests': typeof LivestreamAltRequestsIndexRoute
   '/livestream/calendar': typeof LivestreamCalendarIndexRoute
   '/livestream/channels': typeof LivestreamChannelsIndexRoute
   '/livestream/goals': typeof LivestreamGoalsIndexRoute
@@ -790,6 +807,7 @@ export interface FileRoutesByTo {
   '/admin/system-logs': typeof AdminSystemLogsIndexRoute
   '/admin/tasks': typeof AdminTasksIndexRoute
   '/landing/landing-page': typeof LandingLandingPageIndexRoute
+  '/livestream/alt-requests': typeof LivestreamAltRequestsIndexRoute
   '/livestream/calendar': typeof LivestreamCalendarIndexRoute
   '/livestream/channels': typeof LivestreamChannelsIndexRoute
   '/livestream/goals': typeof LivestreamGoalsIndexRoute
@@ -842,6 +860,7 @@ export interface FileRoutesById {
   '/admin/system-logs/': typeof AdminSystemLogsIndexRoute
   '/admin/tasks/': typeof AdminTasksIndexRoute
   '/landing/landing-page/': typeof LandingLandingPageIndexRoute
+  '/livestream/alt-requests/': typeof LivestreamAltRequestsIndexRoute
   '/livestream/calendar/': typeof LivestreamCalendarIndexRoute
   '/livestream/channels/': typeof LivestreamChannelsIndexRoute
   '/livestream/goals/': typeof LivestreamGoalsIndexRoute
@@ -895,6 +914,7 @@ export interface FileRouteTypes {
     | '/admin/system-logs'
     | '/admin/tasks'
     | '/landing/landing-page'
+    | '/livestream/alt-requests'
     | '/livestream/calendar'
     | '/livestream/channels'
     | '/livestream/goals'
@@ -944,6 +964,7 @@ export interface FileRouteTypes {
     | '/admin/system-logs'
     | '/admin/tasks'
     | '/landing/landing-page'
+    | '/livestream/alt-requests'
     | '/livestream/calendar'
     | '/livestream/channels'
     | '/livestream/goals'
@@ -994,6 +1015,7 @@ export interface FileRouteTypes {
     | '/admin/system-logs/'
     | '/admin/tasks/'
     | '/landing/landing-page/'
+    | '/livestream/alt-requests/'
     | '/livestream/calendar/'
     | '/livestream/channels/'
     | '/livestream/goals/'
@@ -1045,6 +1067,7 @@ export interface RootRouteChildren {
   AdminSystemLogsIndexRoute: typeof AdminSystemLogsIndexRoute
   AdminTasksIndexRoute: typeof AdminTasksIndexRoute
   LandingLandingPageIndexRoute: typeof LandingLandingPageIndexRoute
+  LivestreamAltRequestsIndexRoute: typeof LivestreamAltRequestsIndexRoute
   LivestreamCalendarIndexRoute: typeof LivestreamCalendarIndexRoute
   LivestreamChannelsIndexRoute: typeof LivestreamChannelsIndexRoute
   LivestreamGoalsIndexRoute: typeof LivestreamGoalsIndexRoute
@@ -1095,6 +1118,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminSystemLogsIndexRoute: AdminSystemLogsIndexRoute,
   AdminTasksIndexRoute: AdminTasksIndexRoute,
   LandingLandingPageIndexRoute: LandingLandingPageIndexRoute,
+  LivestreamAltRequestsIndexRoute: LivestreamAltRequestsIndexRoute,
   LivestreamCalendarIndexRoute: LivestreamCalendarIndexRoute,
   LivestreamChannelsIndexRoute: LivestreamChannelsIndexRoute,
   LivestreamGoalsIndexRoute: LivestreamGoalsIndexRoute,
@@ -1156,6 +1180,7 @@ export const routeTree = rootRoute
         "/admin/system-logs/",
         "/admin/tasks/",
         "/landing/landing-page/",
+        "/livestream/alt-requests/",
         "/livestream/calendar/",
         "/livestream/channels/",
         "/livestream/goals/",
@@ -1253,6 +1278,9 @@ export const routeTree = rootRoute
     },
     "/landing/landing-page/": {
       "filePath": "landing/landing-page/index.tsx"
+    },
+    "/livestream/alt-requests/": {
+      "filePath": "livestream/alt-requests/index.tsx"
     },
     "/livestream/calendar/": {
       "filePath": "livestream/calendar/index.tsx"

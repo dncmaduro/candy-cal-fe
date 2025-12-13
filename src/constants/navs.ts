@@ -93,6 +93,12 @@ export const LIVESTREAM_NAVS = [
     roles: ["admin", "livestream-leader", "accounting-emp", "system-emp"],
     icon: "IconReportAnalytics"
   },
+  {
+    to: `${LIVESTREAM_NAVS_URL}/alt-requests`,
+    label: "Yêu cầu thay đổi",
+    roles: ["admin", "livestream-leader", "livestream-emp", "system-emp"],
+    icon: "IconAlertCircle"
+  },
   // {
   //   to: `${LIVESTREAM_NAVS_URL}/stats`,
   //   label: "Chỉ số",

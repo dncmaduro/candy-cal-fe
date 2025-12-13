@@ -1998,10 +1998,14 @@ export interface GetLivestreamByDateRangeResponse {
       comments?: number
       ordersNote?: string
       rating?: string
+      altAssignee?: string
+      altNote?: string
+      altRequest?: string
     }[]
     totalOrders: number
     totalIncome: number
     ads: number
+    fixed: boolean
   }[]
 }
 
@@ -2044,10 +2048,14 @@ export interface ReportLivestreamResponse {
     comments?: number
     ordersNote?: string
     rating?: string
+    altAssignee?: string
+    altNote?: string
+    altRequest?: string
   }[]
   totalOrders: number
   totalIncome: number
   ads: number
+  fixed: boolean
 }
 
 /** @interface */
@@ -2093,6 +2101,177 @@ export interface GetAggregatedMetricsResponse {
   totalIncome: number
   totalAdsCost: number
   totalComments: number
+}
+
+/** @interface */
+export interface UpdateSnapshotAltRequest {
+  altAssignee?: string
+  altNote?: string
+}
+
+/** @interface */
+export interface UpdateSnapshotAltResponse {
+  _id: string
+  date: string
+  snapshots: {
+    _id: string
+    period: {
+      _id?: string
+      startTime: { hour: number; minute: number }
+      endTime: { hour: number; minute: number }
+      channel: {
+        _id: string
+        name: string
+      }
+      for: "host" | "assistant"
+    }
+    assignee?: {
+      _id: string
+      username: string
+      name: string
+    }
+    income?: number
+    adsCost?: number
+    clickRate?: number
+    avgViewingDuration?: number
+    comments?: number
+    ordersNote?: string
+    rating?: string
+    altAssignee?: string
+    altNote?: string
+    altRequest?: string
+  }[]
+  totalOrders: number
+  totalIncome: number
+  ads: number
+  fixed: boolean
+}
+
+/** @interface */
+export interface FixLivestreamRequest {
+  startDate: Date
+  endDate: Date
+  channel: string
+}
+
+/** @interface */
+export interface FixLivestreamResponse {
+  updated: number
+  message: string
+}
+
+/** @interface */
+export interface CreateAltRequestRequest {
+  livestreamId: string
+  snapshotId: string
+  altNote: string
+}
+
+/** @interface */
+export interface CreateAltRequestResponse {
+  createdBy: {
+    _id: string
+    name: string
+    username: string
+  }
+  livestreamId: string
+  snapshotId: string
+  altNote: string
+  status: "pending" | "accepted" | "rejected"
+  createdAt: Date
+  updatedAt: Date
+}
+
+/** @interface */
+export interface UpdateAltRequestsRequest {
+  altNote: string
+}
+
+/** @interface */
+export interface UpdateAltRequestsResponse {
+  createdBy: {
+    _id: string
+    name: string
+    username: string
+  }
+  livestreamId: string
+  snapshotId: string
+  altNote: string
+  status: "pending" | "accepted" | "rejected"
+  createdAt: Date
+  updatedAt: Date
+}
+
+/** @interface */
+export interface GetAltRequestBySnapshotRequest {
+  livestreamId: string
+  snapshotId: string
+}
+
+/** @interface */
+export interface GetAltRequestBySnapshotResponse {
+  _id: string
+  createdBy: {
+    _id: string
+    name: string
+    username: string
+  }
+  livestreamId: string
+  snapshotId: string
+  altNote: string
+  status: "pending" | "accepted" | "rejected"
+  createdAt: Date
+  updatedAt: Date
+}
+
+/** @interface */
+export interface UpdateAltRequestStatusRequest {
+  status: "pending" | "accepted" | "rejected"
+  altAssignee?: string
+}
+
+/** @interface */
+export interface UpdateAltRequestStatusResponse {
+  createdBy: string
+  livestreamId: string
+  snapshotId: string
+  altNote: string
+  status: "pending" | "accepted" | "rejected"
+  createdAt: Date
+  updatedAt: Date
+}
+
+/** @interface */
+export interface SearchAltRequestsRequest {
+  page?: number
+  limit?: number
+  status?: "pending" | "accepted" | "rejected"
+  requestBy?: string
+  channel?: string
+}
+
+/** @interface */
+export interface SearchAltRequestsResponse {
+  data: {
+    _id: string
+    livestreamId: string
+    snapshotId: string
+    altNote: string
+    status: "pending" | "accepted" | "rejected"
+    createdBy: {
+      _id: string
+      name: string
+      username: string
+    }
+    createdAt: Date
+    updatedAt: Date
+  }[]
+  total: number
+}
+
+/** @interface */
+export interface DeleteAltRequestRequest {
+  id: string
 }
 
 // -------------------- SHOPEE PRODUCTS --------------------
