@@ -1,7 +1,44 @@
-import { Button, Box, Stack, Text, ActionIcon, Group } from "@mantine/core"
-import { IconEye, IconReport } from "@tabler/icons-react"
+import {
+  Button,
+  Box,
+  Stack,
+  Text,
+  ActionIcon,
+  Group,
+  Popover,
+  TextInput,
+  Select
+} from "@mantine/core"
+import {
+  IconEye,
+  IconReport,
+  IconAlertCircle,
+  IconUserEdit,
+  IconTrash,
+  IconCircleDashedCheck,
+  IconCircleDashedX,
+  IconCalendarRepeat
+} from "@tabler/icons-react"
 import { format, parseISO } from "date-fns"
 import { vi } from "date-fns/locale"
+import { useState } from "react"
+import { notifications } from "@mantine/notifications"
+import type {
+  UpdateSnapshotAltRequest,
+  UpdateSnapshotAltResponse,
+  CreateAltRequestRequest,
+  CreateAltRequestResponse,
+  UpdateAltRequestsRequest,
+  UpdateAltRequestsResponse,
+  DeleteAltRequestRequest,
+  UpdateAltRequestStatusRequest,
+  UpdateAltRequestStatusResponse,
+  GetAltRequestBySnapshotRequest,
+  GetAltRequestBySnapshotResponse,
+  GetMeResponse
+} from "../../hooks/models"
+import { useLivestream } from "../../hooks/useLivestream"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 
 type LivestreamEmployee = {
   _id: string
@@ -23,6 +60,9 @@ type LivestreamSnapshot = {
     username: string
     name: string
   }
+  altAssignee?: string // This is the ID of alt assignee
+  altNote?: string
+  altRequest?: string
   income?: number
   adsCost?: number
   clickRate?: number
@@ -39,6 +79,797 @@ type LivestreamData = {
   totalOrders: number
   totalIncome: number
   ads: number
+  fixed?: boolean
+}
+
+// Alt Assignee Info Component - show on hover with original assignee and reason
+const AltAssigneeInfo = ({
+  snapshot,
+  altEmployeeName,
+  onGetRequest,
+  livestreamId
+}: {
+  snapshot: LivestreamSnapshot
+  altEmployeeName: string
+  onGetRequest: (
+    req: GetAltRequestBySnapshotRequest
+  ) => Promise<{ data: GetAltRequestBySnapshotResponse }>
+  livestreamId: string
+}) => {
+  const [altRequestData, setAltRequestData] = useState<{
+    originalAssigneeName: string
+    reason: string
+  } | null>(null)
+
+  const fetchAltRequestData = async () => {
+    try {
+      const response = await onGetRequest({
+        livestreamId,
+        snapshotId: snapshot._id
+      })
+      setAltRequestData({
+        originalAssigneeName: snapshot.assignee?.name || "",
+        reason: response.data.altNote || ""
+      })
+    } catch (error) {
+      console.error("Error fetching alt request:", error)
+    }
+  }
+
+  return (
+    <Popover width={300} position="bottom" withArrow>
+      <Popover.Target>
+        <div onMouseEnter={fetchAltRequestData} style={{ cursor: "pointer" }}>
+          <Text size="sm" fw={600} c="orange">
+            {altEmployeeName}
+          </Text>
+        </div>
+      </Popover.Target>
+      <Popover.Dropdown>
+        {altRequestData ? (
+          <Stack gap="xs">
+            <Text size="sm" fw={600}>
+              Thông tin thay thế
+            </Text>
+            <Text size="xs">
+              <strong>Người ban đầu:</strong>{" "}
+              {altRequestData.originalAssigneeName}
+            </Text>
+            <Text size="xs">
+              <strong>Lý do:</strong> {altRequestData.reason}
+            </Text>
+          </Stack>
+        ) : (
+          <Text size="sm">Đang tải...</Text>
+        )}
+      </Popover.Dropdown>
+    </Popover>
+  )
+}
+
+// Schedule Cell Component - handles hover state for UpdateAlt button
+const ScheduleCell = ({
+  snapshot,
+  dayData,
+  hasAltAssignee,
+  altEmployee,
+  displayName,
+  roleColor,
+  role,
+  isLivestreamFixed,
+  isAdminOrLeader,
+  canEditSnapshot,
+  employeesData,
+  onUpdateAlt,
+  onCreateRequest,
+  onGetRequest,
+  onUpdateRequestStatus,
+  onRefetch,
+  onOpenReport
+}: {
+  snapshot?: LivestreamSnapshot
+  dayData?: LivestreamData
+  hasAltAssignee: boolean
+  altEmployee: LivestreamEmployee | null | undefined
+  displayName: string | undefined
+  roleColor: string
+  role: "host" | "assistant"
+  isLivestreamFixed: boolean
+  isAdminOrLeader: () => boolean
+  canEditSnapshot: (snapshot: LivestreamSnapshot) => boolean
+  employeesData: LivestreamEmployee[]
+  onUpdateAlt: (
+    livestreamId: string,
+    snapshotId: string,
+    req: UpdateSnapshotAltRequest
+  ) => Promise<{ data: UpdateSnapshotAltResponse }>
+  onCreateRequest: (
+    req: CreateAltRequestRequest
+  ) => Promise<{ data: CreateAltRequestResponse }>
+  onGetRequest: (
+    req: GetAltRequestBySnapshotRequest
+  ) => Promise<{ data: GetAltRequestBySnapshotResponse }>
+  onUpdateRequestStatus: (
+    id: string,
+    req: UpdateAltRequestStatusRequest
+  ) => Promise<{ data: UpdateAltRequestStatusResponse }>
+  onRefetch: () => void
+  onOpenReport?: (livestreamid: string, snapshot: LivestreamSnapshot) => void
+}) => {
+  const { getAltRequestBySnapshot } = useLivestream()
+  const [isHovering, setIsHovering] = useState(false)
+
+  const { data: requestData } = useQuery({
+    queryKey: ["getAltRequestBySnapshot", snapshot?._id, dayData?._id],
+    queryFn: () =>
+      getAltRequestBySnapshot({
+        livestreamId: dayData?._id!,
+        snapshotId: snapshot?._id!
+      }),
+    enabled: !!snapshot && !!dayData
+  })
+
+  const showUpdate =
+    isHovering &&
+    isLivestreamFixed &&
+    isAdminOrLeader() &&
+    !hasAltAssignee &&
+    !!dayData
+
+  // Admin update visibility when hovering (also applies when altAssignee exists)
+  const showUpdateAdmin =
+    isHovering && isLivestreamFixed && isAdminOrLeader() && !!dayData
+
+  return (
+    <td
+      style={{
+        border: "1px solid #e0e0e0",
+        padding: "8px",
+        verticalAlign: "middle",
+        backgroundColor: hasAltAssignee
+          ? "rgba(255, 193, 7, 0.15)"
+          : snapshot?.assignee
+            ? role === "host"
+              ? "rgba(34, 139, 230, 0.08)"
+              : "rgba(64, 192, 87, 0.08)"
+            : "#fff"
+      }}
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
+    >
+      {snapshot?.assignee ? (
+        <Group justify="space-between" wrap="nowrap" gap="xs">
+          {/* Show alt assignee name with popover if has altAssignee */}
+          {hasAltAssignee && altEmployee ? (
+            <Group align="center" gap={2}>
+              <AltAssigneeInfo
+                snapshot={snapshot}
+                altEmployeeName={altEmployee.name}
+                onGetRequest={onGetRequest}
+                livestreamId={dayData!._id}
+              />
+
+              {/* show UpdateAltPopover for admins only when hovering */}
+              {isAdminOrLeader() && (
+                <div
+                  style={{
+                    visibility: showUpdateAdmin ? "visible" : "hidden",
+                    opacity: showUpdateAdmin ? 1 : 0,
+                    pointerEvents: showUpdateAdmin ? "auto" : "none",
+                    transition: "opacity 120ms ease, visibility 120ms",
+                    marginLeft: 2
+                  }}
+                >
+                  <UpdateAltPopover
+                    livestreamId={dayData?._id!}
+                    snapshot={snapshot}
+                    employees={employeesData}
+                    onUpdateAlt={onUpdateAlt}
+                    onRefetch={onRefetch}
+                  />
+                </div>
+              )}
+            </Group>
+          ) : (
+            <Group align="center" gap={2}>
+              <Text size="sm" fw={600} c={roleColor}>
+                {displayName}
+              </Text>
+
+              <div
+                style={{
+                  visibility: showUpdate ? "visible" : "hidden",
+                  opacity: showUpdate ? 1 : 0,
+                  pointerEvents: showUpdate ? "auto" : "none",
+                  transition: "opacity 120ms ease, visibility 120ms",
+                  marginLeft: 2
+                }}
+              >
+                <UpdateAltPopover
+                  livestreamId={dayData?._id!}
+                  snapshot={snapshot}
+                  employees={employeesData}
+                  onUpdateAlt={onUpdateAlt}
+                  onRefetch={onRefetch}
+                />
+              </div>
+            </Group>
+          )}
+
+          <Group gap={4}>
+            {/* Show create request icon for assignee when week is fixed */}
+            {isLivestreamFixed &&
+              canEditSnapshot(snapshot) &&
+              !hasAltAssignee &&
+              !requestData?.data &&
+              dayData && (
+                <CreateRequestPopover
+                  livestreamId={dayData._id}
+                  snapshot={snapshot}
+                  employees={employeesData}
+                  onCreateRequest={onCreateRequest}
+                  onRefetch={onRefetch}
+                />
+              )}
+
+            <Group gap={4}>
+              {/* Show alt request info if request exists */}
+              {requestData?.data && dayData && snapshot && (
+                <AltRequestInfo
+                  requestData={requestData.data}
+                  employees={employeesData}
+                  onUpdateRequestStatus={onUpdateRequestStatus}
+                  onRefetch={onRefetch}
+                  isAdminOrLeader={isAdminOrLeader()}
+                  isCreator={canEditSnapshot(snapshot)}
+                />
+              )}
+              {onOpenReport && dayData && (
+                <ActionIcon
+                  size="sm"
+                  variant="subtle"
+                  color={
+                    snapshot.income !== undefined &&
+                    snapshot.clickRate !== undefined &&
+                    snapshot.avgViewingDuration !== undefined &&
+                    snapshot.comments !== undefined &&
+                    snapshot.ordersNote !== undefined
+                      ? "blue"
+                      : "gray"
+                  }
+                  onClick={() => onOpenReport(dayData._id, snapshot)}
+                >
+                  {snapshot.income !== undefined &&
+                  snapshot.clickRate !== undefined &&
+                  snapshot.avgViewingDuration !== undefined &&
+                  snapshot.comments !== undefined &&
+                  snapshot.ordersNote !== undefined ? (
+                    <IconEye size={16} />
+                  ) : (
+                    <IconReport size={16} />
+                  )}
+                </ActionIcon>
+              )}
+            </Group>
+          </Group>
+        </Group>
+      ) : (
+        <Text size="xs" c="dimmed" fs="italic">
+          Chưa phân
+        </Text>
+      )}
+    </td>
+  )
+}
+
+// Update Alt Popover Component - for admin/leader to set alt assignee
+const UpdateAltPopover = ({
+  livestreamId,
+  snapshot,
+  employees,
+  onUpdateAlt,
+  onRefetch
+}: {
+  livestreamId: string
+  snapshot: LivestreamSnapshot
+  employees: LivestreamEmployee[]
+  onUpdateAlt: (
+    livestreamId: string,
+    snapshotId: string,
+    req: UpdateSnapshotAltRequest
+  ) => Promise<{ data: UpdateSnapshotAltResponse }>
+  onRefetch: () => void
+}) => {
+  const [opened, setOpened] = useState(false)
+  const [selectedAlt, setSelectedAlt] = useState<string | null>(
+    snapshot.altAssignee || null
+  )
+  const [altNote, setAltNote] = useState<string>(snapshot.altNote || "")
+  const [loading, setLoading] = useState(false)
+
+  const handleSubmit = async () => {
+    if (!selectedAlt) return
+
+    setLoading(true)
+    try {
+      await onUpdateAlt(livestreamId, snapshot._id, {
+        altAssignee: selectedAlt,
+        altNote: altNote?.trim() || undefined
+      })
+      notifications.show({
+        title: "Cập nhật thành công",
+        message: "Đã cập nhật người thay thế",
+        color: "green"
+      })
+      setOpened(false)
+      onRefetch()
+    } catch (error: any) {
+      notifications.show({
+        title: "Cập nhật thất bại",
+        message: error?.response?.data?.message || "Có lỗi xảy ra",
+        color: "red"
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleRemoveAlt = async () => {
+    setLoading(true)
+    try {
+      await onUpdateAlt(livestreamId, snapshot._id, {
+        altAssignee: undefined as any,
+        altNote: undefined
+      })
+      notifications.show({
+        title: "Xóa thành công",
+        message: "Đã xóa người thay thế",
+        color: "green"
+      })
+      setOpened(false)
+      onRefetch()
+    } catch (error: any) {
+      notifications.show({
+        title: "Xóa thất bại",
+        message: error?.response?.data?.message || "Có lỗi xảy ra",
+        color: "red"
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  console.log(
+    employees
+      .map((e) => ({ label: e.name, value: e._id }))
+      .filter((e) => e.value !== snapshot.assignee?._id)
+  )
+
+  return (
+    <Popover
+      opened={opened}
+      onChange={setOpened}
+      width={300}
+      position="bottom"
+      withArrow
+    >
+      <Popover.Target>
+        <ActionIcon
+          size="sm"
+          variant="subtle"
+          color="indigo"
+          onClick={() => setOpened(true)}
+        >
+          <IconUserEdit size={16} />
+        </ActionIcon>
+      </Popover.Target>
+      <Popover.Dropdown>
+        <Stack gap="sm">
+          <Text size="sm" fw={600}>
+            Chỉ định người thay thế
+          </Text>
+          <Select
+            placeholder="Chọn người thay thế"
+            value={selectedAlt}
+            onChange={setSelectedAlt}
+            data={employees
+              .map((e) => ({ label: e.name, value: e._id }))
+              .filter((e) => e.value !== snapshot.assignee?._id)}
+            searchable
+            comboboxProps={{ withinPortal: false }}
+          />
+          <TextInput
+            placeholder="Lý do (tùy chọn)"
+            value={altNote}
+            onChange={(e) => setAltNote(e.currentTarget.value)}
+            size="sm"
+          />
+          <Group justify="apart">
+            <Button
+              size="xs"
+              onClick={handleSubmit}
+              loading={loading}
+              disabled={!selectedAlt}
+            >
+              Lưu
+            </Button>
+            {snapshot.altAssignee && (
+              <Button
+                size="xs"
+                variant="light"
+                color="red"
+                onClick={handleRemoveAlt}
+                loading={loading}
+                leftSection={<IconTrash size={14} />}
+              >
+                Xóa
+              </Button>
+            )}
+          </Group>
+        </Stack>
+      </Popover.Dropdown>
+    </Popover>
+  )
+}
+
+// Alt Request Info Component - show request details with accept/reject
+const AltRequestInfo = ({
+  requestData,
+  employees,
+  onUpdateRequestStatus,
+  onRefetch,
+  isAdminOrLeader,
+  isCreator
+}: {
+  requestData: GetAltRequestBySnapshotResponse
+  employees: LivestreamEmployee[]
+  onUpdateRequestStatus: (
+    id: string,
+    req: UpdateAltRequestStatusRequest
+  ) => Promise<{ data: UpdateAltRequestStatusResponse }>
+  onRefetch: () => void
+  isAdminOrLeader: boolean
+  isCreator: boolean
+}) => {
+  const queryClient = useQueryClient()
+  const [opened, setOpened] = useState(false)
+  const [isAccepting, setIsAccepting] = useState(false)
+  const [selectedAlt, setSelectedAlt] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  // Only show to admin/leader or creator
+  if (!isAdminOrLeader && !isCreator) {
+    return null
+  }
+
+  const handleAccept = () => {
+    setIsAccepting(true)
+  }
+
+  const handleReject = async () => {
+    setLoading(true)
+    try {
+      // Use livestreamId and snapshotId to construct the request ID
+      const requestId = requestData._id
+      await onUpdateRequestStatus(requestId, {
+        status: "rejected"
+      })
+      notifications.show({
+        title: "Đã từ chối",
+        message: "Yêu cầu đã được từ chối",
+        color: "orange"
+      })
+      setOpened(false)
+      // Invalidate the query to refetch updated data
+      queryClient.invalidateQueries({
+        queryKey: [
+          "getAltRequestBySnapshot",
+          requestData.snapshotId,
+          requestData.livestreamId
+        ]
+      })
+      onRefetch()
+    } catch (error: any) {
+      notifications.show({
+        title: "Lỗi",
+        message: error?.response?.data?.message || "Có lỗi xảy ra",
+        color: "red"
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleConfirmAccept = async () => {
+    if (!selectedAlt) {
+      notifications.show({
+        title: "Thiếu thông tin",
+        message: "Vui lòng chọn người thay thế",
+        color: "red"
+      })
+      return
+    }
+
+    setLoading(true)
+    try {
+      // Use livestreamId and snapshotId to construct the request ID
+      const requestId = requestData._id
+      await onUpdateRequestStatus(requestId, {
+        status: "accepted",
+        altAssignee: selectedAlt
+      })
+      notifications.show({
+        title: "Đã chấp nhận",
+        message: "Yêu cầu đã được chấp nhận",
+        color: "green"
+      })
+      setOpened(false)
+      setIsAccepting(false)
+      setSelectedAlt(null)
+      // Invalidate the query to refetch updated data
+      queryClient.invalidateQueries({
+        queryKey: [
+          "getAltRequestBySnapshot",
+          requestData.snapshotId,
+          requestData.livestreamId
+        ]
+      })
+      onRefetch()
+    } catch (error: any) {
+      notifications.show({
+        title: "Lỗi",
+        message: error?.response?.data?.message || "Có lỗi xảy ra",
+        color: "red"
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Determine icon color and type based on status
+  const getIconProps = () => {
+    switch (requestData.status) {
+      case "pending":
+        return { color: "orange", icon: IconCalendarRepeat }
+      case "accepted":
+        return { color: "green", icon: IconCircleDashedCheck }
+      case "rejected":
+        return { color: "red", icon: IconCircleDashedX }
+      default:
+        return { color: "orange", icon: IconCalendarRepeat }
+    }
+  }
+
+  const iconProps = getIconProps()
+  const IconComponent = iconProps.icon
+
+  return (
+    <Popover
+      opened={opened}
+      onChange={(o) => {
+        setOpened(o)
+        if (!o) {
+          setIsAccepting(false)
+          setSelectedAlt(null)
+        }
+      }}
+      width={300}
+      position="bottom"
+      withArrow
+    >
+      <Popover.Target>
+        <ActionIcon
+          size="sm"
+          variant="subtle"
+          color={iconProps.color}
+          onClick={() => setOpened(true)}
+        >
+          <IconComponent size={16} />
+        </ActionIcon>
+      </Popover.Target>
+      <Popover.Dropdown>
+        <Stack gap="sm">
+          <Text size="sm" fw={600}>
+            Yêu cầu thay đổi
+          </Text>
+
+          {/* Show content based on status and user role */}
+          {requestData.status === "pending" && (
+            <>
+              <Text size="xs">
+                <strong>Lý do:</strong> {requestData.altNote}
+              </Text>
+
+              {/* Show accept/reject buttons only for admin/leader */}
+              {isAdminOrLeader && (
+                <>
+                  {isAccepting ? (
+                    <>
+                      <Select
+                        placeholder="Chọn người thay thế"
+                        value={selectedAlt}
+                        onChange={setSelectedAlt}
+                        data={employees
+                          .map((e) => ({
+                            label: e.name,
+                            value: e._id
+                          }))
+                          .filter((e) => e.value !== requestData.createdBy._id)}
+                        searchable
+                        size="sm"
+                        comboboxProps={{ withinPortal: false }}
+                      />
+                      <Group justify="apart">
+                        <Button
+                          size="xs"
+                          variant="light"
+                          onClick={() => setIsAccepting(false)}
+                          disabled={loading}
+                        >
+                          Hủy
+                        </Button>
+                        <Button
+                          size="xs"
+                          color="green"
+                          onClick={handleConfirmAccept}
+                          loading={loading}
+                          disabled={!selectedAlt}
+                        >
+                          Xác nhận
+                        </Button>
+                      </Group>
+                    </>
+                  ) : (
+                    <Group justify="apart">
+                      <Button
+                        size="xs"
+                        color="red"
+                        variant="light"
+                        onClick={handleReject}
+                        loading={loading}
+                      >
+                        Từ chối
+                      </Button>
+                      <Button
+                        size="xs"
+                        color="green"
+                        onClick={handleAccept}
+                        disabled={loading}
+                      >
+                        Chấp nhận
+                      </Button>
+                    </Group>
+                  )}
+                </>
+              )}
+
+              {/* Show status only for creator (read-only) */}
+              {!isAdminOrLeader && isCreator && (
+                <Text size="xs" c="orange">
+                  <strong>Trạng thái:</strong> Đang chờ duyệt
+                </Text>
+              )}
+            </>
+          )}
+
+          {requestData.status === "accepted" && (
+            <>
+              <Text size="xs" c="green">
+                <strong>Trạng thái:</strong> Đã chấp nhận
+              </Text>
+              <Text size="xs">
+                <strong>Lý do:</strong> {requestData.altNote}
+              </Text>
+            </>
+          )}
+
+          {requestData.status === "rejected" && (
+            <>
+              <Text size="xs" c="red">
+                <strong>Trạng thái:</strong> Đã từ chối
+              </Text>
+              <Text size="xs">
+                <strong>Lý do:</strong> {requestData.altNote}
+              </Text>
+            </>
+          )}
+        </Stack>
+      </Popover.Dropdown>
+    </Popover>
+  )
+}
+
+// Create Request Popover Component - for assignee to create alt request
+const CreateRequestPopover = ({
+  livestreamId,
+  snapshot,
+  onCreateRequest,
+  onRefetch
+}: {
+  livestreamId: string
+  snapshot: LivestreamSnapshot
+  employees: LivestreamEmployee[]
+  onCreateRequest: (
+    req: CreateAltRequestRequest
+  ) => Promise<{ data: CreateAltRequestResponse }>
+  onRefetch: () => void
+}) => {
+  const [opened, setOpened] = useState(false)
+  const [reason, setReason] = useState("")
+  const [loading, setLoading] = useState(false)
+
+  const handleSubmit = async () => {
+    if (!reason.trim()) {
+      notifications.show({
+        title: "Thiếu thông tin",
+        message: "Vui lòng nhập lý do",
+        color: "red"
+      })
+      return
+    }
+
+    setLoading(true)
+    try {
+      await onCreateRequest({
+        livestreamId: livestreamId,
+        snapshotId: snapshot._id,
+        altNote: reason.trim()
+      })
+      notifications.show({
+        title: "Tạo yêu cầu thành công",
+        message: "Yêu cầu thay đổi đã được gửi",
+        color: "green"
+      })
+      setOpened(false)
+      setReason("")
+      onRefetch()
+    } catch (error: any) {
+      notifications.show({
+        title: "Tạo yêu cầu thất bại",
+        message: error?.response?.data?.message || "Có lỗi xảy ra",
+        color: "red"
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <Popover
+      opened={opened}
+      onChange={setOpened}
+      width={300}
+      position="bottom"
+      withArrow
+    >
+      <Popover.Target>
+        <ActionIcon
+          size="sm"
+          variant="subtle"
+          color="yellow"
+          onClick={() => setOpened(true)}
+        >
+          <IconAlertCircle size={16} />
+        </ActionIcon>
+      </Popover.Target>
+      <Popover.Dropdown>
+        <Stack gap="sm">
+          <Text size="sm" fw={600}>
+            Yêu cầu thay đổi nhân sự
+          </Text>
+          <TextInput
+            placeholder="Nhập lý do..."
+            value={reason}
+            onChange={(e) => setReason(e.currentTarget.value)}
+            size="sm"
+          />
+          <Button size="xs" onClick={handleSubmit} loading={loading}>
+            Gửi yêu cầu
+          </Button>
+        </Stack>
+      </Popover.Dropdown>
+    </Popover>
+  )
 }
 
 interface LivestreamCalendarTableProps {
@@ -59,6 +890,29 @@ interface LivestreamCalendarTableProps {
   }) => void
   viewMode: "assign" | "schedule"
   onOpenReport?: (livestreamId: string, snapshot: LivestreamSnapshot) => void
+  isWeekFixed: boolean
+  currentUser: GetMeResponse | undefined
+  onUpdateAlt: (
+    livestreamId: string,
+    snapshotId: string,
+    req: UpdateSnapshotAltRequest
+  ) => Promise<{ data: UpdateSnapshotAltResponse }>
+  onCreateRequest: (
+    req: CreateAltRequestRequest
+  ) => Promise<{ data: CreateAltRequestResponse }>
+  onUpdateRequest: (
+    id: string,
+    req: UpdateAltRequestsRequest
+  ) => Promise<{ data: UpdateAltRequestsResponse }>
+  onDeleteRequest: (req: DeleteAltRequestRequest) => Promise<{ data: never }>
+  onUpdateRequestStatus: (
+    id: string,
+    req: UpdateAltRequestStatusRequest
+  ) => Promise<{ data: UpdateAltRequestStatusResponse }>
+  onGetRequest: (
+    req: GetAltRequestBySnapshotRequest
+  ) => Promise<{ data: GetAltRequestBySnapshotResponse }>
+  onRefetch: () => void
 }
 
 export const LivestreamCalendarTable = ({
@@ -69,7 +923,14 @@ export const LivestreamCalendarTable = ({
   onAssignEmployee,
   onUnassignEmployee,
   viewMode,
-  onOpenReport
+  onOpenReport,
+  isWeekFixed,
+  currentUser,
+  onUpdateAlt,
+  onCreateRequest,
+  onGetRequest,
+  onUpdateRequestStatus,
+  onRefetch
 }: LivestreamCalendarTableProps) => {
   const formatTimeRange = (
     start: { hour: number; minute: number },
@@ -77,6 +938,21 @@ export const LivestreamCalendarTable = ({
   ) => {
     const pad = (n: number) => n.toString().padStart(2, "0")
     return `${pad(start.hour)}:${pad(start.minute)}-${pad(end.hour)}:${pad(end.minute)}`
+  }
+
+  // Check if user is admin or livestream-leader
+  const isAdminOrLeader = () => {
+    if (!currentUser) return false
+    return (
+      currentUser.roles?.includes("admin") ||
+      currentUser.roles?.includes("livestream-leader")
+    )
+  }
+
+  // Check if user can edit snapshot (is assignee)
+  const canEditSnapshot = (snapshot: LivestreamSnapshot) => {
+    if (!currentUser) return false
+    return snapshot.assignee?._id === currentUser._id
   }
 
   // Collect unique periods from snapshots that match the role
@@ -132,7 +1008,7 @@ export const LivestreamCalendarTable = ({
                     position: "sticky",
                     left: 0,
                     zIndex: 10,
-                    minWidth: "80px"
+                    minWidth: "100px"
                   }}
                 >
                   <Text size="xs" fw={600}>
@@ -146,7 +1022,7 @@ export const LivestreamCalendarTable = ({
                       border: "1px solid #e0e0e0",
                       padding: "8px",
                       backgroundColor: "#f8f9fa",
-                      minWidth: "120px"
+                      width: "13%"
                     }}
                   >
                     <div>
@@ -189,60 +1065,41 @@ export const LivestreamCalendarTable = ({
                       (s) => s.period._id === period._id
                     )
 
+                    // Check if snapshot has alt assignee (yellow background)
+                    const hasAltAssignee = !!snapshot?.altAssignee
+                    const altEmployee = hasAltAssignee
+                      ? employeesData.find(
+                          (e) => e._id === snapshot.altAssignee
+                        )
+                      : null
+                    const displayName = altEmployee
+                      ? altEmployee.name
+                      : snapshot?.assignee?.name
+
+                    // Check if this livestream is fixed
+                    const isLivestreamFixed = dayData?.fixed === true
+
                     return (
-                      <td
+                      <ScheduleCell
                         key={`${period._id}-${day.toISOString()}`}
-                        style={{
-                          border: "1px solid #e0e0e0",
-                          padding: "8px",
-                          verticalAlign: "middle",
-                          backgroundColor: snapshot?.assignee
-                            ? role === "host"
-                              ? "rgba(34, 139, 230, 0.08)"
-                              : "rgba(64, 192, 87, 0.08)"
-                            : "#fff"
-                        }}
-                      >
-                        {snapshot?.assignee ? (
-                          <Group justify="space-between" wrap="nowrap" gap="xs">
-                            <Text size="sm" fw={600} c={roleColor}>
-                              {snapshot.assignee.name}
-                            </Text>
-                            {onOpenReport && dayData && (
-                              <ActionIcon
-                                size="sm"
-                                variant="subtle"
-                                color={
-                                  snapshot.income !== undefined &&
-                                  snapshot.clickRate !== undefined &&
-                                  snapshot.avgViewingDuration !== undefined &&
-                                  snapshot.comments !== undefined &&
-                                  snapshot.ordersNote !== undefined
-                                    ? "blue"
-                                    : "gray"
-                                }
-                                onClick={() =>
-                                  onOpenReport(dayData._id, snapshot)
-                                }
-                              >
-                                {snapshot.income !== undefined &&
-                                snapshot.clickRate !== undefined &&
-                                snapshot.avgViewingDuration !== undefined &&
-                                snapshot.comments !== undefined &&
-                                snapshot.ordersNote !== undefined ? (
-                                  <IconEye size={16} />
-                                ) : (
-                                  <IconReport size={16} />
-                                )}
-                              </ActionIcon>
-                            )}
-                          </Group>
-                        ) : (
-                          <Text size="xs" c="dimmed" fs="italic">
-                            Chưa phân
-                          </Text>
-                        )}
-                      </td>
+                        snapshot={snapshot}
+                        dayData={dayData}
+                        hasAltAssignee={hasAltAssignee}
+                        altEmployee={altEmployee}
+                        displayName={displayName}
+                        roleColor={roleColor}
+                        role={role}
+                        isLivestreamFixed={isLivestreamFixed}
+                        isAdminOrLeader={isAdminOrLeader}
+                        canEditSnapshot={canEditSnapshot}
+                        employeesData={employeesData}
+                        onUpdateAlt={onUpdateAlt}
+                        onCreateRequest={onCreateRequest}
+                        onGetRequest={onGetRequest}
+                        onUpdateRequestStatus={onUpdateRequestStatus}
+                        onRefetch={onRefetch}
+                        onOpenReport={onOpenReport}
+                      />
                     )
                   })}
                 </tr>
@@ -290,7 +1147,7 @@ export const LivestreamCalendarTable = ({
                     border: "1px solid #e0e0e0",
                     padding: "12px",
                     backgroundColor: "#f8f9fa",
-                    minWidth: "120px"
+                    width: "13%"
                   }}
                 >
                   <div>
@@ -368,7 +1225,7 @@ export const LivestreamCalendarTable = ({
                                   }
                                 }
                               }}
-                              disabled={!dayData?._id}
+                              disabled={!dayData?._id || isWeekFixed}
                               onClick={() =>
                                 isAssigned
                                   ? onUnassignEmployee({

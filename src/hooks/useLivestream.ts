@@ -3,18 +3,27 @@ import { toQueryString } from "../utils/toQuery"
 import { callApi } from "./axios"
 import {
   AddLivestreamSnapshotRequest,
+  CreateAltRequestRequest,
+  CreateAltRequestResponse,
+  SearchAltRequestsRequest,
+  SearchAltRequestsResponse,
   CreateLivestreamChannelRequest,
   CreateLivestreamEmployeeRequest,
   CreateLivestreamMonthGoalRequest,
   CreateLivestreamPeriodRequest,
   CreateLivestreamRangeRequest,
+  DeleteAltRequestRequest,
   DeleteLivestreamChannelRequest,
   DeleteLivestreamEmployeeRequest,
   DeleteLivestreamMonthGoalRequest,
   DeleteLivestreamPeriodRequest,
+  FixLivestreamRequest,
+  FixLivestreamResponse,
   GetAggregatedMetricsRequest,
   GetAggregatedMetricsResponse,
   GetAllLivestreamPeriodsResponse,
+  GetAltRequestBySnapshotRequest,
+  GetAltRequestBySnapshotResponse,
   GetDetailLivestreamEmployeeRequest,
   GetDetailLivestreamPeriodRequest,
   GetDetailLivestreamPeriodResponse,
@@ -36,11 +45,17 @@ import {
   SetMetricsRequest,
   SyncSnapshotRequest,
   SyncSnapshotResponse,
+  UpdateAltRequestsRequest,
+  UpdateAltRequestsResponse,
+  UpdateAltRequestStatusRequest,
+  UpdateAltRequestStatusResponse,
   UpdateLivestreamChannelRequest,
   UpdateLivestreamEmployeeRequest,
   UpdateLivestreamMonthGoalRequest,
   UpdateLivestreamPeriodRequest,
-  UpdateLivestreamSnapshotRequest
+  UpdateLivestreamSnapshotRequest,
+  UpdateSnapshotAltRequest,
+  UpdateSnapshotAltResponse
 } from "./models"
 
 export const useLivestream = () => {
@@ -357,6 +372,94 @@ export const useLivestream = () => {
     })
   }
 
+  const updateSnapshotAltRequest = async (
+    livestreamId: string,
+    snapshotId: string,
+    req: UpdateSnapshotAltRequest
+  ) => {
+    return callApi<UpdateSnapshotAltRequest, UpdateSnapshotAltResponse>({
+      method: "PATCH",
+      path: `/v1/livestreams/${livestreamId}/snapshots/${snapshotId}/alt`,
+      data: req,
+      token: accessToken
+    })
+  }
+
+  const fixLivestream = async (req: FixLivestreamRequest) => {
+    return callApi<FixLivestreamRequest, FixLivestreamResponse>({
+      method: "PATCH",
+      path: `/v1/livestreams/fix`,
+      data: req,
+      token: accessToken
+    })
+  }
+
+  const createAltRequest = async (req: CreateAltRequestRequest) => {
+    return callApi<CreateAltRequestRequest, CreateAltRequestResponse>({
+      method: "POST",
+      path: `/v1/livestreams/alt-requests`,
+      data: req,
+      token: accessToken
+    })
+  }
+
+  const updateAltRequests = async (
+    id: string,
+    req: UpdateAltRequestsRequest
+  ) => {
+    return callApi<UpdateAltRequestsRequest, UpdateAltRequestsResponse>({
+      method: "PUT",
+      path: `/v1/livestreams/alt-requests/${id}`,
+      data: req,
+      token: accessToken
+    })
+  }
+
+  const getAltRequestBySnapshot = async (
+    req: GetAltRequestBySnapshotRequest
+  ) => {
+    const query = toQueryString(req)
+
+    return callApi<never, GetAltRequestBySnapshotResponse>({
+      method: "GET",
+      path: `/v1/livestreams/alt-requests?${query}`,
+      token: accessToken
+    })
+  }
+
+  const updateAltRequestStatus = async (
+    id: string,
+    req: UpdateAltRequestStatusRequest
+  ) => {
+    return callApi<
+      UpdateAltRequestStatusRequest,
+      UpdateAltRequestStatusResponse
+    >({
+      method: "PATCH",
+      path: `/v1/livestreams/alt-requests/${id}/status`,
+      data: req,
+      token: accessToken
+    })
+  }
+
+  const deleteAltRequest = async (req: DeleteAltRequestRequest) => {
+    return callApi<never, never>({
+      method: "DELETE",
+      path: `/v1/livestreams/alt-requests/${req.id}`,
+      token: accessToken
+    })
+  }
+
+  const searchAltRequests = async (req: SearchAltRequestsRequest) => {
+    const query = toQueryString(req)
+
+    return callApi<never, SearchAltRequestsResponse>({
+      method: "GET",
+      path: `/v1/livestreams/alt-requests/search?${query}`,
+      token: accessToken
+    })
+  }
+
   return {
     createLivestreamEmployee,
     updateLivestreamEmployee,
@@ -386,6 +489,14 @@ export const useLivestream = () => {
     deleteLivestreamChannel,
     syncSnapshot,
     reportLivestream,
-    getAggregatedMetrics
+    getAggregatedMetrics,
+    updateSnapshotAltRequest,
+    fixLivestream,
+    createAltRequest,
+    updateAltRequests,
+    getAltRequestBySnapshot,
+    updateAltRequestStatus,
+    deleteAltRequest,
+    searchAltRequests
   }
 }
