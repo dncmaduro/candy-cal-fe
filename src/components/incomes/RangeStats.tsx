@@ -83,8 +83,12 @@ const RangeSelector = ({
           type="default"
           value={startDate}
           onChange={(date) => {
-            onChangeStartDate(date)
-            onChangeEndDate(date)
+            onChangeStartDate(
+              date ? new Date(new Date(date).setHours(0, 0, 0, 0)) : null
+            )
+            onChangeEndDate(
+              date ? new Date(new Date(date).setHours(23, 59, 59, 999)) : null
+            )
           }}
           valueFormat="DD/MM/YYYY"
           size="sm"
@@ -103,9 +107,13 @@ const RangeSelector = ({
           value={rangeValue}
           onChange={(value) => {
             const [start, end] = value || [null, null]
-            onChangeStartDate(start)
+            onChangeStartDate(
+              start ? new Date(new Date(start).setHours(0, 0, 0, 0)) : null
+            )
             // Chỉ set end khi user thực sự chọn ngày thứ 2, không force = start
-            onChangeEndDate(end)
+            onChangeEndDate(
+              end ? new Date(new Date(end).setHours(23, 59, 59, 999)) : null
+            )
           }}
           valueFormat="DD/MM/YYYY"
           size="sm"

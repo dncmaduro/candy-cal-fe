@@ -459,7 +459,12 @@ export const Incomes = () => {
             <>
               <DatePickerInput
                 value={startDate}
-                onChange={setStartDate}
+                onChange={(value) => {
+                  const d = value
+                    ? new Date(new Date(value).setHours(0, 0, 0, 0))
+                    : null
+                  setStartDate(d)
+                }}
                 label="Từ ngày"
                 placeholder="Chọn ngày bắt đầu"
                 valueFormat="DD/MM/YYYY"
@@ -470,7 +475,12 @@ export const Incomes = () => {
               />
               <DatePickerInput
                 value={endDate}
-                onChange={setEndDate}
+                onChange={(value) => {
+                  const d = value
+                    ? new Date(new Date(value).setHours(23, 59, 59, 999))
+                    : null
+                  setEndDate(d)
+                }}
                 label="Đến ngày"
                 placeholder="Chọn ngày kết thúc"
                 valueFormat="DD/MM/YYYY"
