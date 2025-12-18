@@ -96,7 +96,7 @@ export const DailyReportByText = ({ report }: DailyReportByTextProps) => {
   })
 
   const dateLabel = format(report.date, "dd/MM/yyyy")
-  const monthLabel = "11" // giữ nguyên logic text cũ
+  const monthLabel = format(report.date, "MM/yyyy")
 
   const text = `Báo cáo doanh số sỉ lẻ kênh ${channelData?.channelName} ngày ${dateLabel}
   
