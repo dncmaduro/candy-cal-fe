@@ -12,9 +12,8 @@ import {
   Switch
 } from "@mantine/core"
 import { DatePickerInput } from "@mantine/dates"
-import { useForm, Controller } from "react-hook-form"
+import { Controller, useFormContext, useFieldArray } from "react-hook-form"
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { useState } from "react"
 import { IconPlus, IconTrash } from "@tabler/icons-react"
 import { CToast } from "../common/CToast"
 import { useSalesOrders } from "../../hooks/useSalesOrders"
@@ -39,32 +38,19 @@ type CreateSalesOrderFormData = {
   address?: string
   funnelSource: "ads" | "seeding" | "referral"
   fromSystem?: boolean
-}
-
-type ItemInput = {
-  code: string
-  quantity: number
-  note?: string
+  // Items and secondary phones as part of form
+  items: { code: string; quantity: number; note?: string }[]
+  secondaryPhones: string[]
 }
 
 type CreateSalesOrderModalProps = {
+  channelId: string
   onSuccess: () => void
-  salesFunnelId?: string
-  initialItems?: { code: string; quantity: number }[]
-  initialOrderDiscount?: number
-  initialOtherDiscount?: number
-  initialDeposit?: number
-  channelId?: string
 }
 
 export const CreateSalesOrderModal = ({
-  onSuccess,
-  salesFunnelId,
-  initialItems,
-  initialOrderDiscount,
-  initialOtherDiscount,
-  initialDeposit,
-  channelId
+  channelId,
+  onSuccess
 }: CreateSalesOrderModalProps) => {
   const { createSalesOrder } = useSalesOrders()
   const { searchFunnel, createLead, updateFunnelInfo } = useSalesFunnel()
@@ -72,39 +58,24 @@ export const CreateSalesOrderModal = ({
   const { getProvinces } = useProvinces()
   const { searchSalesChannels } = useSalesChannels()
 
-  const [items, setItems] = useState<ItemInput[]>(
-    initialItems && initialItems.length > 0
-      ? initialItems
-      : [{ code: "", quantity: 1, note: "" }]
-  )
-
-  const [secondaryPhones, setSecondaryPhones] = useState<string[]>([])
-
   const {
     control,
     handleSubmit,
     watch,
     formState: { errors }
-  } = useForm<CreateSalesOrderFormData>({
-    defaultValues: {
-      salesFunnelId: salesFunnelId || "",
-      storage: "position_HaNam",
-      date: new Date(new Date().setHours(0, 0, 0, 0)),
-      orderDiscount: initialOrderDiscount ?? 0,
-      otherDiscount: initialOtherDiscount ?? 0,
-      deposit: initialDeposit ?? 0,
-      isNewCustomer: false,
-      newCustomerName: "",
-      newCustomerChannel: "",
-      province: "",
-      phoneNumber: "",
-      address: "",
-      funnelSource: "ads",
-      fromSystem: false
-    }
-  })
+  } = useFormContext<CreateSalesOrderFormData>()
 
   const watchIsNewCustomer = watch("isNewCustomer")
+
+  // Use useFieldArray to manage items and secondaryPhones
+  const {
+    fields: itemFields,
+    append: appendItem,
+    remove: removeItem
+  } = useFieldArray({
+    control,
+    name: "items"
+  })
 
   // Load funnel items for dropdown
   const { data: funnelData } = useQuery({
@@ -143,7 +114,9 @@ export const CreateSalesOrderModal = ({
   const mutation = useMutation({
     mutationFn: async (data: CreateSalesOrderFormData) => {
       // Filter out empty items
-      const validItems = items.filter((item) => item.code && item.quantity > 0)
+      const validItems = data.items.filter(
+        (item) => item.code && item.quantity > 0
+      )
 
       if (validItems.length === 0) {
         throw new Error("Vui lòng thêm ít nhất một sản phẩm")
@@ -170,7 +143,9 @@ export const CreateSalesOrderModal = ({
         await updateFunnelInfo(funnelId, {
           province: data.province,
           phoneNumber: data.phoneNumber,
-          secondaryPhoneNumbers: secondaryPhones.filter((p) => p.trim() !== ""),
+          secondaryPhoneNumbers: data.secondaryPhones.filter(
+            (p) => p.trim() !== ""
+          ),
           address: data.address,
           fromSystem: data.fromSystem
         })
@@ -214,36 +189,32 @@ export const CreateSalesOrderModal = ({
     mutation.mutate(data)
   }
 
+  const { setValue } = useFormContext<CreateSalesOrderFormData>()
+  const secondaryPhones = watch("secondaryPhones") || []
+
   const addSecondaryPhone = () => {
-    setSecondaryPhones([...secondaryPhones, ""])
+    setValue("secondaryPhones", [...secondaryPhones, ""])
   }
 
   const removeSecondaryPhone = (index: number) => {
-    setSecondaryPhones(secondaryPhones.filter((_, i) => i !== index))
+    setValue(
+      "secondaryPhones",
+      secondaryPhones.filter((_, i) => i !== index)
+    )
   }
 
   const updateSecondaryPhone = (index: number, value: string) => {
     const newPhones = [...secondaryPhones]
     newPhones[index] = value
-    setSecondaryPhones(newPhones)
+    setValue("secondaryPhones", newPhones)
   }
 
   const handleAddItem = () => {
-    setItems([...items, { code: "", quantity: 1, note: "" }])
+    appendItem({ code: "", quantity: 1, note: "" })
   }
 
   const handleRemoveItem = (index: number) => {
-    setItems(items.filter((_, i) => i !== index))
-  }
-
-  const handleItemChange = (
-    index: number,
-    field: keyof ItemInput,
-    value: string | number
-  ) => {
-    const newItems = [...items]
-    newItems[index] = { ...newItems[index], [field]: value }
-    setItems(newItems)
+    removeItem(index)
   }
 
   const funnelOptions =
@@ -278,7 +249,7 @@ export const CreateSalesOrderModal = ({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      {!salesFunnelId && (
+      {!watch("salesFunnelId") && (
         <Controller
           name="isNewCustomer"
           control={control}
@@ -594,37 +565,48 @@ export const CreateSalesOrderModal = ({
         </Button>
       </Group>
 
-      {items.map((item, index) => (
-        <Group key={index} mb="sm" align="flex-end">
-          <Select
-            label={index === 0 ? "Mã sản phẩm" : undefined}
-            placeholder="Chọn sản phẩm"
-            data={salesItemOptions}
-            value={item.code}
-            onChange={(value) => handleItemChange(index, "code", value || "")}
-            searchable
-            style={{ flex: 1 }}
+      {itemFields.map((field, index) => (
+        <Group key={field.id} mb="sm" align="flex-end">
+          <Controller
+            name={`items.${index}.code` as const}
+            control={control}
+            render={({ field: inputField }) => (
+              <Select
+                {...inputField}
+                label={index === 0 ? "Mã sản phẩm" : undefined}
+                placeholder="Chọn sản phẩm"
+                data={salesItemOptions}
+                searchable
+                style={{ flex: 1 }}
+              />
+            )}
           />
-          <NumberInput
-            label={index === 0 ? "Số lượng" : undefined}
-            placeholder="Số lượng"
-            value={item.quantity}
-            onChange={(value) =>
-              handleItemChange(index, "quantity", Number(value) || 0)
-            }
-            min={1}
-            style={{ width: 100 }}
+          <Controller
+            name={`items.${index}.quantity` as const}
+            control={control}
+            render={({ field: inputField }) => (
+              <NumberInput
+                {...inputField}
+                label={index === 0 ? "Số lượng" : undefined}
+                placeholder="Số lượng"
+                min={1}
+                style={{ width: 100 }}
+              />
+            )}
           />
-          <TextInput
-            label={index === 0 ? "Ghi chú" : undefined}
-            placeholder="Nhập ghi chú"
-            value={item.note}
-            onChange={(e) =>
-              handleItemChange(index, "note", e.target.value || "")
-            }
-            w={250}
+          <Controller
+            name={`items.${index}.note` as const}
+            control={control}
+            render={({ field: inputField }) => (
+              <TextInput
+                {...inputField}
+                label={index === 0 ? "Ghi chú" : undefined}
+                placeholder="Nhập ghi chú"
+                w={250}
+              />
+            )}
           />
-          {items.length > 1 && (
+          {itemFields.length > 1 && (
             <Button
               color="red"
               variant="light"

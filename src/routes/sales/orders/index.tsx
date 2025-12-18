@@ -35,6 +35,7 @@ import { UploadSalesOrdersModal } from "../../../components/sales/UploadSalesOrd
 import { CToast } from "../../../components/common/CToast"
 import { SearchSalesOrderResponse } from "../../../hooks/models"
 import { useSalesChannels } from "../../../hooks/useSalesChannels"
+import { FormProvider, useForm } from "react-hook-form"
 
 export const Route = createFileRoute("/sales/orders/")({
   component: RouteComponent,
@@ -52,10 +53,30 @@ export const Route = createFileRoute("/sales/orders/")({
 
 type SalesOrderItem = SearchSalesOrderResponse["data"][0]
 
+type CreateSalesOrderFormData = {
+  salesFunnelId: string
+  storage: "position_HaNam" | "position_MKT"
+  date: Date
+  orderDiscount?: number
+  otherDiscount?: number
+  deposit?: number
+  // New customer info
+  isNewCustomer?: boolean
+  newCustomerName?: string
+  newCustomerChannel?: string
+  province?: string
+  phoneNumber?: string
+  address?: string
+  funnelSource: "ads" | "seeding" | "referral"
+  fromSystem?: boolean
+  // Items and secondary phones as part of form
+  items: { code: string; quantity: number; note?: string }[]
+  secondaryPhones: string[]
+}
+
 function RouteComponent() {
   const navigate = useNavigate()
   const search = Route.useSearch()
-  console.log(search)
   const { searchSalesOrders, deleteSalesOrder, exportXlsxSalesOrder } =
     useSalesOrders()
   const { searchFunnel, getFunnelByUser } = useSalesFunnel()
@@ -105,6 +126,30 @@ function RouteComponent() {
   const isSystemEmp = me?.roles.includes("system-emp")
   const isSalesLeader = me?.roles.includes("sales-leader")
   const isSalesEmp = me?.roles.includes("sales-emp")
+
+  const formMethods = useForm<CreateSalesOrderFormData>({
+    defaultValues: {
+      salesFunnelId: search.funnelId || "",
+      storage: "position_HaNam",
+      date: new Date(new Date().setHours(0, 0, 0, 0)),
+      orderDiscount: search.orderDiscount ?? 0,
+      otherDiscount: search.otherDiscount ?? 0,
+      deposit: search.deposit ?? 0,
+      isNewCustomer: false,
+      newCustomerName: "",
+      newCustomerChannel: "",
+      province: "",
+      phoneNumber: "",
+      address: "",
+      funnelSource: "ads",
+      fromSystem: false,
+      items:
+        search.items && JSON.parse(search.items).length > 0
+          ? JSON.parse(search.items)
+          : [{ code: "", quantity: 1, note: "" }],
+      secondaryPhones: []
+    }
+  })
 
   // Determine if user can see all funnels or only their own
   const canSeeAllFunnels = isAdmin || isSystemEmp || isSalesLeader
@@ -201,99 +246,28 @@ function RouteComponent() {
       label: `${item.name}${item.phoneNumber ? ` - ${item.phoneNumber}` : ""}`
     })) || []
 
-  // Handle create order from deleted order
-  useEffect(() => {
-    if (search.createNew === "true" && search.funnelId && search.items) {
-      try {
-        const parsedItems = JSON.parse(search.items)
-        const discount = search.discount
-          ? parseFloat(search.discount)
-          : undefined
-        const deposit = search.deposit ? parseFloat(search.deposit) : undefined
-        handleCreateOrder(
-          myChannelData?.channel._id,
-          search.funnelId,
-          parsedItems,
-          discount,
-          deposit
-        )
-        // Clear search params
-        navigate({
-          to: "/sales/orders",
-          search: {}
-        })
-      } catch (error) {
-        console.error("Error parsing items:", error)
-      }
-    }
-  }, [
-    search.createNew,
-    search.funnelId,
-    search.items,
-    search.discount,
-    search.deposit,
-    myChannelData
-  ])
-
   const channelOptions =
     channelsData?.data.data.map((channel) => ({
       value: channel._id,
       label: channel.channelName
     })) || []
 
-  const handleCreateOrder = (
-    channelId?: string,
-    funnelId?: string,
-    initialItems?: { code: string; quantity: number }[],
-    initialOrderDiscount?: number,
-    initialOtherDiscount?: number,
-    initialDeposit?: number
-  ) => {
+  const handleCreateOrder = (channelId: string) => {
     modals.open({
       id: "create-sales-order",
       title: <b>Tạo đơn hàng mới</b>,
       children: (
-        <CreateSalesOrderModal
-          salesFunnelId={funnelId}
-          initialItems={initialItems}
-          initialOrderDiscount={initialOrderDiscount}
-          initialOtherDiscount={initialOtherDiscount}
-          initialDeposit={initialDeposit}
-          onSuccess={() => {
-            refetch()
-            modals.closeAll()
-          }}
-          channelId={channelId}
-        />
+        <FormProvider {...formMethods}>
+          <CreateSalesOrderModal
+            channelId={channelId}
+            onSuccess={() => {
+              refetch()
+              modals.closeAll()
+            }}
+          />
+        </FormProvider>
       ),
-      size: "xl",
-      onClose: () => {
-        modals.openConfirmModal({
-          id: "confirm-close-create-sales-order",
-          title: <b>Xác nhận hủy tạo đơn hàng</b>,
-          children: <Text>Bạn có chắc chắn muốn hủy tạo đơn hàng?</Text>,
-          labels: { confirm: "Có", cancel: "Không" },
-          confirmProps: { color: "red" },
-          // when user confirms, reopen the create order modal with previous information
-          onConfirm: () => {
-            handleCreateOrder(
-              channelId,
-              funnelId,
-              initialItems,
-              initialOrderDiscount,
-              initialOtherDiscount,
-              initialDeposit
-            )
-          },
-          onCancel: () => {
-            modals.close("confirm-close-create-sales-order")
-          },
-          closeOnClickOutside: false,
-          closeButtonProps: { style: { display: "none" } }
-        })
-
-        return false
-      }
+      size: "xl"
     })
   }
 
@@ -799,7 +773,7 @@ function RouteComponent() {
                   </Button>
                   <Button
                     onClick={() =>
-                      handleCreateOrder(myChannelData?.channel._id)
+                      handleCreateOrder(myChannelData?.channel._id || "")
                     }
                     leftSection={<IconPlus size={16} />}
                     size="sm"
