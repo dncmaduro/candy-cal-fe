@@ -84,7 +84,7 @@ const RangeSelector = ({
           value={startDate}
           onChange={(date) => {
             onChangeStartDate(
-              date ? new Date(new Date(date).setHours(0, 0, 0, 0)) : null
+              date ? new Date(new Date(date).setHours(1, 0, 0, 0)) : null
             )
             onChangeEndDate(
               date ? new Date(new Date(date).setHours(23, 59, 59, 999)) : null
@@ -170,7 +170,7 @@ export const RangeStats = () => {
 
     // chuẩn hóa: start 00:00, end 23:59
     s.setHours(0, 0, 0, 0)
-    e.setHours(23, 59, 59, 999)
+    e.setHours(1, 59, 59, 999)
 
     const sameDay = s.toDateString() === e.toDateString()
     const label = sameDay
