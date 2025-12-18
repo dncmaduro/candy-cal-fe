@@ -250,6 +250,7 @@ function RouteComponent() {
     initialDeposit?: number
   ) => {
     modals.open({
+      id: "create-sales-order",
       title: <b>Tạo đơn hàng mới</b>,
       children: (
         <CreateSalesOrderModal
@@ -265,7 +266,34 @@ function RouteComponent() {
           channelId={channelId}
         />
       ),
-      size: "xl"
+      size: "xl",
+      onClose: () => {
+        modals.openConfirmModal({
+          id: "confirm-close-create-sales-order",
+          title: <b>Xác nhận hủy tạo đơn hàng</b>,
+          children: <Text>Bạn có chắc chắn muốn hủy tạo đơn hàng?</Text>,
+          labels: { confirm: "Có", cancel: "Không" },
+          confirmProps: { color: "red" },
+          // when user confirms, reopen the create order modal with previous information
+          onConfirm: () => {
+            handleCreateOrder(
+              channelId,
+              funnelId,
+              initialItems,
+              initialOrderDiscount,
+              initialOtherDiscount,
+              initialDeposit
+            )
+          },
+          onCancel: () => {
+            modals.close("confirm-close-create-sales-order")
+          },
+          closeOnClickOutside: false,
+          closeButtonProps: { style: { display: "none" } }
+        })
+
+        return false
+      }
     })
   }
 

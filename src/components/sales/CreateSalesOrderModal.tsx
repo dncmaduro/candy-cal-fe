@@ -104,8 +104,6 @@ export const CreateSalesOrderModal = ({
     }
   })
 
-  console.log(new Date(new Date().setHours(0, 0, 0, 0)))
-
   const watchIsNewCustomer = watch("isNewCustomer")
 
   // Load funnel items for dropdown
