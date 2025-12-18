@@ -3935,6 +3935,13 @@ export interface GetMonthlyMetricsResponse {
     customer: number
     closed: number
   }
+  topCustomersByRevenue: {
+    funnelId: string
+    customerName: string
+    customerPhone: string
+    revenue: number
+    orderCount: number
+  }[]
 }
 
 // -------------------- SALES CUSTOMER RANKS --------------------

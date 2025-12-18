@@ -13,15 +13,8 @@ import {
   Stack,
   Badge
 } from "@mantine/core"
-import {
-  IconCash,
-  IconUserCheck,
-  IconPercentage,
-  IconTrendingUp,
-  IconCalendarTime,
-  IconUsers,
-  IconAlertCircle
-} from "@tabler/icons-react"
+import { IconTrendingUp, IconAlertCircle } from "@tabler/icons-react"
+import { TopCustomersChart } from "./TopCustomersChart"
 
 interface MonthlyMetricsData {
   cac: number
@@ -36,6 +29,13 @@ interface MonthlyMetricsData {
     customer: number
     closed: number
   }
+  topCustomersByRevenue?: {
+    funnelId: string
+    customerName: string
+    customerPhone: string
+    revenue: number
+    orderCount: number
+  }[]
 }
 
 interface MonthlyMetricsProps {
@@ -59,7 +59,7 @@ export function MonthlyMetrics({ isLoading, data }: MonthlyMetricsProps) {
     <>
       {/* Metrics KPI Cards */}
       <Grid gutter="md" mb="xl">
-        <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 2.4 }}>
+        {/* <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 2.4 }}>
           <Card shadow="sm" padding="lg" radius="md" withBorder>
             {isLoading ? (
               <Skeleton height={100} />
@@ -81,9 +81,9 @@ export function MonthlyMetrics({ isLoading, data }: MonthlyMetricsProps) {
               </Tooltip>
             )}
           </Card>
-        </Grid.Col>
+        </Grid.Col> */}
 
-        <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 2.4 }}>
+        {/* <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 2.4 }}>
           <Card shadow="sm" padding="lg" radius="md" withBorder>
             {isLoading ? (
               <Skeleton height={100} />
@@ -105,9 +105,9 @@ export function MonthlyMetrics({ isLoading, data }: MonthlyMetricsProps) {
               </Tooltip>
             )}
           </Card>
-        </Grid.Col>
+        </Grid.Col> */}
 
-        <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 2.4 }}>
+        {/* <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 2.4 }}>
           <Card shadow="sm" padding="lg" radius="md" withBorder>
             {isLoading ? (
               <Skeleton height={100} />
@@ -129,7 +129,7 @@ export function MonthlyMetrics({ isLoading, data }: MonthlyMetricsProps) {
               </Tooltip>
             )}
           </Card>
-        </Grid.Col>
+        </Grid.Col> */}
 
         <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 2.4 }}>
           <Card shadow="sm" padding="lg" radius="md" withBorder>
@@ -155,7 +155,7 @@ export function MonthlyMetrics({ isLoading, data }: MonthlyMetricsProps) {
           </Card>
         </Grid.Col>
 
-        <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 2.4 }}>
+        {/* <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 2.4 }}>
           <Card shadow="sm" padding="lg" radius="md" withBorder>
             {isLoading ? (
               <Skeleton height={100} />
@@ -177,9 +177,9 @@ export function MonthlyMetrics({ isLoading, data }: MonthlyMetricsProps) {
               </Tooltip>
             )}
           </Card>
-        </Grid.Col>
+        </Grid.Col> */}
 
-        <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 2.4 }}>
+        {/* <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 2.4 }}>
           <Card shadow="sm" padding="lg" radius="md" withBorder>
             {isLoading ? (
               <Skeleton height={100} />
@@ -201,7 +201,7 @@ export function MonthlyMetrics({ isLoading, data }: MonthlyMetricsProps) {
               </Tooltip>
             )}
           </Card>
-        </Grid.Col>
+        </Grid.Col> */}
       </Grid>
 
       {/* Stage Transitions */}
@@ -308,6 +308,14 @@ export function MonthlyMetrics({ isLoading, data }: MonthlyMetricsProps) {
           </Alert>
         )}
       </Card>
+
+      {/* Top Customers Chart & Table */}
+      <Box mt="xl">
+        <TopCustomersChart
+          isLoading={isLoading}
+          data={data?.topCustomersByRevenue}
+        />
+      </Box>
     </>
   )
 }

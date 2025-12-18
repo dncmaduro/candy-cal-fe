@@ -18,7 +18,6 @@ import { useMetaSocket } from "../../hooks/useMetaSocket"
 import { useSalesFunnel } from "../../hooks/useSalesFunnel"
 import { modals } from "@mantine/modals"
 import { UpdateFunnelInfoModal } from "../sales/UpdateFunnelInfoModal"
-import { CreateSalesOrderModal } from "../sales/CreateSalesOrderModal"
 
 interface Props {
   psid: string
@@ -228,12 +227,7 @@ export function MessagesThread({ psid, conversationId }: Props) {
                 onClick={() => {
                   modals.open({
                     title: <b>Lên đơn mới cho khách hàng</b>,
-                    children: (
-                      <CreateSalesOrderModal
-                        onSuccess={refetch}
-                        salesFunnelId={funnelData?._id}
-                      />
-                    ),
+                    children: <></>,
                     size: "xl"
                   })
                 }}
