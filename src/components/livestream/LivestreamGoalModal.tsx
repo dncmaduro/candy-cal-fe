@@ -53,7 +53,7 @@ export const LivestreamGoalModal = ({ goal, refetch }: Props) => {
     select: (data) =>
       data.data.data.map((channel) => ({
         label: channel.name,
-        value: channel.name
+        value: channel._id
       }))
   })
 

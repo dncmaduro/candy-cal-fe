@@ -105,12 +105,12 @@ export const LIVESTREAM_NAVS = [
   //   roles: ["admin", "livestream-leader", "accounting-emp", "system-emp"],
   //   icon: "IconChartBar"
   // },
-  // {
-  //   to: `${LIVESTREAM_NAVS_URL}/goals`,
-  //   label: "Mục tiêu",
-  //   roles: ["admin", "livestream-leader", "accounting-emp", "system-emp"],
-  //   icon: "IconTarget"
-  // },
+  {
+    to: `${LIVESTREAM_NAVS_URL}/goals`,
+    label: "KPI",
+    roles: ["admin", "livestream-leader", "accounting-emp", "system-emp"],
+    icon: "IconTarget"
+  },
   {
     to: `${LIVESTREAM_NAVS_URL}/channels`,
     label: "Kênh livestream",
