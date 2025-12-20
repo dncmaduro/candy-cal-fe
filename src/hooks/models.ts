@@ -1999,6 +1999,7 @@ export interface GetLivestreamByDateRangeResponse {
       ordersNote?: string
       rating?: string
       altAssignee?: string
+      altOtherAssignee?: string
       altNote?: string
       altRequest?: string
     }[]
@@ -2049,6 +2050,7 @@ export interface ReportLivestreamResponse {
     ordersNote?: string
     rating?: string
     altAssignee?: string
+    altOtherAssignee?: string
     altNote?: string
     altRequest?: string
   }[]
@@ -2106,6 +2108,7 @@ export interface GetAggregatedMetricsResponse {
 /** @interface */
 export interface UpdateSnapshotAltRequest {
   altAssignee?: string
+  altOtherAssignee?: string
   altNote?: string
 }
 
@@ -2138,6 +2141,7 @@ export interface UpdateSnapshotAltResponse {
     ordersNote?: string
     rating?: string
     altAssignee?: string
+    altOtherAssignee?: string
     altNote?: string
     altRequest?: string
   }[]
