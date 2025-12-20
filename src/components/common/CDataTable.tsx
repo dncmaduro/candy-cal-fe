@@ -163,12 +163,18 @@ export function CDataTable<TData, TValue>({
     }
   })
 
+  // Sử dụng ref để tránh trigger effect khi callback thay đổi
+  const onRowSelectionChangeRef = React.useRef(onRowSelectionChange)
   React.useEffect(() => {
-    if (onRowSelectionChange) {
+    onRowSelectionChangeRef.current = onRowSelectionChange
+  }, [onRowSelectionChange])
+
+  React.useEffect(() => {
+    if (onRowSelectionChangeRef.current) {
       const selected = table.getSelectedRowModel().rows.map((r) => r.original)
-      onRowSelectionChange(selected)
+      onRowSelectionChangeRef.current(selected)
     }
-  }, [rowSelection, table, onRowSelectionChange])
+  }, [rowSelection, table])
 
   const pageSizeValue = String(
     onPageSizeChange ? initialPageSize : table.getState().pagination.pageSize
@@ -347,7 +353,10 @@ export function CDataTable<TData, TValue>({
                         className="px-3 py-2 text-sm text-gray-700"
                         onClick={(e) => {
                           // Prevent row click when clicking on actions column
-                          if (cell.column.id === "actions") {
+                          if (
+                            cell.column.id === "actions" ||
+                            cell.column.id === "__select__"
+                          ) {
                             e.stopPropagation()
                           }
                         }}

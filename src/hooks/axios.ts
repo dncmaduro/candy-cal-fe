@@ -7,6 +7,7 @@ type AxiosCallApi<D> = {
   customUrl?: string
   method: AxiosRequestConfig["method"]
   headers?: Record<string, string>
+  responseType?: AxiosRequestConfig["responseType"] // ✅ thêm
 }
 
 export async function callApi<D = unknown, T = unknown>({
@@ -15,7 +16,8 @@ export async function callApi<D = unknown, T = unknown>({
   token,
   customUrl,
   method,
-  headers
+  headers,
+  responseType // ✅ thêm
 }: AxiosCallApi<D>): Promise<AxiosResponse<T>> {
   const convertedHeaders: Record<string, string> = {
     "Content-Type": "application/json",
@@ -23,20 +25,14 @@ export async function callApi<D = unknown, T = unknown>({
     ...headers
   }
 
-  if (token) {
-    convertedHeaders["Authorization"] = `Bearer ${token}`
-  }
+  if (token) convertedHeaders["Authorization"] = `Bearer ${token}`
 
   const response = await axios<T>({
     url: (customUrl ?? import.meta.env.VITE_BACKEND_URL) + path,
     headers: convertedHeaders,
     data,
     method,
-    responseType:
-      headers?.["Content-Type"] ===
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        ? "blob"
-        : "json"
+    responseType: responseType ?? "json" // ✅ dùng override
   })
 
   return response

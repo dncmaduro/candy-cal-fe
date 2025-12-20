@@ -5,6 +5,7 @@ import {
   CreateSalesOrderRequest,
   CreateSalesOrderResponse,
   DeleteSalesOrderRequest,
+  ExportXlsxSalesOrderByIdsRequest,
   ExportXlsxSalesOrderRequest,
   GetOrdersByFunnelRequest,
   GetOrdersByFunnelResponse,
@@ -114,20 +115,6 @@ export const useSalesOrders = () => {
     })
   }
 
-  const exportXlsxSalesOrder = async (req: ExportXlsxSalesOrderRequest) => {
-    const query = toQueryString(req)
-
-    return callApi<never, Blob>({
-      path: `/v1/salesorders/export/xlsx?${query}`,
-      method: "GET",
-      token: accessToken,
-      headers: {
-        "Content-Type":
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-      }
-    })
-  }
-
   const updateSalesOrderTaxShipping = async (
     id: string,
     req: UpdateSalesOrderTaxShippingRequest
@@ -171,6 +158,39 @@ export const useSalesOrders = () => {
     })
   }
 
+  const exportXlsxSalesOrder = async (req: ExportXlsxSalesOrderRequest) => {
+    const query = toQueryString(req)
+
+    return callApi<never, Blob>({
+      path: `/v1/salesorders/export/xlsx?${query}`,
+      method: "GET",
+      token: accessToken,
+      headers: {
+        "Content-Type":
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+    })
+  }
+
+  const exportXlsxSalesOrderByIds = async (
+    req: ExportXlsxSalesOrderByIdsRequest
+  ) => {
+    return callApi<ExportXlsxSalesOrderByIdsRequest, Blob>({
+      path: `/v1/salesorders/export/xlsx/by-ids`,
+      method: "POST",
+      data: req,
+      token: accessToken,
+      headers: {
+        // request body là JSON
+        "Content-Type": "application/json",
+        // response mong muốn là file excel
+        Accept:
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      },
+      responseType: "blob" // thêm param này (xem mục 2)
+    })
+  }
+
   return {
     uploadSalesOrders,
     downloadSalesOrdersTemplate,
@@ -183,6 +203,7 @@ export const useSalesOrders = () => {
     exportXlsxSalesOrder,
     updateSalesOrderTaxShipping,
     moveSalesOrderToOfficial,
-    getOrdersByFunnel
+    getOrdersByFunnel,
+    exportXlsxSalesOrderByIds
   }
 }

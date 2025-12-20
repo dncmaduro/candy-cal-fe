@@ -12,7 +12,7 @@ import {
 } from "@mantine/core"
 import { DatePickerInput } from "@mantine/dates"
 import { useQuery, useMutation } from "@tanstack/react-query"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { modals } from "@mantine/modals"
 import { format } from "date-fns"
 import {
@@ -77,8 +77,12 @@ type CreateSalesOrderFormData = {
 function RouteComponent() {
   const navigate = useNavigate()
   const search = Route.useSearch()
-  const { searchSalesOrders, deleteSalesOrder, exportXlsxSalesOrder } =
-    useSalesOrders()
+  const {
+    searchSalesOrders,
+    deleteSalesOrder,
+    exportXlsxSalesOrder,
+    exportXlsxSalesOrderByIds
+  } = useSalesOrders()
   const { searchFunnel, getFunnelByUser } = useSalesFunnel()
   const { getMe } = useUsers()
   const { searchSalesChannels, getMyChannel } = useSalesChannels()
@@ -94,6 +98,9 @@ function RouteComponent() {
   const [endDate, setEndDate] = useState<Date | null>(null)
   const [userIdFilter, setUserIdFilter] = useState<string>("")
   const [channelIdFilter, setChannelIdFilter] = useState<string>("")
+  const [selectedOrders, setSelectedOrders] = useState<SalesOrderItem[]>([])
+
+  const selectedOrderIds = selectedOrders.map((o) => o._id)
 
   // Get current user info
   const { data: meData } = useQuery({
@@ -103,14 +110,16 @@ function RouteComponent() {
 
   const { data: channelsData } = useQuery({
     queryKey: ["salesChannels", "all"],
-    queryFn: () => searchSalesChannels({ page: 1, limit: 999 })
+    queryFn: () => searchSalesChannels({ page: 1, limit: 999 }),
+    staleTime: 100000
   })
 
   const { data: myChannelData } = useQuery({
     queryKey: ["getMyChannel"],
     queryFn: getMyChannel,
     select: (data) => data.data,
-    enabled: !!meData?.data
+    enabled: !!meData?.data,
+    staleTime: 100000
   })
 
   useEffect(() => {
@@ -177,7 +186,8 @@ function RouteComponent() {
       }
       return undefined
     },
-    enabled: !!me
+    enabled: !!me,
+    staleTime: 100000
   })
 
   // Load orders data with filters
@@ -216,7 +226,10 @@ function RouteComponent() {
         endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
         userId: userIdFilter || undefined,
         channelId: channelIdFilter || undefined
-      })
+      }),
+    staleTime: 5 * 60 * 1000, // 5 phút
+    refetchOnWindowFocus: false,
+    refetchOnMount: false
   })
 
   // Export Excel mutation
@@ -237,6 +250,27 @@ function RouteComponent() {
       CToast.error({ title: "Có lỗi xảy ra khi xuất file Excel" })
     }
   })
+
+  const { mutate: exportXlsxByIds } = useMutation({
+    mutationFn: exportXlsxSalesOrderByIds,
+    onSuccess: (response) => {
+      const url = URL.createObjectURL(response.data)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = `Don_hang_da_chon_${format(new Date(), "ddMMyyyy")}.xlsx`
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      URL.revokeObjectURL(url)
+      CToast.success({ title: "Xuất file Excel (đã chọn) thành công" })
+    },
+    onError: () => CToast.error({ title: "Có lỗi xảy ra khi xuất file Excel" })
+  })
+
+  useEffect(() => {
+    console.log("SalesLayout mounted")
+    return () => console.log("SalesLayout unmounted")
+  }, [])
 
   const ordersData = data?.data.data || []
 
@@ -286,201 +320,257 @@ function RouteComponent() {
     })
   }
 
-  const handleUpdateItems = (item: SalesOrderItem) => {
-    modals.open({
-      title: <b>Cập nhật sản phẩm, chiết khấu & tiền cọc</b>,
-      children: (
-        <UpdateOrderItemsModal
-          orderId={item._id}
-          currentItems={item.items.map((si) => ({
-            code: si.code,
-            quantity: si.quantity,
-            note: si.note
-          }))}
-          currentOrderDiscount={item.orderDiscount}
-          currentOtherDiscount={item.otherDiscount}
-          currentDeposit={item.deposit}
-          onSuccess={() => {
+  const handleUpdateItems = useCallback(
+    (item: SalesOrderItem) => {
+      modals.open({
+        title: <b>Cập nhật sản phẩm, chiết khấu & tiền cọc</b>,
+        children: (
+          <UpdateOrderItemsModal
+            orderId={item._id}
+            currentItems={item.items.map((si) => ({
+              code: si.code,
+              quantity: si.quantity,
+              note: si.note
+            }))}
+            currentOrderDiscount={item.orderDiscount}
+            currentOtherDiscount={item.otherDiscount}
+            currentDeposit={item.deposit}
+            onSuccess={() => {
+              refetch()
+              modals.closeAll()
+            }}
+          />
+        ),
+        size: "xl"
+      })
+    },
+    [refetch]
+  )
+
+  const handleDeleteOrder = useCallback(
+    (orderId: string) => {
+      modals.openConfirmModal({
+        title: <b>Xác nhận xóa</b>,
+        children: <Text>Bạn có chắc chắn muốn xóa đơn hàng này?</Text>,
+        labels: { confirm: "Xóa", cancel: "Hủy" },
+        confirmProps: { color: "red" },
+        onConfirm: async () => {
+          try {
+            await deleteSalesOrder({ id: orderId })
+            CToast.success({ title: "Xóa đơn hàng thành công" })
             refetch()
-            modals.closeAll()
-          }}
-        />
-      ),
-      size: "xl"
-    })
-  }
-
-  const handleDeleteOrder = (orderId: string) => {
-    modals.openConfirmModal({
-      title: <b>Xác nhận xóa</b>,
-      children: <Text>Bạn có chắc chắn muốn xóa đơn hàng này?</Text>,
-      labels: { confirm: "Xóa", cancel: "Hủy" },
-      confirmProps: { color: "red" },
-      onConfirm: async () => {
-        try {
-          await deleteSalesOrder({ id: orderId })
-          CToast.success({ title: "Xóa đơn hàng thành công" })
-          refetch()
-        } catch (error: any) {
-          CToast.error({
-            title:
-              error?.response?.data?.message || "Có lỗi xảy ra khi xóa đơn hàng"
-          })
+          } catch (error: any) {
+            CToast.error({
+              title:
+                error?.response?.data?.message ||
+                "Có lỗi xảy ra khi xóa đơn hàng"
+            })
+          }
         }
-      }
-    })
-  }
+      })
+    },
+    [deleteSalesOrder, refetch]
+  )
 
-  const columns: ColumnDef<SalesOrderItem>[] = [
-    {
-      accessorKey: "salesFunnelId.name",
-      header: "Khách hàng",
-      cell: ({ row }) => (
-        <div>
-          <Flex gap={4} align={"center"}>
-            <Text fw={500} size="sm">
-              {row.original.salesFunnelId.name}
+  const handleRowSelectionChange = useCallback(
+    (rowsOnThisPageSelected: SalesOrderItem[]) => {
+      setSelectedOrders((prev) => {
+        // Tạo Map từ selection trước đó
+        const prevMap = new Map(prev.map((o) => [o._id, o]))
+
+        // Tạo Set các IDs đang được chọn ở trang hiện tại (từ table)
+        const selectedIdsOnPage = new Set(
+          rowsOnThisPageSelected.map((o) => o._id)
+        )
+
+        // IDs của orders ở trang hiện tại (từ data)
+        const currentPageIds = new Set(ordersData.map((o) => o._id))
+
+        // 1) Xóa các orders thuộc trang hiện tại MÀ không còn được chọn
+        for (const id of currentPageIds) {
+          if (!selectedIdsOnPage.has(id)) {
+            prevMap.delete(id)
+          }
+        }
+
+        // 2) Thêm/cập nhật các orders đang được chọn ở trang hiện tại
+        for (const order of rowsOnThisPageSelected) {
+          prevMap.set(order._id, order)
+        }
+
+        const result = Array.from(prevMap.values())
+
+        // Chỉ update nếu thực sự có thay đổi (tránh re-render không cần thiết)
+        if (
+          result.length === prev.length &&
+          result.every((o) => prev.find((p) => p._id === o._id))
+        ) {
+          return prev
+        }
+
+        return result
+      })
+    },
+    [ordersData]
+  )
+
+  const getRowId = useCallback((row: SalesOrderItem) => row._id, [])
+
+  const columns: ColumnDef<SalesOrderItem>[] = useMemo(
+    () => [
+      {
+        accessorKey: "salesFunnelId.name",
+        header: "Khách hàng",
+        cell: ({ row }) => (
+          <div>
+            <Flex gap={4} align={"center"}>
+              <Text fw={500} size="sm">
+                {row.original.salesFunnelId.name}
+              </Text>
+              <Badge
+                variant="light"
+                size="xs"
+                color={row.original.returning ? "violet" : "green"}
+              >
+                {row.original.returning ? "Khách cũ" : "Khách mới"}
+              </Badge>
+            </Flex>
+            <Text size="xs" c="dimmed">
+              {row.original.salesFunnelId.phoneNumber}
             </Text>
-            <Badge
-              variant="light"
-              size="xs"
-              color={row.original.returning ? "violet" : "green"}
-            >
-              {row.original.returning ? "Khách cũ" : "Khách mới"}
-            </Badge>
-          </Flex>
-          <Text size="xs" c="dimmed">
-            {row.original.salesFunnelId.phoneNumber}
+          </div>
+        )
+      },
+      {
+        accessorKey: "items",
+        header: "Số SP",
+        cell: ({ row }) => (
+          <Badge variant="light" color="blue" size="sm">
+            {row.original.items.length}
+          </Badge>
+        )
+      },
+      {
+        accessorKey: "total",
+        header: "Tổng tiền",
+        cell: ({ row }) => (
+          <Text fw={500} size="sm">
+            {row.original.total.toLocaleString("vi-VN")}đ
           </Text>
-        </div>
-      )
-    },
-    {
-      accessorKey: "items",
-      header: "Số SP",
-      cell: ({ row }) => (
-        <Badge variant="light" color="blue" size="sm">
-          {row.original.items.length}
-        </Badge>
-      )
-    },
-    {
-      accessorKey: "total",
-      header: "Tổng tiền",
-      cell: ({ row }) => (
-        <Text fw={500} size="sm">
-          {row.original.total.toLocaleString("vi-VN")}đ
-        </Text>
-      )
-    },
-    {
-      accessorKey: "orderDiscount",
-      header: "Chiết khấu",
-      cell: ({ row }) => {
-        const orderDiscount = row.original.orderDiscount || 0
-        const otherDiscount = row.original.otherDiscount || 0
-        const totalDiscount = orderDiscount + otherDiscount
+        )
+      },
+      {
+        accessorKey: "orderDiscount",
+        header: "Chiết khấu",
+        cell: ({ row }) => {
+          const orderDiscount = row.original.orderDiscount || 0
+          const otherDiscount = row.original.otherDiscount || 0
+          const totalDiscount = orderDiscount + otherDiscount
 
-        return totalDiscount > 0 ? (
-          <Text size="sm">{totalDiscount.toLocaleString("vi-VN")}đ</Text>
-        ) : (
-          <Text size="sm" c="dimmed">
-            -
-          </Text>
+          return totalDiscount > 0 ? (
+            <Text size="sm">{totalDiscount.toLocaleString("vi-VN")}đ</Text>
+          ) : (
+            <Text size="sm" c="dimmed">
+              -
+            </Text>
+          )
+        }
+      },
+      {
+        accessorKey: "status",
+        header: "Trạng thái",
+        cell: ({ row }) => (
+          <Badge
+            variant="light"
+            color={row.original.status === "official" ? "green" : "gray"}
+            size="sm"
+          >
+            {row.original.status === "official" ? "Chính thức" : "Báo giá"}
+          </Badge>
         )
-      }
-    },
-    {
-      accessorKey: "status",
-      header: "Trạng thái",
-      cell: ({ row }) => (
-        <Badge
-          variant="light"
-          color={row.original.status === "official" ? "green" : "gray"}
-          size="sm"
-        >
-          {row.original.status === "official" ? "Chính thức" : "Báo giá"}
-        </Badge>
-      )
-    },
-    {
-      accessorKey: "shippingCode",
-      header: "Mã vận đơn",
-      cell: ({ row }) => (
-        <Text size="sm">{row.original.shippingCode || "Chưa có"}</Text>
-      )
-    },
-    {
-      accessorKey: "shippingType",
-      header: "Đơn vị vận chuyển",
-      cell: ({ row }) =>
-        row.original.shippingType ? (
+      },
+      {
+        accessorKey: "shippingCode",
+        header: "Mã vận đơn",
+        cell: ({ row }) => (
+          <Text size="sm">{row.original.shippingCode || "Chưa có"}</Text>
+        )
+      },
+      {
+        accessorKey: "shippingType",
+        header: "Đơn vị vận chuyển",
+        cell: ({ row }) =>
+          row.original.shippingType ? (
+            <Text size="sm">
+              {row.original.shippingType === "shipping_vtp"
+                ? "Viettel Post"
+                : "Shipcode lên chành"}
+            </Text>
+          ) : (
+            <Text size="sm" c="dimmed">
+              Chưa có
+            </Text>
+          )
+      },
+      {
+        accessorKey: "storage",
+        header: "Kho",
+        cell: ({ row }) => (
           <Text size="sm">
-            {row.original.shippingType === "shipping_vtp"
-              ? "Viettel Post"
-              : "Shipcode lên chành"}
-          </Text>
-        ) : (
-          <Text size="sm" c="dimmed">
-            Chưa có
+            {row.original.storage === "position_HaNam"
+              ? "Kho Hà Nội"
+              : "Kho MKT"}
           </Text>
         )
-    },
-    {
-      accessorKey: "storage",
-      header: "Kho",
-      cell: ({ row }) => (
-        <Text size="sm">
-          {row.original.storage === "position_HaNam" ? "Kho Hà Nội" : "Kho MKT"}
-        </Text>
-      )
-    },
-    {
-      accessorKey: "date",
-      header: "Ngày đặt",
-      cell: ({ row }) => (
-        <Text size="sm" c="dimmed">
-          {format(new Date(row.original.date), "dd/MM/yyyy")}
-        </Text>
-      )
-    },
-    {
-      id: "actions",
-      header: "Thao tác",
-      cell: ({ row }) => (
-        <Can roles={["admin", "sales-leader", "sales-emp"]}>
-          <Group gap="xs">
-            <ActionIcon
-              variant="light"
-              color="indigo"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation()
-                handleUpdateItems(row.original)
-              }}
-              title="Cập nhật sản phẩm"
-              hidden={row.original.status === "official"}
-            >
-              <IconEdit size={16} />
-            </ActionIcon>
-            <ActionIcon
-              variant="light"
-              color="red"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation()
-                handleDeleteOrder(row.original._id)
-              }}
-              title="Xóa đơn hàng"
-            >
-              <IconTrash size={16} />
-            </ActionIcon>
-          </Group>
-        </Can>
-      ),
-      enableSorting: false
-    }
-  ]
+      },
+      {
+        accessorKey: "date",
+        header: "Ngày đặt",
+        cell: ({ row }) => (
+          <Text size="sm" c="dimmed">
+            {format(new Date(row.original.date), "dd/MM/yyyy")}
+          </Text>
+        )
+      },
+      {
+        id: "actions",
+        header: "Thao tác",
+        cell: ({ row }) => (
+          <Can roles={["admin", "sales-leader", "sales-emp"]}>
+            <Group gap="xs">
+              <ActionIcon
+                variant="light"
+                color="indigo"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleUpdateItems(row.original)
+                }}
+                title="Cập nhật sản phẩm"
+                hidden={row.original.status === "official"}
+              >
+                <IconEdit size={16} />
+              </ActionIcon>
+              <ActionIcon
+                variant="light"
+                color="red"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleDeleteOrder(row.original._id)
+                }}
+                title="Xóa đơn hàng"
+              >
+                <IconTrash size={16} />
+              </ActionIcon>
+            </Group>
+          </Can>
+        ),
+        enableSorting: false
+      }
+    ],
+    [handleUpdateItems, handleDeleteOrder]
+  )
 
   return (
     <SalesLayout>
@@ -523,6 +613,11 @@ function RouteComponent() {
             isLoading={isLoading}
             onRowClick={(row) =>
               navigate({ to: `/sales/orders/${row.original._id}` })
+            }
+            getRowId={getRowId}
+            enableRowSelection={true}
+            onRowSelectionChange={(rows) =>
+              handleRowSelectionChange(rows as SalesOrderItem[])
             }
             extraFilters={
               <>
@@ -621,107 +716,120 @@ function RouteComponent() {
               <>
                 <Button
                   onClick={() => {
+                    const hasSelection = selectedOrderIds.length > 0
+
                     modals.openConfirmModal({
                       title: <b>Xác nhận xuất file Excel</b>,
                       children: (
                         <Box>
                           <Text mb="md">
-                            Bạn có chắc chắn muốn xuất file Excel với các bộ lọc
-                            hiện tại?
+                            {hasSelection
+                              ? `Bạn đang chọn ${selectedOrderIds.length} đơn hàng. Xuất theo danh sách đã chọn?`
+                              : "Bạn có chắc chắn muốn xuất file Excel với các bộ lọc hiện tại?"}
                           </Text>
-                          <Box
-                            style={{
-                              background: "#f8f9fa",
-                              padding: "12px",
-                              borderRadius: "8px"
-                            }}
-                          >
-                            <Text size="sm" fw={600} mb="xs">
-                              Thông tin xuất:
-                            </Text>
-                            <Text size="sm" mb={4}>
-                              • Tổng số đơn hàng:{" "}
-                              <strong>{data?.data.total || 0}</strong> đơn
-                            </Text>
-                            {searchText && (
-                              <Text size="sm" mb={4}>
-                                • Tìm kiếm: <strong>{searchText}</strong>
+
+                          {!hasSelection && (
+                            <Box
+                              style={{
+                                background: "#f8f9fa",
+                                padding: "12px",
+                                borderRadius: "8px"
+                              }}
+                            >
+                              <Text size="sm" fw={600} mb="xs">
+                                Thông tin xuất:
                               </Text>
-                            )}
-                            {returningFilter && (
                               <Text size="sm" mb={4}>
-                                • Loại khách:{" "}
-                                <strong>
-                                  {returningFilter === "true"
-                                    ? "Khách cũ"
-                                    : "Khách mới"}
-                                </strong>
+                                • Tổng số đơn hàng:{" "}
+                                <strong>{data?.data.total || 0}</strong> đơn
                               </Text>
-                            )}
-                            {funnelFilter && (
-                              <Text size="sm" mb={4}>
-                                • Khách hàng:{" "}
-                                <strong>
-                                  {
-                                    funnelOptions.find(
-                                      (f) => f.value === funnelFilter
-                                    )?.label
-                                  }
-                                </strong>
-                              </Text>
-                            )}
-                            {shippingTypeFilter && (
-                              <Text size="sm" mb={4}>
-                                • Đơn vị vận chuyển:{" "}
-                                <strong>
-                                  {shippingTypeFilter === "shipping_vtp"
-                                    ? "Viettel Post"
-                                    : "Shipcode lên chành"}
-                                </strong>
-                              </Text>
-                            )}
-                            {statusFilter && (
-                              <Text size="sm" mb={4}>
-                                • Trạng thái:{" "}
-                                <strong>
-                                  {statusFilter === "draft"
-                                    ? "Báo giá"
-                                    : "Chính thức"}
-                                </strong>
-                              </Text>
-                            )}
-                            {startDate && (
-                              <Text size="sm" mb={4}>
-                                • Từ ngày:{" "}
-                                <strong>
-                                  {format(startDate, "dd/MM/yyyy")}
-                                </strong>
-                              </Text>
-                            )}
-                            {endDate && (
-                              <Text size="sm" mb={4}>
-                                • Đến ngày:{" "}
-                                <strong>{format(endDate, "dd/MM/yyyy")}</strong>
-                              </Text>
-                            )}
-                            {!searchText &&
-                              !returningFilter &&
-                              !funnelFilter &&
-                              !shippingTypeFilter &&
-                              !statusFilter &&
-                              !startDate &&
-                              !endDate && (
-                                <Text size="sm" c="orange" mb={4}>
-                                  ⚠️ Không có bộ lọc nào được áp dụng. Tất cả
-                                  đơn hàng sẽ được xuất.
+                              {searchText && (
+                                <Text size="sm" mb={4}>
+                                  • Tìm kiếm: <strong>{searchText}</strong>
                                 </Text>
                               )}
-                          </Box>
+                              {returningFilter && (
+                                <Text size="sm" mb={4}>
+                                  • Loại khách:{" "}
+                                  <strong>
+                                    {returningFilter === "true"
+                                      ? "Khách cũ"
+                                      : "Khách mới"}
+                                  </strong>
+                                </Text>
+                              )}
+                              {funnelFilter && (
+                                <Text size="sm" mb={4}>
+                                  • Khách hàng:{" "}
+                                  <strong>
+                                    {
+                                      funnelOptions.find(
+                                        (f) => f.value === funnelFilter
+                                      )?.label
+                                    }
+                                  </strong>
+                                </Text>
+                              )}
+                              {shippingTypeFilter && (
+                                <Text size="sm" mb={4}>
+                                  • Đơn vị vận chuyển:{" "}
+                                  <strong>
+                                    {shippingTypeFilter === "shipping_vtp"
+                                      ? "Viettel Post"
+                                      : "Shipcode lên chành"}
+                                  </strong>
+                                </Text>
+                              )}
+                              {statusFilter && (
+                                <Text size="sm" mb={4}>
+                                  • Trạng thái:{" "}
+                                  <strong>
+                                    {statusFilter === "draft"
+                                      ? "Báo giá"
+                                      : "Chính thức"}
+                                  </strong>
+                                </Text>
+                              )}
+                              {startDate && (
+                                <Text size="sm" mb={4}>
+                                  • Từ ngày:{" "}
+                                  <strong>
+                                    {format(startDate, "dd/MM/yyyy")}
+                                  </strong>
+                                </Text>
+                              )}
+                              {endDate && (
+                                <Text size="sm" mb={4}>
+                                  • Đến ngày:{" "}
+                                  <strong>
+                                    {format(endDate, "dd/MM/yyyy")}
+                                  </strong>
+                                </Text>
+                              )}
+                              {!searchText &&
+                                !returningFilter &&
+                                !funnelFilter &&
+                                !shippingTypeFilter &&
+                                !statusFilter &&
+                                !startDate &&
+                                !endDate && (
+                                  <Text size="sm" c="orange" mb={4}>
+                                    ⚠️ Không có bộ lọc nào được áp dụng. Tất cả
+                                    đơn hàng sẽ được xuất.
+                                  </Text>
+                                )}
+                            </Box>
+                          )}
                         </Box>
                       ),
                       labels: { confirm: "Xuất Excel", cancel: "Hủy" },
                       confirmProps: { color: "green" },
                       onConfirm: () => {
+                        if (hasSelection) {
+                          exportXlsxByIds({ orderIds: selectedOrderIds })
+                          return
+                        }
+
                         exportXlsx({
                           page: 1,
                           limit: 9999,
@@ -759,7 +867,9 @@ function RouteComponent() {
                   color="green"
                   variant="light"
                 >
-                  Xuất Excel
+                  {selectedOrderIds.length > 0
+                    ? `Xuất Excel (${selectedOrderIds.length} đã chọn)`
+                    : "Xuất Excel"}
                 </Button>
                 <Can roles={["admin", "sales-leader", "sales-emp"]}>
                   <Button
