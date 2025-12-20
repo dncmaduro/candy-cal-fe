@@ -331,12 +331,26 @@ function RouteComponent() {
       },
       {
         accessorKey: "adsCost",
-        header: "Chi phí QC",
+        header: "Ads",
         cell: ({ getValue }) => {
           const value = getValue() as number
           return (
             <Text size="sm" fw={600} c={value > 0 ? "red.6" : "dimmed"}>
               <NumberFormatter value={value} thousandSeparator suffix=" VNĐ" />
+            </Text>
+          )
+        }
+      },
+      {
+        accessorKey: "CAC",
+        header: "Ads/DT",
+        cell: ({ row }) => {
+          const income = row.original.income as number
+          const adsCost = row.original.adsCost as number
+          const cac = income > 0 ? (adsCost / income) * 100 : 0
+          return (
+            <Text size="sm" fw={600} c={cac > 0 ? "orange.6" : "dimmed"}>
+              <NumberFormatter value={cac} decimalScale={2} />%
             </Text>
           )
         }
