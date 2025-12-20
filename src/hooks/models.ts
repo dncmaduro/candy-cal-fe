@@ -2106,6 +2106,23 @@ export interface GetAggregatedMetricsResponse {
 }
 
 /** @interface */
+export interface GetHostRevenueRankingsRequest {
+  startDate: string
+  endDate: string
+}
+
+/** @interface */
+export interface GetHostRevenueRankingsResponse {
+  rankings: {
+    hostId: string
+    hostName: string
+    totalRevenue: number
+    totalAdsCost: number
+    totalOrders: number
+  }[]
+}
+
+/** @interface */
 export interface UpdateSnapshotAltRequest {
   altAssignee?: string
   altOtherAssignee?: string

@@ -55,7 +55,9 @@ import {
   UpdateLivestreamPeriodRequest,
   UpdateLivestreamSnapshotRequest,
   UpdateSnapshotAltRequest,
-  UpdateSnapshotAltResponse
+  UpdateSnapshotAltResponse,
+  GetHostRevenueRankingsRequest,
+  GetHostRevenueRankingsResponse
 } from "./models"
 
 export const useLivestream = () => {
@@ -460,6 +462,16 @@ export const useLivestream = () => {
     })
   }
 
+  const getHostRevenueRankings = async (req: GetHostRevenueRankingsRequest) => {
+    const query = toQueryString(req)
+
+    return callApi<never, GetHostRevenueRankingsResponse>({
+      method: "GET",
+      path: `/v1/livestreams/host-revenue-rankings?${query}`,
+      token: accessToken
+    })
+  }
+
   return {
     createLivestreamEmployee,
     updateLivestreamEmployee,
@@ -497,6 +509,7 @@ export const useLivestream = () => {
     getAltRequestBySnapshot,
     updateAltRequestStatus,
     deleteAltRequest,
-    searchAltRequests
+    searchAltRequests,
+    getHostRevenueRankings
   }
 }
