@@ -72,7 +72,13 @@ export const LIVESTREAM_NAVS = [
   {
     to: `${LIVESTREAM_NAVS_URL}/calendar`,
     label: "Lịch livestream",
-    roles: ["admin", "livestream-leader", "livestream-emp", "system-emp"],
+    roles: [
+      "admin",
+      "livestream-leader",
+      "livestream-emp",
+      "livestream-ast",
+      "system-emp"
+    ],
     icon: "IconCalendar"
   },
   // {
@@ -90,13 +96,25 @@ export const LIVESTREAM_NAVS = [
   {
     to: `${LIVESTREAM_NAVS_URL}/reports`,
     label: "Báo cáo",
-    roles: ["admin", "livestream-leader", "accounting-emp", "system-emp"],
+    roles: [
+      "admin",
+      "livestream-leader",
+      "livestream-emp",
+      "livestream-ast",
+      "system-emp"
+    ],
     icon: "IconReportAnalytics"
   },
   {
     to: `${LIVESTREAM_NAVS_URL}/alt-requests`,
     label: "Yêu cầu thay đổi",
-    roles: ["admin", "livestream-leader", "livestream-emp", "system-emp"],
+    roles: [
+      "admin",
+      "livestream-leader",
+      "livestream-ast",
+      "livestream-emp",
+      "system-emp"
+    ],
     icon: "IconAlertCircle"
   },
   // {

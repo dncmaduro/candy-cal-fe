@@ -463,45 +463,53 @@ function RouteComponent() {
     // Render 2 separate tables for Host and Assistant
     return (
       <Stack gap="xl">
-        <LivestreamCalendarTable
-          role="host"
-          weekDays={weekDays}
-          employeesData={employeesData || []}
-          livestreamData={livestreamData || []}
-          onAssignEmployee={assignEmployee}
-          onUnassignEmployee={unassignEmployee}
-          viewMode={viewMode}
-          onOpenReport={handleOpenReport}
-          isWeekFixed={isWeekFixed}
-          currentUser={me}
-          onUpdateAlt={updateSnapshotAltRequest}
-          onCreateRequest={createAltRequest}
-          onUpdateRequest={updateAltRequests}
-          onDeleteRequest={deleteAltRequest}
-          onUpdateRequestStatus={updateAltRequestStatus}
-          onGetRequest={getAltRequestBySnapshot}
-          onRefetch={refetch}
-        />
+        <Can
+          roles={["admin", "livestream-leader", "livestream-emp", "system-emp"]}
+        >
+          <LivestreamCalendarTable
+            role="host"
+            weekDays={weekDays}
+            employeesData={employeesData || []}
+            livestreamData={livestreamData || []}
+            onAssignEmployee={assignEmployee}
+            onUnassignEmployee={unassignEmployee}
+            viewMode={viewMode}
+            onOpenReport={handleOpenReport}
+            isWeekFixed={isWeekFixed}
+            currentUser={me}
+            onUpdateAlt={updateSnapshotAltRequest}
+            onCreateRequest={createAltRequest}
+            onUpdateRequest={updateAltRequests}
+            onDeleteRequest={deleteAltRequest}
+            onUpdateRequestStatus={updateAltRequestStatus}
+            onGetRequest={getAltRequestBySnapshot}
+            onRefetch={refetch}
+          />
+        </Can>
 
-        <LivestreamCalendarTable
-          role="assistant"
-          weekDays={weekDays}
-          employeesData={employeesData || []}
-          livestreamData={livestreamData || []}
-          onAssignEmployee={assignEmployee}
-          onUnassignEmployee={unassignEmployee}
-          viewMode={viewMode}
-          onOpenReport={handleOpenReport}
-          isWeekFixed={isWeekFixed}
-          currentUser={me}
-          onUpdateAlt={updateSnapshotAltRequest}
-          onCreateRequest={createAltRequest}
-          onUpdateRequest={updateAltRequests}
-          onDeleteRequest={deleteAltRequest}
-          onUpdateRequestStatus={updateAltRequestStatus}
-          onGetRequest={getAltRequestBySnapshot}
-          onRefetch={refetch}
-        />
+        <Can
+          roles={["admin", "livestream-leader", "livestream-ast", "system-emp"]}
+        >
+          <LivestreamCalendarTable
+            role="assistant"
+            weekDays={weekDays}
+            employeesData={employeesData || []}
+            livestreamData={livestreamData || []}
+            onAssignEmployee={assignEmployee}
+            onUnassignEmployee={unassignEmployee}
+            viewMode={viewMode}
+            onOpenReport={handleOpenReport}
+            isWeekFixed={isWeekFixed}
+            currentUser={me}
+            onUpdateAlt={updateSnapshotAltRequest}
+            onCreateRequest={createAltRequest}
+            onUpdateRequest={updateAltRequests}
+            onDeleteRequest={deleteAltRequest}
+            onUpdateRequestStatus={updateAltRequestStatus}
+            onGetRequest={getAltRequestBySnapshot}
+            onRefetch={refetch}
+          />
+        </Can>
       </Stack>
     )
   }
