@@ -151,11 +151,11 @@ export const openLivestreamReportModal = ({
           />
 
           <NumberInput
-            label="Thời gian xem trung bình (phút)"
+            label="Thời gian xem trung bình (giây)"
             placeholder="Nhập thời gian xem trung bình"
             min={0}
             decimalScale={2}
-            suffix=" phút"
+            suffix=" giây"
             readOnly={hasData}
             {...form.getInputProps("avgViewingDuration")}
           />

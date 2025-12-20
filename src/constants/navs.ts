@@ -83,7 +83,7 @@ export const LIVESTREAM_NAVS = [
   // },
   {
     to: `${LIVESTREAM_NAVS_URL}/periods`,
-    label: "Kỳ livestream",
+    label: "Ca livestream",
     roles: ["admin", "livestream-leader", "system-emp"],
     icon: "IconClock"
   },
