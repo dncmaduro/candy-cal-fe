@@ -3382,6 +3382,11 @@ export interface ExportXlsxSalesOrderRequest {
 }
 
 /** @interface */
+export interface ExportXlsxSalesOrderByIdsRequest {
+  orderIds: string[]
+}
+
+/** @interface */
 export interface SearchSalesOrderResponse {
   data: {
     _id: string
