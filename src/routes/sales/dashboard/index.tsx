@@ -38,7 +38,8 @@ export const Route = createFileRoute("/sales/dashboard/")({
 })
 
 function RouteComponent() {
-  const { getSalesRevenue, getMonthlyMetrics } = useSalesDashboard()
+  const { getSalesRevenue, getMonthlyMetrics, getMonthlyTopCustomers } =
+    useSalesDashboard()
 
   // Date range for revenue stats
   const [startDate, setStartDate] = useState<Date | null>(
@@ -82,6 +83,22 @@ function RouteComponent() {
     enabled: !!selectedMonth
   })
 
+  const {
+    data: topCustomersData,
+    isLoading: topCustomersLoading,
+    refetch: refetchTopCustomers
+  } = useQuery({
+    queryKey: ["monthlyTopCustomers", selectedMonth],
+    queryFn: () =>
+      getMonthlyTopCustomers({
+        month: (selectedMonth || new Date()).getMonth() + 1,
+        year: (selectedMonth || new Date()).getFullYear(),
+        page: 1,
+        limit: 999
+      }),
+    enabled: !!selectedMonth
+  })
+
   const handleResetRevenue = () => {
     setStartDate(startOfMonth(new Date()))
     setEndDate(endOfMonth(new Date()))
@@ -91,11 +108,13 @@ function RouteComponent() {
   const handleResetMetrics = () => {
     setSelectedMonth(new Date())
     refetchMetrics()
+    refetchTopCustomers()
   }
 
   // Processed data
   const revenue = revenueData?.data
   const metrics = metricsData?.data
+  const topCustomers = topCustomersData?.data
 
   const createSalesDailyReport = () => {
     modals.open({
@@ -353,7 +372,12 @@ function RouteComponent() {
             )}
 
             {/* Monthly Metrics */}
-            <MonthlyMetrics isLoading={metricsLoading} data={metrics} />
+            <MonthlyMetrics
+              isLoading={metricsLoading}
+              data={metrics}
+              topCustomersData={topCustomers}
+              topCustomersLoading={topCustomersLoading}
+            />
           </Box>
         </Box>
       </Box>
