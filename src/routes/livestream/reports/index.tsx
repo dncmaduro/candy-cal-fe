@@ -15,13 +15,15 @@ import {
   Stack,
   Center,
   Group,
-  NumberFormatter
+  NumberFormatter,
+  SegmentedControl
 } from "@mantine/core"
 import { DatePickerInput } from "@mantine/dates"
 import { useState, useMemo } from "react"
 import { format } from "date-fns"
 import { CDataTable } from "../../../components/common/CDataTable"
 import { ColumnDef } from "@tanstack/react-table"
+import { HostRevenueRankingsChart } from "../../../components/livestream/HostRevenueRankingsChart"
 
 export const Route = createFileRoute("/livestream/reports/")({
   component: RouteComponent
@@ -31,7 +33,8 @@ function RouteComponent() {
   const {
     getLivestreamsByDateRange,
     searchLivestreamChannels,
-    getAggregatedMetrics
+    getAggregatedMetrics,
+    getHostRevenueRankings
   } = useLivestream()
   const { publicSearchUser } = useUsers()
 
@@ -39,6 +42,7 @@ function RouteComponent() {
   const [endDate, setEndDate] = useState<Date | null>(new Date())
   const [channelId, setChannelId] = useState<string | null>(null)
   const [assigneeId, setAssigneeId] = useState<string | null>(null)
+  const [viewMode, setViewMode] = useState<"reports" | "rankings">("reports")
 
   const dateRange = useMemo<[Date | null, Date | null]>(
     () => [startDate, endDate],
@@ -125,6 +129,20 @@ function RouteComponent() {
       return response.data
     },
     enabled: !!dateRange[0] && !!dateRange[1] && !!channelId
+  })
+
+  // Fetch host revenue rankings
+  const { data: rankingsData, isLoading: isLoadingRankings } = useQuery({
+    queryKey: ["getHostRevenueRankings", dateRange[0], dateRange[1]],
+    queryFn: async () => {
+      if (!dateRange[0] || !dateRange[1]) return null
+      const response = await getHostRevenueRankings({
+        startDate: format(dateRange[0], "yyyy-MM-dd"),
+        endDate: format(dateRange[1], "yyyy-MM-dd")
+      })
+      return response.data
+    },
+    enabled: !!dateRange[0] && !!dateRange[1]
   })
 
   // Fetch livestream data
@@ -536,35 +554,58 @@ function RouteComponent() {
           {/* Metrics Cards */}
           <Box mb="lg">{renderMetricsCards()}</Box>
 
-          {/* Reports Table */}
-          <Box>
-            <style>
-              {`
-                .date-group-odd {
-                  background-color: var(--mantine-color-gray-0) !important;
-                }
-                .date-group-odd:hover {
-                  background-color: var(--mantine-color-gray-1) !important;
-                }
-              `}
-            </style>
-            <CDataTable
-              columns={styledColumns}
-              data={enhancedTableData}
-              isLoading={isLoadingLivestreams}
-              page={1}
-              totalPages={1}
-              onPageChange={() => {}}
-              onPageSizeChange={() => {}}
-              initialPageSize={100}
-              pageSizeOptions={[50, 100, 200]}
-              hideSearch
-              getRowId={(row) => `${row.dateKey}-${row.period}`}
-              getRowClassName={(row) =>
-                row.original._dateGroupIndex % 2 === 1 ? "date-group-odd" : ""
-              }
+          {/* View Mode Selector */}
+          <Box mb="lg">
+            <SegmentedControl
+              value={viewMode}
+              onChange={(value) => setViewMode(value as "reports" | "rankings")}
+              data={[
+                { label: "Bảng báo cáo", value: "reports" },
+                { label: "Xếp hạng host", value: "rankings" }
+              ]}
+              fullWidth
             />
           </Box>
+
+          {/* Reports Table */}
+          {viewMode === "reports" && (
+            <Box>
+              <style>
+                {`
+                  .date-group-odd {
+                    background-color: var(--mantine-color-gray-0) !important;
+                  }
+                  .date-group-odd:hover {
+                    background-color: var(--mantine-color-gray-1) !important;
+                  }
+                `}
+              </style>
+              <CDataTable
+                columns={styledColumns}
+                data={enhancedTableData}
+                isLoading={isLoadingLivestreams}
+                page={1}
+                totalPages={1}
+                onPageChange={() => {}}
+                onPageSizeChange={() => {}}
+                initialPageSize={100}
+                pageSizeOptions={[50, 100, 200]}
+                hideSearch
+                getRowId={(row) => `${row.dateKey}-${row.period}`}
+                getRowClassName={(row) =>
+                  row.original._dateGroupIndex % 2 === 1 ? "date-group-odd" : ""
+                }
+              />
+            </Box>
+          )}
+
+          {/* Rankings Chart */}
+          {viewMode === "rankings" && (
+            <HostRevenueRankingsChart
+              isLoadingRankings={isLoadingRankings}
+              rankingsData={rankingsData}
+            />
+          )}
         </Box>
       </Box>
     </LivestreamLayout>
