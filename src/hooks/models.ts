@@ -3940,13 +3940,24 @@ export interface GetMonthlyMetricsResponse {
     customer: number
     closed: number
   }
-  topCustomersByRevenue: {
+}
+
+export interface GetMonthlyTopCustomersRequest {
+  year: number
+  month: number
+  page: number
+  limit: number
+}
+
+export interface GetMonthlyTopCustomersResponse {
+  data: {
     funnelId: string
     customerName: string
     customerPhone: string
     revenue: number
     orderCount: number
   }[]
+  total: number
 }
 
 // -------------------- SALES CUSTOMER RANKS --------------------

@@ -4,6 +4,8 @@ import { callApi } from "./axios"
 import {
   GetMonthlyMetricsRequest,
   GetMonthlyMetricsResponse,
+  GetMonthlyTopCustomersRequest,
+  GetMonthlyTopCustomersResponse,
   GetSalesRevenueRequest,
   GetSalesRevenueResponse
 } from "./models"
@@ -31,8 +33,19 @@ export const useSalesDashboard = () => {
     })
   }
 
+  const getMonthlyTopCustomers = async (req: GetMonthlyTopCustomersRequest) => {
+    const query = toQueryString(req)
+
+    return callApi<never, GetMonthlyTopCustomersResponse>({
+      path: `/v1/salesdashboard/top-customers?${query}`,
+      method: "GET",
+      token: accessToken
+    })
+  }
+
   return {
     getSalesRevenue,
-    getMonthlyMetrics
+    getMonthlyMetrics,
+    getMonthlyTopCustomers
   }
 }

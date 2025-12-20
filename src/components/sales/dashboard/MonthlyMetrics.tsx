@@ -29,21 +29,32 @@ interface MonthlyMetricsData {
     customer: number
     closed: number
   }
-  topCustomersByRevenue?: {
+}
+
+interface TopCustomersData {
+  data: {
     funnelId: string
     customerName: string
     customerPhone: string
     revenue: number
     orderCount: number
   }[]
+  total: number
 }
 
 interface MonthlyMetricsProps {
   isLoading: boolean
   data?: MonthlyMetricsData
+  topCustomersData?: TopCustomersData
+  topCustomersLoading: boolean
 }
 
-export function MonthlyMetrics({ isLoading, data }: MonthlyMetricsProps) {
+export function MonthlyMetrics({
+  isLoading,
+  data,
+  topCustomersData,
+  topCustomersLoading
+}: MonthlyMetricsProps) {
   const stagePercentages = useMemo(() => {
     if (!data?.stageTransitions) return null
     const total = data.stageTransitions.lead || 1
@@ -59,78 +70,6 @@ export function MonthlyMetrics({ isLoading, data }: MonthlyMetricsProps) {
     <>
       {/* Metrics KPI Cards */}
       <Grid gutter="md" mb="xl">
-        {/* <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 2.4 }}>
-          <Card shadow="sm" padding="lg" radius="md" withBorder>
-            {isLoading ? (
-              <Skeleton height={100} />
-            ) : (
-              <Tooltip label="Chi phí thu hút khách hàng">
-                <Box>
-                  <Group justify="space-between" mb="xs">
-                    <Text size="sm" c="dimmed">
-                      CAC
-                    </Text>
-                    <ThemeIcon variant="light" size="lg" color="orange">
-                      <IconCash size={20} />
-                    </ThemeIcon>
-                  </Group>
-                  <Text fw={700} fz="xl">
-                    {data?.cac.toLocaleString("vi-VN")}đ
-                  </Text>
-                </Box>
-              </Tooltip>
-            )}
-          </Card>
-        </Grid.Col> */}
-
-        {/* <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 2.4 }}>
-          <Card shadow="sm" padding="lg" radius="md" withBorder>
-            {isLoading ? (
-              <Skeleton height={100} />
-            ) : (
-              <Tooltip label="Tỷ lệ khách hàng quay lại">
-                <Box>
-                  <Group justify="space-between" mb="xs">
-                    <Text size="sm" c="dimmed">
-                      CRR
-                    </Text>
-                    <ThemeIcon variant="light" size="lg" color="grape">
-                      <IconUserCheck size={20} />
-                    </ThemeIcon>
-                  </Group>
-                  <Text fw={700} fz="xl">
-                    {data?.crr.toFixed(1)}%
-                  </Text>
-                </Box>
-              </Tooltip>
-            )}
-          </Card>
-        </Grid.Col> */}
-
-        {/* <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 2.4 }}>
-          <Card shadow="sm" padding="lg" radius="md" withBorder>
-            {isLoading ? (
-              <Skeleton height={100} />
-            ) : (
-              <Tooltip label="Tỷ lệ chuyển đổi">
-                <Box>
-                  <Group justify="space-between" mb="xs">
-                    <Text size="sm" c="dimmed">
-                      Conversion Rate
-                    </Text>
-                    <ThemeIcon variant="light" size="lg" color="violet">
-                      <IconPercentage size={20} />
-                    </ThemeIcon>
-                  </Group>
-                  <Text fw={700} fz="xl">
-                    {data?.conversionRate.toFixed(1)}%
-                  </Text>
-                </Box>
-              </Tooltip>
-            )}
-          </Card>
-        </Grid.Col> */}
-
         <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 2.4 }}>
           <Card shadow="sm" padding="lg" radius="md" withBorder>
             {isLoading ? (
@@ -154,58 +93,16 @@ export function MonthlyMetrics({ isLoading, data }: MonthlyMetricsProps) {
             )}
           </Card>
         </Grid.Col>
-
-        {/* <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 2.4 }}>
-          <Card shadow="sm" padding="lg" radius="md" withBorder>
-            {isLoading ? (
-              <Skeleton height={100} />
-            ) : (
-              <Tooltip label="Thời gian chu kỳ bán hàng">
-                <Box>
-                  <Group justify="space-between" mb="xs">
-                    <Text size="sm" c="dimmed">
-                      Sales Cycle
-                    </Text>
-                    <ThemeIcon variant="light" size="lg" color="indigo">
-                      <IconCalendarTime size={20} />
-                    </ThemeIcon>
-                  </Group>
-                  <Text fw={700} fz="xl">
-                    {data?.salesCycleLength.toFixed(0)} ngày
-                  </Text>
-                </Box>
-              </Tooltip>
-            )}
-          </Card>
-        </Grid.Col> */}
-
-        {/* <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 2.4 }}>
-          <Card shadow="sm" padding="lg" radius="md" withBorder>
-            {isLoading ? (
-              <Skeleton height={100} />
-            ) : (
-              <Tooltip label="Tỷ lệ rời bỏ">
-                <Box>
-                  <Group justify="space-between" mb="xs">
-                    <Text size="sm" c="dimmed">
-                      Churn Rate
-                    </Text>
-                    <ThemeIcon variant="light" size="lg" color="red">
-                      <IconUsers size={20} />
-                    </ThemeIcon>
-                  </Group>
-                  <Text fw={700} fz="xl">
-                    {data?.churnRate.toFixed(1)}%
-                  </Text>
-                </Box>
-              </Tooltip>
-            )}
-          </Card>
-        </Grid.Col> */}
       </Grid>
 
       {/* Stage Transitions */}
-      <Card shadow="sm" padding="lg" radius="md" withBorder>
+      <Card
+        shadow="sm"
+        padding="lg"
+        radius="md"
+        withBorder
+        className="standards"
+      >
         <Group mb="md">
           <IconTrendingUp size={20} />
           <Text fw={600}>Chuyển đổi giai đoạn</Text>
@@ -310,12 +207,20 @@ export function MonthlyMetrics({ isLoading, data }: MonthlyMetricsProps) {
       </Card>
 
       {/* Top Customers Chart & Table */}
-      <Box mt="xl">
+      <Card
+        shadow="sm"
+        padding="lg"
+        radius="md"
+        withBorder
+        mt="xl"
+        maw={"100%"}
+      >
         <TopCustomersChart
-          isLoading={isLoading}
-          data={data?.topCustomersByRevenue}
+          isLoading={topCustomersLoading}
+          data={topCustomersData?.data}
+          total={topCustomersData?.total}
         />
-      </Box>
+      </Card>
     </>
   )
 }
