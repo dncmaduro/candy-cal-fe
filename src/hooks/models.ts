@@ -2002,11 +2002,13 @@ export interface GetLivestreamByDateRangeResponse {
       altOtherAssignee?: string
       altNote?: string
       altRequest?: string
+      snapshotKpi?: number
     }[]
     totalOrders: number
     totalIncome: number
     ads: number
     fixed: boolean
+    dateKpi?: number
   }[]
 }
 
@@ -2053,11 +2055,13 @@ export interface ReportLivestreamResponse {
     altOtherAssignee?: string
     altNote?: string
     altRequest?: string
+    snapshotKpi?: number
   }[]
   totalOrders: number
   totalIncome: number
   ads: number
   fixed: boolean
+  dateKpi?: number
 }
 
 /** @interface */
@@ -2161,11 +2165,13 @@ export interface UpdateSnapshotAltResponse {
     altOtherAssignee?: string
     altNote?: string
     altRequest?: string
+    snapshotKpi?: number
   }[]
   totalOrders: number
   totalIncome: number
   ads: number
   fixed: boolean
+  dateKpi?: number
 }
 
 /** @interface */
