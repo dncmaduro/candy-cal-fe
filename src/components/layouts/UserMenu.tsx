@@ -29,7 +29,8 @@ export const UserMenu = () => {
     "accounting-emp": "Nhân viên kế toán",
     "system-emp": "Nhân viên hệ thống",
     "livestream-leader": "Leader livestream",
-    "livestream-emp": "Nhân viên livestream",
+    "livestream-emp": "Host livestream",
+    "livestream-ast": "Trợ live",
     "sales-leader": "Leader sales",
     "sales-emp": "Nhân viên sales"
   }

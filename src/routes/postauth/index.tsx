@@ -51,7 +51,8 @@ function RouteComponent() {
   }
   if (
     meData?.roles[0] === "livestream-emp" ||
-    meData?.roles[0] === "livestream-leader"
+    meData?.roles[0] === "livestream-leader" ||
+    meData?.roles[0] === "livestream-ast"
   ) {
     return <Navigate to="/livestream/calendar" />
   }
