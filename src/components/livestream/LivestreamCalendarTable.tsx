@@ -61,6 +61,7 @@ type LivestreamSnapshot = {
     name: string
   }
   altAssignee?: string // This is the ID of alt assignee
+  altOtherAssignee?: string // Name when altAssignee is "other"
   altNote?: string
   altRequest?: string
   income?: number
@@ -240,11 +241,11 @@ const ScheduleCell = ({
       {snapshot?.assignee ? (
         <Group justify="space-between" wrap="nowrap" gap="xs">
           {/* Show alt assignee name with popover if has altAssignee */}
-          {hasAltAssignee && altEmployee ? (
+          {hasAltAssignee ? (
             <Group align="center" gap={2}>
               <AltAssigneeInfo
                 snapshot={snapshot}
-                altEmployeeName={altEmployee.name}
+                altEmployeeName={altEmployee?.name || displayName || "Khác"}
                 onGetRequest={onGetRequest}
                 livestreamId={dayData!._id}
               />
@@ -385,15 +386,30 @@ const UpdateAltPopover = ({
     snapshot.altAssignee || null
   )
   const [altNote, setAltNote] = useState<string>(snapshot.altNote || "")
+  const [altOtherName, setAltOtherName] = useState<string>(
+    snapshot.altOtherAssignee || ""
+  )
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async () => {
     if (!selectedAlt) return
 
+    // Validate that if "other" is selected, a name must be provided
+    if (selectedAlt === "other" && !altOtherName.trim()) {
+      notifications.show({
+        title: "Thiếu thông tin",
+        message: "Vui lòng nhập tên người thay thế",
+        color: "red"
+      })
+      return
+    }
+
     setLoading(true)
     try {
       await onUpdateAlt(livestreamId, snapshot._id, {
         altAssignee: selectedAlt,
+        altOtherAssignee:
+          selectedAlt === "other" ? altOtherName.trim() : undefined,
         altNote: altNote?.trim() || undefined
       })
       notifications.show({
@@ -419,6 +435,7 @@ const UpdateAltPopover = ({
     try {
       await onUpdateAlt(livestreamId, snapshot._id, {
         altAssignee: undefined as any,
+        altOtherAssignee: undefined,
         altNote: undefined
       })
       notifications.show({
@@ -438,12 +455,6 @@ const UpdateAltPopover = ({
       setLoading(false)
     }
   }
-
-  console.log(
-    employees
-      .map((e) => ({ label: e.name, value: e._id }))
-      .filter((e) => e.value !== snapshot.assignee?._id)
-  )
 
   return (
     <Popover
@@ -474,10 +485,19 @@ const UpdateAltPopover = ({
             onChange={setSelectedAlt}
             data={employees
               .map((e) => ({ label: e.name, value: e._id }))
-              .filter((e) => e.value !== snapshot.assignee?._id)}
+              .filter((e) => e.value !== snapshot.assignee?._id)
+              .concat({ label: "Khác", value: "other" })}
             searchable
             comboboxProps={{ withinPortal: false }}
           />
+          {selectedAlt === "other" && (
+            <TextInput
+              placeholder="Nhập tên người thay thế"
+              value={altOtherName}
+              onChange={(e) => setAltOtherName(e.currentTarget.value)}
+              size="sm"
+            />
+          )}
           <TextInput
             placeholder="Lý do (tùy chọn)"
             value={altNote}
@@ -1068,13 +1088,18 @@ export const LivestreamCalendarTable = ({
                     // Check if snapshot has alt assignee (yellow background)
                     const hasAltAssignee = !!snapshot?.altAssignee
                     const altEmployee = hasAltAssignee
-                      ? employeesData.find(
-                          (e) => e._id === snapshot.altAssignee
-                        )
+                      ? snapshot.altAssignee === "other"
+                        ? null // Don't look up employee if it's "other"
+                        : employeesData.find(
+                            (e) => e._id === snapshot.altAssignee
+                          )
                       : null
-                    const displayName = altEmployee
-                      ? altEmployee.name
-                      : snapshot?.assignee?.name
+                    const displayName =
+                      snapshot?.altAssignee === "other"
+                        ? snapshot.altOtherAssignee || "Khác"
+                        : altEmployee
+                          ? altEmployee.name
+                          : snapshot?.assignee?.name
 
                     // Check if this livestream is fixed
                     const isLivestreamFixed = dayData?.fixed === true
