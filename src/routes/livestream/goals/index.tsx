@@ -8,9 +8,7 @@ import {
   Divider,
   Flex,
   Group,
-  Loader,
   rem,
-  Table,
   Text,
   ActionIcon,
   Select
@@ -19,9 +17,11 @@ import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
 import { Can } from "../../../components/common/Can"
 import { CToast } from "../../../components/common/CToast"
-import { useState } from "react"
+import { useState, useMemo, useCallback } from "react"
 import type { GetLivestreamMonthGoalsResponse } from "../../../hooks/models"
 import { LivestreamGoalModal } from "../../../components/livestream/LivestreamGoalModal"
+import { CDataTable } from "../../../components/common/CDataTable"
+import type { ColumnDef } from "@tanstack/react-table"
 
 type LivestreamGoal = GetLivestreamMonthGoalsResponse["data"][0]
 
@@ -68,30 +68,93 @@ function RouteComponent() {
     }
   })
 
-  const openGoalModal = (goal?: LivestreamGoal) => {
-    modals.open({
-      title: <b>{goal ? "Chỉnh sửa mục tiêu" : "Tạo mục tiêu mới"}</b>,
-      children: <LivestreamGoalModal goal={goal} refetch={refetch} />,
-      size: "lg"
-    })
-  }
+  const openGoalModal = useCallback(
+    (goal?: LivestreamGoal) => {
+      modals.open({
+        title: <b>{goal ? "Chỉnh sửa mục tiêu" : "Tạo mục tiêu mới"}</b>,
+        children: <LivestreamGoalModal goal={goal} refetch={refetch} />,
+        size: "lg"
+      })
+    },
+    [refetch]
+  )
 
-  const confirmDelete = (goal: LivestreamGoal) => {
-    modals.openConfirmModal({
-      title: "Xác nhận xóa",
-      children: (
-        <Text size="sm">
-          Bạn có chắc chắn muốn xóa mục tiêu tháng {goal.month + 1}/{goal.year}{" "}
-          của kênh {goal.channel.name}?
-        </Text>
-      ),
-      labels: { confirm: "Xóa", cancel: "Hủy" },
-      confirmProps: { color: "red" },
-      onConfirm: () => deleteGoal({ id: goal._id })
-    })
-  }
+  const confirmDelete = useCallback(
+    (goal: LivestreamGoal) => {
+      modals.openConfirmModal({
+        title: "Xác nhận xóa",
+        children: (
+          <Text size="sm">
+            Bạn có chắc chắn muốn xóa mục tiêu tháng {goal.month + 1}/
+            {goal.year} của kênh {goal.channel.name}?
+          </Text>
+        ),
+        labels: { confirm: "Xóa", cancel: "Hủy" },
+        confirmProps: { color: "red" },
+        onConfirm: () => deleteGoal({ id: goal._id })
+      })
+    },
+    [deleteGoal]
+  )
 
   const goals = goalsData?.data || []
+  const totalGoals = goalsData?.total || 0
+
+  // Define columns for CDataTable
+  const columns = useMemo<ColumnDef<LivestreamGoal>[]>(
+    () => [
+      {
+        accessorKey: "month",
+        header: "Tháng/Năm",
+        cell: ({ row }) => (
+          <Text fw={600}>
+            {row.original.month + 1}/{row.original.year}
+          </Text>
+        )
+      },
+      {
+        accessorKey: "channel.name",
+        header: "Kênh",
+        cell: ({ row }) => <Text>{row.original.channel.name}</Text>
+      },
+      {
+        accessorKey: "goal",
+        header: "Mục tiêu (VNĐ)",
+        cell: ({ getValue }) => (
+          <Text fw={600} c="indigo">
+            {(getValue() as number).toLocaleString("vi-VN")}
+          </Text>
+        )
+      },
+      {
+        id: "actions",
+        header: "Thao tác",
+        cell: ({ row }) => (
+          <Group gap="xs">
+            <Can roles={["admin", "livestream-leader"]}>
+              <ActionIcon
+                variant="light"
+                color="indigo"
+                size="sm"
+                onClick={() => openGoalModal(row.original)}
+              >
+                <IconEdit size={16} />
+              </ActionIcon>
+              <ActionIcon
+                variant="light"
+                color="red"
+                size="sm"
+                onClick={() => confirmDelete(row.original)}
+              >
+                <IconTrash size={16} />
+              </ActionIcon>
+            </Can>
+          </Group>
+        )
+      }
+    ],
+    [openGoalModal, confirmDelete]
+  )
 
   return (
     <LivestreamLayout>
@@ -152,88 +215,29 @@ function RouteComponent() {
 
         {/* Content */}
         <Box px={{ base: 4, md: 28 }} py={20}>
-          {isLoading ? (
-            <Flex justify="center" align="center" h={400}>
-              <Loader />
-            </Flex>
-          ) : goals.length === 0 ? (
-            <Flex justify="center" align="center" h={400}>
-              <Text c="dimmed">Không có mục tiêu nào</Text>
-            </Flex>
-          ) : (
-            <Table
-              withColumnBorders
-              withTableBorder
-              striped
-              verticalSpacing="sm"
-              horizontalSpacing="md"
-              stickyHeader
-              className="rounded-xl"
-              miw={600}
-            >
-              <Table.Thead>
-                <Table.Tr>
-                  <Table.Th style={{ width: 120 }}>Tháng/Năm</Table.Th>
-                  <Table.Th style={{ width: 150 }}>Kênh</Table.Th>
-                  <Table.Th style={{ width: 180 }}>Mục tiêu (VNĐ)</Table.Th>
-                  <Table.Th style={{ width: 140 }}>Thao tác</Table.Th>
-                </Table.Tr>
-              </Table.Thead>
-              <Table.Tbody>
-                {goals.map((goal) => (
-                  <Table.Tr key={goal._id}>
-                    <Table.Td>
-                      <Text fw={600}>
-                        {goal.month + 1}/{goal.year}
-                      </Text>
-                    </Table.Td>
-                    <Table.Td>
-                      <Text>{goal.channel.name}</Text>
-                    </Table.Td>
-                    <Table.Td>
-                      <Text fw={600} c="indigo">
-                        {goal.goal.toLocaleString()}
-                      </Text>
-                    </Table.Td>
-                    <Table.Td>
-                      <Group gap="xs">
-                        <Can roles={["admin", "livestream-leader"]}>
-                          <ActionIcon
-                            variant="light"
-                            color="indigo"
-                            size="sm"
-                            onClick={() => openGoalModal(goal)}
-                          >
-                            <IconEdit size={16} />
-                          </ActionIcon>
-                          <ActionIcon
-                            variant="light"
-                            color="red"
-                            size="sm"
-                            onClick={() => confirmDelete(goal)}
-                          >
-                            <IconTrash size={16} />
-                          </ActionIcon>
-                        </Can>
-                      </Group>
-                    </Table.Td>
-                  </Table.Tr>
-                ))}
-              </Table.Tbody>
-            </Table>
-          )}
+          <CDataTable
+            columns={columns}
+            data={goals}
+            isLoading={isLoading}
+            page={1}
+            totalPages={1}
+            onPageChange={() => {}}
+            onPageSizeChange={() => {}}
+            hideSearch
+            getRowId={(row) => row._id}
+          />
 
           {/* Summary */}
           {goals.length > 0 && (
             <Flex justify="space-between" align="center" mt={16}>
               <Text c="dimmed" fz="sm">
-                Hiển thị {goals.length} mục tiêu
+                Hiển thị {goals.length} / {totalGoals} mục tiêu
               </Text>
               <Text fw={600}>
                 Tổng mục tiêu:{" "}
                 {goals
                   .reduce((sum, goal) => sum + goal.goal, 0)
-                  .toLocaleString()}{" "}
+                  .toLocaleString("vi-VN")}{" "}
                 VNĐ
               </Text>
             </Flex>

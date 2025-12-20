@@ -183,7 +183,12 @@ function RouteComponent() {
       comments: number
       ordersNote: string
       rating: string
+      snapshotKpi: number
+      isSummary?: boolean
     }> = []
+
+    // Group snapshots by date
+    const dateGroups = new Map<string, typeof rows>()
 
     livestreamData.forEach((livestream) => {
       const date = new Date(livestream.date)
@@ -195,6 +200,10 @@ function RouteComponent() {
         (s) => s.period.for === "host"
       )
 
+      if (!dateGroups.has(dateStr)) {
+        dateGroups.set(dateStr, [])
+      }
+
       hostSnapshots.forEach((snapshot) => {
         const periodStr = `${String(snapshot.period.startTime.hour).padStart(2, "0")}:${String(snapshot.period.startTime.minute).padStart(2, "0")} - ${String(snapshot.period.endTime.hour).padStart(2, "0")}:${String(snapshot.period.endTime.minute).padStart(2, "0")}`
 
@@ -203,8 +212,8 @@ function RouteComponent() {
           return
         }
 
-        rows.push({
-          dateKey: dateStr, // Use for grouping
+        const rowData = {
+          dateKey: dateStr,
           date: dateStr,
           dayOfWeek,
           period: periodStr,
@@ -216,12 +225,52 @@ function RouteComponent() {
           avgViewingDuration: snapshot.avgViewingDuration || 0,
           comments: snapshot.comments || 0,
           ordersNote: snapshot.ordersNote || "",
-          rating: snapshot.rating || ""
-        })
+          rating: snapshot.rating || "",
+          snapshotKpi: snapshot.snapshotKpi || 0
+        }
+
+        rows.push(rowData)
+        dateGroups.get(dateStr)!.push(rowData)
       })
     })
 
-    return rows
+    // Add summary rows for each date
+    const finalRows: typeof rows = []
+    const sortedDates = Array.from(dateGroups.keys()).sort()
+
+    sortedDates.forEach((dateStr) => {
+      const dateRows = dateGroups.get(dateStr)!
+
+      // Add all rows for this date
+      finalRows.push(...dateRows)
+
+      // Calculate and add summary row
+      const totalIncome = dateRows.reduce((sum, row) => sum + row.income, 0)
+      const totalAdsCost = dateRows.reduce((sum, row) => sum + row.adsCost, 0)
+      const totalComments = dateRows.reduce((sum, row) => sum + row.comments, 0)
+      const totalKpi = dateRows.reduce((sum, row) => sum + row.snapshotKpi, 0)
+
+      const firstRow = dateRows[0]
+      finalRows.push({
+        dateKey: dateStr,
+        date: dateStr,
+        dayOfWeek: firstRow.dayOfWeek,
+        period: `Tổng ${dateRows.length} ca`,
+        assignee: "",
+        assigneeId: "",
+        income: totalIncome,
+        adsCost: totalAdsCost,
+        clickRate: 0,
+        avgViewingDuration: 0,
+        comments: totalComments,
+        ordersNote: "",
+        rating: "",
+        snapshotKpi: totalKpi,
+        isSummary: true
+      })
+    })
+
+    return finalRows
   }, [livestreamData, assigneeId])
 
   const renderMetricsCards = () => {
@@ -310,22 +359,31 @@ function RouteComponent() {
       {
         accessorKey: "date",
         header: "Ngày",
-        cell: ({ row }) => (
-          <Stack gap={0}>
-            <Text size="sm" fw={600}>
-              {row.original.date}
-            </Text>
-            <Text size="xs" c="dimmed">
-              {row.original.dayOfWeek}
-            </Text>
-          </Stack>
-        )
+        cell: ({ row }) => {
+          if (row.original.isSummary) {
+            return null // Don't show date for summary row
+          }
+          return (
+            <Stack gap={0}>
+              <Text size="sm" fw={600}>
+                {row.original.date}
+              </Text>
+              <Text size="xs" c="dimmed">
+                {row.original.dayOfWeek}
+              </Text>
+            </Stack>
+          )
+        }
       },
       {
         accessorKey: "period",
         header: "Khung giờ",
-        cell: ({ getValue }) => (
-          <Text size="sm" fw={500}>
+        cell: ({ getValue, row }) => (
+          <Text
+            size="sm"
+            fw={row.original.isSummary ? 700 : 500}
+            c={row.original.isSummary ? "indigo" : undefined}
+          >
             {getValue() as string}
           </Text>
         )
@@ -333,15 +391,24 @@ function RouteComponent() {
       {
         accessorKey: "assignee",
         header: "Host",
-        cell: ({ getValue }) => <Text size="sm">{getValue() as string}</Text>
+        cell: ({ getValue, row }) => {
+          if (row.original.isSummary) {
+            return null
+          }
+          return <Text size="sm">{getValue() as string}</Text>
+        }
       },
       {
         accessorKey: "income",
         header: "Doanh thu",
-        cell: ({ getValue }) => {
+        cell: ({ getValue, row }) => {
           const value = getValue() as number
           return (
-            <Text size="sm" fw={600} c={value > 0 ? "blue.6" : "dimmed"}>
+            <Text
+              size="sm"
+              fw={row.original.isSummary ? 700 : 600}
+              c={value > 0 ? "blue.6" : "dimmed"}
+            >
               <NumberFormatter value={value} thousandSeparator suffix=" VNĐ" />
             </Text>
           )
@@ -350,10 +417,14 @@ function RouteComponent() {
       {
         accessorKey: "adsCost",
         header: "Ads",
-        cell: ({ getValue }) => {
+        cell: ({ getValue, row }) => {
           const value = getValue() as number
           return (
-            <Text size="sm" fw={600} c={value > 0 ? "red.6" : "dimmed"}>
+            <Text
+              size="sm"
+              fw={row.original.isSummary ? 700 : 600}
+              c={value > 0 ? "red.6" : "dimmed"}
+            >
               <NumberFormatter value={value} thousandSeparator suffix=" VNĐ" />
             </Text>
           )
@@ -367,16 +438,62 @@ function RouteComponent() {
           const adsCost = row.original.adsCost as number
           const cac = income > 0 ? (adsCost / income) * 100 : 0
           return (
-            <Text size="sm" fw={600} c={cac > 0 ? "orange.6" : "dimmed"}>
+            <Text
+              size="sm"
+              fw={row.original.isSummary ? 700 : 600}
+              c={cac > 0 ? "orange.6" : "dimmed"}
+            >
               <NumberFormatter value={cac} decimalScale={2} />%
             </Text>
           )
         }
       },
       {
+        accessorKey: "snapshotKpi",
+        header: "KPI",
+        cell: ({ row }) => {
+          const kpi = row.original.snapshotKpi || 0
+          const income = row.original.income || 0
+          const percentage = kpi > 0 ? (income / kpi) * 100 : 0
+
+          if (row.original.isSummary) {
+            return (
+              <Stack gap={0}>
+                <Text size="sm" fw={700} c="violet.6">
+                  <NumberFormatter
+                    value={kpi}
+                    thousandSeparator
+                    suffix=" VNĐ"
+                  />
+                </Text>
+                <Text size="xs" c="dimmed">
+                  ({percentage.toFixed(1)}%)
+                </Text>
+              </Stack>
+            )
+          }
+
+          return (
+            <Stack gap={0}>
+              <Text size="sm" fw={600} c="violet.6">
+                <NumberFormatter value={kpi} thousandSeparator suffix=" VNĐ" />
+              </Text>
+              {kpi > 0 && (
+                <Text size="xs" c={percentage >= 100 ? "green" : "orange"}>
+                  ({percentage.toFixed(1)}%)
+                </Text>
+              )}
+            </Stack>
+          )
+        }
+      },
+      {
         accessorKey: "clickRate",
         header: "Tỷ lệ click (%)",
-        cell: ({ getValue }) => {
+        cell: ({ getValue, row }) => {
+          if (row.original.isSummary) {
+            return null
+          }
           const value = getValue() as number
           return (
             <Text size="sm" c={value > 0 ? undefined : "dimmed"}>
@@ -388,7 +505,10 @@ function RouteComponent() {
       {
         accessorKey: "avgViewingDuration",
         header: "Thời gian xem TB (giây)",
-        cell: ({ getValue }) => {
+        cell: ({ getValue, row }) => {
+          if (row.original.isSummary) {
+            return null
+          }
           const value = getValue() as number
           return (
             <Text size="sm" c={value > 0 ? undefined : "dimmed"}>
@@ -400,10 +520,14 @@ function RouteComponent() {
       {
         accessorKey: "comments",
         header: "Bình luận",
-        cell: ({ getValue }) => {
+        cell: ({ getValue, row }) => {
           const value = getValue() as number
           return (
-            <Text size="sm" c={value > 0 ? undefined : "dimmed"}>
+            <Text
+              size="sm"
+              fw={row.original.isSummary ? 700 : undefined}
+              c={value > 0 ? undefined : "dimmed"}
+            >
               <NumberFormatter value={value} thousandSeparator />
             </Text>
           )
@@ -412,7 +536,10 @@ function RouteComponent() {
       {
         accessorKey: "ordersNote",
         header: "Ghi chú đơn hàng",
-        cell: ({ getValue }) => {
+        cell: ({ getValue, row }) => {
+          if (row.original.isSummary) {
+            return null
+          }
           const value = getValue() as string
           return (
             <Text size="sm" c={value ? undefined : "dimmed"} lineClamp={2}>
@@ -424,7 +551,10 @@ function RouteComponent() {
       {
         accessorKey: "rating",
         header: "Đánh giá",
-        cell: ({ getValue }) => {
+        cell: ({ getValue, row }) => {
+          if (row.original.isSummary) {
+            return null
+          }
           const value = getValue() as string
           return (
             <Text size="sm" c={value ? undefined : "dimmed"} lineClamp={2}>
@@ -578,6 +708,13 @@ function RouteComponent() {
                   .date-group-odd:hover {
                     background-color: var(--mantine-color-gray-1) !important;
                   }
+                  .summary-row {
+                    background-color: var(--mantine-color-indigo-0) !important;
+                    font-weight: 600;
+                  }
+                  .summary-row:hover {
+                    background-color: var(--mantine-color-indigo-1) !important;
+                  }
                 `}
               </style>
               <CDataTable
@@ -591,10 +728,15 @@ function RouteComponent() {
                 initialPageSize={100}
                 pageSizeOptions={[50, 100, 200]}
                 hideSearch
-                getRowId={(row) => `${row.dateKey}-${row.period}`}
-                getRowClassName={(row) =>
-                  row.original._dateGroupIndex % 2 === 1 ? "date-group-odd" : ""
+                getRowId={(row) =>
+                  `${row.dateKey}-${row.period}-${row.isSummary ? "summary" : row.assigneeId}`
                 }
+                getRowClassName={(row) => {
+                  if (row.original.isSummary) return "summary-row"
+                  return row.original._dateGroupIndex % 2 === 1
+                    ? "date-group-odd"
+                    : ""
+                }}
               />
             </Box>
           )}
