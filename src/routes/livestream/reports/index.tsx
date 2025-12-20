@@ -355,7 +355,7 @@ function RouteComponent() {
       },
       {
         accessorKey: "avgViewingDuration",
-        header: "Thời gian xem TB (phút)",
+        header: "Thời gian xem TB (giây)",
         cell: ({ getValue }) => {
           const value = getValue() as number
           return (
