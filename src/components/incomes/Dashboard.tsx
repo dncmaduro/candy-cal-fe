@@ -161,8 +161,13 @@ export const Dashboard = () => {
   })
 
   const { data: monthGoalData } = useQuery({
-    queryKey: ["getGoal", currentMonth, currentYear],
-    queryFn: () => getGoal({ month: currentMonth, year: currentYear }),
+    queryKey: ["getGoal", currentMonth, currentYear, selectedChannelId],
+    queryFn: () =>
+      getGoal({
+        month: currentMonth,
+        year: currentYear,
+        channelId: selectedChannelId || undefined
+      }),
     select: (data) => data.data
   })
 
