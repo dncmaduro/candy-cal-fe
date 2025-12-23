@@ -12,7 +12,7 @@ import {
 } from "@mantine/core"
 import { DatePickerInput } from "@mantine/dates"
 import { useQuery, useMutation } from "@tanstack/react-query"
-import { useState, useEffect, useMemo, useCallback } from "react"
+import { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { modals } from "@mantine/modals"
 import { format } from "date-fns"
 import {
@@ -42,6 +42,7 @@ export const Route = createFileRoute("/sales/orders/")({
   validateSearch: (search: Record<string, unknown>) => {
     return {
       createNew: search.createNew as string | undefined,
+      channelId: search.channelId as string | undefined,
       funnelId: search.funnelId as string | undefined,
       items: search.items as string | undefined,
       orderDiscount: search.orderDiscount as string | undefined,
@@ -571,6 +572,110 @@ function RouteComponent() {
     ],
     [handleUpdateItems, handleDeleteOrder]
   )
+
+  const normalizeQuoted = (v?: string) => {
+    if (!v) return v
+    // nếu kiểu: "true" hoặc "0" hoặc "[{...}]"
+    if (v.length >= 2 && v.startsWith('"') && v.endsWith('"')) {
+      try {
+        return JSON.parse(v) // bỏ lớp quote ngoài
+      } catch {
+        return v
+      }
+    }
+    return v
+  }
+
+  const parseBool = (v?: string) => {
+    const s = normalizeQuoted(v)
+    return s === "true" || s === "1"
+  }
+
+  const parseNumber = (v?: string, fallback = 0) => {
+    const s = normalizeQuoted(v)
+    const n = Number(s)
+    return Number.isFinite(n) ? n : fallback
+  }
+
+  const parseItems = (
+    v?: string
+  ): { code: string; quantity: number; note?: string }[] => {
+    if (!v) return []
+    const s1 = normalizeQuoted(v)
+
+    // case 1: s1 đã là JSON array string -> parse ra array
+    try {
+      const r1 = JSON.parse(s1)
+      // nếu r1 lại là string (stringify 2 lần) -> parse tiếp
+      if (typeof r1 === "string") {
+        const r2 = JSON.parse(r1)
+        return Array.isArray(r2) ? r2 : []
+      }
+      return Array.isArray(r1) ? r1 : []
+    } catch {
+      return []
+    }
+  }
+
+  const openedFromUrlRef = useRef(false)
+
+  useEffect(() => {
+    if (openedFromUrlRef.current) return
+    if (!parseBool(search.createNew)) return
+
+    // cần channelId để mở modal
+    const channelId =
+      normalizeQuoted(search.channelId) || myChannelData?.channel?._id
+    if (!channelId) return
+
+    // set form values từ params
+    formMethods.reset({
+      salesFunnelId: normalizeQuoted(search.funnelId) || "",
+      storage: "position_HaNam",
+      date: new Date(new Date().setHours(0, 0, 0, 0)),
+      orderDiscount: parseNumber(search.orderDiscount, 0),
+      otherDiscount: parseNumber(search.otherDiscount, 0),
+      deposit: parseNumber(search.deposit, 0),
+      isNewCustomer: false,
+      newCustomerName: "",
+      newCustomerChannel: "",
+      province: "",
+      phoneNumber: "",
+      address: "",
+      funnelSource: "ads",
+      fromSystem: false,
+      items: (() => {
+        const items = parseItems(search.items)
+        return items.length > 0 ? items : [{ code: "", quantity: 1, note: "" }]
+      })(),
+      secondaryPhones: []
+    })
+
+    openedFromUrlRef.current = true
+    handleCreateOrder(channelId)
+
+    // (khuyến nghị) clear params để F5 / rerender không mở lại
+    navigate({
+      to: "/sales/orders",
+      search: (prev: any) => ({
+        ...prev,
+        createNew: undefined,
+        channelId: undefined,
+        funnelId: undefined,
+        items: undefined,
+        orderDiscount: undefined,
+        otherDiscount: undefined,
+        deposit: undefined
+      }),
+      replace: true
+    })
+  }, [
+    search,
+    myChannelData?.channel?._id,
+    handleCreateOrder,
+    formMethods,
+    navigate
+  ])
 
   return (
     <SalesLayout>
