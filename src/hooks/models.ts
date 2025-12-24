@@ -3157,10 +3157,83 @@ export interface UpdateSalesOrderItemsRequest {
   orderDiscount?: number
   otherDiscount?: number
   deposit?: number
+  date?: Date
 }
 
 /** @interface */
 export interface UpdateSalesOrderItemsResponse {
+  _id: string
+  salesFunnelId: {
+    _id: string
+    name: string
+    province: {
+      _id: string
+      code: string
+      name: string
+      createdAt: string
+      updatedAt: string
+    }
+    phoneNumber: string
+    secondaryPhoneNumbers?: string[]
+    address?: string
+    psid: string
+    channel: {
+      _id: string
+      channelName: string
+    }
+    user: {
+      _id: string
+      name: string
+    }
+    hasBuyed: boolean
+    cost?: number
+    stage: "lead" | "contacted" | "customer" | "closed"
+    funnelSource: "ads" | "seeding" | "referral"
+    createdAt: string
+    updatedAt: string
+  }
+  items: {
+    code: string
+    name: string
+    price: number
+    quantity: number
+    area?: number
+    mass?: number
+    specification?: string
+    size?: string
+    note?: string
+  }[]
+  returning: boolean
+  shippingCode?: string
+  shippingType?: "shipping_vtp" | "shipping_cargo"
+  storage: "position_HaNam" | "position_MKT"
+  cost?: number
+  date: string
+  total: number
+  tax?: number
+  shippingCost?: number
+  deposit?: number
+  orderDiscount?: number
+  otherDiscount?: number
+  status: "draft" | "official"
+  phoneNumber: string
+  address: string
+  province: {
+    id: string
+    name: string
+  }
+  receivedDate?: string
+  createdAt: string
+  updatedAt: string
+}
+
+/** @interface */
+export interface UpdateSalesOrderDateRequest {
+  date: Date
+}
+
+/** @interface */
+export interface UpdateSalesOrderDateResponse {
   _id: string
   salesFunnelId: {
     _id: string
