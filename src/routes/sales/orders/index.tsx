@@ -47,7 +47,8 @@ export const Route = createFileRoute("/sales/orders/")({
       items: search.items as string | undefined,
       orderDiscount: search.orderDiscount as string | undefined,
       otherDiscount: search.otherDiscount as string | undefined,
-      deposit: search.deposit as string | undefined
+      deposit: search.deposit as string | undefined,
+      refetch: search.refetch as string | undefined
     }
   }
 })
@@ -205,7 +206,8 @@ function RouteComponent() {
       startDate,
       endDate,
       userIdFilter,
-      channelIdFilter
+      channelIdFilter,
+      search.refetch
     ],
     queryFn: () =>
       searchSalesOrders({

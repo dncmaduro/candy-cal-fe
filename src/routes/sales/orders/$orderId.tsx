@@ -556,7 +556,7 @@ function RouteComponent() {
             <Group>
               <ActionIcon
                 variant="subtle"
-                onClick={() => navigate({ to: "/sales/orders" })}
+                onClick={() => navigate({ to: "/sales/orders?refetch=true" })}
               >
                 <IconArrowLeft size={20} />
               </ActionIcon>
