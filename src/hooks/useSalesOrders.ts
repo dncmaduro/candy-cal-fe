@@ -14,6 +14,8 @@ import {
   MoveSalesOrderToOfficialResponse,
   SearchSalesOrderRequest,
   SearchSalesOrderResponse,
+  UpdateSalesOrderDateRequest,
+  UpdateSalesOrderDateResponse,
   UpdateSalesOrderItemsRequest,
   UpdateSalesOrderItemsResponse,
   UpdateSalesOrderTaxShippingRequest,
@@ -191,6 +193,18 @@ export const useSalesOrders = () => {
     })
   }
 
+  const updateSalesOrderDate = async (
+    id: string,
+    req: UpdateSalesOrderDateRequest
+  ) => {
+    return callApi<UpdateSalesOrderDateRequest, UpdateSalesOrderDateResponse>({
+      path: `/v1/salesorders/${id}/date`,
+      method: "PATCH",
+      data: req,
+      token: accessToken
+    })
+  }
+
   return {
     uploadSalesOrders,
     downloadSalesOrdersTemplate,
@@ -204,6 +218,7 @@ export const useSalesOrders = () => {
     updateSalesOrderTaxShipping,
     moveSalesOrderToOfficial,
     getOrdersByFunnel,
-    exportXlsxSalesOrderByIds
+    exportXlsxSalesOrderByIds,
+    updateSalesOrderDate
   }
 }
