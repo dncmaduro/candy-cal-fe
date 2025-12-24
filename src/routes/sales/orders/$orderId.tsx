@@ -22,7 +22,8 @@ import {
   IconTruck,
   IconTrash,
   IconPrinter,
-  IconRefresh
+  IconRefresh,
+  IconCalendarEvent
 } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
 import { useCallback, useMemo } from "react"
@@ -37,6 +38,7 @@ import { ConvertToOfficialModal } from "../../../components/sales/ConvertToOffic
 import { CToast } from "../../../components/common/CToast"
 import { Can } from "../../../components/common/Can"
 import { QuotationModal } from "../../../components/sales/QuotationModal"
+import { UpdateOrderDateModal } from "../../../components/sales/UpdateOrderDateModal"
 
 export const Route = createFileRoute("/sales/orders/$orderId")({
   component: RouteComponent
@@ -59,8 +61,12 @@ const STAGE_LABEL: Record<string, string> = {
 function RouteComponent() {
   const { orderId } = Route.useParams()
   const navigate = useNavigate()
-  const { getSalesOrderById, deleteSalesOrder, updateSalesOrderItems } =
-    useSalesOrders()
+  const {
+    getSalesOrderById,
+    deleteSalesOrder,
+    updateSalesOrderItems,
+    updateSalesOrderDate
+  } = useSalesOrders()
 
   // No longer need state for editable fields - now read-only from API
 
@@ -87,6 +93,22 @@ function RouteComponent() {
       CToast.error({
         title:
           error?.response?.data?.message || "Có lỗi xảy ra khi đồng bộ sản phẩm"
+      })
+    }
+  })
+
+  const { mutate: updateDate, isPending: isUpdatingDate } = useMutation({
+    mutationFn: ({ date }: { date: Date }) =>
+      updateSalesOrderDate(orderId, { date }),
+    onSuccess: () => {
+      CToast.success({ title: "Cập nhật ngày thành công" })
+      modals.closeAll()
+      refetch()
+    },
+    onError: (error: any) => {
+      CToast.error({
+        title:
+          error?.response?.data?.message || "Có lỗi xảy ra khi cập nhật ngày"
       })
     }
   })
@@ -500,6 +522,20 @@ function RouteComponent() {
     sync()
   }
 
+  const handleUpdateDate = () => {
+    modals.open({
+      title: <b>Cập nhật ngày của đơn hàng</b>,
+      children: (
+        <UpdateOrderDateModal
+          onSubmit={updateDate}
+          loading={isUpdatingDate}
+          currentOrderDate={new Date(order.date)}
+        />
+      ),
+      size: "lg"
+    })
+  }
+
   return (
     <SalesLayout>
       <Box
@@ -583,6 +619,19 @@ function RouteComponent() {
                       </ActionIcon>
                     </Tooltip>
                   </>
+                )}
+
+                {order.status === "official" && (
+                  <Tooltip label="Cập nhật lại ngày của đơn hàng">
+                    <ActionIcon
+                      variant="light"
+                      color="indigo"
+                      size="lg"
+                      onClick={handleUpdateDate}
+                    >
+                      <IconCalendarEvent size={20} />
+                    </ActionIcon>
+                  </Tooltip>
                 )}
 
                 <Tooltip label="Xóa đơn hàng" withArrow>
