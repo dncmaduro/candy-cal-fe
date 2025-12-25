@@ -10,6 +10,8 @@ interface RevenueKPICardsProps {
   isLoading: boolean
   totalRevenue?: number
   totalOrders?: number
+  totalTax?: number
+  totalShippingCost?: number
   revenueFromNewCustomers?: number
   revenueFromReturningCustomers?: number
 }
@@ -18,6 +20,8 @@ export function RevenueKPICards({
   isLoading,
   totalRevenue,
   totalOrders,
+  totalTax,
+  totalShippingCost,
   revenueFromNewCustomers,
   revenueFromReturningCustomers
 }: RevenueKPICardsProps) {
@@ -39,6 +43,50 @@ export function RevenueKPICards({
               </Group>
               <Text fw={700} fz="xl">
                 {totalRevenue?.toLocaleString("vi-VN")}đ
+              </Text>
+            </>
+          )}
+        </Card>
+      </Grid.Col>
+
+      <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+        <Card shadow="sm" padding="lg" radius="md" withBorder>
+          {isLoading ? (
+            <Skeleton height={100} />
+          ) : (
+            <>
+              <Group justify="space-between" mb="xs">
+                <Text size="sm" c="dimmed">
+                  Tổng thuế
+                </Text>
+                <ThemeIcon variant="light" size="lg" color="orange">
+                  <IconCash size={20} />
+                </ThemeIcon>
+              </Group>
+              <Text fw={700} fz="xl">
+                {totalTax?.toLocaleString("vi-VN")}đ
+              </Text>
+            </>
+          )}
+        </Card>
+      </Grid.Col>
+
+      <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+        <Card shadow="sm" padding="lg" radius="md" withBorder>
+          {isLoading ? (
+            <Skeleton height={100} />
+          ) : (
+            <>
+              <Group justify="space-between" mb="xs">
+                <Text size="sm" c="dimmed">
+                  Tổng chi phí vận chuyển
+                </Text>
+                <ThemeIcon variant="light" size="lg" color="red">
+                  <IconShoppingCart size={20} />
+                </ThemeIcon>
+              </Group>
+              <Text fw={700} fz="xl">
+                {totalShippingCost?.toLocaleString("vi-VN")}đ
               </Text>
             </>
           )}
