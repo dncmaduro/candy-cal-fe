@@ -265,6 +265,8 @@ function RouteComponent() {
               isLoading={revenueLoading}
               totalRevenue={revenue?.totalRevenue}
               totalOrders={revenue?.totalOrders}
+              totalTax={revenue?.totalTax}
+              totalShippingCost={revenue?.totalShippingCost}
               revenueFromNewCustomers={revenue?.revenueFromNewCustomers}
               revenueFromReturningCustomers={
                 revenue?.revenueFromReturningCustomers

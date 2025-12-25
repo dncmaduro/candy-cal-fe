@@ -3985,6 +3985,8 @@ export interface GetSalesRevenueRequest {
 export interface GetSalesRevenueResponse {
   totalRevenue: number
   totalOrders: number
+  totalTax: number
+  totalShippingCost: number
   revenueFromNewCustomers: number
   revenueFromReturningCustomers: number
   topItemsByRevenue: {
