@@ -85,6 +85,12 @@ npm run routes    # Generate router tree
 
 ## 7. Lịch sử cập nhật
 
+### 4.0.3
+
+- Cập nhật công thức tính doanh thu mới cho sales
+- Fix các lỗi liên quan đến timezone ảnh hưởng đến phần tính doanh thu của Tiktok Shop
+- Beta các chức năng liên quan đến lên lịch livestream, tổng kết chỉ số
+
 ### 4.0.2
 
 - Cập nhật logic cho đơn hàng, báo giá
@@ -229,51 +235,6 @@ npm run routes    # Generate router tree
 - Dual Month Goals (liveStreamGoal + shopGoal).
 - Daily Stats modal & phân bổ nguồn.
 - Top Creators (bảng + biểu đồ + nhóm "Khác").
-- Việt hoá System Logs & chuẩn hoá tiêu đề trang.
-- Thêm thống kê kho theo ngày & ca.
-- Ready combos & yêu cầu xuất kho.
-
-### 3.1.3
-
-- UI: Cập nhật giao diện thống kê doanh thu hàng ngày thành giao diện theo khoảng (hỗ trợ xem theo ngày/tuần/tháng) với khả năng so sánh so sánh với giai đoạn trước (hiển thị phần trăm thay đổi).
-
-### 3.1.2
-
-- Incomes: thêm step thứ 3 cho việc nhập doanh thu quảng cáo (Daily Ads) trong quy trình thêm doanh thu. Flow: Upload file doanh thu → Cập nhật affiliate → Thêm chi phí ads (livestream/video). Date được lưu từ step đầu và truyền qua các step tiếp theo.
-- DailyAdsModal: modal nhập chi phí ads với form validation, hiển thị tổng chi phí và breakdown theo loại (livestream/video). Style nhất quán với AffTypeModal.
-
-### 3.1.1
-
-- DailyStatsModal: bổ sung bảng “Theo đơn vị vận chuyển” hiển thị số đơn và tỉ lệ theo `shippingProviders` trong GetDailyStatsResponse.
-- Nhỏ: tối ưu tính phần trăm và format số liệu.
-
-### 3.1.0
-
-- Tasks: thêm tab “Theo người dùng”, bảng tổng hợp và modal chi tiết từng người (API getAllUsersTasks/getUserTasks). Gọi API chi tiết chỉ khi mở modal (modals.open).
-- MyTasksPopover: ẩn nút “Xong” với task HTTP; Việt hoá nhãn/badge; sửa Popover.Target luôn là element hợp lệ.
-- TaskDefinitionModal: typed form với Controller, tách create/update mutations; Select endpoint HTTP với preview; validate giờ HH:MM; size xl.
-- Tasks page: phân trang Mantine + cải thiện UI bảng (Paper, hover highlight), nút “Tạo task theo ngày” với modal GenerateTasks; title modals bóng bẩy hơn.
-- UI: làm tối overlay của tất cả modal (global), tinh chỉnh màu bảng để đỡ “trong suốt”.
-
-### 3.0.2
-
-- Thêm liveIncome vào Daily Stats & refactor DailyStatsModal sang dùng React Query (useQuery).
-- Chuẩn hoá queryKey theo tên hàm (getDailyStats, getIncomesByDateRange...).
-- Dọn rác code incomes (bỏ comment thừa, helper chuẩn hoá start/end day).
-
-### 3.0.1
-
-- Thêm component Can cho kiểm soát hiển thị theo role.
-- Siết quyền mutation: chỉ role phù hợp mới thấy nút thêm / sửa / xoá / gửi yêu cầu ở các màn hình (Incomes, MonthGoals, PackingRules, Storage Items/Logs, Products, ReadyCombos, Delivered Requests, Cal Orders, Cal Result Save...).
-- Bổ sung gating phần lưu lịch sử vận đơn & gửi yêu cầu xuất kho.
-- Cập nhật tài liệu đơn giản hoá nội dung tránh lộ chi tiết triển khai.
-
-### 3.0.0
-
-- Refactor KPI tách LiveStream & Shop + chế độ Tổng.
-- Dual Month Goals (liveStreamGoal + shopGoal).
-- Daily Stats modal & phân bổ nguồn.
-- Top Creators (bảng + biểu đồ + nhóm “Khác”).
 - Việt hoá System Logs & chuẩn hoá tiêu đề trang.
 - Thêm thống kê kho theo ngày & ca.
 - Ready combos & yêu cầu xuất kho.
