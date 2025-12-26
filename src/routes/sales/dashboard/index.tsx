@@ -9,7 +9,8 @@ import {
   Flex,
   Divider,
   Title,
-  Switch
+  Switch,
+  Select
 } from "@mantine/core"
 import { DatePickerInput, MonthPickerInput } from "@mantine/dates"
 import { useQuery } from "@tanstack/react-query"
@@ -32,6 +33,7 @@ import { RevenueTables } from "../../../components/sales/dashboard/RevenueTables
 import { MonthlyMetrics } from "../../../components/sales/dashboard/MonthlyMetrics"
 import { modals } from "@mantine/modals"
 import { CreateSalesDailyReportModal } from "../../../components/sales/dashboard/CreateSalesDailyReportModal"
+import { useSalesChannels } from "../../../hooks/useSalesChannels"
 
 export const Route = createFileRoute("/sales/dashboard/")({
   component: RouteComponent
@@ -40,12 +42,13 @@ export const Route = createFileRoute("/sales/dashboard/")({
 function RouteComponent() {
   const { getSalesRevenue, getMonthlyMetrics, getMonthlyTopCustomers } =
     useSalesDashboard()
+  const { searchSalesChannels } = useSalesChannels()
 
   // Date range for revenue stats
-  const [startDate, setStartDate] = useState<Date | null>(
-    startOfMonth(new Date())
-  )
-  const [endDate, setEndDate] = useState<Date | null>(endOfMonth(new Date()))
+  const [startDate, setStartDate] = useState<Date | null>(new Date())
+  const [endDate, setEndDate] = useState<Date | null>(new Date())
+
+  const [channel, setChannel] = useState<string>()
 
   // Month for monthly metrics
   const [selectedMonth, setSelectedMonth] = useState<Date | null>(new Date())
@@ -59,11 +62,12 @@ function RouteComponent() {
     error: revenueError,
     refetch: refetchRevenue
   } = useQuery({
-    queryKey: ["salesRevenue", startDate, endDate, isRange],
+    queryKey: ["salesRevenue", startDate, endDate, isRange, channel],
     queryFn: () =>
       getSalesRevenue({
         startDate: startDate || startOfMonth(new Date()),
-        endDate: endDate || endOfMonth(new Date())
+        endDate: endDate || endOfMonth(new Date()),
+        channel
       }),
     enabled: !!startDate && !!endDate
   })
@@ -99,9 +103,20 @@ function RouteComponent() {
     enabled: !!selectedMonth
   })
 
+  const { data: channelsData } = useQuery({
+    queryKey: ["salesChannels", "all"],
+    queryFn: () => searchSalesChannels({ page: 1, limit: 999 }),
+    select: (data) => {
+      return data.data.data.map((channel) => ({
+        value: channel._id,
+        label: channel.channelName
+      }))
+    }
+  })
+
   const handleResetRevenue = () => {
-    setStartDate(startOfMonth(new Date()))
-    setEndDate(endOfMonth(new Date()))
+    setStartDate(new Date())
+    setEndDate(new Date())
     refetchRevenue()
   }
 
@@ -228,6 +243,12 @@ function RouteComponent() {
                     clearable
                   />
                 )}
+                <Select
+                  data={channelsData || []}
+                  value={channel}
+                  onChange={(e) => setChannel(e ?? undefined)}
+                  placeholder="Tất cả kênh"
+                />
                 <Button onClick={() => refetchRevenue()} variant="filled">
                   Áp dụng
                 </Button>
