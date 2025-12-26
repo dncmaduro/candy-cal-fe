@@ -3979,6 +3979,7 @@ export interface GetSalesItemsTopCustomersByRangeResponse {
 export interface GetSalesRevenueRequest {
   startDate: Date
   endDate: Date
+  channel?: string
 }
 
 /** @interface */
