@@ -2003,6 +2003,11 @@ export interface GetLivestreamByDateRangeResponse {
       altNote?: string
       altRequest?: string
       snapshotKpi?: number
+      salary?: {
+        salaryPerHour: number
+        bonusPercentage: number
+        total?: number
+      }
     }[]
     totalOrders: number
     totalIncome: number
@@ -2056,6 +2061,11 @@ export interface ReportLivestreamResponse {
     altNote?: string
     altRequest?: string
     snapshotKpi?: number
+    salary?: {
+      salaryPerHour: number
+      bonusPercentage: number
+      total?: number
+    }
   }[]
   totalOrders: number
   totalIncome: number
@@ -2166,6 +2176,11 @@ export interface UpdateSnapshotAltResponse {
     altNote?: string
     altRequest?: string
     snapshotKpi?: number
+    salary?: {
+      salaryPerHour: number
+      bonusPercentage: number
+      total?: number
+    }
   }[]
   totalOrders: number
   totalIncome: number
@@ -2503,6 +2518,104 @@ export interface UpdateLivestreamChannelRequest {
 /** @interface */
 export interface DeleteLivestreamChannelRequest {
   id: string
+}
+
+/** @interface */
+export interface CreateLivestreamPerformanceRequest {
+  minIncome: number
+  maxIncome: number
+  salaryPerHour: number
+  bonusPercentage: number
+}
+
+/** @interface */
+export interface CreateLivestreamPerformanceResponse {
+  _id: string
+  minIncome: number
+  maxIncome: number
+  salaryPerHour: number
+  bonusPercentage: number
+}
+
+/** @interface */
+export interface UpdateLivestreamPerformanceRequest {
+  minIncome?: number
+  maxIncome?: number
+  salaryPerHour?: number
+  bonusPercentage?: number
+}
+
+/** @interface */
+export interface UpdateLivestreamPerformanceResponse {
+  _id: string
+  minIncome: number
+  maxIncome: number
+  salaryPerHour: number
+  bonusPercentage: number
+}
+
+/** @interface */
+export interface SearchLivestreamPerformanceRequest {
+  page: number
+  limit: number
+  sortOrder: "asc" | "desc"
+}
+
+/** @interface */
+export interface SearchLivestreamPerformanceResponse {
+  data: {
+    _id: string
+    minIncome: number
+    maxIncome: number
+    salaryPerHour: number
+    bonusPercentage: number
+  }[]
+  total: number
+}
+
+/** @interface */
+export interface DeleteLivestreamPerformanceRequest {
+  id: string
+}
+
+/** @interface */
+export interface CalculateDailyPerformanceRequest {
+  date: Date
+}
+
+/** @interface */
+export interface CalculateDailyPerformanceResponse {
+  livestreamId: string
+  date: Date
+  snapshotsUpdated: number
+  snapshotsSkipped: number
+  details: Array<{
+    snapshotId: string
+    income: number
+    salaryPerHour: number
+    bonusPercentage: number
+    total: number
+    status: "updated" | "skipped" | "no_performance_found"
+  }>
+}
+
+/** @interface */
+export interface CalculateLivestreamMonthSalaryRequest {
+  month: number
+  year: number
+}
+
+/** @interface */
+export interface CalculateLivestreamMonthSalaryResponse {
+  year: number
+  month: number
+  users: Array<{
+    userId: string
+    userName: string
+    totalSalary: number
+    snapshotsCount: number
+  }>
+  totalSalaryPaid: number
 }
 
 // -------------------- SALES CHANNELS --------------------

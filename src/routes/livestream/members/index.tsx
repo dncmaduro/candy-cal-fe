@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { LivestreamLayout } from "../../../components/layouts/LivestreamLayout"
-import { useLivestream } from "../../../hooks/useLivestream"
+import { useLivestreamEmployees } from "../../../hooks/useLivestreamEmployees"
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import {
@@ -28,7 +28,7 @@ export const Route = createFileRoute("/livestream/members/")({
 })
 
 function RouteComponent() {
-  const { searchLivestreamEmployees } = useLivestream()
+  const { searchLivestreamEmployees } = useLivestreamEmployees()
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(10)
   const [activeFilter, setActiveFilter] = useState<boolean | undefined>(

@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { LivestreamLayout } from "../../../components/layouts/LivestreamLayout"
-import { useLivestream } from "../../../hooks/useLivestream"
+import { useLivestreamAltRequests } from "../../../hooks/useLivestreamAltRequests"
+import { useLivestreamChannels } from "../../../hooks/useLivestreamChannels"
 import { useUsers } from "../../../hooks/useUsers"
 import { useQuery, useMutation } from "@tanstack/react-query"
 import {
@@ -37,9 +38,9 @@ function RouteComponent() {
     searchAltRequests,
     updateAltRequests,
     deleteAltRequest,
-    updateAltRequestStatus,
-    searchLivestreamChannels
-  } = useLivestream()
+    updateAltRequestStatus
+  } = useLivestreamAltRequests()
+  const { searchLivestreamChannels } = useLivestreamChannels()
   const { publicSearchUser, getMe } = useUsers()
 
   const [statusFilter, setStatusFilter] = useState<string | null>("pending")

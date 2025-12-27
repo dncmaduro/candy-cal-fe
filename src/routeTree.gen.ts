@@ -45,6 +45,7 @@ import { Route as MarketingStorageAccountingStorageIndexImport } from './routes/
 import { Route as LivestreamStatsIndexImport } from './routes/livestream/stats/index'
 import { Route as LivestreamReportsIndexImport } from './routes/livestream/reports/index'
 import { Route as LivestreamPeriodsIndexImport } from './routes/livestream/periods/index'
+import { Route as LivestreamPerformanceIndexImport } from './routes/livestream/performance/index'
 import { Route as LivestreamMembersIndexImport } from './routes/livestream/members/index'
 import { Route as LivestreamGoalsIndexImport } from './routes/livestream/goals/index'
 import { Route as LivestreamChannelsIndexImport } from './routes/livestream/channels/index'
@@ -273,6 +274,14 @@ const LivestreamPeriodsIndexRoute = LivestreamPeriodsIndexImport.update({
   path: '/livestream/periods/',
   getParentRoute: () => rootRoute,
 } as any)
+
+const LivestreamPerformanceIndexRoute = LivestreamPerformanceIndexImport.update(
+  {
+    id: '/livestream/performance/',
+    path: '/livestream/performance/',
+    getParentRoute: () => rootRoute,
+  } as any,
+)
 
 const LivestreamMembersIndexRoute = LivestreamMembersIndexImport.update({
   id: '/livestream/members/',
@@ -562,6 +571,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LivestreamMembersIndexImport
       parentRoute: typeof rootRoute
     }
+    '/livestream/performance/': {
+      id: '/livestream/performance/'
+      path: '/livestream/performance'
+      fullPath: '/livestream/performance'
+      preLoaderRoute: typeof LivestreamPerformanceIndexImport
+      parentRoute: typeof rootRoute
+    }
     '/livestream/periods/': {
       id: '/livestream/periods/'
       path: '/livestream/periods'
@@ -761,6 +777,7 @@ export interface FileRoutesByFullPath {
   '/livestream/channels': typeof LivestreamChannelsIndexRoute
   '/livestream/goals': typeof LivestreamGoalsIndexRoute
   '/livestream/members': typeof LivestreamMembersIndexRoute
+  '/livestream/performance': typeof LivestreamPerformanceIndexRoute
   '/livestream/periods': typeof LivestreamPeriodsIndexRoute
   '/livestream/reports': typeof LivestreamReportsIndexRoute
   '/livestream/stats': typeof LivestreamStatsIndexRoute
@@ -812,6 +829,7 @@ export interface FileRoutesByTo {
   '/livestream/channels': typeof LivestreamChannelsIndexRoute
   '/livestream/goals': typeof LivestreamGoalsIndexRoute
   '/livestream/members': typeof LivestreamMembersIndexRoute
+  '/livestream/performance': typeof LivestreamPerformanceIndexRoute
   '/livestream/periods': typeof LivestreamPeriodsIndexRoute
   '/livestream/reports': typeof LivestreamReportsIndexRoute
   '/livestream/stats': typeof LivestreamStatsIndexRoute
@@ -865,6 +883,7 @@ export interface FileRoutesById {
   '/livestream/channels/': typeof LivestreamChannelsIndexRoute
   '/livestream/goals/': typeof LivestreamGoalsIndexRoute
   '/livestream/members/': typeof LivestreamMembersIndexRoute
+  '/livestream/performance/': typeof LivestreamPerformanceIndexRoute
   '/livestream/periods/': typeof LivestreamPeriodsIndexRoute
   '/livestream/reports/': typeof LivestreamReportsIndexRoute
   '/livestream/stats/': typeof LivestreamStatsIndexRoute
@@ -919,6 +938,7 @@ export interface FileRouteTypes {
     | '/livestream/channels'
     | '/livestream/goals'
     | '/livestream/members'
+    | '/livestream/performance'
     | '/livestream/periods'
     | '/livestream/reports'
     | '/livestream/stats'
@@ -969,6 +989,7 @@ export interface FileRouteTypes {
     | '/livestream/channels'
     | '/livestream/goals'
     | '/livestream/members'
+    | '/livestream/performance'
     | '/livestream/periods'
     | '/livestream/reports'
     | '/livestream/stats'
@@ -1020,6 +1041,7 @@ export interface FileRouteTypes {
     | '/livestream/channels/'
     | '/livestream/goals/'
     | '/livestream/members/'
+    | '/livestream/performance/'
     | '/livestream/periods/'
     | '/livestream/reports/'
     | '/livestream/stats/'
@@ -1072,6 +1094,7 @@ export interface RootRouteChildren {
   LivestreamChannelsIndexRoute: typeof LivestreamChannelsIndexRoute
   LivestreamGoalsIndexRoute: typeof LivestreamGoalsIndexRoute
   LivestreamMembersIndexRoute: typeof LivestreamMembersIndexRoute
+  LivestreamPerformanceIndexRoute: typeof LivestreamPerformanceIndexRoute
   LivestreamPeriodsIndexRoute: typeof LivestreamPeriodsIndexRoute
   LivestreamReportsIndexRoute: typeof LivestreamReportsIndexRoute
   LivestreamStatsIndexRoute: typeof LivestreamStatsIndexRoute
@@ -1123,6 +1146,7 @@ const rootRouteChildren: RootRouteChildren = {
   LivestreamChannelsIndexRoute: LivestreamChannelsIndexRoute,
   LivestreamGoalsIndexRoute: LivestreamGoalsIndexRoute,
   LivestreamMembersIndexRoute: LivestreamMembersIndexRoute,
+  LivestreamPerformanceIndexRoute: LivestreamPerformanceIndexRoute,
   LivestreamPeriodsIndexRoute: LivestreamPeriodsIndexRoute,
   LivestreamReportsIndexRoute: LivestreamReportsIndexRoute,
   LivestreamStatsIndexRoute: LivestreamStatsIndexRoute,
@@ -1185,6 +1209,7 @@ export const routeTree = rootRoute
         "/livestream/channels/",
         "/livestream/goals/",
         "/livestream/members/",
+        "/livestream/performance/",
         "/livestream/periods/",
         "/livestream/reports/",
         "/livestream/stats/",
@@ -1293,6 +1318,9 @@ export const routeTree = rootRoute
     },
     "/livestream/members/": {
       "filePath": "livestream/members/index.tsx"
+    },
+    "/livestream/performance/": {
+      "filePath": "livestream/performance/index.tsx"
     },
     "/livestream/periods/": {
       "filePath": "livestream/periods/index.tsx"

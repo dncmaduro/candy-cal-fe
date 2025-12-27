@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { LivestreamLayout } from "../../../components/layouts/LivestreamLayout"
-import { useLivestream } from "../../../hooks/useLivestream"
+import { useLivestreamAnalytics } from "../../../hooks/useLivestreamAnalytics"
+import { useLivestreamEmployees } from "../../../hooks/useLivestreamEmployees"
 import { useQuery } from "@tanstack/react-query"
 import {
   Box,
@@ -47,7 +48,8 @@ export const Route = createFileRoute("/livestream/stats/")({
 })
 
 function RouteComponent() {
-  const { getLivestreamStats, searchLivestreamEmployees } = useLivestream()
+  const { getLivestreamStats } = useLivestreamAnalytics()
+  const { searchLivestreamEmployees } = useLivestreamEmployees()
 
   const [viewType, setViewType] = useState<ViewType>("week")
   const [weekDate, setWeekDate] = useState<Date | null>(new Date())

@@ -1,5 +1,6 @@
 import { useState } from "react"
-import { useLivestream } from "../../hooks/useLivestream"
+import { useLivestreamPeriods } from "../../hooks/useLivestreamPeriods"
+import { useLivestreamChannels } from "../../hooks/useLivestreamChannels"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { Stack, Button, Group, Select } from "@mantine/core"
 import { TimeInput } from "@mantine/dates"
@@ -19,11 +20,9 @@ interface Props {
 }
 
 export const LivestreamPeriodModal = ({ period, refetch }: Props) => {
-  const {
-    createLivestreamPeriod,
-    updateLivestreamPeriod,
-    searchLivestreamChannels
-  } = useLivestream()
+  const { createLivestreamPeriod, updateLivestreamPeriod } =
+    useLivestreamPeriods()
+  const { searchLivestreamChannels } = useLivestreamChannels()
 
   // Fetch channels for select options
   const { data: channelOptions } = useQuery({

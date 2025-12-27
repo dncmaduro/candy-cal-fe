@@ -27,7 +27,7 @@ import {
   CreateSimpleDailyAdsRequest
 } from "../../hooks/models"
 import { useDailyAds } from "../../hooks/useDailyAds"
-import { useLivestream } from "../../hooks/useLivestream"
+import { useLivestreamChannels } from "../../hooks/useLivestreamChannels"
 import { modals } from "@mantine/modals"
 
 type FileStatus = "pending" | "uploading" | "success" | "error"
@@ -56,7 +56,7 @@ export const DailyAdsModal = ({ refetch }: Props) => {
     getPreviousDailyAds,
     createSimpleDailyAds
   } = useDailyAds()
-  const { searchLivestreamChannels } = useLivestream()
+  const { searchLivestreamChannels } = useLivestreamChannels()
   const [mode, setMode] = useState<"file" | "manual">("file")
   const [currency, setCurrency] = useState<"vnd" | "usd">("vnd")
   const [date, setDate] = useState<Date | null>(null)

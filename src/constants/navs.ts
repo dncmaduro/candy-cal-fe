@@ -130,6 +130,18 @@ export const LIVESTREAM_NAVS = [
     icon: "IconTarget"
   },
   {
+    to: `${LIVESTREAM_NAVS_URL}/performance`,
+    label: "Tính hiệu suất",
+    roles: [
+      "admin",
+      "livestream-leader",
+      "system-emp",
+      "livestream-emp",
+      "livestream-ast"
+    ],
+    icon: "IconCirclePercentage"
+  },
+  {
     to: `${LIVESTREAM_NAVS_URL}/channels`,
     label: "Kênh livestream",
     roles: ["admin", "livestream-leader", "system-emp"],

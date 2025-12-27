@@ -22,7 +22,7 @@ import { Helmet } from "react-helmet-async"
 import { MonthGoals } from "../../../components/incomes/MonthGoals"
 import { PackingRules } from "../../../components/incomes/PackingRules"
 import { RangeStats } from "../../../components/incomes/RangeStats"
-import { useLivestream } from "../../../hooks/useLivestream"
+import { useLivestreamChannels } from "../../../hooks/useLivestreamChannels"
 import { LivestreamChannelProvider } from "../../../context/LivestreamChannelContext"
 
 type Subtab = {
@@ -44,7 +44,7 @@ function RouteComponent() {
   useAuthGuard(["admin", "accounting-emp", "order-emp", "system-emp"])
   const { tab, channel } = Route.useSearch()
   const navigate = useNavigate()
-  const { searchLivestreamChannels } = useLivestream()
+  const { searchLivestreamChannels } = useLivestreamChannels()
 
   const [channels, setChannels] = useState<
     Array<{
