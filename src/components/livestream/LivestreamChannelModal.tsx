@@ -1,4 +1,4 @@
-import { useLivestream } from "../../hooks/useLivestream"
+import { useLivestreamChannels } from "../../hooks/useLivestreamChannels"
 import { useMutation } from "@tanstack/react-query"
 import { Stack, Button, Group, TextInput } from "@mantine/core"
 import { useForm, Controller } from "react-hook-form"
@@ -26,7 +26,8 @@ interface FormData {
 }
 
 export const LivestreamChannelModal = ({ channel, refetch }: Props) => {
-  const { createLivestreamChannel, updateLivestreamChannel } = useLivestream()
+  const { createLivestreamChannel, updateLivestreamChannel } =
+    useLivestreamChannels()
 
   const {
     control,

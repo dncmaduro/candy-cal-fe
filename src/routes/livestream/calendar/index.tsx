@@ -1,6 +1,8 @@
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router"
 import { LivestreamLayout } from "../../../components/layouts/LivestreamLayout"
-import { useLivestream } from "../../../hooks/useLivestream"
+import { useLivestreamCore } from "../../../hooks/useLivestreamCore"
+import { useLivestreamChannels } from "../../../hooks/useLivestreamChannels"
+import { useLivestreamAltRequests } from "../../../hooks/useLivestreamAltRequests"
 import { useUsers } from "../../../hooks/useUsers"
 import { useQuery, useMutation } from "@tanstack/react-query"
 import {
@@ -58,20 +60,22 @@ function RouteComponent() {
 
   const {
     getLivestreamsByDateRange,
-    searchLivestreamChannels,
     createLivestreamRange,
     addLivestreamSnapshot,
     updateLivestreamSnapshot,
     syncSnapshot,
     reportLivestream,
     fixLivestream,
-    updateSnapshotAltRequest,
+    updateSnapshotAltRequest
+  } = useLivestreamCore()
+  const { searchLivestreamChannels } = useLivestreamChannels()
+  const {
     createAltRequest,
     updateAltRequests,
     getAltRequestBySnapshot,
     updateAltRequestStatus,
     deleteAltRequest
-  } = useLivestream()
+  } = useLivestreamAltRequests()
   const { publicSearchUser } = useUsers()
   const { getMe } = useUsers()
   const { data: me } = useQuery({

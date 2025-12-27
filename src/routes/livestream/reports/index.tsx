@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { LivestreamLayout } from "../../../components/layouts/LivestreamLayout"
-import { useLivestream } from "../../../hooks/useLivestream"
+import { useLivestreamCore } from "../../../hooks/useLivestreamCore"
+import { useLivestreamChannels } from "../../../hooks/useLivestreamChannels"
+import { useLivestreamAnalytics } from "../../../hooks/useLivestreamAnalytics"
 import { useUsers } from "../../../hooks/useUsers"
 import { useQuery } from "@tanstack/react-query"
 import {
@@ -30,12 +32,10 @@ export const Route = createFileRoute("/livestream/reports/")({
 })
 
 function RouteComponent() {
-  const {
-    getLivestreamsByDateRange,
-    searchLivestreamChannels,
-    getAggregatedMetrics,
-    getHostRevenueRankings
-  } = useLivestream()
+  const { getLivestreamsByDateRange } = useLivestreamCore()
+  const { searchLivestreamChannels } = useLivestreamChannels()
+  const { getAggregatedMetrics, getHostRevenueRankings } =
+    useLivestreamAnalytics()
   const { publicSearchUser } = useUsers()
 
   const [startDate, setStartDate] = useState<Date | null>(new Date())

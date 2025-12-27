@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react"
 import { useIncomes } from "../../hooks/useIncomes"
-import { useLivestream } from "../../hooks/useLivestream"
+import { useLivestreamChannels } from "../../hooks/useLivestreamChannels"
 import { DatePickerInput } from "@mantine/dates"
 import {
   Flex,
@@ -130,7 +130,7 @@ const RangeSelector = ({
 
 export const RangeStats = () => {
   const { getRangeStats } = useIncomes()
-  const { searchLivestreamChannels } = useLivestream()
+  const { searchLivestreamChannels } = useLivestreamChannels()
   const { selectedChannelId } = useLivestreamChannel()
 
   const [mode, setMode] = useState<DiscountMode>("afterDiscount")

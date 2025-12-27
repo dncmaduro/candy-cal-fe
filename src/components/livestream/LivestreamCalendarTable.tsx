@@ -17,7 +17,9 @@ import {
   IconTrash,
   IconCircleDashedCheck,
   IconCircleDashedX,
-  IconCalendarRepeat
+  IconCalendarRepeat,
+  IconRefresh,
+  IconCalculator
 } from "@tabler/icons-react"
 import { format, parseISO } from "date-fns"
 import { vi } from "date-fns/locale"
@@ -37,7 +39,7 @@ import type {
   GetAltRequestBySnapshotResponse,
   GetMeResponse
 } from "../../hooks/models"
-import { useLivestream } from "../../hooks/useLivestream"
+import { useLivestreamAltRequests } from "../../hooks/useLivestreamAltRequests"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 
 type LivestreamEmployee = {
@@ -71,6 +73,11 @@ type LivestreamSnapshot = {
   comments?: number
   ordersNote?: string
   rating?: string
+  salary?: {
+    salaryPerHour: number
+    bonusPercentage: number
+    total?: number
+  }
 }
 
 type LivestreamData = {
@@ -166,7 +173,9 @@ const ScheduleCell = ({
   onGetRequest,
   onUpdateRequestStatus,
   onRefetch,
-  onOpenReport
+  onOpenReport,
+  onCalculateDailySalary,
+  hideEditButtons
 }: {
   snapshot?: LivestreamSnapshot
   dayData?: LivestreamData
@@ -196,8 +205,10 @@ const ScheduleCell = ({
   ) => Promise<{ data: UpdateAltRequestStatusResponse }>
   onRefetch: () => void
   onOpenReport?: (livestreamid: string, snapshot: LivestreamSnapshot) => void
+  onCalculateDailySalary?: (date: Date) => void
+  hideEditButtons?: boolean
 }) => {
-  const { getAltRequestBySnapshot } = useLivestream()
+  const { getAltRequestBySnapshot } = useLivestreamAltRequests()
   const [isHovering, setIsHovering] = useState(false)
 
   const { data: requestData } = useQuery({
@@ -251,7 +262,7 @@ const ScheduleCell = ({
               />
 
               {/* show UpdateAltPopover for admins only when hovering */}
-              {isAdminOrLeader() && (
+              {!hideEditButtons && isAdminOrLeader() && (
                 <div
                   style={{
                     visibility: showUpdateAdmin ? "visible" : "hidden",
@@ -267,6 +278,7 @@ const ScheduleCell = ({
                     employees={employeesData}
                     onUpdateAlt={onUpdateAlt}
                     onRefetch={onRefetch}
+                    onCalculateDailySalary={onCalculateDailySalary}
                   />
                 </div>
               )}
@@ -286,20 +298,23 @@ const ScheduleCell = ({
                   marginLeft: 2
                 }}
               >
-                <UpdateAltPopover
-                  livestreamId={dayData?._id!}
-                  snapshot={snapshot}
-                  employees={employeesData}
-                  onUpdateAlt={onUpdateAlt}
-                  onRefetch={onRefetch}
-                />
+                {!hideEditButtons && (
+                  <UpdateAltPopover
+                    livestreamId={dayData?._id!}
+                    snapshot={snapshot}
+                    employees={employeesData}
+                    onUpdateAlt={onUpdateAlt}
+                    onRefetch={onRefetch}
+                  />
+                )}
               </div>
             </Group>
           )}
 
           <Group gap={4}>
             {/* Show create request icon for assignee when week is fixed */}
-            {isLivestreamFixed &&
+            {!hideEditButtons &&
+              isLivestreamFixed &&
               canEditSnapshot(snapshot) &&
               !hasAltAssignee &&
               !requestData?.data &&
@@ -315,7 +330,7 @@ const ScheduleCell = ({
 
             <Group gap={4}>
               {/* Show alt request info if request exists */}
-              {requestData?.data && dayData && snapshot && (
+              {!hideEditButtons && requestData?.data && dayData && snapshot && (
                 <AltRequestInfo
                   requestData={requestData.data}
                   employees={employeesData}
@@ -369,7 +384,8 @@ const UpdateAltPopover = ({
   snapshot,
   employees,
   onUpdateAlt,
-  onRefetch
+  onRefetch,
+  onCalculateDailySalary
 }: {
   livestreamId: string
   snapshot: LivestreamSnapshot
@@ -380,6 +396,7 @@ const UpdateAltPopover = ({
     req: UpdateSnapshotAltRequest
   ) => Promise<{ data: UpdateSnapshotAltResponse }>
   onRefetch: () => void
+  onCalculateDailySalary?: (date: Date) => void
 }) => {
   const [opened, setOpened] = useState(false)
   const [selectedAlt, setSelectedAlt] = useState<string | null>(
@@ -454,6 +471,10 @@ const UpdateAltPopover = ({
     } finally {
       setLoading(false)
     }
+  }
+
+  if (onCalculateDailySalary) {
+    return null
   }
 
   return (
@@ -933,6 +954,9 @@ interface LivestreamCalendarTableProps {
     req: GetAltRequestBySnapshotRequest
   ) => Promise<{ data: GetAltRequestBySnapshotResponse }>
   onRefetch: () => void
+  onCalculateDailySalary?: (date: Date) => void
+  isCalculatingSalary?: boolean
+  hideEditButtons?: boolean // Hide UpdateAlt and AltRequest buttons
 }
 
 export const LivestreamCalendarTable = ({
@@ -950,7 +974,10 @@ export const LivestreamCalendarTable = ({
   onCreateRequest,
   onGetRequest,
   onUpdateRequestStatus,
-  onRefetch
+  onRefetch,
+  onCalculateDailySalary,
+  isCalculatingSalary,
+  hideEditButtons = false
 }: LivestreamCalendarTableProps) => {
   const formatTimeRange = (
     start: { hour: number; minute: number },
@@ -1124,11 +1151,74 @@ export const LivestreamCalendarTable = ({
                         onUpdateRequestStatus={onUpdateRequestStatus}
                         onRefetch={onRefetch}
                         onOpenReport={onOpenReport}
+                        onCalculateDailySalary={onCalculateDailySalary}
+                        hideEditButtons={hideEditButtons}
                       />
                     )
                   })}
                 </tr>
               ))}
+              {/* Add Salary Calculation Button Row for Host */}
+              {role === "host" && onCalculateDailySalary && (
+                <tr>
+                  <td
+                    style={{
+                      border: "1px solid #e0e0e0",
+                      padding: "8px",
+                      backgroundColor: "#fff",
+                      position: "sticky",
+                      left: 0,
+                      zIndex: 5
+                    }}
+                  >
+                    <Text size="xs" fw={600}>
+                      Tính lương
+                    </Text>
+                  </td>
+                  {weekDays.map((day) => {
+                    const dayData = livestreamData?.find(
+                      (ls) =>
+                        format(parseISO(ls.date), "yyyy-MM-dd") ===
+                        format(day, "yyyy-MM-dd")
+                    )
+
+                    // Check if any snapshot for this day has calculated salary
+                    const hasCalculatedSalary = dayData?.snapshots.some(
+                      (s) => s.salary?.total && s.salary.total > 0
+                    )
+
+                    return (
+                      <td
+                        key={`salary-${day.toISOString()}`}
+                        style={{
+                          border: "1px solid #e0e0e0",
+                          padding: "8px",
+                          verticalAlign: "middle",
+                          textAlign: "center"
+                        }}
+                      >
+                        <Button
+                          size="xs"
+                          color={hasCalculatedSalary ? "yellow" : "indigo"}
+                          variant="light"
+                          leftSection={
+                            hasCalculatedSalary ? (
+                              <IconRefresh size={14} />
+                            ) : (
+                              <IconCalculator size={14} />
+                            )
+                          }
+                          onClick={() => onCalculateDailySalary(day)}
+                          loading={isCalculatingSalary}
+                          fullWidth
+                        >
+                          {hasCalculatedSalary ? "Tính lại" : "Tính lương"}
+                        </Button>
+                      </td>
+                    )
+                  })}
+                </tr>
+              )}
             </tbody>
           </table>
         </Box>

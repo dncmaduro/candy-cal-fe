@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { LivestreamLayout } from "../../../components/layouts/LivestreamLayout"
-import { useLivestream } from "../../../hooks/useLivestream"
+import { useLivestreamPeriods } from "../../../hooks/useLivestreamPeriods"
 import { useQuery, useMutation } from "@tanstack/react-query"
 import { useMemo } from "react"
 import {
@@ -28,7 +28,8 @@ export const Route = createFileRoute("/livestream/periods/")({
 })
 
 function RouteComponent() {
-  const { getAllLivestreamPeriods, deleteLivestreamPeriod } = useLivestream()
+  const { getAllLivestreamPeriods, deleteLivestreamPeriod } =
+    useLivestreamPeriods()
 
   const {
     data: periodsData,

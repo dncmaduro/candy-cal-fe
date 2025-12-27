@@ -1,4 +1,5 @@
-import { useLivestream } from "../../hooks/useLivestream"
+import { useLivestreamGoals } from "../../hooks/useLivestreamGoals"
+import { useLivestreamChannels } from "../../hooks/useLivestreamChannels"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { Stack, Button, Group, NumberInput, Select } from "@mantine/core"
 import { MonthPickerInput } from "@mantine/dates"
@@ -33,11 +34,9 @@ interface FormData {
 }
 
 export const LivestreamGoalModal = ({ goal, refetch }: Props) => {
-  const {
-    createLivestreamMonthGoal,
-    updateLivestreamMonthGoal,
-    searchLivestreamChannels
-  } = useLivestream()
+  const { createLivestreamMonthGoal, updateLivestreamMonthGoal } =
+    useLivestreamGoals()
+  const { searchLivestreamChannels } = useLivestreamChannels()
 
   const [month, setMonth] = useState<Date | null>(() => {
     if (goal) {

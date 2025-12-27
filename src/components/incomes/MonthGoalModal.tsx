@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { useMonthGoals } from "../../hooks/useMonthGoals"
-import { useLivestream } from "../../hooks/useLivestream"
+import { useLivestreamChannels } from "../../hooks/useLivestreamChannels"
 import { modals } from "@mantine/modals"
 import { CToast } from "../common/CToast"
 import { Controller, useForm } from "react-hook-form"
@@ -24,7 +24,7 @@ interface Props {
 
 export const MonthGoalModal = ({ monthGoal, refetch }: Props) => {
   const { createMonthGoal, updateGoal } = useMonthGoals()
-  const { searchLivestreamChannels } = useLivestream()
+  const { searchLivestreamChannels } = useLivestreamChannels()
   const [month, setMonth] = useState<Date | null>(new Date())
 
   // Fetch livestream channels

@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useLivestream } from "../../hooks/useLivestream"
+import { useLivestreamEmployees } from "../../hooks/useLivestreamEmployees"
 import { useMutation } from "@tanstack/react-query"
 import { Stack, TextInput, Button, Group, Switch, Text } from "@mantine/core"
 import { modals } from "@mantine/modals"
@@ -19,7 +19,8 @@ interface Props {
 }
 
 export const LivestreamEmployeeModal = ({ employee, refetch }: Props) => {
-  const { createLivestreamEmployee, updateLivestreamEmployee } = useLivestream()
+  const { createLivestreamEmployee, updateLivestreamEmployee } =
+    useLivestreamEmployees()
 
   const [name, setName] = useState(employee?.name || "")
   const [active, setActive] = useState(employee?.active !== false)

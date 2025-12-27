@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { LivestreamLayout } from "../../../components/layouts/LivestreamLayout"
-import { useLivestream } from "../../../hooks/useLivestream"
+import { useLivestreamGoals } from "../../../hooks/useLivestreamGoals"
 import { useQuery, useMutation } from "@tanstack/react-query"
 import {
   Box,
@@ -38,7 +38,8 @@ export const Route = createFileRoute("/livestream/goals/")({
 })
 
 function RouteComponent() {
-  const { getLivestreamMonthGoals, deleteLivestreamMonthGoal } = useLivestream()
+  const { getLivestreamMonthGoals, deleteLivestreamMonthGoal } =
+    useLivestreamGoals()
 
   const [selectedChannel, setSelectedChannel] = useState<string>("")
 
