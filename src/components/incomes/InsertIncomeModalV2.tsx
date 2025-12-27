@@ -17,7 +17,7 @@ import { DatePickerInput } from "@mantine/dates"
 import { IconCheck, IconX } from "@tabler/icons-react"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { useIncomes } from "../../hooks/useIncomes"
-import { useLivestream } from "../../hooks/useLivestream"
+import { useLivestreamChannels } from "../../hooks/useLivestreamChannels"
 import { CToast } from "../common/CToast"
 import { modals } from "@mantine/modals"
 
@@ -38,7 +38,7 @@ interface Props {
 
 export const InsertIncomeModalV2 = ({ refetch }: Props) => {
   const { insertIncomeAndUpdateSource } = useIncomes()
-  const { searchLivestreamChannels } = useLivestream()
+  const { searchLivestreamChannels } = useLivestreamChannels()
   const [date, setDate] = useState<Date | null>(null)
   const [channel, setChannel] = useState<string | null>(null)
   const [files, setFiles] = useState<Record<keyof typeof LABELS, FileState>>({

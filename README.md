@@ -85,6 +85,10 @@ npm run routes    # Generate router tree
 
 ## 7. Lịch sử cập nhật
 
+### 4.0.4
+
+- Beta chức năng tính toán lương cho các host livestream và setup hiệu suất các phiên live
+
 ### 4.0.3
 
 - Cập nhật công thức tính doanh thu mới cho sales

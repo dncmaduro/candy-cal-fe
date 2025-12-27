@@ -11,7 +11,7 @@ import { LivestreamChannelModal } from "../../../components/livestream/Livestrea
 import { CDataTable } from "../../../components/common/CDataTable"
 import { ColumnDef } from "@tanstack/react-table"
 import { format } from "date-fns"
-import { useLivestream } from "../../../hooks/useLivestream"
+import { useLivestreamChannels } from "../../../hooks/useLivestreamChannels"
 
 type LivestreamChannel = {
   _id: string
@@ -27,7 +27,8 @@ export const Route = createFileRoute("/livestream/channels/")({
 })
 
 function RouteComponent() {
-  const { searchLivestreamChannels, deleteLivestreamChannel } = useLivestream()
+  const { searchLivestreamChannels, deleteLivestreamChannel } =
+    useLivestreamChannels()
 
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(10)
