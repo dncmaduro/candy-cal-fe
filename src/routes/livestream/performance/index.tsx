@@ -33,7 +33,7 @@ import {
 import { modals } from "@mantine/modals"
 import { Can } from "../../../components/common/Can"
 import { CToast } from "../../../components/common/CToast"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { CDataTable } from "../../../components/common/CDataTable"
 import { ColumnDef } from "@tanstack/react-table"
 import { DatePickerInput } from "@mantine/dates"
@@ -243,6 +243,10 @@ function RouteComponent() {
       ["admin", "system-emp", "livestream-leader"].includes(role)
     )
   }, [me])
+
+  useEffect(() => {
+    setViewMode(isAdmin ? "calendar" : "salary")
+  })
 
   const {
     data: performanceData,
@@ -699,88 +703,90 @@ function RouteComponent() {
 
   return (
     <LivestreamLayout>
-      <Box
-        mt={40}
-        mx="auto"
-        px={{ base: 8, md: 0 }}
-        w="100%"
-        style={{
-          background: "rgba(255,255,255,0.97)",
-          borderRadius: rem(20),
-          boxShadow: "0 4px 32px 0 rgba(60,80,180,0.07)",
-          border: "1px solid #ececec"
-        }}
-      >
-        {/* Header Section */}
-        <Flex
-          align="flex-start"
-          justify="space-between"
-          pt={32}
-          pb={16}
-          px={{ base: 8, md: 28 }}
-          direction="row"
-          gap={8}
+      <Can roles={["admin", "livestream-leader"]}>
+        <Box
+          mt={40}
+          mx="auto"
+          px={{ base: 8, md: 0 }}
+          w="100%"
+          style={{
+            background: "rgba(255,255,255,0.97)",
+            borderRadius: rem(20),
+            boxShadow: "0 4px 32px 0 rgba(60,80,180,0.07)",
+            border: "1px solid #ececec"
+          }}
         >
-          <Box>
-            <Text fw={700} fz="xl" mb={2}>
-              Bậc lương Livestream
-            </Text>
-            <Text c="dimmed" fz="sm">
-              Quản lý các bậc lương dựa trên doanh thu
-            </Text>
-          </Box>
-
-          <Group>
-            <Can roles={["admin", "livestream-leader"]}>
-              <Button
-                leftSection={<IconCalculator size={16} />}
-                variant="light"
-                onClick={openCalculateModal}
-                loading={calculating}
-                size="md"
-                radius="xl"
-              >
-                Tính toán tự động
-              </Button>
-              <Button
-                leftSection={<IconPlus size={16} />}
-                onClick={() => openPerformanceModal()}
-                size="md"
-                radius="xl"
-              >
-                Thêm bậc lương
-              </Button>
-            </Can>
-          </Group>
-        </Flex>
-
-        <Divider my={0} />
-
-        {/* Content */}
-        <Box px={{ base: 4, md: 28 }} py={20}>
-          <CDataTable
-            columns={columns}
-            data={performances}
-            isLoading={isLoading}
-            page={page}
-            totalPages={Math.ceil(totalPerformances / limit)}
-            onPageChange={setPage}
-            onPageSizeChange={setLimit}
-            initialPageSize={limit}
-            hideSearch
-            getRowId={(row) => row._id}
-          />
-
-          {/* Summary */}
-          {performances.length > 0 && (
-            <Flex justify="space-between" align="center" mt={16}>
-              <Text c="dimmed" fz="sm">
-                Hiển thị {performances.length} / {totalPerformances} bậc lương
+          {/* Header Section */}
+          <Flex
+            align="flex-start"
+            justify="space-between"
+            pt={32}
+            pb={16}
+            px={{ base: 8, md: 28 }}
+            direction="row"
+            gap={8}
+          >
+            <Box>
+              <Text fw={700} fz="xl" mb={2}>
+                Bậc lương Livestream
               </Text>
-            </Flex>
-          )}
+              <Text c="dimmed" fz="sm">
+                Quản lý các bậc lương dựa trên doanh thu
+              </Text>
+            </Box>
+
+            <Group>
+              <Can roles={["admin", "livestream-leader"]}>
+                <Button
+                  leftSection={<IconCalculator size={16} />}
+                  variant="light"
+                  onClick={openCalculateModal}
+                  loading={calculating}
+                  size="md"
+                  radius="xl"
+                >
+                  Tính toán tự động
+                </Button>
+                <Button
+                  leftSection={<IconPlus size={16} />}
+                  onClick={() => openPerformanceModal()}
+                  size="md"
+                  radius="xl"
+                >
+                  Thêm bậc lương
+                </Button>
+              </Can>
+            </Group>
+          </Flex>
+
+          <Divider my={0} />
+
+          {/* Content */}
+          <Box px={{ base: 4, md: 28 }} py={20}>
+            <CDataTable
+              columns={columns}
+              data={performances}
+              isLoading={isLoading}
+              page={page}
+              totalPages={Math.ceil(totalPerformances / limit)}
+              onPageChange={setPage}
+              onPageSizeChange={setLimit}
+              initialPageSize={limit}
+              hideSearch
+              getRowId={(row) => row._id}
+            />
+
+            {/* Summary */}
+            {performances.length > 0 && (
+              <Flex justify="space-between" align="center" mt={16}>
+                <Text c="dimmed" fz="sm">
+                  Hiển thị {performances.length} / {totalPerformances} bậc lương
+                </Text>
+              </Flex>
+            )}
+          </Box>
         </Box>
-      </Box>
+      </Can>
 
       {/* Calendar View Section */}
       <Box
@@ -845,16 +851,14 @@ function RouteComponent() {
                   radius="md"
                   fullWidth
                   color="indigo"
-                  data={[
-                    {
-                      label: "Xem lịch",
-                      value: "calendar"
-                    },
-                    {
-                      label: "Xem lương",
-                      value: "salary"
-                    }
-                  ]}
+                  data={
+                    isAdmin
+                      ? [
+                          { label: "Xem lịch", value: "calendar" },
+                          { label: "Xem lương", value: "salary" }
+                        ]
+                      : [{ label: "Xem lương", value: "salary" }]
+                  }
                 />
               </Stack>
 
