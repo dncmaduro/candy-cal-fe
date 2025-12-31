@@ -6,6 +6,8 @@ import {
   CalculateDailyPerformanceResponse,
   CalculateLivestreamMonthSalaryRequest,
   CalculateLivestreamMonthSalaryResponse,
+  CalculateLivestreamRealIncomeRequest,
+  CalculateLivestreamRealIncomeResponse,
   CreateLivestreamPerformanceRequest,
   CreateLivestreamPerformanceResponse,
   DeleteLivestreamPerformanceRequest,
@@ -95,12 +97,37 @@ export const useLivestreamPerformance = () => {
     })
   }
 
+  const calculateLivestreamRealIncome = async (
+    files: File[],
+    req: CalculateLivestreamRealIncomeRequest
+  ) => {
+    const formData = new FormData()
+    formData.append("files", files[0])
+    formData.append("files", files[1])
+
+    Object.entries(req).forEach(([key, value]) => {
+      if (typeof value !== "undefined" && value !== null)
+        formData.append(key, value as string)
+    })
+
+    return callApi<FormData, CalculateLivestreamRealIncomeResponse>({
+      path: `/v1/livestreamperformance/calculate-real-income`,
+      data: formData,
+      method: "POST",
+      token: accessToken,
+      headers: {
+        "Content-Type": "multipart/form-data"
+      }
+    })
+  }
+
   return {
     createLivestreamPerformance,
     updateLivestreamPerformance,
     deleteLivestreamPerformance,
     searchLivestreamPerformance,
     calculateDailyPerformance,
-    calculateLivestreamMonthSalary
+    calculateLivestreamMonthSalary,
+    calculateLivestreamRealIncome
   }
 }

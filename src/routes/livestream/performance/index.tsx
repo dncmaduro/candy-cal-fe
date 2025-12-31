@@ -42,6 +42,7 @@ import { format, startOfWeek, endOfWeek, eachDayOfInterval } from "date-fns"
 import type { SearchLivestreamPerformanceResponse } from "../../../hooks/models"
 import { LivestreamCalendarTable } from "../../../components/livestream/LivestreamCalendarTable"
 import { MonthlySalaryTable } from "../../../components/livestream/MonthlySalaryTable"
+import { CalculateIncomeModal } from "../../../components/livestream/CalculateIncomeModal"
 import { openLivestreamReportModal } from "../../../components/livestream/LivestreamReportModal"
 import { notifications } from "@mantine/notifications"
 
@@ -246,7 +247,7 @@ function RouteComponent() {
 
   useEffect(() => {
     setViewMode(isAdmin ? "calendar" : "salary")
-  })
+  }, [me])
 
   const {
     data: performanceData,
@@ -303,11 +304,48 @@ function RouteComponent() {
       })
       // Invalidate calendar query to refetch data
       queryClient.invalidateQueries({ queryKey: ["getLivestreamsByDateRange"] })
+      modals.closeAll()
     },
     onError: () => {
       CToast.error({ title: "Có lỗi xảy ra khi tính lương" })
     }
   })
+
+  const { mutate: reportLivestreamMutation, isPending: isReporting } =
+    useMutation({
+      mutationFn: async (payload: {
+        livestreamId: string
+        snapshotId: string
+        reportData: {
+          income: number
+          adsCost?: number
+          clickRate: number
+          avgViewingDuration: number
+          comments: number
+          ordersNote: string
+          rating?: string
+        }
+      }) => {
+        const { livestreamId, snapshotId, reportData } = payload
+        return reportLivestream(livestreamId, snapshotId, reportData)
+      },
+      onSuccess: () => {
+        notifications.show({
+          title: "Báo cáo thành công",
+          message: "Đã lưu báo cáo ca livestream",
+          color: "green"
+        })
+        refetch()
+        modals.closeAll()
+      },
+      onError: (error: any) => {
+        notifications.show({
+          title: "Báo cáo thất bại",
+          message: error?.response?.data?.message || "Có lỗi khi lưu báo cáo",
+          color: "red"
+        })
+      }
+    })
 
   const handleCalculateDailySalary = (date: Date) => {
     calculateDailyFromCalendar({ date })
@@ -317,34 +355,32 @@ function RouteComponent() {
   const handleOpenReport = (livestreamId: string, snapshot: any) => {
     openLivestreamReportModal({
       snapshot,
-      onSubmit: async (reportData: {
-        income: number
-        adsCost?: number
-        clickRate: number
-        avgViewingDuration: number
-        comments: number
-        ordersNote: string
-        rating?: string
-      }) => {
-        try {
-          await reportLivestream(livestreamId, snapshot._id, reportData)
-          notifications.show({
-            title: "Báo cáo thành công",
-            message: "Đã lưu báo cáo ca livestream",
-            color: "green"
-          })
-          // Invalidate calendar query to refetch data
-          queryClient.invalidateQueries({
-            queryKey: ["getLivestreamsByDateRange"]
-          })
-        } catch (error: any) {
-          notifications.show({
-            title: "Báo cáo thất bại",
-            message: error?.response?.data?.message || "Có lỗi khi lưu báo cáo",
-            color: "red"
-          })
-        }
+      isSubmitting: isReporting,
+      onSubmit: (reportData) => {
+        reportLivestreamMutation({
+          livestreamId,
+          snapshotId: snapshot._id,
+          reportData
+        })
       }
+    })
+  }
+
+  // Handle opening calculate income modal
+  const handleCalculateIncome = (date: Date) => {
+    modals.open({
+      title: <b>Tính doanh thu thực</b>,
+      children: (
+        <CalculateIncomeModal
+          date={date}
+          refetch={() => {
+            queryClient.invalidateQueries({
+              queryKey: ["getLivestreamsByDateRange"]
+            })
+          }}
+        />
+      ),
+      size: "xl"
     })
   }
 
@@ -974,6 +1010,7 @@ function RouteComponent() {
                     onRefetch={() => {}}
                     onCalculateDailySalary={handleCalculateDailySalary}
                     isCalculatingSalary={calculatingDailySalary}
+                    onCalculateIncome={handleCalculateIncome}
                     hideEditButtons={true}
                   />
                 </Can>

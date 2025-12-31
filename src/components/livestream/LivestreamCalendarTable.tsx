@@ -956,6 +956,8 @@ interface LivestreamCalendarTableProps {
   onRefetch: () => void
   onCalculateDailySalary?: (date: Date) => void
   isCalculatingSalary?: boolean
+  onCalculateIncome?: (date: Date) => void
+  isCalculatingIncome?: boolean
   hideEditButtons?: boolean // Hide UpdateAlt and AltRequest buttons
 }
 
@@ -977,6 +979,8 @@ export const LivestreamCalendarTable = ({
   onRefetch,
   onCalculateDailySalary,
   isCalculatingSalary,
+  onCalculateIncome,
+  isCalculatingIncome,
   hideEditButtons = false
 }: LivestreamCalendarTableProps) => {
   const formatTimeRange = (
@@ -1170,11 +1174,7 @@ export const LivestreamCalendarTable = ({
                       left: 0,
                       zIndex: 5
                     }}
-                  >
-                    <Text size="xs" fw={600}>
-                      Tính lương
-                    </Text>
-                  </td>
+                  ></td>
                   {weekDays.map((day) => {
                     const dayData = livestreamData?.find(
                       (ls) =>
@@ -1213,6 +1213,46 @@ export const LivestreamCalendarTable = ({
                           fullWidth
                         >
                           {hasCalculatedSalary ? "Tính lại" : "Tính lương"}
+                        </Button>
+                      </td>
+                    )
+                  })}
+                </tr>
+              )}
+              {/* Add Calculate Income Button Row for Host */}
+              {role === "host" && onCalculateIncome && (
+                <tr>
+                  <td
+                    style={{
+                      border: "1px solid #e0e0e0",
+                      padding: "8px",
+                      backgroundColor: "#fff",
+                      position: "sticky",
+                      left: 0,
+                      zIndex: 5
+                    }}
+                  ></td>
+                  {weekDays.map((day) => {
+                    return (
+                      <td
+                        key={`income-${day.toISOString()}`}
+                        style={{
+                          border: "1px solid #e0e0e0",
+                          padding: "8px",
+                          verticalAlign: "middle",
+                          textAlign: "center"
+                        }}
+                      >
+                        <Button
+                          size="xs"
+                          color="teal"
+                          variant="light"
+                          leftSection={<IconCalculator size={14} />}
+                          onClick={() => onCalculateIncome?.(day)}
+                          loading={isCalculatingIncome}
+                          fullWidth
+                        >
+                          Tính DT thực
                         </Button>
                       </td>
                     )
