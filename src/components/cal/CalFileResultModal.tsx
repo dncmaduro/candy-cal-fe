@@ -2,7 +2,6 @@ import { useQuery } from "@tanstack/react-query"
 import { useItems } from "../../hooks/useItems"
 import { Box, Button, Collapse, Divider, Stack, Tabs, rem } from "@mantine/core"
 import { SearchStorageItemResponse } from "../../hooks/models"
-import { CalOrders } from "./CalOrders"
 import {
   IconBox,
   IconClipboardList,
@@ -10,7 +9,8 @@ import {
 } from "@tabler/icons-react"
 import { useDisclosure } from "@mantine/hooks"
 import { SaveLogDiv } from "./SaveLogDiv"
-import { CalItems } from "./CalItems"
+import { CalItemsV2 } from "./CalItemsV2"
+import { CalOrdersV2 } from "./CalOrdersV2"
 
 interface Props {
   items: {
@@ -107,16 +107,14 @@ export const CalFileResultModal = ({
         </Tabs.List>
 
         <Tabs.Panel value="items" className="p-3">
-          <CalItems allItems={allItems} items={items} />
+          <CalItemsV2 allItems={allItems} items={items} />
         </Tabs.Panel>
 
         <Tabs.Panel
           value="orders"
-          className="mx-2 mb-4 rounded-xl border border-gray-100 bg-gray-50/80 p-4 shadow-sm"
+          className="mx-2 mb-4 rounded-xl border border-gray-100 p-4 shadow-sm"
         >
-          <div className="rounded-lg bg-white p-4 shadow-sm">
-            <CalOrders orders={orders} allCalItems={items} date={date} />
-          </div>
+          <CalOrdersV2 orders={orders} allCalItems={items} date={date} />
         </Tabs.Panel>
       </Tabs>
 

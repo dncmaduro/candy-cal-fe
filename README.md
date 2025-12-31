@@ -85,6 +85,12 @@ npm run routes    # Generate router tree
 
 ## 7. Lịch sử cập nhật
 
+### 4.0.5
+
+- Cập nhật, đồng bộ toàn bộ giao diện cho phần kho vận
+- Beta chức năng tính doanh thu thực của các ca livestream bằng file doanh thu và tách nguồn
+- Sửa lỗi không xuất được file excel của sales
+
 ### 4.0.4
 
 - Beta chức năng tính toán lương cho các host livestream và setup hiệu suất các phiên live

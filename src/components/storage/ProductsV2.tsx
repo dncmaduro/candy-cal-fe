@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react"
-import { useProducts } from "../../hooks/useProducts"
+import { useEffect, useMemo, useState } from "react"
 import { useDebouncedValue } from "@mantine/hooks"
 import { useQuery, useMutation } from "@tanstack/react-query"
 import {
@@ -8,9 +7,7 @@ import {
   Divider,
   Flex,
   Group,
-  Loader,
   Paper,
-  Table,
   Text,
   TextInput,
   rem,
@@ -29,6 +26,9 @@ import {
   IconTrash
 } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
+import type { ColumnDef } from "@tanstack/react-table"
+
+import { useProducts } from "../../hooks/useProducts"
 import { ProductItemsV2 } from "./ProductItemsV2"
 import { ProductModalV2 } from "./ProductModalV2"
 import { CalFileResultModal } from "../cal/CalFileResultModal"
@@ -37,12 +37,22 @@ import { CToast } from "../common/CToast"
 import { useCalResultStore } from "../../store/calResultStore"
 import type { ProductsCalResult } from "../../store/calResultStore"
 
+import { CDataTable } from "../common/CDataTable"
+
+type ProductRow = {
+  _id: string
+  name: string
+  items: any[]
+}
+
 export const ProductsV2 = () => {
   const { searchProducts, calFile, deleteProduct, restoreProduct } =
     useProducts()
   const { lastProductsResult, setLastProductsResult } = useCalResultStore()
+
   const [searchText, setSearchText] = useState<string>("")
   const [debouncedSearchText] = useDebouncedValue(searchText, 300)
+
   const [xlsxFile, setXlsxFile] = useState<File | null>(null)
   const [showDeleted, setShowDeleted] = useState<boolean>(false)
 
@@ -56,6 +66,8 @@ export const ProductsV2 = () => {
       searchProducts({ searchText: debouncedSearchText, deleted: showDeleted }),
     select: (data) => data.data
   })
+
+  const rows: ProductRow[] = useMemo(() => productsData ?? [], [productsData])
 
   const { mutate: calXlsxMutation, isPending: isCalculating } = useMutation({
     mutationFn: calFile,
@@ -112,29 +124,27 @@ export const ProductsV2 = () => {
   })
 
   const handleCalXlsx = () => {
-    if (xlsxFile) {
-      calXlsxMutation(xlsxFile)
-      setXlsxFile(null)
-    }
+    if (!xlsxFile) return
+    calXlsxMutation(xlsxFile)
+    setXlsxFile(null)
   }
 
   const handleViewLastResult = () => {
-    if (lastProductsResult) {
-      modals.open({
-        title: (
-          <Text fw={700} fz="lg">
-            Kết quả tính toán gần nhất
-          </Text>
-        ),
-        children: (
-          <CalFileResultModal
-            items={lastProductsResult.items}
-            orders={lastProductsResult.orders}
-          />
-        ),
-        size: "80vw"
-      })
-    }
+    if (!lastProductsResult) return
+    modals.open({
+      title: (
+        <Text fw={700} fz="lg">
+          Kết quả tính toán gần nhất
+        </Text>
+      ),
+      children: (
+        <CalFileResultModal
+          items={lastProductsResult.items}
+          orders={lastProductsResult.orders}
+        />
+      ),
+      size: "80vw"
+    })
   }
 
   useEffect(() => {
@@ -155,6 +165,223 @@ export const ProductsV2 = () => {
       onConfirm: () => deleteMutation(productId)
     })
   }
+
+  const columns: ColumnDef<ProductRow>[] = useMemo(
+    () => [
+      {
+        accessorKey: "name",
+        header: "Tên sản phẩm",
+        cell: ({ row }) => (
+          <Text fw={500} className="whitespace-nowrap">
+            {row.original.name}
+          </Text>
+        )
+      },
+      {
+        id: "items",
+        header: "Các mặt hàng",
+        cell: ({ row }) => <ProductItemsV2 items={row.original.items} />
+      },
+      {
+        id: "actions",
+        header: "Hành động",
+        enableSorting: false,
+        enableHiding: false,
+        cell: ({ row }) => {
+          const product = row.original
+          return (
+            <Group gap={8} wrap="nowrap">
+              {!showDeleted ? (
+                <>
+                  <Can roles={["admin", "order-emp"]}>
+                    <Button
+                      variant="light"
+                      color="indigo"
+                      size="xs"
+                      radius="xl"
+                      px={14}
+                      leftSection={<IconEdit size={14} />}
+                      onClick={() =>
+                        modals.open({
+                          title: (
+                            <Text fw={700} fz="md">
+                              Sửa sản phẩm
+                            </Text>
+                          ),
+                          children: (
+                            <ProductModalV2
+                              product={product}
+                              refetch={refetch}
+                            />
+                          ),
+                          size: "lg"
+                        })
+                      }
+                      style={{ fontWeight: 500 }}
+                    >
+                      Chỉnh sửa
+                    </Button>
+                  </Can>
+
+                  <Can roles={["admin"]}>
+                    <Button
+                      variant="light"
+                      color="red"
+                      size="xs"
+                      radius="xl"
+                      px={14}
+                      leftSection={<IconTrash size={14} />}
+                      onClick={() =>
+                        handleDeleteProduct(product._id, product.name)
+                      }
+                      style={{ fontWeight: 500 }}
+                    >
+                      Xóa
+                    </Button>
+                  </Can>
+                </>
+              ) : (
+                <Can roles={["admin"]}>
+                  <Button
+                    variant="outline"
+                    color="green"
+                    size="xs"
+                    radius="xl"
+                    px={14}
+                    onClick={() => restoreMutation({ id: product._id })}
+                    leftSection={<IconRestore size={14} />}
+                    style={{ fontWeight: 500 }}
+                    loading={restoring}
+                  >
+                    Khôi phục
+                  </Button>
+                </Can>
+              )}
+            </Group>
+          )
+        }
+      }
+    ],
+    [refetch, restoreMutation, restoring, showDeleted]
+  )
+
+  const extraFilters = (
+    <Group gap={12} align="end" wrap="wrap">
+      <TextInput
+        value={searchText}
+        onChange={(e) => setSearchText(e.currentTarget.value)}
+        leftSection={<IconSearch size={16} />}
+        placeholder="Tìm kiếm sản phẩm..."
+        size="sm"
+        w={{ base: "100%", sm: 260 }}
+        radius="md"
+        styles={{
+          input: { background: "#f4f6fb", border: "1px solid #ececec" }
+        }}
+      />
+
+      <Box
+        p={8}
+        style={{
+          backgroundColor: showDeleted
+            ? "rgba(255, 0, 0, 0.08)"
+            : "rgba(0, 128, 0, 0.06)",
+          borderRadius: rem(10),
+          border: `1px solid ${
+            showDeleted ? "rgba(255, 0, 0, 0.18)" : "rgba(0, 128, 0, 0.18)"
+          }`,
+          transition: "all 0.2s ease"
+        }}
+      >
+        <Switch
+          label="Hiển thị sản phẩm đã xóa"
+          checked={showDeleted}
+          onChange={(event) => setShowDeleted(event.currentTarget.checked)}
+          color="red"
+          size="sm"
+        />
+      </Box>
+    </Group>
+  )
+
+  const extraActions = (
+    <Group gap={10} align="end" wrap="wrap">
+      {!showDeleted && (
+        <Tooltip label="Thêm sản phẩm mới" withArrow>
+          <Can roles={["admin", "order-emp"]}>
+            <Button
+              color="indigo"
+              leftSection={<IconPlus size={18} />}
+              radius="xl"
+              size="sm"
+              px={14}
+              onClick={() =>
+                modals.open({
+                  title: (
+                    <Text fw={700} fz="md">
+                      Thêm sản phẩm mới
+                    </Text>
+                  ),
+                  children: <ProductModalV2 refetch={refetch} />,
+                  size: "lg"
+                })
+              }
+              style={{ fontWeight: 600, letterSpacing: 0.1 }}
+            >
+              Thêm sản phẩm
+            </Button>
+          </Can>
+        </Tooltip>
+      )}
+
+      {/* Excel actions in toolbar */}
+      <Paper withBorder p="sm" radius="md">
+        <Group align="end" gap={10} wrap="wrap">
+          <FileInput
+            label="Excel"
+            placeholder="Chọn file .xlsx/.xls"
+            accept=".xlsx,.xls"
+            value={xlsxFile}
+            onChange={setXlsxFile}
+            leftSection={<IconUpload size={16} />}
+            w={{ base: 220, sm: 260 }}
+          />
+
+          <Button
+            color="green"
+            leftSection={<IconDownload size={16} />}
+            onClick={handleCalXlsx}
+            disabled={!xlsxFile}
+            loading={isCalculating}
+            style={{ alignSelf: "end" }}
+            size="sm"
+          >
+            Tính toán
+          </Button>
+
+          {lastProductsResult && (
+            <Tooltip
+              label={`Kết quả từ: ${new Date(
+                lastProductsResult.timestamp
+              ).toLocaleString("vi-VN")}`}
+              withArrow
+            >
+              <Button
+                variant="light"
+                color="blue"
+                leftSection={<IconEye size={16} />}
+                onClick={handleViewLastResult}
+                style={{ alignSelf: "end" }}
+                size="sm"
+              >
+                Xem gần nhất
+              </Button>
+            </Tooltip>
+          )}
+        </Group>
+      </Paper>
+    </Group>
+  )
 
   return (
     <Box
@@ -188,252 +415,24 @@ export const ProductsV2 = () => {
               : "Quản lý, chỉnh sửa và tìm kiếm sản phẩm"}
           </Text>
         </Box>
-        <Flex gap={12} align="center" w={{ base: "100%", sm: "auto" }}>
-          <TextInput
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            leftSection={<IconSearch size={16} />}
-            placeholder="Tìm kiếm sản phẩm..."
-            size="md"
-            w={{ base: "100%", sm: 260 }}
-            radius="md"
-            styles={{
-              input: { background: "#f4f6fb", border: "1px solid #ececec" }
-            }}
-          />
-          {!showDeleted && (
-            <Tooltip label="Thêm sản phẩm mới" withArrow>
-              <Can roles={["admin", "order-emp"]}>
-                <Button
-                  color="indigo"
-                  leftSection={<IconPlus size={18} />}
-                  radius="xl"
-                  size="md"
-                  px={18}
-                  onClick={() =>
-                    modals.open({
-                      title: (
-                        <Text fw={700} fz="md">
-                          Thêm sản phẩm mới
-                        </Text>
-                      ),
-                      children: <ProductModalV2 refetch={refetch} />,
-                      size: "lg"
-                    })
-                  }
-                  style={{
-                    fontWeight: 600,
-                    letterSpacing: 0.1
-                  }}
-                >
-                  Thêm sản phẩm
-                </Button>
-              </Can>
-            </Tooltip>
-          )}
-        </Flex>
       </Flex>
 
       <Divider my={0} />
 
-      {/* Excel Upload Section */}
-      <Box px={{ base: 8, md: 28 }} py={16}>
-        <Paper withBorder p="md" radius="md" mb={16}>
-          <Group justify="space-between" align="center" mb={12}>
-            <Text fw={600} fz="md">
-              Tính toán từ file Excel
-            </Text>
-          </Group>
-          <Group align="end" gap={12}>
-            <FileInput
-              label="Chọn file Excel"
-              placeholder="Chọn file Excel để tính toán"
-              accept=".xlsx,.xls"
-              value={xlsxFile}
-              onChange={setXlsxFile}
-              leftSection={<IconUpload size={16} />}
-              style={{ flex: 1, minWidth: 200 }}
-            />
-            <Button
-              color="green"
-              leftSection={<IconDownload size={16} />}
-              onClick={handleCalXlsx}
-              disabled={!xlsxFile}
-              loading={isCalculating}
-              style={{ alignSelf: "end" }}
-            >
-              Tính toán
-            </Button>
-            {lastProductsResult && (
-              <Tooltip
-                label={`Kết quả từ: ${new Date(lastProductsResult.timestamp).toLocaleString("vi-VN")}`}
-                withArrow
-              >
-                <Button
-                  variant="light"
-                  color="blue"
-                  leftSection={<IconEye size={16} />}
-                  onClick={handleViewLastResult}
-                  style={{ alignSelf: "end" }}
-                >
-                  Xem kết quả gần nhất
-                </Button>
-              </Tooltip>
-            )}
-          </Group>
-        </Paper>
-      </Box>
-
-      <Box px={{ base: 4, md: 28 }} py={20}>
-        <Group justify="space-between" align="center" mb={16}>
-          <Text fw={600} fz="lg">
-            Danh sách sản phẩm
-          </Text>
-          <Group align="flex-end">
-            <Box
-              p={12}
-              style={{
-                backgroundColor: "rgba(255, 0, 0, 0.1)",
-                borderRadius: rem(8),
-                border: `1px solid ${showDeleted ? "rgba(255, 0, 0, 0.2)" : "rgba(0, 128, 0, 0.2)"}`,
-                transition: "all 0.2s ease"
-              }}
-            >
-              <Switch
-                label="Hiển thị sản phẩm đã xóa"
-                checked={showDeleted}
-                onChange={(event) =>
-                  setShowDeleted(event.currentTarget.checked)
-                }
-                color="red"
-                size="md"
-                className="text-red-500"
-              />
-            </Box>
-          </Group>
-        </Group>
-
-        <Table
-          highlightOnHover
-          striped
-          withColumnBorders
-          withTableBorder
-          verticalSpacing="sm"
-          horizontalSpacing="md"
-          stickyHeader
-          className="rounded-xl"
-          miw={500}
-        >
-          <Table.Thead bg="indigo.0">
-            <Table.Tr>
-              <Table.Th style={{ width: 240 }}>Tên sản phẩm</Table.Th>
-              <Table.Th>Các mặt hàng</Table.Th>
-              <Table.Th>Hành động</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-
-          <Table.Tbody>
-            {isLoading ? (
-              <Table.Tr>
-                <Table.Td colSpan={3}>
-                  <Flex justify="center" align="center" h={60}>
-                    <Loader />
-                  </Flex>
-                </Table.Td>
-              </Table.Tr>
-            ) : productsData && productsData.length > 0 ? (
-              productsData.map((product) => (
-                <Table.Tr key={product._id}>
-                  <Table.Td fw={500} w={"30%"}>
-                    <Flex align={"center"} gap={12}>
-                      <Text>{product.name}</Text>
-                    </Flex>
-                  </Table.Td>
-                  <Table.Td>
-                    <ProductItemsV2 items={product.items} />
-                  </Table.Td>
-                  <Table.Td>
-                    <Group>
-                      {!showDeleted ? (
-                        <>
-                          <Can roles={["admin", "order-emp"]}>
-                            <Button
-                              variant="light"
-                              color="indigo"
-                              size="xs"
-                              radius="xl"
-                              px={14}
-                              leftSection={<IconEdit size={14} />}
-                              onClick={() =>
-                                modals.open({
-                                  title: (
-                                    <Text fw={700} fz="md">
-                                      Sửa sản phẩm
-                                    </Text>
-                                  ),
-                                  children: (
-                                    <ProductModalV2
-                                      product={product}
-                                      refetch={refetch}
-                                    />
-                                  ),
-                                  size: "lg"
-                                })
-                              }
-                              style={{ fontWeight: 500 }}
-                            >
-                              Chỉnh sửa
-                            </Button>
-                          </Can>
-                          <Can roles={["admin"]}>
-                            <Button
-                              variant="light"
-                              color="red"
-                              size="xs"
-                              radius="xl"
-                              px={14}
-                              leftSection={<IconTrash size={14} />}
-                              onClick={() =>
-                                handleDeleteProduct(product._id, product.name)
-                              }
-                              style={{ fontWeight: 500 }}
-                            >
-                              Xóa
-                            </Button>
-                          </Can>
-                        </>
-                      ) : (
-                        <Can roles={["admin"]}>
-                          <Button
-                            variant="outline"
-                            color="green"
-                            size="xs"
-                            radius="xl"
-                            px={14}
-                            onClick={() => restoreMutation({ id: product._id })}
-                            leftSection={<IconRestore size={14} />}
-                            style={{ fontWeight: 500 }}
-                            loading={restoring}
-                          >
-                            Khôi phục
-                          </Button>
-                        </Can>
-                      )}
-                    </Group>
-                  </Table.Td>
-                </Table.Tr>
-              ))
-            ) : (
-              <Table.Tr>
-                <Table.Td colSpan={3}>
-                  <Flex justify="center" align="center" h={60}>
-                    <Text c="dimmed">Không có sản phẩm nào</Text>
-                  </Flex>
-                </Table.Td>
-              </Table.Tr>
-            )}
-          </Table.Tbody>
-        </Table>
+      <Box px={{ base: 8, md: 28 }} py={20}>
+        <CDataTable<ProductRow, any>
+          columns={columns}
+          data={rows}
+          isLoading={isLoading}
+          loadingText="Đang tải danh sách sản phẩm..."
+          enableGlobalFilter={false}
+          enableRowSelection={false}
+          extraFilters={extraFilters}
+          extraActions={extraActions}
+          initialPageSize={10}
+          pageSizeOptions={[10, 20, 50, 100]}
+          getRowId={(row) => row._id}
+        />
       </Box>
     </Box>
   )

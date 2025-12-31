@@ -1,70 +1,166 @@
-import { Box, Table, Text, Loader, Flex } from "@mantine/core"
+import { useMemo, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
+import type { ColumnDef } from "@tanstack/react-table"
+import { Box, Button, Group, Text } from "@mantine/core"
+import { MonthPickerInput } from "@mantine/dates"
+import { IconRefresh } from "@tabler/icons-react"
+
 import { useLogs } from "../../hooks/useLogs"
+import { CDataTable } from "../common/CDataTable"
 
 interface Props {
-  month: Date | null
+  initialMonth?: Date | null
 }
 
-export const MonthLogsModal = ({ month }: Props) => {
+type MonthLogRow = {
+  _id: string
+  name: string
+  receivedQuantity: number
+  deliveredQuantity: number
+}
+
+export const MonthLogsModal = ({ initialMonth }: Props) => {
   const { getStorageLogsByMonth } = useLogs()
 
-  const { data: monthlogsData, isFetching } = useQuery({
-    queryKey: ["getStorageLogsByMonth", month],
-    queryFn: () =>
-      getStorageLogsByMonth(
-        month
-          ? { month: month.getMonth() + 1, year: month.getFullYear() }
-          : { month: new Date().getMonth() + 1, year: new Date().getFullYear() }
-      ),
+  const [q, setQ] = useState("")
+  const [month, setMonth] = useState<Date | null>(initialMonth ?? new Date())
+
+  const monthParam = useMemo(() => {
+    const d = month ?? new Date()
+    return { month: d.getMonth() + 1, year: d.getFullYear() }
+  }, [month])
+
+  const {
+    data: monthlogsData,
+    isFetching,
+    refetch
+  } = useQuery({
+    queryKey: ["getStorageLogsByMonth", monthParam.month, monthParam.year],
+    queryFn: () => getStorageLogsByMonth(monthParam),
     enabled: !!month,
-    select: (data) => data.data
+    select: (res) => res.data
   })
 
-  return (
-    <Box py={16} px={8} w="100%" maw={640}>
-      <Table
-        striped
-        highlightOnHover
-        withTableBorder
-        withColumnBorders
-        verticalSpacing="sm"
+  const rows: MonthLogRow[] = useMemo(() => {
+    return (monthlogsData?.items ?? []).map((x: any) => ({
+      _id: x._id,
+      name: x.name,
+      receivedQuantity: Number(x.receivedQuantity ?? 0),
+      deliveredQuantity: Number(x.deliveredQuantity ?? 0)
+    }))
+  }, [monthlogsData])
+
+  const summary = useMemo(() => {
+    const totalItems = rows.length
+    const totalReceived = rows.reduce(
+      (acc, r) => acc + (r.receivedQuantity || 0),
+      0
+    )
+    const totalDelivered = rows.reduce(
+      (acc, r) => acc + (r.deliveredQuantity || 0),
+      0
+    )
+    return { totalItems, totalReceived, totalDelivered }
+  }, [rows])
+
+  const columns: ColumnDef<MonthLogRow>[] = useMemo(
+    () => [
+      {
+        accessorKey: "name",
+        header: "Mặt hàng",
+        cell: ({ row }) => (
+          <Text fw={600} lineClamp={2}>
+            {row.original.name}
+          </Text>
+        )
+      },
+      {
+        accessorKey: "receivedQuantity",
+        header: "Nhập",
+        cell: ({ row }) => (
+          <Text ta="right" fw={700}>
+            {row.original.receivedQuantity}
+          </Text>
+        )
+      },
+      {
+        accessorKey: "deliveredQuantity",
+        header: "Xuất",
+        cell: ({ row }) => (
+          <Text ta="right" fw={700}>
+            {row.original.deliveredQuantity}
+          </Text>
+        )
+      }
+    ],
+    []
+  )
+
+  const extraFilters = (
+    <Group gap={10} align="end" wrap="wrap">
+      <MonthPickerInput
+        label="Chọn tháng"
+        value={month}
+        onChange={setMonth}
+        valueFormat="MM/YYYY"
+        w={180}
+      />
+
+      <Box>
+        <Text fz="xs" c="dimmed" mb={4}>
+          Tổng mặt hàng
+        </Text>
+        <Text fw={700}>{summary.totalItems}</Text>
+      </Box>
+
+      <Box>
+        <Text fz="xs" c="dimmed" mb={4}>
+          Tổng nhập
+        </Text>
+        <Text fw={700}>{summary.totalReceived}</Text>
+      </Box>
+
+      <Box>
+        <Text fz="xs" c="dimmed" mb={4}>
+          Tổng xuất
+        </Text>
+        <Text fw={700}>{summary.totalDelivered}</Text>
+      </Box>
+    </Group>
+  )
+
+  const extraActions = (
+    <Group gap={8}>
+      <Button
+        variant="light"
+        leftSection={<IconRefresh size={16} />}
+        onClick={() => refetch()}
+        loading={isFetching}
       >
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th>Tên mặt hàng</Table.Th>
-            <Table.Th>Nhập kho</Table.Th>
-            <Table.Th>Xuất kho</Table.Th>
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          {isFetching ? (
-            <Table.Tr>
-              <Table.Td colSpan={3}>
-                <Flex justify="center" align="center" h={60}>
-                  <Loader />
-                </Flex>
-              </Table.Td>
-            </Table.Tr>
-          ) : monthlogsData?.items && monthlogsData.items.length > 0 ? (
-            monthlogsData.items.map((item) => (
-              <Table.Tr key={item._id}>
-                <Table.Td>{item.name}</Table.Td>
-                <Table.Td>{item.receivedQuantity}</Table.Td>
-                <Table.Td>{item.deliveredQuantity}</Table.Td>
-              </Table.Tr>
-            ))
-          ) : (
-            <Table.Tr>
-              <Table.Td colSpan={3}>
-                <Text c="dimmed" ta="center">
-                  Không có dữ liệu cho tháng này
-                </Text>
-              </Table.Td>
-            </Table.Tr>
-          )}
-        </Table.Tbody>
-      </Table>
+        Tải lại
+      </Button>
+    </Group>
+  )
+
+  return (
+    <Box py={8} px={4} w="100%">
+      <CDataTable<MonthLogRow, any>
+        columns={columns}
+        data={rows}
+        isLoading={isFetching}
+        loadingText="Đang tải số liệu theo tháng..."
+        enableRowSelection={false}
+        enableGlobalFilter
+        globalFilterValue={q}
+        onGlobalFilterChange={setQ}
+        extraFilters={extraFilters}
+        extraActions={extraActions}
+        // no pagination
+        initialPageSize={100000}
+        pageSizeOptions={[100000]}
+        className="min-w-[640px] [&>div:last-child]:hidden"
+        getRowId={(r) => r._id}
+      />
     </Box>
   )
 }
