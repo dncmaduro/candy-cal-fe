@@ -118,11 +118,9 @@ export const CalFileResultModalV2 = ({
 
         <Tabs.Panel
           value="orders"
-          className="mx-2 mb-4 rounded-xl border border-gray-100 bg-gray-50/80 p-4 shadow-sm"
+          className="mx-2 mb-4 rounded-xl border border-gray-100 p-4 shadow-sm"
         >
-          <div className="rounded-lg bg-white p-4 shadow-sm">
-            <CalOrdersV2 orders={orders} allCalItems={items} date={date} />
-          </div>
+          <CalOrdersV2 orders={orders} allCalItems={items} date={date} />
         </Tabs.Panel>
       </Tabs>
 

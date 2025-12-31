@@ -174,7 +174,7 @@ export const useSalesOrders = () => {
         Accept:
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
       },
-      responseType: "blob" // thêm param này (xem mục 2)
+      responseType: "blob"
     })
   }
 

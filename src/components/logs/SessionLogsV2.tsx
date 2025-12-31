@@ -1,47 +1,120 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { useSessionLogs } from "../../hooks/useSessionLogs"
 import { useQuery } from "@tanstack/react-query"
-import {
-  Box,
-  Button,
-  Divider,
-  Flex,
-  Group,
-  Loader,
-  NumberInput,
-  Pagination,
-  rem,
-  Table,
-  Text
-} from "@mantine/core"
+import { Box, Button, Divider, Flex, Group, rem, Text } from "@mantine/core"
 import { IconHistory, IconListDetails } from "@tabler/icons-react"
 import { format } from "date-fns"
 import { modals } from "@mantine/modals"
 import { CalFileResultModalV2 } from "../cal/CalFileResultModalV2"
 import { Link } from "@tanstack/react-router"
 import { NAVS_URL } from "../../constants/navs"
+import type { ColumnDef } from "@tanstack/react-table"
+import { CDataTable } from "../common/CDataTable"
+
+type SessionLogRow = {
+  _id: string
+  time: string | Date
+  items?: any[]
+  orders?: any[]
+}
 
 export const SessionLogsV2 = () => {
-  const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(10)
 
   const { getSessionLogs } = useSessionLogs()
-
   const newVersionDate = new Date(import.meta.env.VITE_NEW_ITEMS_DATE)
 
   const { data: sessionLogsData, isLoading } = useQuery({
-    queryKey: ["sessionLogs", page, limit],
-    queryFn: () => getSessionLogs({ page, limit }),
+    // Không dùng page nữa vì DataTable đang paginate client-side
+    queryKey: ["sessionLogs", limit],
+    queryFn: () =>
+      getSessionLogs({ page: 1, limit: Math.max(200, limit * 20) }),
     select: (data) => {
-      const newData = data.data.data.filter(
-        (log) => new Date(log.time) >= newVersionDate
-      )
-      return { data: newData, total: newData.length }
+      const raw: SessionLogRow[] = data.data.data ?? []
+      const filtered = raw.filter((log) => new Date(log.time) >= newVersionDate)
+      return { data: filtered, total: filtered.length }
     },
     refetchOnWindowFocus: true
   })
 
-  const colCount = 4
+  const rows = useMemo(() => sessionLogsData?.data ?? [], [sessionLogsData])
+
+  const columns: ColumnDef<SessionLogRow>[] = useMemo(
+    () => [
+      {
+        accessorKey: "time",
+        header: "Thời gian",
+        cell: ({ row }) =>
+          format(new Date(row.original.time), "dd/MM/yyyy HH:mm:ss")
+      },
+      {
+        id: "itemsCount",
+        header: "Số mặt hàng",
+        cell: ({ row }) => row.original.items?.length || 0,
+        enableSorting: false
+      },
+      {
+        id: "ordersCount",
+        header: "Số đơn hàng",
+        cell: ({ row }) => row.original.orders?.length || 0,
+        enableSorting: false
+      },
+      {
+        id: "actions",
+        header: "",
+        enableSorting: false,
+        enableHiding: false,
+        cell: ({ row }) => {
+          const log = row.original
+          return (
+            <Group gap={8} justify="flex-end" wrap="nowrap">
+              <Button
+                variant="light"
+                size="xs"
+                radius="xl"
+                leftSection={<IconListDetails size={14} />}
+                onClick={() =>
+                  modals.open({
+                    title: (
+                      <b>
+                        Chi tiết log kho theo ca{" "}
+                        {format(new Date(log.time), "dd/MM/yyyy HH:mm:ss")}
+                      </b>
+                    ),
+                    children: (
+                      <CalFileResultModalV2
+                        items={log.items ?? []}
+                        orders={log.orders ?? []}
+                        readOnly
+                      />
+                    ),
+                    size: "960"
+                  })
+                }
+              >
+                Chi tiết
+              </Button>
+            </Group>
+          )
+        }
+      }
+    ],
+    []
+  )
+
+  const extraActions = (
+    <Button
+      component={Link}
+      to={`${NAVS_URL}/old-logs`}
+      variant="outline"
+      leftSection={<IconHistory size={16} />}
+      size="sm"
+      radius="xl"
+      color="orange"
+    >
+      Xem lại log cũ
+    </Button>
+  )
 
   return (
     <Box
@@ -73,121 +146,24 @@ export const SessionLogsV2 = () => {
             Quản lý các log nhập xuất kho, điều chỉnh số lượng theo ca
           </Text>
         </Box>
-        <Button
-          component={Link}
-          to={`${NAVS_URL}/old-logs`}
-          variant="outline"
-          leftSection={<IconHistory size={16} />}
-          size="md"
-          radius={"xl"}
-          color="orange"
-        >
-          Xem lại log cũ
-        </Button>
       </Flex>
-      <Divider my={0} />
-      <Box px={{ base: 4, md: 28 }} py={20}>
-        <Table
-          highlightOnHover
-          striped
-          withColumnBorders
-          withTableBorder
-          verticalSpacing="sm"
-          horizontalSpacing="md"
-          stickyHeader
-          className="rounded-xl"
-          miw={900}
-        >
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Thời gian</Table.Th>
-              <Table.Th>Số mặt hàng</Table.Th>
-              <Table.Th>Số đơn hàng</Table.Th>
-              <Table.Th></Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {isLoading ? (
-              <Table.Tr>
-                <Table.Td colSpan={colCount}>
-                  <Flex justify="center" align="center" h={60}>
-                    <Loader />
-                  </Flex>
-                </Table.Td>
-              </Table.Tr>
-            ) : sessionLogsData?.data && sessionLogsData.data.length > 0 ? (
-              sessionLogsData.data.map((log) => (
-                <Table.Tr key={log._id}>
-                  <Table.Td>
-                    {format(new Date(log.time), "dd/MM/yyyy HH:mm:ss")}
-                  </Table.Td>
-                  <Table.Td>{log.items?.length || 0}</Table.Td>
-                  <Table.Td>{log.orders?.length || 0}</Table.Td>
-                  <Table.Td>
-                    <Group gap={8}>
-                      <Button
-                        variant="light"
-                        size="xs"
-                        radius={"xl"}
-                        leftSection={<IconListDetails size={14} />}
-                        onClick={() =>
-                          modals.open({
-                            title: (
-                              <b>
-                                Chi tiết log kho theo ca{" "}
-                                {format(
-                                  new Date(log.time),
-                                  "dd/MM/yyyy HH:ii:ss"
-                                )}
-                              </b>
-                            ),
-                            children: (
-                              <CalFileResultModalV2
-                                items={log.items}
-                                orders={log.orders}
-                                readOnly
-                              />
-                            ),
-                            size: "xl"
-                          })
-                        }
-                      >
-                        Chi tiết
-                      </Button>
-                    </Group>
-                  </Table.Td>
-                </Table.Tr>
-              ))
-            ) : (
-              <Table.Tr>
-                <Table.Td colSpan={colCount}>
-                  <Flex justify="center" align="center" h={60}>
-                    <Text c="dimmed">Không có log kho nào</Text>
-                  </Flex>
-                </Table.Td>
-              </Table.Tr>
-            )}
-          </Table.Tbody>
-        </Table>
 
-        <Flex justify="space-between" align={"center"} mt={16}>
-          <Text c="dimmed" mr={8}>
-            Tổng số dòng: {sessionLogsData?.total}
-          </Text>
-          <Pagination
-            total={Math.ceil((sessionLogsData?.total ?? 1) / limit)}
-            value={page}
-            onChange={setPage}
-          />
-          <Group>
-            <Text>Số dòng/trang </Text>
-            <NumberInput
-              value={limit}
-              onChange={(val) => setLimit(Number(val))}
-              w={100}
-            />
-          </Group>
-        </Flex>
+      <Divider my={0} />
+
+      <Box px={{ base: 8, md: 28 }} py={20}>
+        <CDataTable<SessionLogRow, any>
+          columns={columns}
+          data={rows}
+          isLoading={isLoading}
+          loadingText="Đang tải log kho..."
+          enableGlobalFilter={false}
+          enableRowSelection={false}
+          extraActions={extraActions}
+          initialPageSize={limit}
+          pageSizeOptions={[10, 20, 50, 100]}
+          onPageSizeChange={setLimit}
+          getRowId={(row) => row._id}
+        />
       </Box>
     </Box>
   )

@@ -12,7 +12,8 @@ import {
   getSortedRowModel,
   getFilteredRowModel,
   flexRender,
-  useReactTable
+  useReactTable,
+  getExpandedRowModel
 } from "@tanstack/react-table"
 import {
   Button,
@@ -46,12 +47,19 @@ export type DataTableProps<TData, TValue> = {
   globalFilterValue?: string
   onGlobalFilterChange?: (value: string) => void
   hideSearch?: boolean
+  hideColumnToggle?: boolean
 
   // External pagination (server-side)
   page?: number
   totalPages?: number
   onPageChange?: (page: number) => void
   onPageSizeChange?: (pageSize: number) => void
+  hidePagination?: boolean
+  hidePaginationInformation?: boolean
+
+  // Expanding rows
+  enableExpanding?: boolean
+  renderRowSubComponent?: (ctx: { row: any }) => React.ReactNode
 
   getRowId?: (originalRow: TData, index: number, parent?: Row<TData>) => string
   onRowSelectionChange?: (selectedRows: TData[]) => void
@@ -77,11 +85,17 @@ export function CDataTable<TData, TValue>({
   globalFilterValue,
   onGlobalFilterChange,
   hideSearch = false,
+  hideColumnToggle = false,
+  // expanding rows
+  enableExpanding = false,
+  renderRowSubComponent,
   // external pagination
   page,
   totalPages,
   onPageChange,
   onPageSizeChange,
+  hidePagination = false,
+  hidePaginationInformation = false,
   getRowId,
   onRowSelectionChange,
   onRowClick,
@@ -160,7 +174,9 @@ export function CDataTable<TData, TValue>({
         pageIndex: 0,
         pageSize: initialPageSize
       }
-    }
+    },
+    getRowCanExpand: enableExpanding ? () => true : undefined,
+    getExpandedRowModel: enableExpanding ? getExpandedRowModel() : undefined
   })
 
   // Sử dụng ref để tránh trigger effect khi callback thay đổi
@@ -213,37 +229,39 @@ export function CDataTable<TData, TValue>({
 
         {extraFilters}
 
-        <Menu withinPortal>
-          <Menu.Target>
-            <Button
-              variant="light"
-              rightSection={<IconChevronDown size={16} />}
-              disabled={isLoading}
-            >
-              Cột hiển thị
-            </Button>
-          </Menu.Target>
-          <Menu.Dropdown>
-            {table
-              .getAllLeafColumns()
-              .filter((c) => c.getCanHide())
-              .map((column) => (
-                <Menu.Item key={column.id}>
-                  <label className="flex cursor-pointer items-center gap-2">
-                    <Checkbox
-                      checked={column.getIsVisible()}
-                      onChange={(e) =>
-                        column.toggleVisibility(e.currentTarget.checked)
-                      }
-                    />
-                    <span className="text-sm">
-                      {String(column.columnDef.header ?? column.id)}
-                    </span>
-                  </label>
-                </Menu.Item>
-              ))}
-          </Menu.Dropdown>
-        </Menu>
+        {!hideColumnToggle && (
+          <Menu withinPortal>
+            <Menu.Target>
+              <Button
+                variant="light"
+                rightSection={<IconChevronDown size={16} />}
+                disabled={isLoading}
+              >
+                Cột hiển thị
+              </Button>
+            </Menu.Target>
+            <Menu.Dropdown>
+              {table
+                .getAllLeafColumns()
+                .filter((c) => c.getCanHide())
+                .map((column) => (
+                  <Menu.Item key={column.id}>
+                    <label className="flex cursor-pointer items-center gap-2">
+                      <Checkbox
+                        checked={column.getIsVisible()}
+                        onChange={(e) =>
+                          column.toggleVisibility(e.currentTarget.checked)
+                        }
+                      />
+                      <span className="text-sm">
+                        {String(column.columnDef.header ?? column.id)}
+                      </span>
+                    </label>
+                  </Menu.Item>
+                ))}
+            </Menu.Dropdown>
+          </Menu>
+        )}
 
         <div className="ml-auto flex items-center gap-2">
           {extraActions}
@@ -331,43 +349,55 @@ export function CDataTable<TData, TValue>({
                 </tr>
               ) : (
                 table.getRowModel().rows.map((row) => (
-                  <tr
-                    key={row.id}
-                    className={clsx(
-                      "border-b border-gray-100 hover:bg-gray-50",
-                      enableRowSelection &&
-                        row.getIsSelected() &&
-                        "bg-blue-50/60",
-                      isLoading && "pointer-events-none",
-                      getRowClassName && getRowClassName(row)
-                    )}
-                    onClick={
-                      !isLoading && onRowClick
-                        ? () => onRowClick(row)
-                        : undefined
-                    }
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <td
-                        key={cell.id}
-                        className="px-3 py-2 text-sm text-gray-700"
-                        onClick={(e) => {
-                          // Prevent row click when clicking on actions column
-                          if (
-                            cell.column.id === "actions" ||
-                            cell.column.id === "__select__"
-                          ) {
-                            e.stopPropagation()
-                          }
-                        }}
-                      >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </td>
-                    ))}
-                  </tr>
+                  <React.Fragment key={row.id}>
+                    <tr
+                      key={row.id}
+                      className={clsx(
+                        "border-b border-gray-100 hover:bg-gray-50",
+                        enableRowSelection &&
+                          row.getIsSelected() &&
+                          "bg-blue-50/60",
+                        isLoading && "pointer-events-none",
+                        getRowClassName && getRowClassName(row)
+                      )}
+                      onClick={
+                        !isLoading && onRowClick
+                          ? () => onRowClick(row)
+                          : undefined
+                      }
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <td
+                          key={cell.id}
+                          className="px-3 py-2 text-sm text-gray-700"
+                          onClick={(e) => {
+                            // Prevent row click when clicking on actions column
+                            if (
+                              cell.column.id === "actions" ||
+                              cell.column.id === "__select__"
+                            ) {
+                              e.stopPropagation()
+                            }
+                          }}
+                        >
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+
+                    {enableExpanding &&
+                      row.getIsExpanded() &&
+                      renderRowSubComponent && (
+                        <tr>
+                          <td colSpan={row.getVisibleCells().length}>
+                            {renderRowSubComponent({ row })}
+                          </td>
+                        </tr>
+                      )}
+                  </React.Fragment>
                 ))
               )}
             </tbody>
@@ -377,42 +407,48 @@ export function CDataTable<TData, TValue>({
 
       {/* Pagination */}
       <div className="flex items-center justify-between gap-2">
-        <div className="text-sm text-gray-600">
-          Trang {currentPage} / {total} · Tổng{" "}
-          {table.getPrePaginationRowModel().rows.length} dòng
-        </div>
-        <div className="flex flex-1 justify-center">
-          <Pagination
-            total={total}
-            value={currentPage}
-            onChange={(p) =>
-              onPageChange ? onPageChange(p) : table.setPageIndex(p - 1)
-            }
-            withEdges
-            disabled={isLoading}
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <Select
-            className="w-32"
-            aria-label="Số dòng mỗi trang"
-            value={pageSizeValue}
-            onChange={(value) => {
-              if (!value) return
-              const n = Number(value)
-              if (onPageSizeChange) {
-                onPageSizeChange(n)
-              } else {
-                table.setPageSize(n)
-              }
-            }}
-            data={pageSizeOptions.map((n) => ({
-              value: String(n),
-              label: String(n)
-            }))}
-            disabled={isLoading}
-          />
-        </div>
+        {!hidePaginationInformation && (
+          <div className="text-sm text-gray-600">
+            Trang {currentPage} / {total} · Tổng{" "}
+            {table.getPrePaginationRowModel().rows.length} dòng
+          </div>
+        )}
+        {!hidePagination && (
+          <>
+            <div className="flex flex-1 justify-center">
+              <Pagination
+                total={total}
+                value={currentPage}
+                onChange={(p) =>
+                  onPageChange ? onPageChange(p) : table.setPageIndex(p - 1)
+                }
+                withEdges
+                disabled={isLoading}
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Select
+                className="w-32"
+                aria-label="Số dòng mỗi trang"
+                value={pageSizeValue}
+                onChange={(value) => {
+                  if (!value) return
+                  const n = Number(value)
+                  if (onPageSizeChange) {
+                    onPageSizeChange(n)
+                  } else {
+                    table.setPageSize(n)
+                  }
+                }}
+                data={pageSizeOptions.map((n) => ({
+                  value: String(n),
+                  label: String(n)
+                }))}
+                disabled={isLoading}
+              />
+            </div>
+          </>
+        )}
       </div>
     </div>
   )
