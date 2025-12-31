@@ -2008,6 +2008,7 @@ export interface GetLivestreamByDateRangeResponse {
         bonusPercentage: number
         total?: number
       }
+      realIncome?: number
     }[]
     totalOrders: number
     totalIncome: number
@@ -2085,6 +2086,19 @@ export interface GetMonthlyTotalsLivestreamResponse {
   totalOrders: number
   totalIncome: number
   totalAds: number
+}
+
+/** @interface */
+export interface CalculateLivestreamRealIncomeRequest {
+  date: Date
+}
+
+/** @interface */
+export interface CalculateLivestreamRealIncomeResponse {
+  success: boolean
+  processedOrders: number
+  updatedSnapshots: number
+  message: string
 }
 
 // -------------------- LIVESTREAM STATS --------------------

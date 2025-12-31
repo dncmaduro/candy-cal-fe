@@ -95,7 +95,7 @@ export const useLivestreamCore = () => {
     req: ReportLivestreamRequest
   ) => {
     return callApi<ReportLivestreamRequest, ReportLivestreamResponse>({
-      method: "POST",
+      method: "PATCH",
       path: `/v1/livestreamcore/${livestreamId}/snapshots/${snapshotId}/report`,
       data: req,
       token: accessToken
