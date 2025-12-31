@@ -168,9 +168,13 @@ export const useSalesOrders = () => {
       method: "GET",
       token: accessToken,
       headers: {
-        "Content-Type":
+        // request body là JSON
+        "Content-Type": "application/json",
+        // response mong muốn là file excel
+        Accept:
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-      }
+      },
+      responseType: "blob" // thêm param này (xem mục 2)
     })
   }
 
