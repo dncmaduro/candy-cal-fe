@@ -4,7 +4,7 @@ import { useLivestreamCore } from "../../../hooks/useLivestreamCore"
 import { useLivestreamChannels } from "../../../hooks/useLivestreamChannels"
 import { useLivestreamAltRequests } from "../../../hooks/useLivestreamAltRequests"
 import { useUsers } from "../../../hooks/useUsers"
-import { useQuery, useMutation } from "@tanstack/react-query"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import {
   Box,
   Button,
@@ -43,6 +43,7 @@ import {
   parseISO
 } from "date-fns"
 import { Can } from "../../../components/common/Can"
+import { modals } from "@mantine/modals"
 
 export const Route = createFileRoute("/livestream/calendar/")({
   component: RouteComponent,
@@ -57,6 +58,7 @@ export const Route = createFileRoute("/livestream/calendar/")({
 function RouteComponent() {
   const navigate = useNavigate()
   const searchParams = useSearch({ from: "/livestream/calendar/" })
+  const queryClient = useQueryClient()
 
   const {
     getLivestreamsByDateRange,
@@ -182,6 +184,44 @@ function RouteComponent() {
       }),
     select: (data) => data.data.data
   })
+
+  const { mutate: reportLivestreamMutation, isPending: isReporting } =
+    useMutation({
+      mutationFn: async (payload: {
+        livestreamId: string
+        snapshotId: string
+        reportData: {
+          income: number
+          adsCost?: number
+          clickRate: number
+          avgViewingDuration: number
+          comments: number
+          ordersNote: string
+          rating?: string
+        }
+      }) => {
+        const { livestreamId, snapshotId, reportData } = payload
+        return reportLivestream(livestreamId, snapshotId, reportData)
+      },
+      onSuccess: () => {
+        notifications.show({
+          title: "Báo cáo thành công",
+          message: "Đã lưu báo cáo ca livestream",
+          color: "green"
+        })
+        queryClient.invalidateQueries({
+          queryKey: ["getLivestreamsByDateRange"]
+        })
+        modals.closeAll()
+      },
+      onError: (error: any) => {
+        notifications.show({
+          title: "Báo cáo thất bại",
+          message: error?.response?.data?.message || "Có lỗi khi lưu báo cáo",
+          color: "red"
+        })
+      }
+    })
 
   // filter duplicate employees
   const employeesData = useMemo(() => {
@@ -364,30 +404,13 @@ function RouteComponent() {
   const handleOpenReport = (livestreamId: string, snapshot: any) => {
     openLivestreamReportModal({
       snapshot,
-      onSubmit: async (reportData: {
-        income: number
-        adsCost?: number
-        clickRate: number
-        avgViewingDuration: number
-        comments: number
-        ordersNote: string
-        rating?: string
-      }) => {
-        try {
-          await reportLivestream(livestreamId, snapshot._id, reportData)
-          notifications.show({
-            title: "Báo cáo thành công",
-            message: "Đã lưu báo cáo ca livestream",
-            color: "green"
-          })
-          refetch()
-        } catch (error: any) {
-          notifications.show({
-            title: "Báo cáo thất bại",
-            message: error?.response?.data?.message || "Có lỗi khi lưu báo cáo",
-            color: "red"
-          })
-        }
+      isSubmitting: isReporting,
+      onSubmit: (reportData) => {
+        reportLivestreamMutation({
+          livestreamId,
+          snapshotId: snapshot._id,
+          reportData
+        })
       }
     })
   }

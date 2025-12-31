@@ -27,6 +27,18 @@ type LivestreamSnapshot = {
   comments?: number
   ordersNote?: string
   rating?: string
+  realIncome?: number
+}
+
+export type LivestreamReportFormValues = {
+  income: number
+  adsCost?: number
+  clickRate: number
+  avgViewingDuration: number
+  comments: number
+  ordersNote: string
+  rating?: string
+  realIncome?: number
 }
 
 const formatTimeRange = (
@@ -44,60 +56,53 @@ export const openLivestreamReportModal = ({
   forceEdit = false
 }: {
   snapshot: LivestreamSnapshot
-  onSubmit: (data: {
-    income: number
-    adsCost?: number
-    clickRate: number
-    avgViewingDuration: number
-    comments: number
-    ordersNote: string
-    rating?: string
-  }) => void
+  onSubmit: (data: LivestreamReportFormValues) => void
   isSubmitting?: boolean
   forceEdit?: boolean
 }) => {
-  // Check if all required data exists (income and 4 required metrics)
   const hasData =
     !forceEdit &&
-    !!(
-      snapshot.income !== undefined &&
-      snapshot.clickRate !== undefined &&
-      snapshot.avgViewingDuration !== undefined &&
-      snapshot.comments !== undefined &&
-      snapshot.ordersNote !== undefined
-    )
+    snapshot.income !== undefined &&
+    snapshot.clickRate !== undefined &&
+    snapshot.avgViewingDuration !== undefined &&
+    snapshot.comments !== undefined &&
+    snapshot.ordersNote !== undefined
+
+  console.log(snapshot)
 
   const ReportForm = () => {
-    const form = useForm({
+    const form = useForm<LivestreamReportFormValues>({
       initialValues: {
-        income: snapshot.income || 0,
-        adsCost: snapshot.adsCost || 0,
-        clickRate: snapshot.clickRate || 0,
-        avgViewingDuration: snapshot.avgViewingDuration || 0,
-        comments: snapshot.comments || 0,
-        ordersNote: snapshot.ordersNote || "",
-        rating: snapshot.rating || ""
+        income: snapshot.income ?? 0,
+        adsCost: snapshot.adsCost ?? 0,
+        clickRate: snapshot.clickRate ?? 0,
+        avgViewingDuration: snapshot.avgViewingDuration ?? 0,
+        comments: snapshot.comments ?? 0,
+        ordersNote: snapshot.ordersNote ?? "",
+        rating: snapshot.rating ?? "",
+        realIncome: snapshot.realIncome ?? 0
       },
       validate: {
-        income: (value: number) =>
-          value < 0 ? "Doanh thu không được âm" : null,
-        adsCost: (value: number) =>
-          value < 0 ? "Chi phí quảng cáo không được âm" : null,
-        clickRate: (value: number) =>
-          value < 0 ? "Tỷ lệ click không được âm" : null,
-        avgViewingDuration: (value: number) =>
+        income: (value) => (value < 0 ? "Doanh thu không được âm" : null),
+        adsCost: (value) =>
+          value !== undefined && value < 0
+            ? "Chi phí quảng cáo không được âm"
+            : null,
+        clickRate: (value) => (value < 0 ? "Tỷ lệ click không được âm" : null),
+        avgViewingDuration: (value) =>
           value < 0 ? "Thời gian xem không được âm" : null,
-        comments: (value: number) =>
-          value < 0 ? "Số bình luận không được âm" : null
+        comments: (value) => (value < 0 ? "Số bình luận không được âm" : null),
+        ordersNote: (value) =>
+          !value?.trim() ? "Vui lòng nhập ghi chú đơn hàng" : null
       }
     })
 
-    const handleSubmit = form.onSubmit((values) => {
-      onSubmit(values)
-    })
-
     return (
-      <form onSubmit={handleSubmit}>
+      <form
+        onSubmit={form.onSubmit((values) => {
+          onSubmit(values)
+        })}
+      >
         <Stack gap="md">
           <Stack gap="xs">
             <TextInput
@@ -109,6 +114,7 @@ export const openLivestreamReportModal = ({
               readOnly
               disabled
             />
+
             {snapshot.assignee && (
               <TextInput
                 label="Người phụ trách"
@@ -119,15 +125,26 @@ export const openLivestreamReportModal = ({
             )}
           </Stack>
 
-          <NumberInput
-            label="Doanh thu"
-            placeholder="Nhập doanh thu"
-            min={0}
-            thousandSeparator=","
-            suffix=" VNĐ"
-            readOnly={hasData}
-            {...form.getInputProps("income")}
-          />
+          <Group>
+            <NumberInput
+              label="Doanh thu"
+              placeholder="Nhập doanh thu"
+              min={0}
+              thousandSeparator=","
+              suffix=" VNĐ"
+              readOnly={hasData}
+              className="grow"
+              {...form.getInputProps("income")}
+            />
+            <NumberInput
+              label="Doanh thu thực"
+              readOnly
+              thousandSeparator=","
+              suffix=" VNĐ"
+              className="grow"
+              {...form.getInputProps("realIncome")}
+            />
+          </Group>
 
           <NumberInput
             label="Chi phí quảng cáo"
@@ -184,18 +201,20 @@ export const openLivestreamReportModal = ({
             {...form.getInputProps("rating")}
           />
 
-          {!hasData && (
+          {!hasData ? (
             <Group justify="flex-end" mt="md">
-              <Button variant="subtle" onClick={() => modals.closeAll()}>
+              <Button
+                variant="subtle"
+                onClick={() => modals.closeAll()}
+                disabled={!!isSubmitting}
+              >
                 Hủy
               </Button>
               <Button type="submit" loading={isSubmitting}>
                 Lưu báo cáo
               </Button>
             </Group>
-          )}
-
-          {hasData && (
+          ) : (
             <Group justify="flex-end" mt="md">
               <Button
                 variant="light"
@@ -223,7 +242,7 @@ export const openLivestreamReportModal = ({
     title: (
       <b>{hasData ? "Xem báo cáo ca livestream" : "Báo cáo ca livestream"}</b>
     ),
-    size: "lg",
+    size: "xl",
     children: <ReportForm />
   })
 }
