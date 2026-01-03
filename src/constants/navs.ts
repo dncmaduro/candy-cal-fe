@@ -142,6 +142,12 @@ export const LIVESTREAM_NAVS = [
     icon: "IconCirclePercentage"
   },
   {
+    to: `${LIVESTREAM_NAVS_URL}/salary`,
+    label: "Tính lương",
+    roles: ["admin"],
+    icon: "IconCoin"
+  },
+  {
     to: `${LIVESTREAM_NAVS_URL}/channels`,
     label: "Kênh livestream",
     roles: ["admin", "livestream-leader", "system-emp"],

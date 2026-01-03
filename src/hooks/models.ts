@@ -2632,6 +2632,103 @@ export interface CalculateLivestreamMonthSalaryResponse {
   totalSalaryPaid: number
 }
 
+/** @interface */
+export interface CreateLivestreamSalaryRequest {
+  name: string
+  livestreamPerformances: string[]
+  livestreamEmployees: string[]
+}
+
+/** @interface */
+export interface CreateLivestreamSalaryResponse {
+  name: string
+  livestreamPerformances: {
+    _id: string
+    minIncome: number
+    maxIncome: number
+    salaryPerHour: number
+    bonusPercentage: number
+  }[]
+  livestreamEmployees: {
+    _id: string
+    name: string
+  }[]
+}
+
+/** @interface */
+export interface UpdateLivestreamSalaryRequest {
+  name?: string
+  livestreamPerformances?: string[]
+  livestreamEmployees?: string[]
+}
+
+/** @interface */
+export interface UpdateLivestreamSalaryResponse {
+  name: string
+  livestreamPerformances: {
+    _id: string
+    minIncome: number
+    maxIncome: number
+    salaryPerHour: number
+    bonusPercentage: number
+  }[]
+  livestreamEmployees: {
+    _id: string
+    name: string
+  }[]
+}
+
+/** @interface */
+export interface SearchLivestreamSalaryRequest {
+  page: number
+  limit: number
+}
+
+/** @interface */
+export interface SearchLivestreamSalaryResponse {
+  data: {
+    name: string
+    livestreamPerformances: {
+      _id: string
+      minIncome: number
+      maxIncome: number
+      salaryPerHour: number
+      bonusPercentage: number
+    }[]
+    livestreamEmployees: {
+      _id: string
+      name: string
+    }[]
+  }[]
+  total: number
+}
+
+/** @interface */
+export interface DeleteLivestreamSalaryRequest {
+  id: string
+}
+
+/** @interface */
+export interface GetLivestreamSalaryDetailRequest {
+  id: string
+}
+
+/** @interface */
+export interface GetLivestreamSalaryDetailResponse {
+  name: string
+  livestreamPerformances: {
+    _id: string
+    minIncome: number
+    maxIncome: number
+    salaryPerHour: number
+    bonusPercentage: number
+  }[]
+  livestreamEmployees: {
+    _id: string
+    name: string
+  }[]
+}
+
 // -------------------- SALES CHANNELS --------------------
 
 /** @interface */

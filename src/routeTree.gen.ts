@@ -43,6 +43,7 @@ import { Route as MarketingStorageCalfileIndexImport } from './routes/marketing-
 import { Route as MarketingStorageCalIndexImport } from './routes/marketing-storage/cal/index'
 import { Route as MarketingStorageAccountingStorageIndexImport } from './routes/marketing-storage/accounting-storage/index'
 import { Route as LivestreamStatsIndexImport } from './routes/livestream/stats/index'
+import { Route as LivestreamSalaryIndexImport } from './routes/livestream/salary/index'
 import { Route as LivestreamReportsIndexImport } from './routes/livestream/reports/index'
 import { Route as LivestreamPeriodsIndexImport } from './routes/livestream/periods/index'
 import { Route as LivestreamPerformanceIndexImport } from './routes/livestream/performance/index'
@@ -260,6 +261,12 @@ const MarketingStorageAccountingStorageIndexRoute =
 const LivestreamStatsIndexRoute = LivestreamStatsIndexImport.update({
   id: '/livestream/stats/',
   path: '/livestream/stats/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const LivestreamSalaryIndexRoute = LivestreamSalaryIndexImport.update({
+  id: '/livestream/salary/',
+  path: '/livestream/salary/',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -592,6 +599,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LivestreamReportsIndexImport
       parentRoute: typeof rootRoute
     }
+    '/livestream/salary/': {
+      id: '/livestream/salary/'
+      path: '/livestream/salary'
+      fullPath: '/livestream/salary'
+      preLoaderRoute: typeof LivestreamSalaryIndexImport
+      parentRoute: typeof rootRoute
+    }
     '/livestream/stats/': {
       id: '/livestream/stats/'
       path: '/livestream/stats'
@@ -780,6 +794,7 @@ export interface FileRoutesByFullPath {
   '/livestream/performance': typeof LivestreamPerformanceIndexRoute
   '/livestream/periods': typeof LivestreamPeriodsIndexRoute
   '/livestream/reports': typeof LivestreamReportsIndexRoute
+  '/livestream/salary': typeof LivestreamSalaryIndexRoute
   '/livestream/stats': typeof LivestreamStatsIndexRoute
   '/marketing-storage/accounting-storage': typeof MarketingStorageAccountingStorageIndexRoute
   '/marketing-storage/cal': typeof MarketingStorageCalIndexRoute
@@ -832,6 +847,7 @@ export interface FileRoutesByTo {
   '/livestream/performance': typeof LivestreamPerformanceIndexRoute
   '/livestream/periods': typeof LivestreamPeriodsIndexRoute
   '/livestream/reports': typeof LivestreamReportsIndexRoute
+  '/livestream/salary': typeof LivestreamSalaryIndexRoute
   '/livestream/stats': typeof LivestreamStatsIndexRoute
   '/marketing-storage/accounting-storage': typeof MarketingStorageAccountingStorageIndexRoute
   '/marketing-storage/cal': typeof MarketingStorageCalIndexRoute
@@ -886,6 +902,7 @@ export interface FileRoutesById {
   '/livestream/performance/': typeof LivestreamPerformanceIndexRoute
   '/livestream/periods/': typeof LivestreamPeriodsIndexRoute
   '/livestream/reports/': typeof LivestreamReportsIndexRoute
+  '/livestream/salary/': typeof LivestreamSalaryIndexRoute
   '/livestream/stats/': typeof LivestreamStatsIndexRoute
   '/marketing-storage/accounting-storage/': typeof MarketingStorageAccountingStorageIndexRoute
   '/marketing-storage/cal/': typeof MarketingStorageCalIndexRoute
@@ -941,6 +958,7 @@ export interface FileRouteTypes {
     | '/livestream/performance'
     | '/livestream/periods'
     | '/livestream/reports'
+    | '/livestream/salary'
     | '/livestream/stats'
     | '/marketing-storage/accounting-storage'
     | '/marketing-storage/cal'
@@ -992,6 +1010,7 @@ export interface FileRouteTypes {
     | '/livestream/performance'
     | '/livestream/periods'
     | '/livestream/reports'
+    | '/livestream/salary'
     | '/livestream/stats'
     | '/marketing-storage/accounting-storage'
     | '/marketing-storage/cal'
@@ -1044,6 +1063,7 @@ export interface FileRouteTypes {
     | '/livestream/performance/'
     | '/livestream/periods/'
     | '/livestream/reports/'
+    | '/livestream/salary/'
     | '/livestream/stats/'
     | '/marketing-storage/accounting-storage/'
     | '/marketing-storage/cal/'
@@ -1097,6 +1117,7 @@ export interface RootRouteChildren {
   LivestreamPerformanceIndexRoute: typeof LivestreamPerformanceIndexRoute
   LivestreamPeriodsIndexRoute: typeof LivestreamPeriodsIndexRoute
   LivestreamReportsIndexRoute: typeof LivestreamReportsIndexRoute
+  LivestreamSalaryIndexRoute: typeof LivestreamSalaryIndexRoute
   LivestreamStatsIndexRoute: typeof LivestreamStatsIndexRoute
   MarketingStorageAccountingStorageIndexRoute: typeof MarketingStorageAccountingStorageIndexRoute
   MarketingStorageCalIndexRoute: typeof MarketingStorageCalIndexRoute
@@ -1149,6 +1170,7 @@ const rootRouteChildren: RootRouteChildren = {
   LivestreamPerformanceIndexRoute: LivestreamPerformanceIndexRoute,
   LivestreamPeriodsIndexRoute: LivestreamPeriodsIndexRoute,
   LivestreamReportsIndexRoute: LivestreamReportsIndexRoute,
+  LivestreamSalaryIndexRoute: LivestreamSalaryIndexRoute,
   LivestreamStatsIndexRoute: LivestreamStatsIndexRoute,
   MarketingStorageAccountingStorageIndexRoute:
     MarketingStorageAccountingStorageIndexRoute,
@@ -1212,6 +1234,7 @@ export const routeTree = rootRoute
         "/livestream/performance/",
         "/livestream/periods/",
         "/livestream/reports/",
+        "/livestream/salary/",
         "/livestream/stats/",
         "/marketing-storage/accounting-storage/",
         "/marketing-storage/cal/",
@@ -1327,6 +1350,9 @@ export const routeTree = rootRoute
     },
     "/livestream/reports/": {
       "filePath": "livestream/reports/index.tsx"
+    },
+    "/livestream/salary/": {
+      "filePath": "livestream/salary/index.tsx"
     },
     "/livestream/stats/": {
       "filePath": "livestream/stats/index.tsx"
