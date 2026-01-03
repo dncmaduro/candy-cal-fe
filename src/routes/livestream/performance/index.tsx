@@ -4,10 +4,10 @@ import { useLivestreamPerformance } from "../../../hooks/useLivestreamPerformanc
 import { useLivestreamCore } from "../../../hooks/useLivestreamCore"
 import { useLivestreamChannels } from "../../../hooks/useLivestreamChannels"
 import { useUsers } from "../../../hooks/useUsers"
+import { useLivestreamSalary } from "../../../hooks/useLivestreamSalary"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import {
   Box,
-  Button,
   Divider,
   Flex,
   Group,
@@ -15,215 +15,39 @@ import {
   Text,
   ActionIcon,
   Stack,
-  NumberInput,
   Select,
   Paper,
   Center,
   Loader,
-  SegmentedControl
+  SegmentedControl,
+  Accordion
 } from "@mantine/core"
-import {
-  IconEdit,
-  IconPlus,
-  IconTrash,
-  IconCalculator,
-  IconChevronLeft,
-  IconChevronRight
-} from "@tabler/icons-react"
+import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
 import { Can } from "../../../components/common/Can"
 import { CToast } from "../../../components/common/CToast"
 import { useState, useMemo, useEffect } from "react"
-import { CDataTable } from "../../../components/common/CDataTable"
-import { ColumnDef } from "@tanstack/react-table"
-import { DatePickerInput } from "@mantine/dates"
-import { useForm, Controller } from "react-hook-form"
+import { MonthPickerInput } from "@mantine/dates"
 import { format, startOfWeek, endOfWeek, eachDayOfInterval } from "date-fns"
-import type { SearchLivestreamPerformanceResponse } from "../../../hooks/models"
 import { LivestreamCalendarTable } from "../../../components/livestream/LivestreamCalendarTable"
 import { MonthlySalaryTable } from "../../../components/livestream/MonthlySalaryTable"
 import { CalculateIncomeModal } from "../../../components/livestream/CalculateIncomeModal"
 import { openLivestreamReportModal } from "../../../components/livestream/LivestreamReportModal"
 import { notifications } from "@mantine/notifications"
 
-type PerformanceRule = SearchLivestreamPerformanceResponse["data"][0]
-
 export const Route = createFileRoute("/livestream/performance/")({
   component: RouteComponent
 })
 
-interface PerformanceFormData {
-  minIncome: number
-  maxIncome: number
-  salaryPerHour: number
-  bonusPercentage: number
-}
-
-function PerformanceModal({
-  performance,
-  refetch
-}: {
-  performance?: PerformanceRule
-  refetch: () => void
-}) {
-  const { createLivestreamPerformance, updateLivestreamPerformance } =
+function RouteComponent() {
+  const { calculateDailyPerformance, calculateLivestreamMonthSalary } =
     useLivestreamPerformance()
 
-  const {
-    control,
-    handleSubmit,
-    formState: { errors }
-  } = useForm<PerformanceFormData>({
-    defaultValues: {
-      minIncome: performance?.minIncome || 0,
-      maxIncome: performance?.maxIncome || 0,
-      salaryPerHour: performance?.salaryPerHour || 0,
-      bonusPercentage: performance?.bonusPercentage || 0
-    }
-  })
-
-  const { mutate: create, isPending: creating } = useMutation({
-    mutationFn: createLivestreamPerformance,
-    onSuccess: () => {
-      CToast.success({ title: "Thêm bậc lương thành công" })
-      modals.closeAll()
-      refetch()
-    },
-    onError: () => {
-      CToast.error({ title: "Có lỗi xảy ra khi thêm bậc lương" })
-    }
-  })
-
-  const { mutate: update, isPending: updating } = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) =>
-      updateLivestreamPerformance(id, data),
-    onSuccess: () => {
-      CToast.success({ title: "Cập nhật bậc lương thành công" })
-      modals.closeAll()
-      refetch()
-    },
-    onError: () => {
-      CToast.error({ title: "Có lỗi xảy ra khi cập nhật bậc lương" })
-    }
-  })
-
-  const onSubmit = (data: PerformanceFormData) => {
-    if (performance) {
-      update({ id: performance._id, data })
-    } else {
-      create(data)
-    }
-  }
-
-  return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <Stack gap="md">
-        <Group grow>
-          <Controller
-            control={control}
-            name="minIncome"
-            rules={{ required: "Vui lòng nhập doanh thu tối thiểu" }}
-            render={({ field }) => (
-              <NumberInput
-                {...field}
-                label="Doanh thu tối thiểu (VNĐ)"
-                placeholder="Nhập doanh thu tối thiểu"
-                error={errors.minIncome?.message}
-                thousandSeparator=","
-                min={0}
-                required
-              />
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="maxIncome"
-            rules={{ required: "Vui lòng nhập doanh thu tối đa" }}
-            render={({ field }) => (
-              <NumberInput
-                {...field}
-                label="Doanh thu tối đa (VNĐ)"
-                placeholder="Nhập doanh thu tối đa"
-                error={errors.maxIncome?.message}
-                thousandSeparator=","
-                min={0}
-                required
-              />
-            )}
-          />
-        </Group>
-
-        <Group grow>
-          <Controller
-            control={control}
-            name="salaryPerHour"
-            rules={{ required: "Vui lòng nhập lương theo giờ" }}
-            render={({ field }) => (
-              <NumberInput
-                {...field}
-                label="Lương theo giờ (VNĐ)"
-                placeholder="Nhập lương theo giờ"
-                error={errors.salaryPerHour?.message}
-                thousandSeparator=","
-                min={0}
-                required
-              />
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="bonusPercentage"
-            rules={{ required: "Vui lòng nhập % thưởng" }}
-            render={({ field }) => (
-              <NumberInput
-                {...field}
-                label="Phần trăm thưởng (%)"
-                placeholder="Nhập % thưởng"
-                error={errors.bonusPercentage?.message}
-                min={0}
-                max={100}
-                decimalScale={2}
-                required
-              />
-            )}
-          />
-        </Group>
-
-        <Group justify="flex-end" mt="md">
-          <Button
-            variant="subtle"
-            onClick={() => modals.closeAll()}
-            disabled={creating || updating}
-          >
-            Hủy
-          </Button>
-          <Button type="submit" loading={creating || updating}>
-            {performance ? "Cập nhật" : "Thêm mới"}
-          </Button>
-        </Group>
-      </Stack>
-    </form>
-  )
-}
-
-function RouteComponent() {
-  const {
-    searchLivestreamPerformance,
-    deleteLivestreamPerformance,
-    calculateDailyPerformance,
-    calculateLivestreamMonthSalary
-  } = useLivestreamPerformance()
-
+  const { searchLivestreamSalary } = useLivestreamSalary()
   const { getLivestreamsByDateRange, reportLivestream } = useLivestreamCore()
   const { searchLivestreamChannels } = useLivestreamChannels()
-  const { getMe } = useUsers()
+  const { getMe, publicSearchUser } = useUsers()
   const queryClient = useQueryClient()
-
-  const [page, setPage] = useState(1)
-  const [limit, setLimit] = useState(20)
-  const [sortOrder] = useState<"asc" | "desc">("asc")
 
   // Calendar filters
   const [weekDate, setWeekDate] = useState<Date>(new Date())
@@ -231,6 +55,9 @@ function RouteComponent() {
     null
   )
   const [viewMode, setViewMode] = useState<"calendar" | "salary">("calendar")
+
+  // Salary view filter
+  const [salaryMonth, setSalaryMonth] = useState<Date>(new Date())
 
   // Get current user
   const { data: me } = useQuery({
@@ -249,45 +76,15 @@ function RouteComponent() {
     setViewMode(isAdmin ? "calendar" : "salary")
   }, [me])
 
-  const {
-    data: performanceData,
-    refetch,
-    isLoading
-  } = useQuery({
-    queryKey: ["searchLivestreamPerformance", page, limit, sortOrder],
+  // Fetch salary configurations
+  const { data: salaryData, isLoading: isLoadingSalaryConfig } = useQuery({
+    queryKey: ["searchLivestreamSalary"],
     queryFn: () =>
-      searchLivestreamPerformance({
-        page,
-        limit,
-        sortOrder
+      searchLivestreamSalary({
+        page: 1,
+        limit: 1000
       }),
-    select: (data) => data.data
-  })
-
-  const { mutate: deletePerformance } = useMutation({
-    mutationFn: deleteLivestreamPerformance,
-    onSuccess: () => {
-      CToast.success({ title: "Xóa bậc lương thành công" })
-      refetch()
-    },
-    onError: () => {
-      CToast.error({ title: "Có lỗi xảy ra khi xóa bậc lương" })
-    }
-  })
-
-  const { mutate: calculateDaily, isPending: calculating } = useMutation({
-    mutationFn: calculateDailyPerformance,
-    onSuccess: (response) => {
-      const data = response.data
-      CToast.success({
-        title: "Tính toán hiệu suất thành công",
-        subtitle: `Cập nhật: ${data.snapshotsUpdated}, Bỏ qua: ${data.snapshotsSkipped}`
-      })
-      refetch()
-    },
-    onError: () => {
-      CToast.error({ title: "Có lỗi xảy ra khi tính toán hiệu suất" })
-    }
+    select: (data) => data.data.data
   })
 
   // Mutation for daily salary calculation from calendar
@@ -335,7 +132,9 @@ function RouteComponent() {
           message: "Đã lưu báo cáo ca livestream",
           color: "green"
         })
-        refetch()
+        queryClient.invalidateQueries({
+          queryKey: ["getLivestreamsByDateRange"]
+        })
         modals.closeAll()
       },
       onError: (error: any) => {
@@ -383,92 +182,6 @@ function RouteComponent() {
       size: "xl"
     })
   }
-
-  const openPerformanceModal = (performance?: PerformanceRule) => {
-    modals.open({
-      title: (
-        <b>{performance ? "Chỉnh sửa bậc lương" : "Thêm bậc lương mới"}</b>
-      ),
-      children: (
-        <PerformanceModal performance={performance} refetch={refetch} />
-      ),
-      size: "lg"
-    })
-  }
-
-  const openCalculateModal = () => {
-    let selectedDate: Date | null = new Date()
-
-    modals.open({
-      title: <b>Tính toán hiệu suất hàng ngày</b>,
-      children: (
-        <Stack gap="md">
-          <Text size="sm" c="dimmed">
-            Tính toán lương cho tất cả các livestream snapshot trong ngày được
-            chọn dựa trên bậc lương đã cấu hình.
-          </Text>
-          <DatePickerInput
-            label="Ngày"
-            placeholder="Chọn ngày"
-            value={selectedDate}
-            onChange={(date) => (selectedDate = date)}
-            locale="vi"
-            required
-          />
-          <Group justify="flex-end" mt="md">
-            <Button variant="subtle" onClick={() => modals.closeAll()}>
-              Hủy
-            </Button>
-            <Button
-              loading={calculating}
-              onClick={() => {
-                if (selectedDate) {
-                  calculateDaily({
-                    date: selectedDate
-                  })
-                  modals.closeAll()
-                }
-              }}
-            >
-              Tính toán
-            </Button>
-          </Group>
-        </Stack>
-      ),
-      size: "md"
-    })
-  }
-
-  const confirmDelete = (performance: PerformanceRule) => {
-    modals.openConfirmModal({
-      title: "Xác nhận xóa",
-      children: (
-        <Text size="sm">
-          Bạn có chắc chắn muốn xóa bậc lương từ{" "}
-          <strong>
-            {new Intl.NumberFormat("vi-VN", {
-              style: "currency",
-              currency: "VND"
-            }).format(performance.minIncome)}
-          </strong>{" "}
-          đến{" "}
-          <strong>
-            {new Intl.NumberFormat("vi-VN", {
-              style: "currency",
-              currency: "VND"
-            }).format(performance.maxIncome)}
-          </strong>
-          ?
-        </Text>
-      ),
-      labels: { confirm: "Xóa", cancel: "Hủy" },
-      confirmProps: { color: "red" },
-      onConfirm: () => deletePerformance({ id: performance._id })
-    })
-  }
-
-  const performances = performanceData?.data || []
-  const totalPerformances = performanceData?.total || 0
 
   // Calculate week range for calendar
   const weekRange = useMemo(() => {
@@ -520,9 +233,31 @@ function RouteComponent() {
     enabled: !!selectedChannelId && viewMode === "calendar"
   })
 
+  const { data: livestreamEmpData } = useQuery({
+    queryKey: ["livestreamEmployees"],
+    queryFn: () =>
+      publicSearchUser({
+        page: 1,
+        limit: 100,
+        role: "livestream-emp"
+      }),
+    select: (data) => data.data.data
+  })
+
+  const { data: livestreamLeaderData } = useQuery({
+    queryKey: ["livestreamLeaders"],
+    queryFn: () =>
+      publicSearchUser({
+        page: 1,
+        limit: 100,
+        role: "livestream-leader"
+      }),
+    select: (data) => data.data.data
+  })
+
   // Fetch monthly salary data
-  const currentMonth = new Date().getMonth() + 1
-  const currentYear = new Date().getFullYear()
+  const currentMonth = salaryMonth.getMonth() + 1
+  const currentYear = salaryMonth.getFullYear()
 
   const { data: monthlySalaryData, isLoading: isLoadingSalary } = useQuery({
     queryKey: ["calculateLivestreamMonthSalary", currentMonth, currentYear],
@@ -572,17 +307,39 @@ function RouteComponent() {
     >()
 
     monthlyLivestreamData.forEach((livestream) => {
-      // Group snapshots by userId
+      // Group snapshots by userId with correct priority logic
       const userSnapshotsMap = new Map<string, any[]>()
 
       livestream.snapshots.forEach((snapshot) => {
-        if (snapshot.assignee && snapshot.salary?.total) {
-          const userId = snapshot.assignee._id
-          if (!userSnapshotsMap.has(userId)) {
-            userSnapshotsMap.set(userId, [])
+        if (!snapshot.salary?.total) return
+
+        let userId: string | null = null
+
+        // Priority logic:
+        // 1. If altAssignee exists and is "other" -> skip (no salary)
+        // 2. If altAssignee exists and is not "other" -> use altAssignee._id
+        // 3. If no altAssignee -> use assignee._id
+        console.log(snapshot)
+        if (snapshot.altAssignee) {
+          if (snapshot.altAssignee === "other") {
+            // Skip this snapshot - no salary for "other"
+            return
+          } else if (typeof snapshot.altAssignee === "string") {
+            console.log(snapshot.altAssignee, "www")
+
+            userId = snapshot.altAssignee
           }
-          userSnapshotsMap.get(userId)!.push(snapshot)
+        } else if (snapshot.assignee) {
+          console.log(snapshot.altAssignee, "ble")
+          userId = snapshot.assignee._id
         }
+
+        if (!userId) return
+
+        if (!userSnapshotsMap.has(userId)) {
+          userSnapshotsMap.set(userId, [])
+        }
+        userSnapshotsMap.get(userId)!.push(snapshot)
       })
 
       // Calculate daily totals for each user
@@ -651,6 +408,13 @@ function RouteComponent() {
     )}`
   }, [weekRange])
 
+  const employeesData = useMemo(() => {
+    const emps = [...(livestreamEmpData || []), ...(livestreamLeaderData || [])]
+    return emps.filter((emp, index, self) => {
+      return self.findIndex((e) => e._id === emp._id) === index
+    })
+  }, [livestreamEmpData, livestreamLeaderData])
+
   // Channel options
   const channelOptions = useMemo(() => {
     if (!channelsData) return []
@@ -660,169 +424,107 @@ function RouteComponent() {
     }))
   }, [channelsData])
 
-  const columns = useMemo<ColumnDef<PerformanceRule>[]>(
-    () => [
-      {
-        accessorKey: "minIncome",
-        header: "Doanh thu tối thiểu",
-        cell: ({ row }) => (
-          <Text fw={500}>
-            {new Intl.NumberFormat("vi-VN", {
-              style: "currency",
-              currency: "VND"
-            }).format(row.original.minIncome)}
-          </Text>
-        )
-      },
-      {
-        accessorKey: "maxIncome",
-        header: "Doanh thu tối đa",
-        cell: ({ row }) => (
-          <Text fw={500}>
-            {new Intl.NumberFormat("vi-VN", {
-              style: "currency",
-              currency: "VND"
-            }).format(row.original.maxIncome)}
-          </Text>
-        )
-      },
-      {
-        accessorKey: "salaryPerHour",
-        header: "Lương/giờ",
-        cell: ({ row }) => (
-          <Text fw={600} c="indigo">
-            {new Intl.NumberFormat("vi-VN", {
-              style: "currency",
-              currency: "VND"
-            }).format(row.original.salaryPerHour)}
-          </Text>
-        )
-      },
-      {
-        accessorKey: "bonusPercentage",
-        header: "% Thưởng",
-        cell: ({ row }) => (
-          <Text fw={600} c="teal">
-            {row.original.bonusPercentage}%
-          </Text>
-        )
-      },
-      {
-        id: "actions",
-        header: "Thao tác",
-        cell: ({ row }) => (
-          <Group gap="xs">
-            <Can roles={["admin", "livestream-leader"]}>
-              <ActionIcon
-                variant="light"
-                color="indigo"
-                size="sm"
-                onClick={() => openPerformanceModal(row.original)}
-              >
-                <IconEdit size={16} />
-              </ActionIcon>
-              <ActionIcon
-                variant="light"
-                color="red"
-                size="sm"
-                onClick={() => confirmDelete(row.original)}
-              >
-                <IconTrash size={16} />
-              </ActionIcon>
-            </Can>
-          </Group>
-        )
-      }
-    ],
-    [openPerformanceModal, confirmDelete]
-  )
-
   return (
     <LivestreamLayout>
-      <Can roles={["admin", "livestream-leader"]}>
-        <Box
-          mt={40}
-          mx="auto"
-          px={{ base: 8, md: 0 }}
-          w="100%"
-          style={{
-            background: "rgba(255,255,255,0.97)",
-            borderRadius: rem(20),
-            boxShadow: "0 4px 32px 0 rgba(60,80,180,0.07)",
-            border: "1px solid #ececec"
-          }}
-        >
-          {/* Header Section */}
-          <Flex
-            align="flex-start"
-            justify="space-between"
-            pt={32}
-            pb={16}
-            px={{ base: 8, md: 28 }}
-            direction="row"
-            gap={8}
-          >
-            <Box>
-              <Text fw={700} fz="xl" mb={2}>
-                Bậc lương Livestream
-              </Text>
-              <Text c="dimmed" fz="sm">
-                Quản lý các bậc lương dựa trên doanh thu
-              </Text>
-            </Box>
-
-            <Group>
-              <Can roles={["admin", "livestream-leader"]}>
-                <Button
-                  leftSection={<IconCalculator size={16} />}
-                  variant="light"
-                  onClick={openCalculateModal}
-                  loading={calculating}
-                  size="md"
-                  radius="xl"
-                >
-                  Tính toán tự động
-                </Button>
-                <Button
-                  leftSection={<IconPlus size={16} />}
-                  onClick={() => openPerformanceModal()}
-                  size="md"
-                  radius="xl"
-                >
-                  Thêm bậc lương
-                </Button>
-              </Can>
-            </Group>
-          </Flex>
-
-          <Divider my={0} />
-
-          {/* Content */}
-          <Box px={{ base: 4, md: 28 }} py={20}>
-            <CDataTable
-              columns={columns}
-              data={performances}
-              isLoading={isLoading}
-              page={page}
-              totalPages={Math.ceil(totalPerformances / limit)}
-              onPageChange={setPage}
-              onPageSizeChange={setLimit}
-              initialPageSize={limit}
-              hideSearch
-              getRowId={(row) => row._id}
-            />
-
-            {/* Summary */}
-            {performances.length > 0 && (
-              <Flex justify="space-between" align="center" mt={16}>
-                <Text c="dimmed" fz="sm">
-                  Hiển thị {performances.length} / {totalPerformances} bậc lương
+      {/* Salary Configuration Section */}
+      <Box
+        mt={40}
+        mx="auto"
+        px={{ base: 8, md: 0 }}
+        w="100%"
+        style={{
+          background: "rgba(255,255,255,0.97)",
+          borderRadius: rem(20),
+          boxShadow: "0 4px 32px 0 rgba(60,80,180,0.07)",
+          border: "1px solid #ececec"
+        }}
+      >
+        <Accordion defaultValue="">
+          <Accordion.Item value="salary-config">
+            <Accordion.Control>
+              <Box>
+                <Text fw={700} fz="lg">
+                  Cấu trúc lương Livestream
                 </Text>
-              </Flex>
-            )}
-          </Box>
-        </Box>
-      </Can>
+                <Text c="dimmed" fz="sm">
+                  Quản lý cấu trúc lương cho từng nhân viên
+                </Text>
+              </Box>
+            </Accordion.Control>
+            <Accordion.Panel>
+              <Box px={{ base: 4, md: 28 }} py={20}>
+                {isLoadingSalaryConfig ? (
+                  <Center h={200}>
+                    <Loader />
+                  </Center>
+                ) : !salaryData || salaryData.length === 0 ? (
+                  <Center h={200}>
+                    <Text c="dimmed" size="sm">
+                      Chưa có cấu trúc lương nào
+                    </Text>
+                  </Center>
+                ) : (
+                  <Stack gap="md">
+                    {salaryData.map((salary, idx) => (
+                      <Paper key={idx} p="lg" withBorder radius="md">
+                        <Stack gap="md">
+                          <Text fw={600} size="lg">
+                            {salary.name}
+                          </Text>
+
+                          <Box>
+                            <Text fw={500} size="sm" c="dimmed" mb={8}>
+                              Nhân viên:
+                            </Text>
+                            <Text size="sm">
+                              {salary.livestreamEmployees
+                                ?.map((e) => e.name)
+                                .join(", ") || "-"}
+                            </Text>
+                          </Box>
+
+                          <Box>
+                            <Text fw={500} size="sm" c="dimmed" mb={8}>
+                              Bậc lương áp dụng:
+                            </Text>
+                            {salary.livestreamPerformances &&
+                            salary.livestreamPerformances.length > 0 ? (
+                              <Stack gap={4}>
+                                {salary.livestreamPerformances.map(
+                                  (perf, perfIdx) => (
+                                    <Text key={perfIdx} fz="sm" c="dimmed">
+                                      {new Intl.NumberFormat("vi-VN").format(
+                                        perf.minIncome
+                                      )}{" "}
+                                      -{" "}
+                                      {new Intl.NumberFormat("vi-VN").format(
+                                        perf.maxIncome
+                                      )}{" "}
+                                      VNĐ (
+                                      {new Intl.NumberFormat("vi-VN").format(
+                                        perf.salaryPerHour
+                                      )}
+                                      đ/h, {perf.bonusPercentage}%)
+                                    </Text>
+                                  )
+                                )}
+                              </Stack>
+                            ) : (
+                              <Text size="sm" c="dimmed">
+                                Chưa có bậc lương
+                              </Text>
+                            )}
+                          </Box>
+                        </Stack>
+                      </Paper>
+                    ))}
+                  </Stack>
+                )}
+              </Box>
+            </Accordion.Panel>
+          </Accordion.Item>
+        </Accordion>
+      </Box>
 
       {/* Calendar View Section */}
       <Box
@@ -961,6 +663,23 @@ function RouteComponent() {
                   </Stack>
                 </>
               )}
+
+              {viewMode === "salary" && (
+                <Stack gap={4}>
+                  <Text size="xs" fw={600} c="dimmed" tt="uppercase">
+                    Tháng xem lương
+                  </Text>
+                  <MonthPickerInput
+                    placeholder="Chọn tháng"
+                    value={salaryMonth}
+                    onChange={(date) => setSalaryMonth(date || new Date())}
+                    locale="vi"
+                    size="sm"
+                    radius="md"
+                    maxDate={new Date()}
+                  />
+                </Stack>
+              )}
             </Stack>
           </Paper>
 
@@ -993,7 +712,7 @@ function RouteComponent() {
                   <LivestreamCalendarTable
                     role="host"
                     weekDays={weekDays}
-                    employeesData={[]}
+                    employeesData={employeesData}
                     livestreamData={livestreamData}
                     onAssignEmployee={() => {}}
                     onUnassignEmployee={() => {}}
