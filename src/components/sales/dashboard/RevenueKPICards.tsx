@@ -3,13 +3,15 @@ import {
   IconCash,
   IconShoppingCart,
   IconUserPlus,
-  IconUserCheck
+  IconUserCheck,
+  IconPackageExport
 } from "@tabler/icons-react"
 
 interface RevenueKPICardsProps {
   isLoading: boolean
   totalRevenue?: number
   totalOrders?: number
+  totalQuantity?: number
   totalTax?: number
   totalShippingCost?: number
   revenueFromNewCustomers?: number
@@ -20,6 +22,7 @@ export function RevenueKPICards({
   isLoading,
   totalRevenue,
   totalOrders,
+  totalQuantity,
   totalTax,
   totalShippingCost,
   revenueFromNewCustomers,
@@ -109,6 +112,28 @@ export function RevenueKPICards({
               </Group>
               <Text fw={700} fz="xl">
                 {totalOrders}
+              </Text>
+            </>
+          )}
+        </Card>
+      </Grid.Col>
+
+      <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+        <Card shadow="sm" padding="lg" radius="md" withBorder>
+          {isLoading ? (
+            <Skeleton height={100} />
+          ) : (
+            <>
+              <Group justify="space-between" mb="xs">
+                <Text size="sm" c="dimmed">
+                  Tổng số thùng
+                </Text>
+                <ThemeIcon variant="light" size="lg" color="yellow">
+                  <IconPackageExport />
+                </ThemeIcon>
+              </Group>
+              <Text fw={700} fz="xl">
+                {totalQuantity}
               </Text>
             </>
           )}

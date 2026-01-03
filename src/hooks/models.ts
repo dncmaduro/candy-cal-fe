@@ -4210,6 +4210,7 @@ export interface GetSalesRevenueRequest {
 export interface GetSalesRevenueResponse {
   totalRevenue: number
   totalOrders: number
+  totalQuantity: number
   totalTax: number
   totalShippingCost: number
   revenueFromNewCustomers: number
