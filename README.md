@@ -85,6 +85,12 @@ npm run routes    # Generate router tree
 
 ## 7. Lịch sử cập nhật
 
+### 4.0.6
+
+- Cập nhật thêm tổng số thùng cho sales
+- Bổ sung cấu trúc lương cho host livestream
+- PWA cho iOS
+
 ### 4.0.5
 
 - Cập nhật, đồng bộ toàn bộ giao diện cho phần kho vận
@@ -197,8 +203,6 @@ npm run routes    # Generate router tree
   - Kết quả lưu trữ với tooltips thời gian
 - **An toàn kiểu dữ liệu**: Hoàn toàn loại bỏ kiểu `any`, sử dụng TypeScript interfaces đúng cho tất cả kết quả tính toán.
 - **Điều hướng**: Cập nhật cấu trúc điều hướng, deprecated route `/calfile` với hỗ trợ redirectTo.
-
-### 3.2.0
 
 ### 3.2.0
 
