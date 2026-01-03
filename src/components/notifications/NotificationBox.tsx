@@ -15,10 +15,13 @@ import {
   Text
 } from "@mantine/core"
 import { NotificationItem } from "./NotificationItem"
+import { useMediaQuery } from "@mantine/hooks"
 
 export const NotificationBox = () => {
   const { getNotifications, markAllAsRead } = useNotifications()
   const queryClient = useQueryClient()
+
+  const isMobile = useMediaQuery("(max-width: 768px)")
 
   const { mutate: readAll } = useMutation({
     mutationFn: () => markAllAsRead(),
@@ -88,9 +91,9 @@ export const NotificationBox = () => {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
   return (
-    <Box>
+    <Box className="">
       <Group justify="space-between" align="center" mb={6} px={4}>
-        <Text fw={700} fz="md">
+        <Text fw={700} fz={isMobile ? "sm" : "md"}>
           Thông báo
         </Text>
         <Button
@@ -102,15 +105,15 @@ export const NotificationBox = () => {
           Đánh dấu tất cả đã đọc
         </Button>
       </Group>
-      <ScrollArea.Autosize w={380} mah={600}>
-        <Stack>
+      <ScrollArea.Autosize w={isMobile ? 300 : 380} mah={500}>
+        <Stack gap={isMobile ? 4 : 8}>
           {notifications?.map((noti) => (
             <NotificationItem key={noti._id} notification={noti} />
           ))}
           {(hasNextPage || isFetchingNextPage) && (
             <Skeleton
               ref={loaderRef}
-              h={48}
+              h={isMobile ? 48 : 48}
               radius="md"
               my={8}
               visible={isFetchingNextPage || hasNextPage}

@@ -12,6 +12,7 @@ import { useUserStore } from "../../store/userStore"
 import { useUsers } from "../../hooks/useUsers"
 import { useQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
+import { useMediaQuery } from "@mantine/hooks"
 
 export const UserMenu = () => {
   const { clearUser } = useUserStore()
@@ -22,6 +23,7 @@ export const UserMenu = () => {
     queryFn: () => getMe(),
     select: (data) => data.data
   })
+  const isMobile = useMediaQuery("(max-width: 768px)")
 
   const ROLES: Record<string, string> = {
     admin: "Admin",
@@ -39,37 +41,37 @@ export const UserMenu = () => {
     {
       to: "/marketing-storage",
       label: "Kho vận",
-      icon: <IconPackages size={18} />,
+      icon: <IconPackages size={isMobile ? 14 : 18} />,
       roles: ["admin", "order-emp", "accounting-emp", "system-emp"]
     },
     {
       to: "/landing",
       label: "Landing Page",
-      icon: <IconAppWindow size={18} />,
+      icon: <IconAppWindow size={isMobile ? 14 : 18} />,
       roles: ["admin"]
     },
     {
       to: "/livestream",
       label: "Livestream",
-      icon: <IconVideo size={18} />,
+      icon: <IconVideo size={isMobile ? 14 : 18} />,
       roles: ["admin", "system-emp", "livestream-leader", "livestream-emp"]
     },
     {
       to: "/sales",
       label: "Sales",
-      icon: <IconShoppingBag size={18} />,
+      icon: <IconShoppingBag size={isMobile ? 14 : 18} />,
       roles: ["admin", "system-emp", "sales-leader", "sales-emp"]
     },
     {
       to: "/admin",
       label: "Quản trị",
-      icon: <IconSettings size={18} />,
+      icon: <IconSettings size={isMobile ? 14 : 18} />,
       roles: ["admin"]
     }
   ]
 
   return (
-    <Menu shadow="xl" withArrow position="bottom-end" offset={8}>
+    <Menu shadow="xl" withArrow position="bottom-end" offset={isMobile ? 2 : 8}>
       <Menu.Target>
         <Group
           gap={10}
@@ -85,43 +87,46 @@ export const UserMenu = () => {
           }}
         >
           <Avatar
-            size="sm"
+            size={isMobile ? 24 : "sm"}
             radius="xl"
             alt={meData?.name}
             src={meData?.avatarUrl}
           />
           <Box>
-            <Text fw={500} fz="sm" lh={1.2}>
+            <Text fw={500} fz={isMobile ? "xs" : "sm"} lh={isMobile ? 1 : 1.2}>
               {meData?.name ?? "Người dùng"}
             </Text>
-            <Text size="xs" c="dimmed" lh={1.2}>
+            <Text
+              fz={isMobile ? "10" : "xs"}
+              c="dimmed"
+              lh={isMobile ? 1 : 1.2}
+            >
               {meData?.roles.map((r) => ROLES[r]).join(", ")}
             </Text>
           </Box>
         </Group>
       </Menu.Target>
 
-      <Menu.Dropdown px={0} py={0} style={{ minWidth: 230 }}>
+      <Menu.Dropdown px={0} py={0} style={{ minWidth: isMobile ? 200 : 230 }}>
         <Box p="md" bg="gray.0" mb={6}>
           <Stack gap={4} align="center">
             <Avatar
-              size={54}
+              size={isMobile ? 40 : 54}
               radius={32}
               src={meData?.avatarUrl}
               alt={meData?.name}
               style={{ border: "2px solid #ececec" }}
             />
-            <Text fw={600} fz="md">
+            <Text fw={600} fz={isMobile ? "sm" : "md"}>
               {meData?.name ?? "Người dùng"}
             </Text>
-            <Text size="xs" c="dimmed">
+            <Text c="dimmed" fz={isMobile ? "xs" : "sm"}>
               {meData?.roles.map((r) => ROLES[r]).join(", ")}
             </Text>
           </Stack>
         </Box>
 
-        <Menu.Divider my={0} />
-        <Menu.Label>Các ứng dụng</Menu.Label>
+        <Menu.Label fz={isMobile ? "11" : "sm"}>Các ứng dụng</Menu.Label>
         {APPS.map((app) => {
           const hasPermission = app.roles.some((role) =>
             meData?.roles.includes(role)
@@ -131,7 +136,7 @@ export const UserMenu = () => {
             <Menu.Item
               key={app.to}
               leftSection={app.icon}
-              fz="sm"
+              fz={isMobile ? "xs" : "sm"}
               component={Link}
               to={app.to}
               hidden={!hasPermission}
@@ -143,22 +148,22 @@ export const UserMenu = () => {
 
         <Menu.Divider my={0} />
 
-        <Menu.Label>Tài khoản</Menu.Label>
+        <Menu.Label fz={isMobile ? "11" : "sm"}>Tài khoản</Menu.Label>
         <Menu.Item
-          leftSection={<IconUser size={18} />}
+          leftSection={<IconUser size={isMobile ? 14 : 18} />}
           onClick={() => {
             /* Chuyển trang tài khoản nếu có */
           }}
-          fz="sm"
+          fz={isMobile ? "xs" : "sm"}
           component={Link}
           to="/user"
         >
           Thông tin tài khoản
         </Menu.Item>
         <Menu.Item
-          leftSection={<IconPower size={18} />}
+          leftSection={<IconPower size={isMobile ? 14 : 18} />}
           color="red"
-          fz="sm"
+          fz={isMobile ? "xs" : "sm"}
           onClick={clearUser}
         >
           Đăng xuất

@@ -13,12 +13,14 @@ import { Link } from "@tanstack/react-router"
 import { useNotifications } from "../../hooks/useNotifications"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
+import { useMediaQuery } from "@mantine/hooks"
 
 interface Props {
   notification: Notification
 }
 
 export const NotificationItem = ({ notification }: Props) => {
+  const isMobile = useMediaQuery("(max-width: 768px)")
   const { markAsRead, markAsUnread, deleteNotification } = useNotifications()
   const queryClient = useQueryClient()
   const [menuOpened, setMenuOpened] = useState(false)
@@ -83,8 +85,8 @@ export const NotificationItem = ({ notification }: Props) => {
 
   const content = (
     <Box
-      px={16}
-      py={12}
+      px={isMobile ? 12 : 16}
+      py={isMobile ? 8 : 12}
       bg={notification.read ? "#f8fafc" : "indigo.0"}
       style={{
         borderRadius: 12,
@@ -105,19 +107,24 @@ export const NotificationItem = ({ notification }: Props) => {
         {!notification.read ? (
           <IconCircleDotFilled
             color="#6366f1"
-            size={16}
-            style={{ marginTop: 2, flexShrink: 0 }}
+            size={isMobile ? 12 : 16}
+            style={{ marginTop: isMobile ? 4 : 2, flexShrink: 0 }}
           />
         ) : (
           <IconCircleDashed
             color="#cbd5e1"
-            size={16}
-            style={{ marginTop: 2, flexShrink: 0 }}
+            size={isMobile ? 12 : 16}
+            style={{ marginTop: isMobile ? 4 : 2, flexShrink: 0 }}
           />
         )}
         <Box style={{ flex: 1 }}>
           <Group align="center" gap={8}>
-            <Text fw={600} fz="sm" truncate="end" style={{ flex: 1 }}>
+            <Text
+              fw={600}
+              fz={isMobile ? "13" : "sm"}
+              truncate="end"
+              style={{ flex: 1 }}
+            >
               {notification.title}
             </Text>
             <Badge
@@ -128,11 +135,17 @@ export const NotificationItem = ({ notification }: Props) => {
               {notification.type === "system" ? "Hệ thống" : "Thông báo"}
             </Badge>
           </Group>
-          <Text fz="sm" c="dimmed" mt={4} mb={4} lineClamp={2}>
+          <Text
+            fz={isMobile ? "xs" : "sm"}
+            c="dimmed"
+            mt={4}
+            mb={4}
+            lineClamp={2}
+          >
             {notification.content}
           </Text>
           <Flex align="center" gap={8}>
-            <Text fz="xs" c="gray.7">
+            <Text fz={isMobile ? "10" : "xs"} c="gray.7">
               {formatDistanceToNow(new Date(notification.createdAt), {
                 addSuffix: true,
                 locale: vi
@@ -146,7 +159,7 @@ export const NotificationItem = ({ notification }: Props) => {
         {/* Menu tuỳ chọn */}
         <Menu
           position="bottom-end"
-          offset={4}
+          offset={isMobile ? 2 : 4}
           opened={menuOpened}
           onChange={setMenuOpened}
         >
@@ -154,6 +167,7 @@ export const NotificationItem = ({ notification }: Props) => {
             <ActionIcon
               variant="subtle"
               color="gray"
+              size={isMobile ? "xs" : "sm"}
               onClick={(e) => {
                 e.stopPropagation()
                 e.preventDefault()
@@ -161,7 +175,7 @@ export const NotificationItem = ({ notification }: Props) => {
               }}
               aria-label="Tuỳ chọn"
             >
-              <IconDotsVertical size={18} />
+              <IconDotsVertical size={isMobile ? 14 : 18} />
             </ActionIcon>
           </Menu.Target>
           <Menu.Dropdown>
@@ -169,6 +183,7 @@ export const NotificationItem = ({ notification }: Props) => {
               <Menu.Item
                 leftSection={<IconCircleDotFilled size={14} color="#6366f1" />}
                 onClick={() => read()}
+                fz={isMobile ? "11" : "sm"}
               >
                 Đánh dấu đã đọc
               </Menu.Item>
@@ -177,15 +192,16 @@ export const NotificationItem = ({ notification }: Props) => {
               <Menu.Item
                 leftSection={<IconCircleDashed size={14} color="#94a3b8" />}
                 onClick={() => unread()}
+                fz={isMobile ? "11" : "sm"}
               >
                 Đánh dấu chưa đọc
               </Menu.Item>
             )}
-            <Menu.Divider />
             <Menu.Item
               color="red"
               leftSection={<IconTrash size={14} />}
               onClick={() => remove()}
+              fz={isMobile ? "11" : "sm"}
             >
               Xoá thông báo
             </Menu.Item>

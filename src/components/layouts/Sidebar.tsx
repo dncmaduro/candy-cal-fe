@@ -1,3 +1,4 @@
+import { useMediaQuery } from "@mantine/hooks"
 import { NAVS } from "../../constants/navs"
 import { NavButton } from "./NavButton"
 import { IconChevronLeft, IconMenu2 } from "@tabler/icons-react"
@@ -15,6 +16,8 @@ export const Sidebar = ({
   setCollapsed,
   navs
 }: SidebarProps) => {
+  const isMobile = useMediaQuery("(max-width: 768px)")
+
   return (
     <nav
       className={[
@@ -33,7 +36,11 @@ export const Sidebar = ({
         ].join(" ")}
         aria-label={collapsed ? "Mở menu" : "Thu gọn menu"}
       >
-        {collapsed ? <IconMenu2 size={22} /> : <IconChevronLeft size={22} />}
+        {collapsed ? (
+          <IconMenu2 size={isMobile ? 14 : 22} />
+        ) : (
+          <IconChevronLeft size={isMobile ? 14 : 22} />
+        )}
       </button>
 
       <div className="flex flex-1 flex-col gap-3 px-2">
