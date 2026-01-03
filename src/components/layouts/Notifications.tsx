@@ -8,6 +8,7 @@ import { useSocket } from "../../hooks/useSocket"
 import { useNavigate } from "@tanstack/react-router"
 import { NotificationBox } from "../notifications/NotificationBox"
 import { useNotifications } from "../../hooks/useNotifications"
+import { useMediaQuery } from "@mantine/hooks"
 
 export const Notifications = () => {
   const { getMe } = useUsers()
@@ -50,14 +51,16 @@ export const Notifications = () => {
     }
   })
 
+  const isMobile = useMediaQuery("(max-width: 768px)")
+
   return (
-    <Popover onOpen={() => viewAll()}>
+    <Popover onOpen={() => viewAll()} shadow="lg">
       <Popover.Target>
         <Indicator
           inline
-          size={14}
+          size={isMobile ? 12 : 14}
           color="red"
-          offset={4}
+          offset={isMobile ? 2 : 4}
           label={
             unviewedCountData
               ? unviewedCountData > 9
@@ -68,7 +71,7 @@ export const Notifications = () => {
           disabled={unviewedCountData === 0}
         >
           <ActionIcon variant="subtle" size={"lg"} radius={"xl"}>
-            <IconBell />
+            <IconBell size={isMobile ? 18 : 20} />
           </ActionIcon>
         </Indicator>
       </Popover.Target>

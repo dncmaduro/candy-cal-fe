@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router"
 import * as TablerIcons from "@tabler/icons-react"
 import { ReactNode } from "react"
+import { useMediaQuery } from "@mantine/hooks"
 
 interface Props {
   to: string
@@ -22,6 +23,7 @@ export const NavButton = ({
 }: Props) => {
   const pathname = window.location.pathname
   const active = pathname === to
+  const isMobile = useMediaQuery("(max-width: 768px)")
 
   // Resolve icon component from Tabler by name if provided
   let ResolvedIcon: ReactNode = null
@@ -29,7 +31,7 @@ export const NavButton = ({
     const Cmp =
       (TablerIcons as any)[iconName] ||
       (TablerIcons as any)["IconSquareRounded"]
-    if (Cmp) ResolvedIcon = <Cmp size={20} />
+    if (Cmp) ResolvedIcon = <Cmp size={isMobile ? 14 : 20} />
   }
 
   const baseClasses = [
@@ -57,7 +59,7 @@ export const NavButton = ({
       {/* Label + Beta (hidden when collapsed) */}
       {!collapsed && (
         <span className="flex items-center gap-2">
-          <span className="text-sm font-medium">{label}</span>
+          <span className="text-xs font-medium md:text-sm">{label}</span>
           {beta && (
             <span className="inline-flex items-center rounded-full border border-red-300 px-2 py-0.5 text-[10px] font-semibold text-red-600">
               Beta
