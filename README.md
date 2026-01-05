@@ -85,6 +85,11 @@ npm run routes    # Generate router tree
 
 ## 7. Lịch sử cập nhật
 
+### 4.1.0
+
+- Thêm chỉ số AOV và CPO cho báo cáo livestream
+- Officially release module livestream
+
 ### 4.0.6
 
 - Cập nhật thêm tổng số thùng cho sales
