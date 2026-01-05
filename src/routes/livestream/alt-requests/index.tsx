@@ -320,7 +320,11 @@ function RouteComponent() {
       {
         accessorKey: "createdBy",
         header: "Người yêu cầu",
-        cell: ({ row }) => <Text size="sm">{row.original.createdBy.name}</Text>
+        cell: ({ row }) => (
+          <Text size="sm">
+            {row.original.createdBy ? row.original.createdBy.name : ""}
+          </Text>
+        )
       },
       {
         accessorKey: "status",

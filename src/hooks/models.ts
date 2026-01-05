@@ -2009,6 +2009,7 @@ export interface GetLivestreamByDateRangeResponse {
         total?: number
       }
       realIncome?: number
+      orders?: number
     }[]
     totalOrders: number
     totalIncome: number
@@ -2026,6 +2027,7 @@ export interface ReportLivestreamRequest {
   avgViewingDuration: number
   comments: number
   ordersNote: string
+  orders: number
   rating?: string
 }
 
@@ -2067,6 +2069,8 @@ export interface ReportLivestreamResponse {
       bonusPercentage: number
       total?: number
     }
+    realIncome?: number
+    orders?: number
   }[]
   totalOrders: number
   totalIncome: number
@@ -2195,6 +2199,8 @@ export interface UpdateSnapshotAltResponse {
       bonusPercentage: number
       total?: number
     }
+    realIncome?: number
+    orders?: number
   }[]
   totalOrders: number
   totalIncome: number

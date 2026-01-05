@@ -184,6 +184,7 @@ function RouteComponent() {
       ordersNote: string
       rating: string
       snapshotKpi: number
+      orders: number
       isSummary?: boolean
     }> = []
 
@@ -193,7 +194,25 @@ function RouteComponent() {
     livestreamData.forEach((livestream) => {
       const date = new Date(livestream.date)
       const dateStr = format(date, "dd/MM/yyyy")
-      const dayOfWeek = format(date, "EEEE", { locale: undefined })
+      // day of week return by format is in Vietnamese
+      const dayOfWeekEn = format(date, "EEEE")
+      // TODO: translate day of week to Vietnamese
+      const dayOfWeek =
+        dayOfWeekEn === "Monday"
+          ? "Thứ 2"
+          : dayOfWeekEn === "Tuesday"
+            ? "Thứ 3"
+            : dayOfWeekEn === "Wednesday"
+              ? "Thứ 4"
+              : dayOfWeekEn === "Thursday"
+                ? "Thứ 5"
+                : dayOfWeekEn === "Friday"
+                  ? "Thứ 6"
+                  : dayOfWeekEn === "Saturday"
+                    ? "Thứ 7"
+                    : dayOfWeekEn === "Sunday"
+                      ? "Chủ nhật"
+                      : dayOfWeekEn
 
       // Filter only host snapshots
       const hostSnapshots = livestream.snapshots.filter(
@@ -226,7 +245,8 @@ function RouteComponent() {
           comments: snapshot.comments || 0,
           ordersNote: snapshot.ordersNote || "",
           rating: snapshot.rating || "",
-          snapshotKpi: snapshot.snapshotKpi || 0
+          snapshotKpi: snapshot.snapshotKpi || 0,
+          orders: snapshot.orders || 0
         }
 
         rows.push(rowData)
@@ -249,6 +269,7 @@ function RouteComponent() {
       const totalAdsCost = dateRows.reduce((sum, row) => sum + row.adsCost, 0)
       const totalComments = dateRows.reduce((sum, row) => sum + row.comments, 0)
       const totalKpi = dateRows.reduce((sum, row) => sum + row.snapshotKpi, 0)
+      const totalOrders = dateRows.reduce((sum, row) => sum + row.orders, 0)
 
       const firstRow = dateRows[0]
       finalRows.push({
@@ -266,6 +287,7 @@ function RouteComponent() {
         ordersNote: "",
         rating: "",
         snapshotKpi: totalKpi,
+        orders: totalOrders,
         isSummary: true
       })
     })
@@ -409,7 +431,7 @@ function RouteComponent() {
               fw={row.original.isSummary ? 700 : 600}
               c={value > 0 ? "blue.6" : "dimmed"}
             >
-              <NumberFormatter value={value} thousandSeparator suffix=" VNĐ" />
+              <NumberFormatter value={value} thousandSeparator />
             </Text>
           )
         }
@@ -425,7 +447,23 @@ function RouteComponent() {
               fw={row.original.isSummary ? 700 : 600}
               c={value > 0 ? "red.6" : "dimmed"}
             >
-              <NumberFormatter value={value} thousandSeparator suffix=" VNĐ" />
+              <NumberFormatter value={value} thousandSeparator />
+            </Text>
+          )
+        }
+      },
+      {
+        accessorKey: "orders",
+        header: "Số đơn",
+        cell: ({ getValue, row }) => {
+          const value = getValue() as number
+          return (
+            <Text
+              size="sm"
+              fw={row.original.isSummary ? 700 : 600}
+              c={value > 0 ? "teal.6" : "dimmed"}
+            >
+              <NumberFormatter value={value} />
             </Text>
           )
         }
@@ -449,6 +487,43 @@ function RouteComponent() {
         }
       },
       {
+        accessorKey: "AOV",
+        header: "AOV",
+        cell: ({ row }) => {
+          const income = row.original.income as number
+          const adsCost = row.original.adsCost as number
+          const orders = row.original.orders as number
+          const aov = (income - adsCost) / orders
+          return (
+            <Text
+              size="sm"
+              fw={row.original.isSummary ? 700 : 600}
+              c={aov > 0 ? "green.6" : "dimmed"}
+            >
+              <NumberFormatter value={aov} thousandSeparator />
+            </Text>
+          )
+        }
+      },
+      {
+        accessorKey: "CPO",
+        header: "CPO",
+        cell: ({ row }) => {
+          const adsCost = row.original.adsCost as number
+          const orders = row.original.orders as number
+          const cpo = adsCost / orders
+          return (
+            <Text
+              size="sm"
+              fw={row.original.isSummary ? 700 : 600}
+              c={cpo > 0 ? "blue.6" : "dimmed"}
+            >
+              <NumberFormatter value={cpo} thousandSeparator />
+            </Text>
+          )
+        }
+      },
+      {
         accessorKey: "snapshotKpi",
         header: "KPI",
         cell: ({ row }) => {
@@ -460,11 +535,7 @@ function RouteComponent() {
             return (
               <Stack gap={0}>
                 <Text size="sm" fw={700} c="violet.6">
-                  <NumberFormatter
-                    value={kpi}
-                    thousandSeparator
-                    suffix=" VNĐ"
-                  />
+                  <NumberFormatter value={kpi} thousandSeparator />
                 </Text>
                 <Text size="xs" c="dimmed">
                   ({percentage.toFixed(1)}%)
@@ -476,7 +547,7 @@ function RouteComponent() {
           return (
             <Stack gap={0}>
               <Text size="sm" fw={600} c="violet.6">
-                <NumberFormatter value={kpi} thousandSeparator suffix=" VNĐ" />
+                <NumberFormatter value={kpi} thousandSeparator />
               </Text>
               {kpi > 0 && (
                 <Text size="xs" c={percentage >= 100 ? "green" : "orange"}>
@@ -728,6 +799,7 @@ function RouteComponent() {
                 initialPageSize={100}
                 pageSizeOptions={[50, 100, 200]}
                 hideSearch
+                className="[&_th]:text-xs!"
                 getRowId={(row) =>
                   `${row.dateKey}-${row.period}-${row.isSummary ? "summary" : row.assigneeId}`
                 }

@@ -72,6 +72,7 @@ type LivestreamSnapshot = {
   avgViewingDuration?: number
   comments?: number
   ordersNote?: string
+  orders?: number
   rating?: string
   salary?: {
     salaryPerHour: number
