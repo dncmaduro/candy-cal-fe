@@ -28,6 +28,7 @@ type LivestreamSnapshot = {
   ordersNote?: string
   rating?: string
   realIncome?: number
+  orders?: number
 }
 
 export type LivestreamReportFormValues = {
@@ -39,6 +40,7 @@ export type LivestreamReportFormValues = {
   ordersNote: string
   rating?: string
   realIncome?: number
+  orders: number
 }
 
 const formatTimeRange = (
@@ -68,8 +70,6 @@ export const openLivestreamReportModal = ({
     snapshot.comments !== undefined &&
     snapshot.ordersNote !== undefined
 
-  console.log(snapshot)
-
   const ReportForm = () => {
     const form = useForm<LivestreamReportFormValues>({
       initialValues: {
@@ -80,7 +80,8 @@ export const openLivestreamReportModal = ({
         comments: snapshot.comments ?? 0,
         ordersNote: snapshot.ordersNote ?? "",
         rating: snapshot.rating ?? "",
-        realIncome: snapshot.realIncome ?? 0
+        realIncome: snapshot.realIncome ?? 0,
+        orders: snapshot.orders ?? 0
       },
       validate: {
         income: (value) => (value < 0 ? "Doanh thu không được âm" : null),
@@ -146,15 +147,26 @@ export const openLivestreamReportModal = ({
             />
           </Group>
 
-          <NumberInput
-            label="Chi phí quảng cáo"
-            placeholder="Nhập chi phí quảng cáo"
-            min={0}
-            thousandSeparator=","
-            suffix=" VNĐ"
-            readOnly={hasData}
-            {...form.getInputProps("adsCost")}
-          />
+          <Group>
+            <NumberInput
+              label="Chi phí quảng cáo"
+              placeholder="Nhập chi phí quảng cáo"
+              min={0}
+              thousandSeparator=","
+              suffix=" VNĐ"
+              readOnly={hasData}
+              className="grow"
+              {...form.getInputProps("adsCost")}
+            />
+            <NumberInput
+              label="Số đơn hàng"
+              placeholder="Nhập số đơn hàng"
+              min={0}
+              readOnly={hasData}
+              className="grow"
+              {...form.getInputProps("orders")}
+            />
+          </Group>
 
           <NumberInput
             label="Tỷ lệ click (%)"

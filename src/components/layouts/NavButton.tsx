@@ -1,7 +1,8 @@
-import { Link } from "@tanstack/react-router"
+import { useNavigate } from "@tanstack/react-router"
 import * as TablerIcons from "@tabler/icons-react"
 import { ReactNode } from "react"
 import { useMediaQuery } from "@mantine/hooks"
+import { modals } from "@mantine/modals"
 
 interface Props {
   to: string
@@ -24,6 +25,7 @@ export const NavButton = ({
   const pathname = window.location.pathname
   const active = pathname === to
   const isMobile = useMediaQuery("(max-width: 768px)")
+  const navigate = useNavigate()
 
   // Resolve icon component from Tabler by name if provided
   let ResolvedIcon: ReactNode = null
@@ -35,7 +37,7 @@ export const NavButton = ({
   }
 
   const baseClasses = [
-    "flex items-center gap-2 rounded-xl transition-colors duration-150",
+    "flex items-center gap-2 rounded-xl transition-colors duration-150 cursor-pointer",
     "text-gray-600 hover:text-gray-900",
     active ? "bg-indigo-50 text-indigo-700 shadow-sm" : "hover:bg-gray-50",
     collapsed
@@ -44,7 +46,16 @@ export const NavButton = ({
   ].join(" ")
 
   return (
-    <Link to={to} title={collapsed ? label : undefined} className={baseClasses}>
+    <div
+      onClick={() => {
+        if (!active) {
+          modals.closeAll()
+          navigate({ to })
+        }
+      }}
+      title={collapsed ? label : undefined}
+      className={baseClasses}
+    >
       {/* Icon */}
       <span
         className={
@@ -67,6 +78,6 @@ export const NavButton = ({
           )}
         </span>
       )}
-    </Link>
+    </div>
   )
 }

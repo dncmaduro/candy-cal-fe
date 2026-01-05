@@ -197,6 +197,7 @@ function RouteComponent() {
           avgViewingDuration: number
           comments: number
           ordersNote: string
+          orders: number
           rating?: string
         }
       }) => {
