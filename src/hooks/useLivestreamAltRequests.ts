@@ -61,7 +61,7 @@ export const useLivestreamAltRequests = () => {
       UpdateAltRequestStatusRequest,
       UpdateAltRequestStatusResponse
     >({
-      method: "PUT",
+      method: "PATCH",
       path: `/v1/livestreamaltrequests/${id}/status`,
       data: req,
       token: accessToken

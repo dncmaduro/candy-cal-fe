@@ -120,6 +120,7 @@ function RouteComponent() {
           avgViewingDuration: number
           comments: number
           ordersNote: string
+          orders: number
           rating?: string
         }
       }) => {
@@ -427,104 +428,106 @@ function RouteComponent() {
   return (
     <LivestreamLayout>
       {/* Salary Configuration Section */}
-      <Box
-        mt={40}
-        mx="auto"
-        px={{ base: 8, md: 0 }}
-        w="100%"
-        style={{
-          background: "rgba(255,255,255,0.97)",
-          borderRadius: rem(20),
-          boxShadow: "0 4px 32px 0 rgba(60,80,180,0.07)",
-          border: "1px solid #ececec"
-        }}
-      >
-        <Accordion defaultValue="">
-          <Accordion.Item value="salary-config">
-            <Accordion.Control>
-              <Box>
-                <Text fw={700} fz="lg">
-                  Cấu trúc lương Livestream
-                </Text>
-                <Text c="dimmed" fz="sm">
-                  Quản lý cấu trúc lương cho từng nhân viên
-                </Text>
-              </Box>
-            </Accordion.Control>
-            <Accordion.Panel>
-              <Box px={{ base: 4, md: 28 }} py={20}>
-                {isLoadingSalaryConfig ? (
-                  <Center h={200}>
-                    <Loader />
-                  </Center>
-                ) : !salaryData || salaryData.length === 0 ? (
-                  <Center h={200}>
-                    <Text c="dimmed" size="sm">
-                      Chưa có cấu trúc lương nào
-                    </Text>
-                  </Center>
-                ) : (
-                  <Stack gap="md">
-                    {salaryData.map((salary, idx) => (
-                      <Paper key={idx} p="lg" withBorder radius="md">
-                        <Stack gap="md">
-                          <Text fw={600} size="lg">
-                            {salary.name}
-                          </Text>
+      <Can roles={["admin", "livestream-leader"]}>
+        <Box
+          mt={40}
+          mx="auto"
+          px={{ base: 8, md: 0 }}
+          w="100%"
+          style={{
+            background: "rgba(255,255,255,0.97)",
+            borderRadius: rem(20),
+            boxShadow: "0 4px 32px 0 rgba(60,80,180,0.07)",
+            border: "1px solid #ececec"
+          }}
+        >
+          <Accordion defaultValue="">
+            <Accordion.Item value="salary-config">
+              <Accordion.Control>
+                <Box>
+                  <Text fw={700} fz="lg">
+                    Cấu trúc lương Livestream
+                  </Text>
+                  <Text c="dimmed" fz="sm">
+                    Quản lý cấu trúc lương cho từng nhân viên
+                  </Text>
+                </Box>
+              </Accordion.Control>
+              <Accordion.Panel>
+                <Box px={{ base: 4, md: 28 }} py={20}>
+                  {isLoadingSalaryConfig ? (
+                    <Center h={200}>
+                      <Loader />
+                    </Center>
+                  ) : !salaryData || salaryData.length === 0 ? (
+                    <Center h={200}>
+                      <Text c="dimmed" size="sm">
+                        Chưa có cấu trúc lương nào
+                      </Text>
+                    </Center>
+                  ) : (
+                    <Stack gap="md">
+                      {salaryData.map((salary, idx) => (
+                        <Paper key={idx} p="lg" withBorder radius="md">
+                          <Stack gap="md">
+                            <Text fw={600} size="lg">
+                              {salary.name}
+                            </Text>
 
-                          <Box>
-                            <Text fw={500} size="sm" c="dimmed" mb={8}>
-                              Nhân viên:
-                            </Text>
-                            <Text size="sm">
-                              {salary.livestreamEmployees
-                                ?.map((e) => e.name)
-                                .join(", ") || "-"}
-                            </Text>
-                          </Box>
-
-                          <Box>
-                            <Text fw={500} size="sm" c="dimmed" mb={8}>
-                              Bậc lương áp dụng:
-                            </Text>
-                            {salary.livestreamPerformances &&
-                            salary.livestreamPerformances.length > 0 ? (
-                              <Stack gap={4}>
-                                {salary.livestreamPerformances.map(
-                                  (perf, perfIdx) => (
-                                    <Text key={perfIdx} fz="sm" c="dimmed">
-                                      {new Intl.NumberFormat("vi-VN").format(
-                                        perf.minIncome
-                                      )}{" "}
-                                      -{" "}
-                                      {new Intl.NumberFormat("vi-VN").format(
-                                        perf.maxIncome
-                                      )}{" "}
-                                      VNĐ (
-                                      {new Intl.NumberFormat("vi-VN").format(
-                                        perf.salaryPerHour
-                                      )}
-                                      đ/h, {perf.bonusPercentage}%)
-                                    </Text>
-                                  )
-                                )}
-                              </Stack>
-                            ) : (
-                              <Text size="sm" c="dimmed">
-                                Chưa có bậc lương
+                            <Box>
+                              <Text fw={500} size="sm" c="dimmed" mb={8}>
+                                Nhân viên:
                               </Text>
-                            )}
-                          </Box>
-                        </Stack>
-                      </Paper>
-                    ))}
-                  </Stack>
-                )}
-              </Box>
-            </Accordion.Panel>
-          </Accordion.Item>
-        </Accordion>
-      </Box>
+                              <Text size="sm">
+                                {salary.livestreamEmployees
+                                  ?.map((e) => e.name)
+                                  .join(", ") || "-"}
+                              </Text>
+                            </Box>
+
+                            <Box>
+                              <Text fw={500} size="sm" c="dimmed" mb={8}>
+                                Bậc lương áp dụng:
+                              </Text>
+                              {salary.livestreamPerformances &&
+                              salary.livestreamPerformances.length > 0 ? (
+                                <Stack gap={4}>
+                                  {salary.livestreamPerformances.map(
+                                    (perf, perfIdx) => (
+                                      <Text key={perfIdx} fz="sm" c="dimmed">
+                                        {new Intl.NumberFormat("vi-VN").format(
+                                          perf.minIncome
+                                        )}{" "}
+                                        -{" "}
+                                        {new Intl.NumberFormat("vi-VN").format(
+                                          perf.maxIncome
+                                        )}{" "}
+                                        VNĐ (
+                                        {new Intl.NumberFormat("vi-VN").format(
+                                          perf.salaryPerHour
+                                        )}
+                                        đ/h, {perf.bonusPercentage}%)
+                                      </Text>
+                                    )
+                                  )}
+                                </Stack>
+                              ) : (
+                                <Text size="sm" c="dimmed">
+                                  Chưa có bậc lương
+                                </Text>
+                              )}
+                            </Box>
+                          </Stack>
+                        </Paper>
+                      ))}
+                    </Stack>
+                  )}
+                </Box>
+              </Accordion.Panel>
+            </Accordion.Item>
+          </Accordion>
+        </Box>
+      </Can>
 
       {/* Calendar View Section */}
       <Box
@@ -551,10 +554,12 @@ function RouteComponent() {
         >
           <Box>
             <Text fw={700} fz="xl" mb={2}>
-              Lịch Livestream
+              {isAdmin ? "Lịch Livestream và xem lương" : "Xem lương"}
             </Text>
             <Text c="dimmed" fz="sm">
-              Xem lịch phát sóng livestream theo tuần
+              {isAdmin
+                ? "Xem lịch livestream và lương của nhân viên"
+                : "Xem lương của bạn"}
             </Text>
           </Box>
         </Flex>
@@ -576,7 +581,7 @@ function RouteComponent() {
           >
             <Stack gap="md">
               {/* Mode toggle */}
-              <Stack gap={4}>
+              <Stack gap={4} hidden={!isAdmin}>
                 <Text size="xs" fw={600} c="dimmed" tt="uppercase">
                   Chế độ xem
                 </Text>
@@ -677,6 +682,7 @@ function RouteComponent() {
                     size="sm"
                     radius="md"
                     maxDate={new Date()}
+                    valueFormat="MM/YYYY"
                   />
                 </Stack>
               )}
