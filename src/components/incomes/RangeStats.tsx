@@ -313,6 +313,43 @@ export const RangeStats = () => {
                     )}
                   </Group>
                 </Group>
+
+                {/* KPI Section */}
+                {current.dailyGoal && (
+                  <>
+                    <Divider my={12} />
+                    <Group justify="space-between" align="center">
+                      <Group gap={8}>
+                        <Text fw={600} fz="sm" c="dimmed">
+                          KPI hàng ngày:
+                        </Text>
+                        <Text fw={700} fz="md" c="blue">
+                          {current.dailyGoal.goals.dailyTotalIncomeGoal.toLocaleString()}{" "}
+                          VNĐ
+                        </Text>
+                      </Group>
+                      <Group gap={8} align="center">
+                        <Text fw={500} fz="sm" c="dimmed">
+                          Đạt được:
+                        </Text>
+                        <Badge
+                          color={
+                            current.dailyGoal[mode].incomePercentage >= 100
+                              ? "green"
+                              : current.dailyGoal[mode].incomePercentage >= 80
+                                ? "yellow"
+                                : "red"
+                          }
+                          variant="filled"
+                          size="lg"
+                        >
+                          {current.dailyGoal[mode].incomePercentage.toFixed(1)}%
+                        </Badge>
+                      </Group>
+                    </Group>
+                  </>
+                )}
+
                 <Divider my={12} />
 
                 <Stack gap={10}>
@@ -320,6 +357,8 @@ export const RangeStats = () => {
                     <LiveAndVideoStats
                       title="Livestream"
                       income={current[mode].liveIncome}
+                      incomePct={current.dailyGoal?.[mode].liveIncomePercentage}
+                      incomeGoal={current.dailyGoal?.goals.dailyLiveIncomeGoal}
                       adsCost={current.ads.liveAdsCost}
                       adsCostChangePct={changes?.ads?.liveAdsCostPct}
                       adsSharePctDiff={changes?.ads?.liveAdsToLiveIncomePctDiff}
@@ -331,6 +370,8 @@ export const RangeStats = () => {
                         (current[mode].videoIncome || 0) +
                         (current[mode].otherIncome || 0)
                       }
+                      incomePct={current.dailyGoal?.[mode].shopIncomePercentage}
+                      incomeGoal={current.dailyGoal?.goals.dailyShopIncomeGoal}
                       adsCost={current.ads.shopAdsCost}
                       adsCostChangePct={changes?.ads?.shopAdsCostPct}
                       adsSharePctDiff={changes?.ads?.shopAdsToShopIncomePctDiff}

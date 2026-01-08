@@ -16,6 +16,8 @@ import { CPiechart } from "../common/CPiechart"
 type Props = {
   title: string
   income: number
+  incomePct?: number
+  incomeGoal?: number
   adsCost: number
   adsCostChangePct?: number
   adsSharePctDiff?: number
@@ -28,6 +30,8 @@ type Props = {
 export const LiveAndVideoStats = ({
   title,
   income,
+  incomePct,
+  incomeGoal,
   adsCost,
   adsCostChangePct,
   adsSharePctDiff,
@@ -81,6 +85,18 @@ export const LiveAndVideoStats = ({
             <Text>Doanh thu</Text>
             <Text fw={700}>{fmtCurrency(income)}</Text>
           </Group>
+          {incomeGoal && (
+            <Group justify="space-between">
+              <Text>KPI doanh thu</Text>
+              <Text fw={700}>{fmtCurrency(Math.round(incomeGoal))}</Text>
+            </Group>
+          )}
+          {incomePct && (
+            <Group justify="space-between">
+              <Text>% đạt KPI</Text>
+              <Text fw={700}>{incomePct} %</Text>
+            </Group>
+          )}
 
           {/* If this is Video or Doanh thu Sàn, show breakdown rows */}
           {(title === "Video" || title === "Doanh thu Sàn") && (
