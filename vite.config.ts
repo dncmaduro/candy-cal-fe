@@ -3,9 +3,33 @@ import react from "@vitejs/plugin-react"
 import { TanStackRouterVite } from "@tanstack/router-plugin/vite"
 import tailwindcss from "@tailwindcss/vite"
 import { VitePWA } from "vite-plugin-pwa"
+import { execaSync } from "execa"
+
+function getCommit() {
+  // 1) Vercel
+  const vercelSha = process.env.VERCEL_GIT_COMMIT_SHA
+  if (vercelSha) return vercelSha.slice(0, 7)
+
+  // 2) Nếu bạn có set env thủ công
+  const envCommit = process.env.VITE_GIT_COMMIT || process.env.GIT_COMMIT
+  if (envCommit) return envCommit.slice(0, 7)
+
+  // 3) Local: lấy trực tiếp từ git
+  try {
+    const { stdout } = execaSync("git", ["rev-parse", "--short", "HEAD"])
+    return stdout.trim()
+  } catch {
+    return "unknown"
+  }
+}
+
+const commit = getCommit()
 
 // https://vite.dev/config/
 export default defineConfig({
+  define: {
+    __GIT_COMMIT__: JSON.stringify(commit)
+  },
   plugins: [
     react(),
     TanStackRouterVite(),
