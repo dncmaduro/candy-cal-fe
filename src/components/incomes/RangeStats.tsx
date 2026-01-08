@@ -319,15 +319,19 @@ export const RangeStats = () => {
                   <>
                     <Divider my={12} />
                     <Group justify="space-between" align="center">
-                      <Group gap={8}>
-                        <Text fw={600} fz="sm" c="dimmed">
-                          KPI hàng ngày:
-                        </Text>
-                        <Text fw={700} fz="md" c="blue">
-                          {current.dailyGoal.goals.dailyTotalIncomeGoal.toLocaleString()}{" "}
-                          VNĐ
-                        </Text>
-                      </Group>
+                      {current.dailyGoal ? (
+                        <Group gap={8}>
+                          <Text fw={600} fz="sm" c="dimmed">
+                            KPI hàng ngày:
+                          </Text>
+                          <Text fw={700} fz="md" c="blue">
+                            {current.dailyGoal.goals.dailyTotalIncomeGoal.toLocaleString()}{" "}
+                            VNĐ
+                          </Text>
+                        </Group>
+                      ) : (
+                        <></>
+                      )}
                       <Group gap={8} align="center">
                         <Text fw={500} fz="sm" c="dimmed">
                           Đạt được:

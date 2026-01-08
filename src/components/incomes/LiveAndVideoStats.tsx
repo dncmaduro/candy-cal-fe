@@ -85,17 +85,21 @@ export const LiveAndVideoStats = ({
             <Text>Doanh thu</Text>
             <Text fw={700}>{fmtCurrency(income)}</Text>
           </Group>
-          {incomeGoal && (
+          {incomeGoal ? (
             <Group justify="space-between">
               <Text>KPI doanh thu</Text>
               <Text fw={700}>{fmtCurrency(Math.round(incomeGoal))}</Text>
             </Group>
+          ) : (
+            <></>
           )}
-          {incomePct && (
+          {incomePct ? (
             <Group justify="space-between">
               <Text>% đạt KPI</Text>
               <Text fw={700}>{incomePct} %</Text>
             </Group>
+          ) : (
+            <></>
           )}
 
           {/* If this is Video or Doanh thu Sàn, show breakdown rows */}
