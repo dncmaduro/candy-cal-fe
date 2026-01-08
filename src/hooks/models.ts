@@ -1428,6 +1428,23 @@ export interface GetRangeStatsResponse {
     productsQuantity: {
       [code: string]: number
     }
+    dailyGoal?: {
+      beforeDiscount: {
+        liveIncomePercentage: number
+        shopIncomePercentage: number
+        incomePercentage: number
+      }
+      afterDiscount: {
+        liveIncomePercentage: number
+        shopIncomePercentage: number
+        incomePercentage: number
+      }
+      goals: {
+        dailyLiveIncomeGoal: number
+        dailyShopIncomeGoal: number
+        dailyTotalIncomeGoal: number
+      }
+    }
   }
   changes?: {
     beforeDiscount: {
