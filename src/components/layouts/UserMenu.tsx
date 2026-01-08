@@ -54,7 +54,14 @@ export const UserMenu = () => {
       to: "/livestream",
       label: "Livestream",
       icon: <IconVideo size={isMobile ? 14 : 18} />,
-      roles: ["admin", "system-emp", "livestream-leader", "livestream-emp"]
+      roles: [
+        "admin",
+        "system-emp",
+        "livestream-leader",
+        "livestream-emp",
+        "livestream-ast",
+        "livestream-accounting"
+      ]
     },
     {
       to: "/sales",

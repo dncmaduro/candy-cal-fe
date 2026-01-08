@@ -77,7 +77,8 @@ export const LIVESTREAM_NAVS = [
       "livestream-leader",
       "livestream-emp",
       "livestream-ast",
-      "system-emp"
+      "system-emp",
+      "livestream-accounting"
     ],
     icon: "IconCalendar"
   },
@@ -101,7 +102,8 @@ export const LIVESTREAM_NAVS = [
       "livestream-leader",
       "livestream-emp",
       "livestream-ast",
-      "system-emp"
+      "system-emp",
+      "livestream-accounting"
     ],
     icon: "IconReportAnalytics"
   },
@@ -126,7 +128,13 @@ export const LIVESTREAM_NAVS = [
   {
     to: `${LIVESTREAM_NAVS_URL}/goals`,
     label: "KPI",
-    roles: ["admin", "livestream-leader", "accounting-emp", "system-emp"],
+    roles: [
+      "admin",
+      "livestream-leader",
+      "accounting-emp",
+      "system-emp",
+      "livestream-accounting"
+    ],
     icon: "IconTarget"
   },
   {
@@ -137,7 +145,8 @@ export const LIVESTREAM_NAVS = [
       "livestream-leader",
       "system-emp",
       "livestream-emp",
-      "livestream-ast"
+      "livestream-ast",
+      "livestream-accounting"
     ],
     icon: "IconCirclePercentage"
   },
