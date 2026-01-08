@@ -68,7 +68,12 @@ function RouteComponent() {
 
   const isAdmin = useMemo(() => {
     return me?.roles?.some((role) =>
-      ["admin", "system-emp", "livestream-leader"].includes(role)
+      [
+        "admin",
+        "system-emp",
+        "livestream-leader",
+        "livestream-accounting"
+      ].includes(role)
     )
   }, [me])
 
