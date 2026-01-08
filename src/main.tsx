@@ -17,3 +17,7 @@ createRoot(document.getElementById("root")!).render(
     <App />
   </StrictMode>
 )
+
+declare const __GIT_COMMIT__: string
+
+console.log(`[FE] App started. Commit: ${__GIT_COMMIT__}`)
