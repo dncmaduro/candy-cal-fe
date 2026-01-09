@@ -174,16 +174,27 @@ function RouteComponent() {
     select: (data) => data.data.data
   })
 
-  const { data: livestreamLeaderData } = useQuery({
-    queryKey: ["livestreamLeaders"],
+  const { data: livestreamAstData } = useQuery({
+    queryKey: ["livestreamAssistants"],
     queryFn: () =>
       publicSearchUser({
         page: 1,
         limit: 100,
-        role: "livestream-leader"
+        role: "livestream-ast"
       }),
     select: (data) => data.data.data
   })
+
+  // const { data: livestreamLeaderData } = useQuery({
+  //   queryKey: ["livestreamLeaders"],
+  //   queryFn: () =>
+  //     publicSearchUser({
+  //       page: 1,
+  //       limit: 100,
+  //       role: "livestream-leader"
+  //     }),
+  //   select: (data) => data.data.data
+  // })
 
   const { mutate: reportLivestreamMutation, isPending: isReporting } =
     useMutation({
@@ -225,12 +236,19 @@ function RouteComponent() {
     })
 
   // filter duplicate employees
-  const employeesData = useMemo(() => {
-    const emps = [...(livestreamEmpData || []), ...(livestreamLeaderData || [])]
+  const livestreamEmpOptions = useMemo(() => {
+    const emps = livestreamEmpData || []
     return emps.filter((emp, index, self) => {
       return self.findIndex((e) => e._id === emp._id) === index
     })
-  }, [livestreamEmpData, livestreamLeaderData])
+  }, [livestreamEmpData])
+
+  const livestreamAstOptions = useMemo(() => {
+    const asts = livestreamAstData || []
+    return asts.filter((ast, index, self) => {
+      return self.findIndex((a) => a._id === ast._id) === index
+    })
+  }, [livestreamAstData])
 
   // Fetch livestream data for the week
   const {
@@ -497,7 +515,7 @@ function RouteComponent() {
           <LivestreamCalendarTable
             role="host"
             weekDays={weekDays}
-            employeesData={employeesData || []}
+            employeesData={livestreamEmpOptions || []}
             livestreamData={livestreamData || []}
             onAssignEmployee={assignEmployee}
             onUnassignEmployee={unassignEmployee}
@@ -521,7 +539,7 @@ function RouteComponent() {
           <LivestreamCalendarTable
             role="assistant"
             weekDays={weekDays}
-            employeesData={employeesData || []}
+            employeesData={livestreamAstOptions || []}
             livestreamData={livestreamData || []}
             onAssignEmployee={assignEmployee}
             onUnassignEmployee={unassignEmployee}
