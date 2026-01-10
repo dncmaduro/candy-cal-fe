@@ -70,6 +70,18 @@ function RouteComponent() {
     select: (data) => data.data.data
   })
 
+  // Fetch livestream assistants
+  const { data: livestreamAstData } = useQuery({
+    queryKey: ["livestreamAssistants"],
+    queryFn: () =>
+      publicSearchUser({
+        page: 1,
+        limit: 100,
+        role: "livestream-ast"
+      }),
+    select: (data) => data.data.data
+  })
+
   const { data: livestreamLeaderData } = useQuery({
     queryKey: ["livestreamLeaders"],
     queryFn: () =>
@@ -83,11 +95,15 @@ function RouteComponent() {
 
   // Combine and deduplicate employees
   const employeesData = useMemo(() => {
-    const emps = [...(livestreamEmpData || []), ...(livestreamLeaderData || [])]
+    const emps = [
+      ...(livestreamEmpData || []),
+      ...(livestreamAstData || []),
+      ...(livestreamLeaderData || [])
+    ]
     return emps.filter((emp, index, self) => {
       return self.findIndex((e) => e._id === emp._id) === index
     })
-  }, [livestreamEmpData, livestreamLeaderData])
+  }, [livestreamEmpData, livestreamAstData, livestreamLeaderData])
 
   // Auto-select first channel
   useMemo(() => {
@@ -236,7 +252,13 @@ function RouteComponent() {
           date: dateStr,
           dayOfWeek,
           period: periodStr,
-          assignee: snapshot.assignee?.name || "Chưa phân",
+          assignee:
+            snapshot.altAssignee === "other"
+              ? snapshot.altOtherAssignee || "Khác"
+              : !!snapshot.altAssignee
+                ? employeesData.find((e) => e._id === snapshot.altAssignee)
+                    ?.name || "Khác"
+                : snapshot.assignee?.name || "Chưa phân",
           assigneeId: snapshot.assignee?._id || "",
           income: snapshot.income || 0,
           adsCost: snapshot.adsCost || 0,
@@ -431,7 +453,11 @@ function RouteComponent() {
               fw={row.original.isSummary ? 700 : 600}
               c={value > 0 ? "blue.6" : "dimmed"}
             >
-              <NumberFormatter value={value} thousandSeparator />
+              <NumberFormatter
+                value={value}
+                thousandSeparator
+                decimalScale={0}
+              />
             </Text>
           )
         }
@@ -447,7 +473,11 @@ function RouteComponent() {
               fw={row.original.isSummary ? 700 : 600}
               c={value > 0 ? "red.6" : "dimmed"}
             >
-              <NumberFormatter value={value} thousandSeparator />
+              <NumberFormatter
+                value={value}
+                thousandSeparator
+                decimalScale={0}
+              />
             </Text>
           )
         }
@@ -500,7 +530,7 @@ function RouteComponent() {
               fw={row.original.isSummary ? 700 : 600}
               c={aov > 0 ? "green.6" : "dimmed"}
             >
-              <NumberFormatter value={aov} thousandSeparator />
+              <NumberFormatter value={aov} thousandSeparator decimalScale={0} />
             </Text>
           )
         }
@@ -518,7 +548,7 @@ function RouteComponent() {
               fw={row.original.isSummary ? 700 : 600}
               c={cpo > 0 ? "blue.6" : "dimmed"}
             >
-              <NumberFormatter value={cpo} thousandSeparator />
+              <NumberFormatter value={cpo} thousandSeparator decimalScale={0} />
             </Text>
           )
         }
