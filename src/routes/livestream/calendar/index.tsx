@@ -510,7 +510,14 @@ function RouteComponent() {
     return (
       <Stack gap="xl">
         <Can
-          roles={["admin", "livestream-leader", "livestream-emp", "system-emp"]}
+          roles={[
+            "admin",
+            "livestream-leader",
+            "livestream-emp",
+            "system-emp",
+            "livestream-ast",
+            "livestream-accounting"
+          ]}
         >
           <LivestreamCalendarTable
             role="host"
@@ -534,7 +541,14 @@ function RouteComponent() {
         </Can>
 
         <Can
-          roles={["admin", "livestream-leader", "livestream-ast", "system-emp"]}
+          roles={[
+            "admin",
+            "livestream-leader",
+            "livestream-ast",
+            "system-emp",
+            "livestream-accounting",
+            "livestream-emp"
+          ]}
         >
           <LivestreamCalendarTable
             role="assistant"
