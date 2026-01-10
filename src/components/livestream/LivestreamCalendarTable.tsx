@@ -23,7 +23,7 @@ import {
 } from "@tabler/icons-react"
 import { format, parseISO } from "date-fns"
 import { vi } from "date-fns/locale"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { notifications } from "@mantine/notifications"
 import type {
   UpdateSnapshotAltRequest,
@@ -177,7 +177,7 @@ const ScheduleCell = ({
   onRefetch,
   onOpenReport,
   onCalculateDailySalary,
-  hideEditButtons
+  hideEditButtons = false
 }: {
   snapshot?: LivestreamSnapshot
   dayData?: LivestreamData
@@ -188,7 +188,7 @@ const ScheduleCell = ({
   role: "host" | "assistant"
   currentUser: GetMeResponse | undefined
   isLivestreamFixed: boolean
-  isAdminOrLeader: () => boolean
+  isAdminOrLeader: boolean
   canEditSnapshot: (snapshot: LivestreamSnapshot) => boolean
   employeesData: LivestreamEmployee[]
   onUpdateAlt: (
@@ -227,13 +227,13 @@ const ScheduleCell = ({
   const showUpdate =
     isHovering &&
     isLivestreamFixed &&
-    isAdminOrLeader() &&
+    isAdminOrLeader &&
     !hasAltAssignee &&
     !!dayData
 
   // Admin update visibility when hovering (also applies when altAssignee exists)
   const showUpdateAdmin =
-    isHovering && isLivestreamFixed && isAdminOrLeader() && !!dayData
+    isHovering && isLivestreamFixed && isAdminOrLeader && !!dayData
 
   const isUserLivestreamAst = currentUser?.roles?.includes("livestream-ast")
 
@@ -267,7 +267,7 @@ const ScheduleCell = ({
               />
 
               {/* show UpdateAltPopover for admins only when hovering */}
-              {!hideEditButtons && isAdminOrLeader() && (
+              {!hideEditButtons && isAdminOrLeader && (
                 <div
                   style={{
                     visibility: showUpdateAdmin ? "visible" : "hidden",
@@ -341,7 +341,7 @@ const ScheduleCell = ({
                   employees={employeesData}
                   onUpdateRequestStatus={onUpdateRequestStatus}
                   onRefetch={onRefetch}
-                  isAdminOrLeader={isAdminOrLeader()}
+                  isAdminOrLeader={isAdminOrLeader}
                   isCreator={canEditSnapshot(snapshot)}
                 />
               )}
@@ -1000,13 +1000,13 @@ export const LivestreamCalendarTable = ({
   }
 
   // Check if user is admin or livestream-leader
-  const isAdminOrLeader = () => {
+  const isAdminOrLeader = useMemo(() => {
     if (!currentUser) return false
     return (
       currentUser.roles?.includes("admin") ||
       currentUser.roles?.includes("livestream-leader")
     )
-  }
+  }, [currentUser])
 
   // Check if user can edit snapshot (is assignee)
   const canEditSnapshot = (snapshot: LivestreamSnapshot) => {
