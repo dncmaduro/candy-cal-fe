@@ -118,7 +118,7 @@ export const useLivestreamCore = () => {
   const fixLivestream = async (req: FixLivestreamRequest) => {
     return callApi<FixLivestreamRequest, FixLivestreamResponse>({
       method: "PATCH",
-      path: `/v1/livestreamcore/fix`,
+      path: `/v1/livestreamcore/fix-by-date`,
       data: req,
       token: accessToken
     })
