@@ -165,6 +165,7 @@ const ScheduleCell = ({
   displayName,
   roleColor,
   role,
+  currentUser,
   isLivestreamFixed,
   isAdminOrLeader,
   canEditSnapshot,
@@ -185,6 +186,7 @@ const ScheduleCell = ({
   displayName: string | undefined
   roleColor: string
   role: "host" | "assistant"
+  currentUser: GetMeResponse | undefined
   isLivestreamFixed: boolean
   isAdminOrLeader: () => boolean
   canEditSnapshot: (snapshot: LivestreamSnapshot) => boolean
@@ -232,6 +234,8 @@ const ScheduleCell = ({
   // Admin update visibility when hovering (also applies when altAssignee exists)
   const showUpdateAdmin =
     isHovering && isLivestreamFixed && isAdminOrLeader() && !!dayData
+
+  const isUserLivestreamAst = currentUser?.roles?.includes("livestream-ast")
 
   return (
     <td
@@ -341,32 +345,35 @@ const ScheduleCell = ({
                   isCreator={canEditSnapshot(snapshot)}
                 />
               )}
-              {onOpenReport && dayData && (
-                <ActionIcon
-                  size="sm"
-                  variant="subtle"
-                  color={
-                    snapshot.income !== undefined &&
+              {onOpenReport &&
+                dayData &&
+                isUserLivestreamAst &&
+                role === "host" && (
+                  <ActionIcon
+                    size="sm"
+                    variant="subtle"
+                    color={
+                      snapshot.income !== undefined &&
+                      snapshot.clickRate !== undefined &&
+                      snapshot.avgViewingDuration !== undefined &&
+                      snapshot.comments !== undefined &&
+                      snapshot.ordersNote !== undefined
+                        ? "blue"
+                        : "gray"
+                    }
+                    onClick={() => onOpenReport(dayData._id, snapshot)}
+                  >
+                    {snapshot.income !== undefined &&
                     snapshot.clickRate !== undefined &&
                     snapshot.avgViewingDuration !== undefined &&
                     snapshot.comments !== undefined &&
-                    snapshot.ordersNote !== undefined
-                      ? "blue"
-                      : "gray"
-                  }
-                  onClick={() => onOpenReport(dayData._id, snapshot)}
-                >
-                  {snapshot.income !== undefined &&
-                  snapshot.clickRate !== undefined &&
-                  snapshot.avgViewingDuration !== undefined &&
-                  snapshot.comments !== undefined &&
-                  snapshot.ordersNote !== undefined ? (
-                    <IconEye size={16} />
-                  ) : (
-                    <IconReport size={16} />
-                  )}
-                </ActionIcon>
-              )}
+                    snapshot.ordersNote !== undefined ? (
+                      <IconEye size={16} />
+                    ) : (
+                      <IconReport size={16} />
+                    )}
+                  </ActionIcon>
+                )}
             </Group>
           </Group>
         </Group>
@@ -1146,6 +1153,7 @@ export const LivestreamCalendarTable = ({
                         displayName={displayName}
                         roleColor={roleColor}
                         role={role}
+                        currentUser={currentUser}
                         isLivestreamFixed={isLivestreamFixed}
                         isAdminOrLeader={isAdminOrLeader}
                         canEditSnapshot={canEditSnapshot}
