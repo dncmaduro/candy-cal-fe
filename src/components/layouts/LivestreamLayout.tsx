@@ -1,7 +1,7 @@
-import { Badge, Box, Container, Group, rem, Burger } from "@mantine/core"
+import { Badge, Box, Container, Group, rem } from "@mantine/core"
 import pkg from "../../../package.json"
 import { useNavigate } from "@tanstack/react-router"
-import { ReactNode, useEffect, useState } from "react"
+import { ReactNode, useEffect } from "react"
 import { useUserStore } from "../../store/userStore"
 import { UserMenu } from "./UserMenu"
 import { useUsers } from "../../hooks/useUsers"
@@ -12,9 +12,8 @@ import { Notifications } from "./Notifications"
 import { Sidebar } from "./Sidebar"
 import { useUIStore } from "../../store/uiStore"
 import { MeContext } from "../../context/MeContext"
-// import { MyTasksPopover } from "../tasks/MyTasksPopover.tsx"
+import { MyTasksPopover } from "../tasks/MyTasksPopover.tsx"
 import { LIVESTREAM_NAVS } from "../../constants/navs.ts"
-import { useMediaQuery } from "@mantine/hooks"
 
 export const LivestreamLayout = ({ children }: { children: ReactNode }) => {
   const { accessToken, setUser, clearUser } = useUserStore()
@@ -22,8 +21,6 @@ export const LivestreamLayout = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate()
   const collapsed = useUIStore((s) => s.sidebarCollapsed)
   const setCollapsed = useUIStore((s) => s.setSidebarCollapsed)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const isMobile = useMediaQuery("(max-width: 768px)")
 
   const { mutate: getToken } = useMutation({
     mutationKey: ["getNewToken"],
@@ -70,50 +67,18 @@ export const LivestreamLayout = ({ children }: { children: ReactNode }) => {
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "#f8fafc" }}>
-      {/* Mobile Overlay */}
-      {isMobile && mobileMenuOpen && (
-        <div
-          onClick={() => setMobileMenuOpen(false)}
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-            zIndex: 199
-          }}
-        />
-      )}
-
-      {/* Sidebar */}
-      <div
-        style={{
-          position: isMobile ? "fixed" : "sticky",
-          top: 0,
-          left: isMobile && !mobileMenuOpen ? "-100%" : 0,
-          transition: "left 0.3s ease",
-          zIndex: 202,
-          height: "100vh"
-        }}
-      >
-        <Sidebar
-          meData={meData}
-          collapsed={isMobile ? false : collapsed}
-          setCollapsed={
-            isMobile ? () => setMobileMenuOpen(false) : setCollapsed
-          }
-          navs={LIVESTREAM_NAVS}
-        />
-      </div>
-
+      <Sidebar
+        meData={meData}
+        collapsed={collapsed}
+        setCollapsed={setCollapsed}
+        navs={LIVESTREAM_NAVS}
+      />
       <div
         style={{
           flex: 1,
           display: "flex",
           flexDirection: "column",
-          minHeight: "100vh",
-          width: isMobile ? "100%" : "auto"
+          minHeight: "100vh"
         }}
       >
         <header
@@ -125,27 +90,18 @@ export const LivestreamLayout = ({ children }: { children: ReactNode }) => {
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
+            height: rem(64),
             position: "sticky",
             top: 0
           }}
-          className="h-12 lg:h-16"
         >
-          <Group gap={8} style={{ marginLeft: isMobile ? rem(8) : rem(16) }}>
-            {/* Mobile Menu Button */}
-            {isMobile && (
-              <Burger
-                opened={mobileMenuOpen}
-                onClick={() => setMobileMenuOpen((prev) => !prev)}
-                size={isMobile ? "xs" : "sm"}
-                aria-label="Toggle navigation"
-              />
-            )}
+          <Group gap={8} style={{ marginLeft: rem(16) }}>
             <Badge
               ml={0}
               variant="gradient"
               gradient={{ from: "indigo", to: "violet", deg: 112 }}
               radius="xl"
-              size={isMobile ? "sm" : "md"}
+              size="md"
               fw={700}
               style={{
                 fontFamily: "Montserrat, sans-serif",
@@ -153,17 +109,12 @@ export const LivestreamLayout = ({ children }: { children: ReactNode }) => {
               }}
             >
               {import.meta.env.VITE_ENV === "development"
-                ? isMobile
-                  ? "DEV"
-                  : "DEVELOPMENT"
+                ? "DEVELOPMENT"
                 : `v${pkg.version}`}
             </Badge>
           </Group>
-          <Group
-            gap={isMobile ? 4 : 8}
-            style={{ marginRight: isMobile ? rem(8) : rem(16) }}
-          >
-            {/* <MyTasksPopover /> */}
+          <Group gap={8} style={{ marginRight: rem(16) }}>
+            <MyTasksPopover />
             <Notifications />
             <UserMenu />
           </Group>
@@ -172,11 +123,10 @@ export const LivestreamLayout = ({ children }: { children: ReactNode }) => {
           style={{
             flex: 1,
             background: "none",
-            minHeight: "calc(100vh - 64px)",
-            padding: isMobile ? "0.5rem" : "1rem"
+            minHeight: "calc(100vh - 64px)"
           }}
         >
-          <Container size="1600" px={isMobile ? 4 : undefined}>
+          <Container size="1600">
             <Box w="100%" maw={1600} mx="auto">
               <MeContext.Provider value={meData}>{children}</MeContext.Provider>
             </Box>
