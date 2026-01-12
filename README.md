@@ -85,6 +85,11 @@ npm run routes    # Generate router tree
 
 ## 7. Lịch sử cập nhật
 
+### 4.1.1
+
+- Thêm tốc độ KPI cho Dashboard của TTS
+- Sửa lỗi trong phần báo cáo của Livestream
+
 ### 4.1.0
 
 - Thêm chỉ số AOV và CPO cho báo cáo livestream
