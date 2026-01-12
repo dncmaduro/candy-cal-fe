@@ -52,7 +52,6 @@ export const Dashboard = () => {
   })
 
   const {
-    getKPIPercentageByMonth,
     getTotalIncomesByMonth,
     getTotalQuantityByMonth,
     getLiveShopIncomeByMonth,
@@ -79,22 +78,6 @@ export const Dashboard = () => {
   const selectedDate = new Date(selectedMonth)
   const currentMonth = selectedDate.getMonth()
   const currentYear = selectedDate.getFullYear()
-
-  const { data: KPIPercentageData } = useQuery({
-    queryKey: [
-      "getKPIPercentageByMonth",
-      currentMonth,
-      currentYear,
-      selectedChannelId
-    ],
-    queryFn: () =>
-      getKPIPercentageByMonth({
-        month: currentMonth,
-        year: currentYear,
-        channelId: selectedChannelId || undefined
-      }),
-    select: (data) => data.data
-  })
 
   const { data: totalQuantityData } = useQuery({
     queryKey: [
@@ -226,17 +209,49 @@ export const Dashboard = () => {
         (totalIncomesSelected?.live || 0) + (totalIncomesSelected?.shop || 0)
       return (totalIncome / totalGoal) * 100
     }
-    const splitSelected = pickMode<{ live: number; shop: number }>(
-      KPIPercentageData?.KPIPercentage,
-      mode
-    )
-    if (!splitSelected) return undefined
-    return splitSelected[kpiView]
+
+    // For live/shop view, calculate percentage directly from income and goal
+    const income = totalIncomesSelected?.[kpiView]
+    const goal =
+      kpiView === "live" ? monthGoalData.liveStreamGoal : monthGoalData.shopGoal
+
+    if (!goal || goal === 0) return 0
+    if (income === undefined) return undefined
+
+    return (income / goal) * 100
   })()
+
+  // Calculate expected KPI based on current day of month
+  const currentExpectedKPI = useMemo(() => {
+    const now = new Date()
+    const currentDay = now.getDate()
+    const totalDaysInMonth = new Date(
+      selectedDate.getFullYear(),
+      selectedDate.getMonth() + 1,
+      0
+    ).getDate()
+
+    // If selected month is current month, calculate expected percentage
+    if (
+      selectedDate.getMonth() === now.getMonth() &&
+      selectedDate.getFullYear() === now.getFullYear()
+    ) {
+      const expected = (100 / totalDaysInMonth) * currentDay
+      return Math.round(expected * 100) / 100
+    }
+
+    // If selected month is in the past, expected is 100%
+    if (selectedDate < new Date(now.getFullYear(), now.getMonth(), 1)) {
+      return 100
+    }
+
+    // If selected month is in the future, expected is 0%
+    return 0
+  }, [selectedDate])
 
   const percentageDisplay =
     percentageValue !== undefined && percentageValue !== null
-      ? `${Math.round((percentageValue + Number.EPSILON) * 100) / 100}%`
+      ? `${Math.round((percentageValue + Number.EPSILON) * 100) / 100}% / ${currentExpectedKPI}%`
       : "..."
 
   const percentageColor = (() => {
