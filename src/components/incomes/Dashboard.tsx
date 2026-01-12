@@ -249,15 +249,18 @@ export const Dashboard = () => {
     return 0
   }, [selectedDate])
 
+  const isKPIExceeded =
+    percentageValue !== undefined &&
+    percentageValue !== null &&
+    percentageValue > currentExpectedKPI
+
   const percentageDisplay =
     percentageValue !== undefined && percentageValue !== null
-      ? `${Math.round((percentageValue + Number.EPSILON) * 100) / 100}% / ${currentExpectedKPI}%`
+      ? `${Math.round((percentageValue + Number.EPSILON) * 100) / 100}% / ${currentExpectedKPI}% (${isKPIExceeded ? "+" : "-"}${Math.round(Math.abs(percentageValue - currentExpectedKPI) * 100) / 100}%)`
       : "..."
 
   const percentageColor = (() => {
-    if (percentageValue === undefined || percentageValue === null) return "gray"
-    if (percentageValue >= 100) return "green"
-    if (percentageValue >= 70) return "yellow"
+    if (isKPIExceeded) return "green"
     return "red"
   })()
 
