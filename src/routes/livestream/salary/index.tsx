@@ -261,8 +261,6 @@ function SalaryModal({
     }
   }
 
-  console.log(users)
-
   const userOptions = (users || []).map((user) => ({
     value: user._id,
     label: user.name ?? ""
