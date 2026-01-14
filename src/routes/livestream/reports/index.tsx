@@ -366,7 +366,7 @@ function RouteComponent() {
           </Stack>
         </Paper>
 
-        <Paper p="md" radius="md" withBorder>
+        {/* <Paper p="md" radius="md" withBorder>
           <Stack gap={4}>
             <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
               Tổng bình luận
@@ -374,6 +374,20 @@ function RouteComponent() {
             <Text size="xl" fw={700} c="green.6">
               <NumberFormatter
                 value={metricsData.totalComments}
+                thousandSeparator
+              />
+            </Text>
+          </Stack>
+        </Paper> */}
+
+        <Paper p="md" radius="md" withBorder>
+          <Stack gap={4}>
+            <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
+              Tổng đơn hàng
+            </Text>
+            <Text size="xl" fw={700} c="green.6">
+              <NumberFormatter
+                value={metricsData.totalOrders}
                 thousandSeparator
               />
             </Text>
