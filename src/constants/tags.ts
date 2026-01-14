@@ -9,3 +9,9 @@ export const DELIVERED_TAG_OPTIONS = [
   { value: "deliver-error", label: "Xuất hàng lỗi" },
   { value: "deliver-employee", label: "Xuất hàng cho nhân viên" }
 ]
+
+/** @constant */
+export const RETURNED_TAG_OPTIONS = [
+  { value: "return-tiktokshop", label: "Hoàn hàng TiktokShop" },
+  { value: "return-other", label: "Hoàn hàng khác" }
+]
