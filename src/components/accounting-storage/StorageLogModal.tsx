@@ -16,7 +16,8 @@ import { IconCheck, IconPlus, IconTrash } from "@tabler/icons-react"
 import { useLogs } from "../../hooks/useLogs"
 import {
   DELIVERED_TAG_OPTIONS,
-  RECEIVED_TAG_OPTION
+  RECEIVED_TAG_OPTION,
+  RETURNED_TAG_OPTIONS
 } from "../../constants/tags"
 import { STATUS_OPTIONS } from "../../constants/status"
 import { useMutation } from "@tanstack/react-query"
@@ -232,7 +233,9 @@ export const StorageLogModal = ({ itemsList, log, onSuccess }: Props) => {
                 data={
                   watch("status") === "delivered"
                     ? DELIVERED_TAG_OPTIONS
-                    : RECEIVED_TAG_OPTION
+                    : watch("status") === "received"
+                      ? RECEIVED_TAG_OPTION
+                      : RETURNED_TAG_OPTIONS
                 }
                 allowDeselect={false}
                 value={field.value}
