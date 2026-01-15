@@ -85,6 +85,13 @@ npm run routes    # Generate router tree
 
 ## 7. Lịch sử cập nhật
 
+### 4.1.2
+
+- Sửa text hiển thị ở phiếu báo giá
+- Hiển thị lần cuối mua hàng của từng khách
+- Hiển thị phần KPI theo tháng cho Sales
+- Hiển thị phần KPI còn thiếu cho TTS
+
 ### 4.1.1
 
 - Thêm tốc độ KPI cho Dashboard của TTS
