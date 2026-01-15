@@ -139,7 +139,7 @@ export const LIVESTREAM_NAVS = [
   },
   {
     to: `${LIVESTREAM_NAVS_URL}/performance`,
-    label: "Tính hiệu suất",
+    label: "Hiệu suất & lương",
     roles: [
       "admin",
       "livestream-leader",

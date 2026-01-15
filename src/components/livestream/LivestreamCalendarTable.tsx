@@ -112,13 +112,13 @@ const AltAssigneeInfo = ({
 
   const fetchAltRequestData = async () => {
     try {
-      const response = await onGetRequest({
+      await onGetRequest({
         livestreamId,
         snapshotId: snapshot._id
       })
       setAltRequestData({
         originalAssigneeName: snapshot.assignee?.name || "",
-        reason: response.data.altNote || ""
+        reason: snapshot.altNote || ""
       })
     } catch (error) {
       console.error("Error fetching alt request:", error)
