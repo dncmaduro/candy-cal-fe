@@ -343,7 +343,7 @@ function RouteComponent() {
             </Text>
             <Text size="xl" fw={700} c="blue.6">
               <NumberFormatter
-                value={metricsData.totalIncome}
+                value={Math.round(metricsData.totalIncome)}
                 thousandSeparator
                 suffix=" VNĐ"
               />
@@ -358,7 +358,7 @@ function RouteComponent() {
             </Text>
             <Text size="xl" fw={700} c="red.6">
               <NumberFormatter
-                value={metricsData.totalAdsCost}
+                value={Math.round(metricsData.totalAdsCost)}
                 thousandSeparator
                 suffix=" VNĐ"
               />
@@ -458,14 +458,34 @@ function RouteComponent() {
       },
       {
         accessorKey: "income",
-        header: "Doanh thu",
+        header: "DT",
         cell: ({ getValue, row }) => {
           const value = getValue() as number
           return (
             <Text
               size="sm"
               fw={row.original.isSummary ? 700 : 600}
-              c={value > 0 ? "blue.6" : "dimmed"}
+              c={value > 0 ? "indigo" : "dimmed"}
+            >
+              <NumberFormatter
+                value={value}
+                thousandSeparator
+                decimalScale={0}
+              />
+            </Text>
+          )
+        }
+      },
+      {
+        accessorKey: "realIncome",
+        header: "DT thực",
+        cell: ({ getValue, row }) => {
+          const value = getValue() as number
+          return (
+            <Text
+              size="sm"
+              fw={row.original.isSummary ? 700 : 600}
+              c={value > 0 ? "blue" : "dimmed"}
             >
               <NumberFormatter
                 value={value}
@@ -485,7 +505,7 @@ function RouteComponent() {
             <Text
               size="sm"
               fw={row.original.isSummary ? 700 : 600}
-              c={value > 0 ? "red.6" : "dimmed"}
+              c={value > 0 ? "orange" : "dimmed"}
             >
               <NumberFormatter
                 value={value}
@@ -505,7 +525,7 @@ function RouteComponent() {
             <Text
               size="sm"
               fw={row.original.isSummary ? 700 : 600}
-              c={value > 0 ? "teal.6" : "dimmed"}
+              c={value > 0 ? "teal" : "dimmed"}
             >
               <NumberFormatter value={value} />
             </Text>
@@ -523,7 +543,7 @@ function RouteComponent() {
             <Text
               size="sm"
               fw={row.original.isSummary ? 700 : 600}
-              c={cac > 0 ? "orange.6" : "dimmed"}
+              c={cac > 0 ? "black" : "dimmed"}
             >
               <NumberFormatter value={cac} decimalScale={2} />%
             </Text>
@@ -542,7 +562,7 @@ function RouteComponent() {
             <Text
               size="sm"
               fw={row.original.isSummary ? 700 : 600}
-              c={aov > 0 ? "green.6" : "dimmed"}
+              c={aov > 0 ? "black" : "dimmed"}
             >
               <NumberFormatter value={aov} thousandSeparator decimalScale={0} />
             </Text>
@@ -560,7 +580,7 @@ function RouteComponent() {
             <Text
               size="sm"
               fw={row.original.isSummary ? 700 : 600}
-              c={cpo > 0 ? "blue.6" : "dimmed"}
+              c={cpo > 0 ? "black" : "dimmed"}
             >
               <NumberFormatter value={cpo} thousandSeparator decimalScale={0} />
             </Text>
@@ -578,7 +598,7 @@ function RouteComponent() {
           if (row.original.isSummary) {
             return (
               <Stack gap={0}>
-                <Text size="sm" fw={700} c="violet.6">
+                <Text size="sm" fw={700} c="black">
                   <NumberFormatter value={kpi} thousandSeparator />
                 </Text>
                 <Text size="xs" c="dimmed">
@@ -590,7 +610,7 @@ function RouteComponent() {
 
           return (
             <Stack gap={0}>
-              <Text size="sm" fw={600} c="violet.6">
+              <Text size="sm" fw={600} c="black">
                 <NumberFormatter value={kpi} thousandSeparator />
               </Text>
               {kpi > 0 && (
@@ -619,7 +639,7 @@ function RouteComponent() {
       },
       {
         accessorKey: "avgViewingDuration",
-        header: "Thời gian xem TB (giây)",
+        header: "TGXTB (giây)",
         cell: ({ getValue, row }) => {
           if (row.original.isSummary) {
             return null
@@ -650,7 +670,7 @@ function RouteComponent() {
       },
       {
         accessorKey: "ordersNote",
-        header: "Ghi chú đơn hàng",
+        header: "Ghi chú",
         cell: ({ getValue, row }) => {
           if (row.original.isSummary) {
             return null

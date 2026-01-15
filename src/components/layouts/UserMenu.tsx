@@ -34,7 +34,8 @@ export const UserMenu = () => {
     "livestream-emp": "Host livestream",
     "livestream-ast": "Trợ live",
     "sales-leader": "Leader sales",
-    "sales-emp": "Nhân viên sales"
+    "sales-emp": "Nhân viên sales",
+    "livestream-accounting": "Kế toán livestream"
   }
 
   const APPS = [
