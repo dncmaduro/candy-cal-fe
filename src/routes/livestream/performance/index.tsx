@@ -325,18 +325,14 @@ function RouteComponent() {
         // 1. If altAssignee exists and is "other" -> skip (no salary)
         // 2. If altAssignee exists and is not "other" -> use altAssignee._id
         // 3. If no altAssignee -> use assignee._id
-        console.log(snapshot)
         if (snapshot.altAssignee) {
           if (snapshot.altAssignee === "other") {
             // Skip this snapshot - no salary for "other"
             return
           } else if (typeof snapshot.altAssignee === "string") {
-            console.log(snapshot.altAssignee, "www")
-
             userId = snapshot.altAssignee
           }
         } else if (snapshot.assignee) {
-          console.log(snapshot.altAssignee, "ble")
           userId = snapshot.assignee._id
         }
 
@@ -717,6 +713,7 @@ function RouteComponent() {
                     "admin",
                     "livestream-leader",
                     "livestream-emp",
+                    "livestream-accounting",
                     "system-emp"
                   ]}
                 >
@@ -750,6 +747,7 @@ function RouteComponent() {
                     "admin",
                     "livestream-leader",
                     "livestream-ast",
+                    "livestream-accounting",
                     "system-emp"
                   ]}
                 >
