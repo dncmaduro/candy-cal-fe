@@ -4276,6 +4276,7 @@ export interface GetSalesRevenueResponse {
 export interface GetMonthlyMetricsRequest {
   month: number
   year: number
+  channel?: string
 }
 
 /** @interface */
@@ -4292,6 +4293,8 @@ export interface GetMonthlyMetricsResponse {
     customer: number
     closed: number
   }
+  monthlyGoal: number
+  goalCompletionPercentage: number
 }
 
 export interface GetMonthlyTopCustomersRequest {
@@ -4299,6 +4302,7 @@ export interface GetMonthlyTopCustomersRequest {
   month: number
   page: number
   limit: number
+  channel?: string
 }
 
 export interface GetMonthlyTopCustomersResponse {
