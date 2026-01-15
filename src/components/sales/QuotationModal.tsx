@@ -720,7 +720,7 @@ export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
             <Stack gap="xs">
               <Group justify="center">
                 <Title order={3} fw={700}>
-                  PHIẾU XUẤT HÀNG DỰ KIẾN
+                  PHIẾU XUẤT HÀNG
                 </Title>
               </Group>
 
