@@ -361,7 +361,16 @@ function RouteComponent() {
                 value={Math.round(metricsData.totalAdsCost)}
                 thousandSeparator
                 suffix=" VNĐ"
+              />{" "}
+              (
+              <NumberFormatter
+                value={
+                  (metricsData.totalAdsCost / metricsData.totalIncome) * 100
+                }
+                suffix="%"
+                decimalScale={2}
               />
+              )
             </Text>
           </Stack>
         </Paper>
