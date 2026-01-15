@@ -49,6 +49,7 @@ function RouteComponent() {
   const [endDate, setEndDate] = useState<Date | null>(new Date())
 
   const [channel, setChannel] = useState<string>()
+  const [monthlyMetricsChannel, setMonthlyMetricsChannel] = useState<string>()
 
   // Month for monthly metrics
   const [selectedMonth, setSelectedMonth] = useState<Date | null>(new Date())
@@ -78,11 +79,12 @@ function RouteComponent() {
     error: metricsError,
     refetch: refetchMetrics
   } = useQuery({
-    queryKey: ["monthlyMetrics", selectedMonth],
+    queryKey: ["monthlyMetrics", selectedMonth, monthlyMetricsChannel],
     queryFn: () =>
       getMonthlyMetrics({
         month: (selectedMonth || new Date()).getMonth() + 1,
-        year: (selectedMonth || new Date()).getFullYear()
+        year: (selectedMonth || new Date()).getFullYear(),
+        channel: monthlyMetricsChannel
       }),
     enabled: !!selectedMonth
   })
@@ -92,13 +94,14 @@ function RouteComponent() {
     isLoading: topCustomersLoading,
     refetch: refetchTopCustomers
   } = useQuery({
-    queryKey: ["monthlyTopCustomers", selectedMonth],
+    queryKey: ["monthlyTopCustomers", selectedMonth, monthlyMetricsChannel],
     queryFn: () =>
       getMonthlyTopCustomers({
         month: (selectedMonth || new Date()).getMonth() + 1,
         year: (selectedMonth || new Date()).getFullYear(),
         page: 1,
-        limit: 999
+        limit: 999,
+        channel: monthlyMetricsChannel
       }),
     enabled: !!selectedMonth
   })
@@ -122,6 +125,7 @@ function RouteComponent() {
 
   const handleResetMetrics = () => {
     setSelectedMonth(new Date())
+    setMonthlyMetricsChannel(undefined)
     refetchMetrics()
     refetchTopCustomers()
   }
@@ -361,6 +365,13 @@ function RouteComponent() {
                   onChange={setSelectedMonth}
                   valueFormat="MM/YYYY"
                   style={{ width: 180 }}
+                  clearable
+                />
+                <Select
+                  data={channelsData || []}
+                  value={monthlyMetricsChannel}
+                  onChange={(e) => setMonthlyMetricsChannel(e ?? undefined)}
+                  placeholder="Tất cả kênh"
                   clearable
                 />
                 <Button onClick={() => refetchMetrics()} variant="filled">

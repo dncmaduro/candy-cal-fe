@@ -13,7 +13,11 @@ import {
   Stack,
   Badge
 } from "@mantine/core"
-import { IconTrendingUp, IconAlertCircle } from "@tabler/icons-react"
+import {
+  IconTrendingUp,
+  IconAlertCircle,
+  IconTargetArrow
+} from "@tabler/icons-react"
 import { TopCustomersChart } from "./TopCustomersChart"
 
 interface MonthlyMetricsData {
@@ -29,6 +33,8 @@ interface MonthlyMetricsData {
     customer: number
     closed: number
   }
+  monthlyGoal: number
+  goalCompletionPercentage: number
 }
 
 interface TopCustomersData {
@@ -79,7 +85,7 @@ export function MonthlyMetrics({
                 <Box>
                   <Group justify="space-between" mb="xs">
                     <Text size="sm" c="dimmed">
-                      Avg Deal Size
+                      Giá trị đơn hàng trung bình
                     </Text>
                     <ThemeIcon variant="light" size="lg" color="pink">
                       <IconTrendingUp size={20} />
@@ -87,6 +93,30 @@ export function MonthlyMetrics({
                   </Group>
                   <Text fw={700} fz="xl">
                     {data?.avgDealSize.toLocaleString("vi-VN")}đ
+                  </Text>
+                </Box>
+              </Tooltip>
+            )}
+          </Card>
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 2.4 }}>
+          <Card shadow="sm" padding="lg" radius="md" withBorder>
+            {isLoading ? (
+              <Skeleton height={100} />
+            ) : (
+              <Tooltip label="Giá trị đơn hàng trung bình">
+                <Box>
+                  <Group justify="space-between" mb="xs">
+                    <Text size="sm" c="dimmed">
+                      KPI
+                    </Text>
+                    <ThemeIcon variant="light" size="lg" color="red">
+                      <IconTargetArrow size={20} />
+                    </ThemeIcon>
+                  </Group>
+                  <Text fw={700} fz="xl">
+                    {data?.monthlyGoal.toLocaleString("vi-VN")}đ (
+                    {data?.goalCompletionPercentage.toFixed(2)}%)
                   </Text>
                 </Box>
               </Tooltip>
