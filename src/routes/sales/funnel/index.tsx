@@ -77,23 +77,10 @@ type FunnelItem = {
   rank: "gold" | "silver" | "bronze"
   stage: "lead" | "contacted" | "customer" | "closed"
   funnelSource: "ads" | "seeding" | "referral"
+  lastTimeBuyed?: string
   createdAt: string
   updatedAt: string
   deletedAt?: string
-}
-
-const STAGE_BADGE_COLOR: Record<string, string> = {
-  lead: "blue",
-  contacted: "cyan",
-  customer: "green",
-  closed: "gray"
-}
-
-const STAGE_LABEL: Record<string, string> = {
-  lead: "Lead",
-  contacted: "Đã liên hệ",
-  customer: "Khách hàng",
-  closed: "Đã đóng"
 }
 
 const RANK_LABELS: Record<string, string> = {
@@ -132,6 +119,23 @@ function RouteComponent() {
     "ads" | "seeding" | "referral" | undefined
   >(undefined)
   const [showDeleted, setShowDeleted] = useState(false)
+  const [sortBy, setSortBy] = useState<
+    "totalIncome" | "lastTimeBuyed" | undefined
+  >(undefined)
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
+
+  const handleSortChange = (
+    newSortBy: string | undefined,
+    newSortOrder: "asc" | "desc"
+  ) => {
+    if (newSortBy === "totalIncome" || newSortBy === "lastTimeBuyed") {
+      setSortBy(newSortBy)
+      setSortOrder(newSortOrder)
+    } else {
+      setSortBy(undefined)
+      setSortOrder("desc")
+    }
+  }
 
   // const { mutate: goToMessage } = useMutation({
   //   mutationFn: async (psid: string) => {
@@ -185,7 +189,9 @@ function RouteComponent() {
       rankFilter,
       noActivityDaysFilter,
       funnelSourceFilter,
-      showDeleted
+      showDeleted,
+      sortBy,
+      sortOrder
     ],
     queryFn: () =>
       searchFunnel({
@@ -205,7 +211,9 @@ function RouteComponent() {
           ? Number(noActivityDaysFilter)
           : undefined,
         funnelSource: funnelSourceFilter,
-        deleted: showDeleted
+        deleted: showDeleted,
+        sortBy: sortBy,
+        sortOrder: sortOrder
       })
   })
 
@@ -430,43 +438,48 @@ function RouteComponent() {
         <Text fw={500} size="sm" c={row.original.deletedAt ? "red" : undefined}>
           {row.original.name}
         </Text>
-      )
+      ),
+      enableSorting: false
     },
     {
       accessorKey: "phoneNumber",
       header: "SĐT",
       cell: ({ row }) => (
         <Text size="sm">{row.original.phoneNumber || "N/A"}</Text>
-      )
+      ),
+      enableSorting: false
     },
     {
       accessorKey: "province",
       header: "Tỉnh/TP",
-      cell: ({ row }) => <Text size="sm">{row.original.province?.name}</Text>
+      cell: ({ row }) => <Text size="sm">{row.original.province?.name}</Text>,
+      enableSorting: false
     },
     {
       accessorKey: "channel",
       header: "Kênh",
       cell: ({ row }) => (
         <Text size="sm">{row.original.channel.channelName}</Text>
-      )
+      ),
+      enableSorting: false
     },
-    {
-      accessorKey: "user",
-      header: "Nhân viên",
-      cell: ({ row }) => (
-        <Text size="sm">{row.original.user?.name || "N/A"}</Text>
-      )
-    },
-    {
-      accessorKey: "stage",
-      header: "Giai đoạn",
-      cell: ({ row }) => (
-        <Badge color={STAGE_BADGE_COLOR[row.original.stage]}>
-          {STAGE_LABEL[row.original.stage]}
-        </Badge>
-      )
-    },
+    // {
+    //   accessorKey: "user",
+    //   header: "Nhân viên",
+    //   cell: ({ row }) => (
+    //     <Text size="sm">{row.original.user?.name || "N/A"}</Text>
+    //   )
+    // },
+    // {
+    //   accessorKey: "stage",
+    //   header: "Giai đoạn",
+    //   cell: ({ row }) => (
+    //     <Badge color={STAGE_BADGE_COLOR[row.original.stage]}>
+    //       {STAGE_LABEL[row.original.stage]}
+    //     </Badge>
+    //   )
+    // },
+
     {
       accessorKey: "totalIncome",
       header: "Tổng doanh thu",
@@ -476,7 +489,18 @@ function RouteComponent() {
             ? row.original.totalIncome.toLocaleString("vi-VN") + "đ"
             : "N/A"}
         </Text>
-      )
+      ),
+      enableSorting: true
+    },
+    {
+      accessorKey: "lastTimeBuyed",
+      header: "Lần cuối mua hàng",
+      cell: ({ row }) => (
+        <Text size="sm" c="dimmed">
+          {row.original.lastTimeBuyed}
+        </Text>
+      ),
+      enableSorting: true
     },
     {
       accessorKey: "rank",
@@ -485,7 +509,8 @@ function RouteComponent() {
         <Badge variant="light" color={RANK_COLORS[row.original.rank]} size="lg">
           {RANK_LABELS[row.original.rank]}
         </Badge>
-      )
+      ),
+      enableSorting: false
     },
     {
       accessorKey: "funnelSource",
@@ -494,7 +519,8 @@ function RouteComponent() {
         <Text fw={500} size="sm">
           {mapFunnelSource[row.original.funnelSource]}
         </Text>
-      )
+      ),
+      enableSorting: false
     },
     {
       accessorKey: "createdAt",
@@ -503,7 +529,8 @@ function RouteComponent() {
         <Text size="sm" c="dimmed">
           {format(new Date(row.original.createdAt), "dd/MM/yyyy HH:mm")}
         </Text>
-      )
+      ),
+      enableSorting: false
     },
     {
       id: "actions",
@@ -641,6 +668,9 @@ function RouteComponent() {
             onPageSizeChange={setLimit}
             initialPageSize={limit}
             pageSizeOptions={[10, 20, 50, 100]}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            onSortChange={handleSortChange}
             onRowClick={(row) =>
               navigate({ to: `/sales/funnel/${row.original._id}` })
             }

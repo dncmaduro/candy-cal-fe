@@ -3124,6 +3124,8 @@ export interface SearchFunnelRequest {
   noActivityDays?: number
   funnelSource?: "ads" | "seeding" | "referral"
   deleted?: boolean
+  sortBy?: "totalIncome" | "lastTimeBuyed"
+  sortOrder?: "asc" | "desc"
   page: number
   limit: number
 }
@@ -3158,6 +3160,7 @@ export interface SearchFunnelResponse {
     rank: "gold" | "silver" | "bronze"
     funnelSource: "ads" | "seeding" | "referral"
     fromSystem?: boolean
+    lastTimeBuyed?: string
     createdAt: string
     updatedAt: string
     deletedAt?: string
