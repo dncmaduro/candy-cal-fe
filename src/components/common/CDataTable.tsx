@@ -57,6 +57,11 @@ export type DataTableProps<TData, TValue> = {
   hidePagination?: boolean
   hidePaginationInformation?: boolean
 
+  // External sorting (server-side)
+  sortBy?: string
+  sortOrder?: "asc" | "desc"
+  onSortChange?: (sortBy: string | undefined, sortOrder: "asc" | "desc") => void
+
   // Expanding rows
   enableExpanding?: boolean
   renderRowSubComponent?: (ctx: { row: any }) => React.ReactNode
@@ -96,6 +101,10 @@ export function CDataTable<TData, TValue>({
   onPageSizeChange,
   hidePagination = false,
   hidePaginationInformation = false,
+  // external sorting
+  sortBy,
+  sortOrder,
+  onSortChange,
   getRowId,
   onRowSelectionChange,
   onRowClick,
@@ -118,6 +127,42 @@ export function CDataTable<TData, TValue>({
 
   // Determine if using server-side pagination
   const isServerPagination = !!(page && totalPages && onPageChange)
+
+  // Determine if using server-side sorting
+  const isServerSorting = !!onSortChange
+
+  // Handle sorting change
+  const handleSortingChange = React.useCallback(
+    (updaterOrValue: SortingState | ((old: SortingState) => SortingState)) => {
+      const newSorting =
+        typeof updaterOrValue === "function"
+          ? updaterOrValue(sorting)
+          : updaterOrValue
+
+      if (isServerSorting && onSortChange) {
+        // Server-side sorting
+        if (newSorting.length > 0) {
+          const sort = newSorting[0]
+          onSortChange(sort.id, sort.desc ? "desc" : "asc")
+        } else {
+          onSortChange(undefined, "desc")
+        }
+      } else {
+        // Client-side sorting
+        setSorting(newSorting)
+      }
+    },
+    [sorting, isServerSorting, onSortChange]
+  )
+
+  // Sync external sorting state with internal state
+  React.useEffect(() => {
+    if (isServerSorting && sortBy) {
+      setSorting([{ id: sortBy, desc: sortOrder === "desc" }])
+    } else if (isServerSorting && !sortBy) {
+      setSorting([])
+    }
+  }, [sortBy, sortOrder, isServerSorting])
 
   const table = useReactTable({
     data,
@@ -159,15 +204,16 @@ export function CDataTable<TData, TValue>({
     getRowId,
     enableRowSelection,
     onRowSelectionChange: setRowSelection,
-    onSortingChange: setSorting,
+    onSortingChange: handleSortingChange,
     onColumnVisibilityChange: setColumnVisibility,
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGf,
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
+    getSortedRowModel: isServerSorting ? undefined : getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     manualPagination: isServerPagination,
+    manualSorting: isServerSorting,
     pageCount: isServerPagination ? totalPages : undefined,
     initialState: {
       pagination: {
