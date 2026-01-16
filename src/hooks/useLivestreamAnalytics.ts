@@ -4,6 +4,8 @@ import { callApi } from "./axios"
 import {
   GetAggregatedMetricsRequest,
   GetAggregatedMetricsResponse,
+  GetAssistantRevenueRankingsRequest,
+  GetAssistantRevenueRankingsResponse,
   GetHostRevenueRankingsRequest,
   GetHostRevenueRankingsResponse,
   GetLivestreamStatsRequest,
@@ -61,10 +63,23 @@ export const useLivestreamAnalytics = () => {
     })
   }
 
+  const getAssistantRevenueRankings = async (
+    req: GetAssistantRevenueRankingsRequest
+  ) => {
+    const query = toQueryString(req)
+
+    return callApi<never, GetAssistantRevenueRankingsResponse>({
+      method: "GET",
+      path: `/v1/livestreamanalytics/assistant-revenue-rankings?${query}`,
+      token: accessToken
+    })
+  }
+
   return {
     getMonthlyTotalsLivestreams,
     getLivestreamStats,
     getAggregatedMetrics,
-    getHostRevenueRankings
+    getHostRevenueRankings,
+    getAssistantRevenueRankings
   }
 }
