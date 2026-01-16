@@ -215,6 +215,7 @@ function RouteComponent() {
       assignee: string
       assigneeId: string
       income: number
+      realIncome: number
       adsCost: number
       clickRate: number
       avgViewingDuration: number
@@ -283,6 +284,7 @@ function RouteComponent() {
                 : snapshot.assignee?.name || "Chưa phân",
           assigneeId: snapshot.assignee?._id || "",
           income: snapshot.income || 0,
+          realIncome: snapshot.realIncome || 0,
           adsCost: snapshot.adsCost || 0,
           clickRate: snapshot.clickRate || 0,
           avgViewingDuration: snapshot.avgViewingDuration || 0,
@@ -310,6 +312,10 @@ function RouteComponent() {
 
       // Calculate and add summary row
       const totalIncome = dateRows.reduce((sum, row) => sum + row.income, 0)
+      const totalRealIncome = dateRows.reduce(
+        (sum, row) => sum + row.realIncome,
+        0
+      )
       const totalAdsCost = dateRows.reduce((sum, row) => sum + row.adsCost, 0)
       const totalComments = dateRows.reduce((sum, row) => sum + row.comments, 0)
       const totalKpi = dateRows.reduce((sum, row) => sum + row.snapshotKpi, 0)
@@ -324,6 +330,7 @@ function RouteComponent() {
         assignee: "",
         assigneeId: "",
         income: totalIncome,
+        realIncome: totalRealIncome,
         adsCost: totalAdsCost,
         clickRate: 0,
         avgViewingDuration: 0,
