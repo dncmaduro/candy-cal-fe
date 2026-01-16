@@ -2173,6 +2173,23 @@ export interface GetHostRevenueRankingsResponse {
 }
 
 /** @interface */
+export interface GetAssistantRevenueRankingsRequest {
+  startDate: string
+  endDate: string
+}
+
+/** @interface */
+export interface GetAssistantRevenueRankingsResponse {
+  rankings: {
+    assistantId: string
+    assistantName: string
+    totalRevenue: number
+    totalAdsCost: number
+    totalOrders: number
+  }[]
+}
+
+/** @interface */
 export interface UpdateSnapshotAltRequest {
   altAssignee?: string
   altOtherAssignee?: string
