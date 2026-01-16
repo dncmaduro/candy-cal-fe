@@ -249,9 +249,10 @@ function RouteComponent() {
                 )}
                 <Select
                   data={channelsData || []}
-                  value={channel}
+                  // value={channel}
                   onChange={(e) => setChannel(e ?? undefined)}
                   placeholder="Tất cả kênh"
+                  clearable
                 />
                 <Button onClick={() => refetchRevenue()} variant="filled">
                   Áp dụng
