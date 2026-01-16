@@ -67,6 +67,7 @@ type LivestreamSnapshot = {
   altNote?: string
   altRequest?: string
   income?: number
+  realIncome?: number
   adsCost?: number
   clickRate?: number
   avgViewingDuration?: number
@@ -1091,6 +1092,22 @@ export const LivestreamCalendarTable = ({
                       <Text size="xs" c="dimmed">
                         {format(day, "dd/MM/yyyy")}
                       </Text>
+                      {(() => {
+                        const dayData = livestreamData?.find(
+                          (ls) =>
+                            format(parseISO(ls.date), "yyyy-MM-dd") ===
+                            format(day, "yyyy-MM-dd")
+                        )
+                        const hasRealIncome = dayData?.snapshots.some(
+                          (s) =>
+                            s.realIncome !== undefined && s.realIncome !== null
+                        )
+                        return hasRealIncome ? (
+                          <Text size="xs" c="teal" fw={600} mt={4}>
+                            Đã tính DT thực
+                          </Text>
+                        ) : null
+                      })()}
                     </div>
                   </th>
                 ))}
@@ -1321,6 +1338,22 @@ export const LivestreamCalendarTable = ({
                     <Text size="xs" c="dimmed">
                       {format(day, "dd/MM/yyyy")}
                     </Text>
+                    {(() => {
+                      const dayData = livestreamData?.find(
+                        (ls) =>
+                          format(parseISO(ls.date), "yyyy-MM-dd") ===
+                          format(day, "yyyy-MM-dd")
+                      )
+                      const hasRealIncome = dayData?.snapshots.some(
+                        (s) =>
+                          s.realIncome !== undefined && s.realIncome !== null
+                      )
+                      return hasRealIncome ? (
+                        <Text size="xs" c="teal" fw={600} mt={4}>
+                          Đã tính DT thực
+                        </Text>
+                      ) : null
+                    })()}
                   </div>
                 </th>
               ))}
