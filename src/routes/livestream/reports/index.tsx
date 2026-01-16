@@ -26,6 +26,7 @@ import { format } from "date-fns"
 import { CDataTable } from "../../../components/common/CDataTable"
 import { ColumnDef } from "@tanstack/react-table"
 import { HostRevenueRankingsChart } from "../../../components/livestream/HostRevenueRankingsChart"
+import { AssistantRevenueRankingsChart } from "../../../components/livestream/AssistantRevenueRankingsChart"
 
 export const Route = createFileRoute("/livestream/reports/")({
   component: RouteComponent
@@ -34,15 +35,20 @@ export const Route = createFileRoute("/livestream/reports/")({
 function RouteComponent() {
   const { getLivestreamsByDateRange } = useLivestreamCore()
   const { searchLivestreamChannels } = useLivestreamChannels()
-  const { getAggregatedMetrics, getHostRevenueRankings } =
-    useLivestreamAnalytics()
+  const {
+    getAggregatedMetrics,
+    getHostRevenueRankings,
+    getAssistantRevenueRankings
+  } = useLivestreamAnalytics()
   const { publicSearchUser } = useUsers()
 
   const [startDate, setStartDate] = useState<Date | null>(new Date())
   const [endDate, setEndDate] = useState<Date | null>(new Date())
   const [channelId, setChannelId] = useState<string | null>(null)
   const [assigneeId, setAssigneeId] = useState<string | null>(null)
-  const [viewMode, setViewMode] = useState<"reports" | "rankings">("reports")
+  const [viewMode, setViewMode] = useState<
+    "reports" | "host-rankings" | "assistant-rankings"
+  >("reports")
 
   const dateRange = useMemo<[Date | null, Date | null]>(
     () => [startDate, endDate],
@@ -148,18 +154,34 @@ function RouteComponent() {
   })
 
   // Fetch host revenue rankings
-  const { data: rankingsData, isLoading: isLoadingRankings } = useQuery({
-    queryKey: ["getHostRevenueRankings", dateRange[0], dateRange[1]],
-    queryFn: async () => {
-      if (!dateRange[0] || !dateRange[1]) return null
-      const response = await getHostRevenueRankings({
-        startDate: format(dateRange[0], "yyyy-MM-dd"),
-        endDate: format(dateRange[1], "yyyy-MM-dd")
-      })
-      return response.data
-    },
-    enabled: !!dateRange[0] && !!dateRange[1]
-  })
+  const { data: hostRankingsData, isLoading: isLoadingHostRankings } = useQuery(
+    {
+      queryKey: ["getHostRevenueRankings", dateRange[0], dateRange[1]],
+      queryFn: async () => {
+        if (!dateRange[0] || !dateRange[1]) return null
+        const response = await getHostRevenueRankings({
+          startDate: format(dateRange[0], "yyyy-MM-dd"),
+          endDate: format(dateRange[1], "yyyy-MM-dd")
+        })
+        return response.data
+      },
+      enabled: !!dateRange[0] && !!dateRange[1]
+    }
+  )
+
+  const { data: assistantRankingsData, isLoading: isLoadingAssistantRankings } =
+    useQuery({
+      queryKey: ["getAssistantRevenueRankings", dateRange[0], dateRange[1]],
+      queryFn: async () => {
+        if (!dateRange[0] || !dateRange[1]) return null
+        const response = await getAssistantRevenueRankings({
+          startDate: format(dateRange[0], "yyyy-MM-dd"),
+          endDate: format(dateRange[1], "yyyy-MM-dd")
+        })
+        return response.data
+      },
+      enabled: !!dateRange[0] && !!dateRange[1]
+    })
 
   // Fetch livestream data
   const { data: livestreamData, isLoading: isLoadingLivestreams } = useQuery({
@@ -832,10 +854,16 @@ function RouteComponent() {
           <Box mb="lg">
             <SegmentedControl
               value={viewMode}
-              onChange={(value) => setViewMode(value as "reports" | "rankings")}
+              onChange={(value) =>
+                setViewMode(
+                  value as "reports" | "host-rankings" | "assistant-rankings"
+                )
+              }
+              size="sm"
               data={[
                 { label: "Bảng báo cáo", value: "reports" },
-                { label: "Xếp hạng host", value: "rankings" }
+                { label: "Xếp hạng host", value: "host-rankings" },
+                { label: "Xếp hạng trợ live", value: "assistant-rankings" }
               ]}
               fullWidth
             />
@@ -887,10 +915,18 @@ function RouteComponent() {
           )}
 
           {/* Rankings Chart */}
-          {viewMode === "rankings" && (
+          {viewMode === "host-rankings" && (
             <HostRevenueRankingsChart
-              isLoadingRankings={isLoadingRankings}
-              rankingsData={rankingsData}
+              isLoadingRankings={isLoadingHostRankings}
+              rankingsData={hostRankingsData}
+            />
+          )}
+
+          {/* Assistants Chart */}
+          {viewMode === "assistant-rankings" && (
+            <AssistantRevenueRankingsChart
+              isLoadingRankings={isLoadingAssistantRankings}
+              rankingsData={assistantRankingsData}
             />
           )}
         </Box>

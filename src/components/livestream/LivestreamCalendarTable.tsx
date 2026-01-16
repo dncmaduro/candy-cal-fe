@@ -346,6 +346,7 @@ const ScheduleCell = ({
                   isCreator={canEditSnapshot(snapshot)}
                 />
               )}
+              {/* Show report button for host with conditions */}
               {onOpenReport &&
                 dayData &&
                 isUserLivestreamAst &&
@@ -373,6 +374,20 @@ const ScheduleCell = ({
                     ) : (
                       <IconReport size={16} />
                     )}
+                  </ActionIcon>
+                )}
+              {/* Show eye button for assistant - always visible */}
+              {onOpenReport &&
+                dayData &&
+                isUserLivestreamAst &&
+                role === "assistant" && (
+                  <ActionIcon
+                    size="sm"
+                    variant="subtle"
+                    color="blue"
+                    onClick={() => onOpenReport(dayData._id, snapshot)}
+                  >
+                    <IconEye size={16} />
                   </ActionIcon>
                 )}
             </Group>
@@ -1188,8 +1203,8 @@ export const LivestreamCalendarTable = ({
                   })}
                 </tr>
               ))}
-              {/* Add Salary Calculation Button Row for Host */}
-              {role === "host" && onCalculateDailySalary && (
+              {/* Add Salary Calculation Button Row for both Host and Assistant */}
+              {onCalculateDailySalary && (
                 <tr>
                   <td
                     style={{
