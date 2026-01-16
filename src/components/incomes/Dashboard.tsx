@@ -42,7 +42,7 @@ type KPIView = "live" | "shop" | "total"
 type DiscountMode = "beforeDiscount" | "afterDiscount"
 
 export const Dashboard = () => {
-  const [kpiView, setKpiView] = useState<KPIView>("live")
+  const [kpiView, setKpiView] = useState<KPIView>("total")
   const [mode, setMode] = useState<DiscountMode>("afterDiscount")
 
   const { selectedChannelId, channels } = useLivestreamChannel()
@@ -393,6 +393,15 @@ export const Dashboard = () => {
                   {
                     label: (
                       <Flex align="center" gap={4}>
+                        <IconSum size={14} />
+                        <span>Tổng</span>
+                      </Flex>
+                    ),
+                    value: "total"
+                  },
+                  {
+                    label: (
+                      <Flex align="center" gap={4}>
                         <IconDeviceDesktop size={14} />
                         <span>Live</span>
                       </Flex>
@@ -407,15 +416,6 @@ export const Dashboard = () => {
                       </Flex>
                     ),
                     value: "shop"
-                  },
-                  {
-                    label: (
-                      <Flex align="center" gap={4}>
-                        <IconSum size={14} />
-                        <span>Tổng</span>
-                      </Flex>
-                    ),
-                    value: "total"
                   }
                 ]}
               />
