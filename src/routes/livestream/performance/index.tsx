@@ -44,7 +44,8 @@ function RouteComponent() {
     useLivestreamPerformance()
 
   const { searchLivestreamSalary } = useLivestreamSalary()
-  const { getLivestreamsByDateRange, reportLivestream } = useLivestreamCore()
+  const { getLivestreamsByDateRange, reportLivestream, mergeSnapshots } =
+    useLivestreamCore()
   const { searchLivestreamChannels } = useLivestreamChannels()
   const { getMe, publicSearchUser } = useUsers()
   const queryClient = useQueryClient()
@@ -154,6 +155,53 @@ function RouteComponent() {
 
   const handleCalculateDailySalary = (date: Date) => {
     calculateDailyFromCalendar({ date })
+  }
+
+  // Merge snapshots mutation
+  const { mutate: mergeSnapshotsMutation } = useMutation({
+    mutationFn: async ({
+      livestreamId,
+      snapshotId1,
+      snapshotId2
+    }: {
+      livestreamId: string
+      snapshotId1: string
+      snapshotId2: string
+    }) => {
+      return await mergeSnapshots(livestreamId, {
+        snapshotId1,
+        snapshotId2
+      })
+    },
+    onSuccess: () => {
+      notifications.show({
+        title: "Gộp thành công",
+        message: "Đã gộp 2 snapshot thành công",
+        color: "green"
+      })
+      queryClient.invalidateQueries({
+        queryKey: ["getLivestreamsByDateRange"]
+      })
+    },
+    onError: (error: any) => {
+      notifications.show({
+        title: "Gộp thất bại",
+        message: error?.response?.data?.message || "Có lỗi khi gộp snapshot",
+        color: "red"
+      })
+    }
+  })
+
+  const handleMergeSnapshots = async (
+    livestreamId: string,
+    snapshotId1: string,
+    snapshotId2: string
+  ) => {
+    mergeSnapshotsMutation({
+      livestreamId,
+      snapshotId1,
+      snapshotId2
+    })
   }
 
   // Handle opening report modal
@@ -734,7 +782,12 @@ function RouteComponent() {
                     onDeleteRequest={() => Promise.resolve({} as any)}
                     onUpdateRequestStatus={() => Promise.resolve({} as any)}
                     onGetRequest={() => Promise.resolve({} as any)}
-                    onRefetch={() => {}}
+                    onRefetch={() =>
+                      queryClient.invalidateQueries({
+                        queryKey: ["getLivestreamsByDateRange"]
+                      })
+                    }
+                    onMergeSnapshots={handleMergeSnapshots}
                     onCalculateDailySalary={handleCalculateDailySalary}
                     isCalculatingSalary={calculatingDailySalary}
                     onCalculateIncome={handleCalculateIncome}
@@ -768,7 +821,12 @@ function RouteComponent() {
                     onDeleteRequest={() => Promise.resolve({} as any)}
                     onUpdateRequestStatus={() => Promise.resolve({} as any)}
                     onGetRequest={() => Promise.resolve({} as any)}
-                    onRefetch={() => {}}
+                    onRefetch={() =>
+                      queryClient.invalidateQueries({
+                        queryKey: ["getLivestreamsByDateRange"]
+                      })
+                    }
+                    onMergeSnapshots={handleMergeSnapshots}
                     hideEditButtons={true}
                   />
                 </Can>

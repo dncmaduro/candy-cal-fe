@@ -7,7 +7,8 @@ import {
   Group,
   Popover,
   TextInput,
-  Select
+  Select,
+  Tooltip
 } from "@mantine/core"
 import {
   IconEye,
@@ -19,7 +20,8 @@ import {
   IconCircleDashedX,
   IconCalendarRepeat,
   IconRefresh,
-  IconCalculator
+  IconCalculator,
+  IconFold
 } from "@tabler/icons-react"
 import { format, parseISO } from "date-fns"
 import { vi } from "date-fns/locale"
@@ -92,6 +94,72 @@ type LivestreamData = {
   fixed?: boolean
 }
 
+// Helper function to check if a snapshot can be merged (doesn't have required fields)
+const canMergeSnapshot = (
+  snapshot: LivestreamSnapshot | undefined
+): boolean => {
+  if (!snapshot) return false
+
+  const requiredFields = [
+    "income",
+    "realIncome",
+    "adsCost",
+    "clickRate",
+    "avgViewingDuration",
+    "comments",
+    "orders"
+  ]
+
+  return !requiredFields.some(
+    (field) => !!snapshot[field as keyof LivestreamSnapshot]
+  )
+}
+
+// Merge Button Component
+const MergeSnapshotsButton = ({
+  snapshot1,
+  snapshot2,
+  livestreamId,
+  onMerge
+}: {
+  snapshot1: LivestreamSnapshot | undefined
+  snapshot2: LivestreamSnapshot | undefined
+  livestreamId: string
+  onMerge: (
+    livestreamId: string,
+    snapshotId1: string,
+    snapshotId2: string
+  ) => Promise<void>
+}) => {
+  const [loading, setLoading] = useState(false)
+
+  if (!snapshot1 || !snapshot2) return null
+
+  // Only show if both snapshots can be merged
+  const canMerge = canMergeSnapshot(snapshot1) && canMergeSnapshot(snapshot2)
+
+  if (!canMerge) return null
+
+  const handleMerge = async () => {
+    setLoading(true)
+    await onMerge(livestreamId, snapshot1._id, snapshot2._id)
+  }
+
+  return (
+    <Tooltip label="Gộp 2 ca" withArrow position="top">
+      <ActionIcon
+        size="sm"
+        variant="light"
+        color="indigo"
+        onClick={handleMerge}
+        loading={loading}
+      >
+        <IconFold size={14} />
+      </ActionIcon>
+    </Tooltip>
+  )
+}
+
 // Alt Assignee Info Component - show on hover with original assignee and reason
 const AltAssigneeInfo = ({
   snapshot,
@@ -160,6 +228,7 @@ const AltAssigneeInfo = ({
 // Schedule Cell Component - handles hover state for UpdateAlt button
 const ScheduleCell = ({
   snapshot,
+  nextSnapshot,
   dayData,
   hasAltAssignee,
   altEmployee,
@@ -178,9 +247,12 @@ const ScheduleCell = ({
   onRefetch,
   onOpenReport,
   onCalculateDailySalary,
+  onMergeSnapshots,
+  canMergeWithNext = false,
   hideEditButtons = false
 }: {
   snapshot?: LivestreamSnapshot
+  nextSnapshot?: LivestreamSnapshot
   dayData?: LivestreamData
   hasAltAssignee: boolean
   altEmployee: LivestreamEmployee | null | undefined
@@ -210,10 +282,17 @@ const ScheduleCell = ({
   onRefetch: () => void
   onOpenReport?: (livestreamid: string, snapshot: LivestreamSnapshot) => void
   onCalculateDailySalary?: (date: Date) => void
+  onMergeSnapshots: (
+    livestreamId: string,
+    snapshotId1: string,
+    snapshotId2: string
+  ) => Promise<void>
+  canMergeWithNext?: boolean
   hideEditButtons?: boolean
 }) => {
   const { getAltRequestBySnapshot } = useLivestreamAltRequests()
   const [isHovering, setIsHovering] = useState(false)
+  const [isHoveringBottomBorder, setIsHoveringBottomBorder] = useState(false)
 
   const { data: requestData } = useQuery({
     queryKey: ["getAltRequestBySnapshot", snapshot?._id, dayData?._id],
@@ -238,22 +317,52 @@ const ScheduleCell = ({
 
   const isUserLivestreamAst = currentUser?.roles?.includes("livestream-ast")
 
+  const handleMouseEnter = (e: React.MouseEvent<HTMLTableCellElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const y = e.clientY - rect.top
+    // Check if mouse is within 20px of bottom border
+    if (y > rect.height - 20) {
+      setIsHoveringBottomBorder(true)
+    } else {
+      setIsHovering(true)
+    }
+  }
+
+  const handleMouseLeave = () => {
+    setIsHovering(false)
+    setIsHoveringBottomBorder(false)
+  }
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLTableCellElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const y = e.clientY - rect.top
+    // Check if mouse is within 20px of bottom border
+    if (y > rect.height - 20) {
+      setIsHoveringBottomBorder(true)
+    } else {
+      setIsHoveringBottomBorder(false)
+    }
+  }
+
   return (
     <td
+      rowSpan={canMergeWithNext ? 2 : 1}
       style={{
         border: "1px solid #e0e0e0",
         padding: "8px",
-        verticalAlign: "middle",
+        verticalAlign: canMergeWithNext ? "top" : "middle",
         backgroundColor: hasAltAssignee
           ? "rgba(255, 193, 7, 0.15)"
           : snapshot?.assignee
             ? role === "host"
               ? "rgba(34, 139, 230, 0.08)"
               : "rgba(64, 192, 87, 0.08)"
-            : "#fff"
+            : "#fff",
+        position: "relative"
       }}
-      onMouseEnter={() => setIsHovering(true)}
-      onMouseLeave={() => setIsHovering(false)}
+      onMouseEnter={handleMouseEnter}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
     >
       {snapshot?.assignee ? (
         <Group justify="space-between" wrap="nowrap" gap="xs">
@@ -397,6 +506,28 @@ const ScheduleCell = ({
         <Text size="xs" c="dimmed" fs="italic">
           Chưa phân
         </Text>
+      )}
+
+      {/* Merge button on bottom border hover */}
+      {isHoveringBottomBorder && snapshot && dayData && (
+        <div
+          style={{
+            position: "absolute",
+            bottom: -12,
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 20,
+            display: "flex",
+            alignItems: "center"
+          }}
+        >
+          <MergeSnapshotsButton
+            snapshot1={snapshot}
+            snapshot2={nextSnapshot}
+            livestreamId={dayData._id}
+            onMerge={onMergeSnapshots}
+          />
+        </div>
       )}
     </td>
   )
@@ -978,6 +1109,11 @@ interface LivestreamCalendarTableProps {
     req: GetAltRequestBySnapshotRequest
   ) => Promise<{ data: GetAltRequestBySnapshotResponse }>
   onRefetch: () => void
+  onMergeSnapshots?: (
+    livestreamId: string,
+    snapshotId1: string,
+    snapshotId2: string
+  ) => Promise<void>
   onCalculateDailySalary?: (date: Date) => void
   isCalculatingSalary?: boolean
   onCalculateIncome?: (date: Date) => void
@@ -1001,6 +1137,7 @@ export const LivestreamCalendarTable = ({
   onGetRequest,
   onUpdateRequestStatus,
   onRefetch,
+  onMergeSnapshots,
   onCalculateDailySalary,
   isCalculatingSalary,
   onCalculateIncome,
@@ -1129,80 +1266,138 @@ export const LivestreamCalendarTable = ({
               </tr>
             </thead>
             <tbody>
-              {sortedPeriods.map((period) => (
-                <tr key={period._id}>
-                  <td
-                    style={{
-                      border: "1px solid #e0e0e0",
-                      padding: "8px",
-                      backgroundColor: "#fff",
-                      position: "sticky",
-                      left: 0,
-                      zIndex: 5
-                    }}
-                  >
-                    <Text size="xs" fw={600}>
-                      {formatTimeRange(period.startTime, period.endTime)}
-                    </Text>
-                  </td>
-                  {weekDays.map((day) => {
-                    const dayData = livestreamData?.find(
-                      (ls) =>
-                        format(parseISO(ls.date), "yyyy-MM-dd") ===
-                        format(day, "yyyy-MM-dd")
-                    )
+              {sortedPeriods.map((period, periodIndex) => {
+                // Check if this row is already merged (merged into the previous row)
+                const prevPeriod =
+                  periodIndex > 0 ? sortedPeriods[periodIndex - 1] : null
+                const isMergedRow = prevPeriod
+                  ? livestreamData?.some((dayData) => {
+                      const currentSnapshot = dayData.snapshots.find(
+                        (s) => s.period._id === period._id
+                      )
+                      const prevSnapshot = dayData.snapshots.find(
+                        (s) => s.period._id === prevPeriod._id
+                      )
+                      // Check if both have same assignee and are mergeable
+                      return (
+                        currentSnapshot &&
+                        prevSnapshot &&
+                        currentSnapshot.assignee?._id ===
+                          prevSnapshot.assignee?._id &&
+                        canMergeSnapshot(currentSnapshot) &&
+                        canMergeSnapshot(prevSnapshot)
+                      )
+                    })
+                  : false
 
-                    const snapshot = dayData?.snapshots.find(
-                      (s) => s.period._id === period._id
-                    )
+                // Skip rendering this row if it's merged into previous row
+                if (isMergedRow) {
+                  return null
+                }
 
-                    // Check if snapshot has alt assignee (yellow background)
-                    const hasAltAssignee = !!snapshot?.altAssignee
-                    const altEmployee = hasAltAssignee
-                      ? snapshot.altAssignee === "other"
-                        ? null // Don't look up employee if it's "other"
-                        : employeesData.find(
-                            (e) => e._id === snapshot.altAssignee
+                return (
+                  <tr key={period._id}>
+                    <td
+                      style={{
+                        border: "1px solid #e0e0e0",
+                        padding: "8px",
+                        backgroundColor: "#fff",
+                        position: "sticky",
+                        left: 0,
+                        zIndex: 5
+                      }}
+                    >
+                      <Text size="xs" fw={600}>
+                        {formatTimeRange(period.startTime, period.endTime)}
+                      </Text>
+                    </td>
+                    {weekDays.map((day) => {
+                      const dayData = livestreamData?.find(
+                        (ls) =>
+                          format(parseISO(ls.date), "yyyy-MM-dd") ===
+                          format(day, "yyyy-MM-dd")
+                      )
+
+                      const snapshot = dayData?.snapshots.find(
+                        (s) => s.period._id === period._id
+                      )
+
+                      // Get next period snapshot for merge button
+                      const nextPeriodIndex = sortedPeriods.findIndex(
+                        (p) => p._id === period._id
+                      )
+                      const nextPeriod =
+                        nextPeriodIndex !== -1 &&
+                        nextPeriodIndex < sortedPeriods.length - 1
+                          ? sortedPeriods[nextPeriodIndex + 1]
+                          : null
+                      const nextSnapshot = nextPeriod
+                        ? dayData?.snapshots.find(
+                            (s) => s.period._id === nextPeriod._id
                           )
-                      : null
-                    const displayName =
-                      snapshot?.altAssignee === "other"
-                        ? snapshot.altOtherAssignee || "Khác"
-                        : altEmployee
-                          ? altEmployee.name
-                          : snapshot?.assignee?.name
+                        : undefined
 
-                    // Check if this livestream is fixed
-                    const isLivestreamFixed = dayData?.fixed === true
+                      // Check if next snapshot is mergeable with current
+                      const canMergeWithNext =
+                        snapshot &&
+                        nextSnapshot &&
+                        snapshot.assignee?._id === nextSnapshot.assignee?._id &&
+                        canMergeSnapshot(snapshot) &&
+                        canMergeSnapshot(nextSnapshot)
 
-                    return (
-                      <ScheduleCell
-                        key={`${period._id}-${day.toISOString()}`}
-                        snapshot={snapshot}
-                        dayData={dayData}
-                        hasAltAssignee={hasAltAssignee}
-                        altEmployee={altEmployee}
-                        displayName={displayName}
-                        roleColor={roleColor}
-                        role={role}
-                        currentUser={currentUser}
-                        isLivestreamFixed={isLivestreamFixed}
-                        isAdminOrLeader={isAdminOrLeader}
-                        canEditSnapshot={canEditSnapshot}
-                        employeesData={employeesData}
-                        onUpdateAlt={onUpdateAlt}
-                        onCreateRequest={onCreateRequest}
-                        onGetRequest={onGetRequest}
-                        onUpdateRequestStatus={onUpdateRequestStatus}
-                        onRefetch={onRefetch}
-                        onOpenReport={onOpenReport}
-                        onCalculateDailySalary={onCalculateDailySalary}
-                        hideEditButtons={hideEditButtons}
-                      />
-                    )
-                  })}
-                </tr>
-              ))}
+                      // Check if snapshot has alt assignee (yellow background)
+                      const hasAltAssignee = !!snapshot?.altAssignee
+                      const altEmployee = hasAltAssignee
+                        ? snapshot.altAssignee === "other"
+                          ? null // Don't look up employee if it's "other"
+                          : employeesData.find(
+                              (e) => e._id === snapshot.altAssignee
+                            )
+                        : null
+                      const displayName =
+                        snapshot?.altAssignee === "other"
+                          ? snapshot.altOtherAssignee || "Khác"
+                          : altEmployee
+                            ? altEmployee.name
+                            : snapshot?.assignee?.name
+
+                      // Check if this livestream is fixed
+                      const isLivestreamFixed = dayData?.fixed === true
+
+                      return (
+                        <ScheduleCell
+                          key={`${period._id}-${day.toISOString()}`}
+                          snapshot={snapshot}
+                          nextSnapshot={nextSnapshot}
+                          dayData={dayData}
+                          hasAltAssignee={hasAltAssignee}
+                          altEmployee={altEmployee}
+                          displayName={displayName}
+                          roleColor={roleColor}
+                          role={role}
+                          currentUser={currentUser}
+                          isLivestreamFixed={isLivestreamFixed}
+                          isAdminOrLeader={isAdminOrLeader}
+                          canEditSnapshot={canEditSnapshot}
+                          employeesData={employeesData}
+                          onUpdateAlt={onUpdateAlt}
+                          onCreateRequest={onCreateRequest}
+                          onGetRequest={onGetRequest}
+                          onUpdateRequestStatus={onUpdateRequestStatus}
+                          onRefetch={onRefetch}
+                          onOpenReport={onOpenReport}
+                          onCalculateDailySalary={onCalculateDailySalary}
+                          onMergeSnapshots={
+                            onMergeSnapshots || (() => Promise.resolve())
+                          }
+                          hideEditButtons={hideEditButtons}
+                          canMergeWithNext={canMergeWithNext}
+                        />
+                      )
+                    })}
+                  </tr>
+                )
+              })}
               {/* Add Salary Calculation Button Row for both Host and Assistant */}
               {onCalculateDailySalary && (
                 <tr>

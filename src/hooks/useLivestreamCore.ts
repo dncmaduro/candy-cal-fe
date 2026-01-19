@@ -8,6 +8,8 @@ import {
   FixLivestreamResponse,
   GetLivestreamByDateRangeRequest,
   GetLivestreamByDateRangeResponse,
+  MergeLivestreamSnapshotsRequest,
+  MergeLivestreamSnapshotsResponse,
   ReportLivestreamRequest,
   ReportLivestreamResponse,
   SetMetricsRequest,
@@ -124,6 +126,21 @@ export const useLivestreamCore = () => {
     })
   }
 
+  const mergeSnapshots = async (
+    livestreamId: string,
+    req: MergeLivestreamSnapshotsRequest
+  ) => {
+    return callApi<
+      MergeLivestreamSnapshotsRequest,
+      MergeLivestreamSnapshotsResponse
+    >({
+      method: "POST",
+      path: `/v1/livestreamcore/${livestreamId}/snapshots/merge`,
+      data: req,
+      token: accessToken
+    })
+  }
+
   return {
     createLivestreamRange,
     addLivestreamSnapshot,
@@ -133,6 +150,7 @@ export const useLivestreamCore = () => {
     syncSnapshot,
     reportLivestream,
     updateSnapshotAltRequest,
-    fixLivestream
+    fixLivestream,
+    mergeSnapshots
   }
 }

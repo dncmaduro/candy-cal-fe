@@ -68,7 +68,8 @@ function RouteComponent() {
     syncSnapshot,
     reportLivestream,
     fixLivestream,
-    updateSnapshotAltRequest
+    updateSnapshotAltRequest,
+    mergeSnapshots
   } = useLivestreamCore()
   const { searchLivestreamChannels } = useLivestreamChannels()
   const {
@@ -457,6 +458,51 @@ function RouteComponent() {
     )}`
   }, [weekRange])
 
+  // Merge snapshots mutation
+  const { mutate: mergeSnapshotsMutation } = useMutation({
+    mutationFn: async ({
+      livestreamId,
+      snapshotId1,
+      snapshotId2
+    }: {
+      livestreamId: string
+      snapshotId1: string
+      snapshotId2: string
+    }) => {
+      return await mergeSnapshots(livestreamId, {
+        snapshotId1,
+        snapshotId2
+      })
+    },
+    onSuccess: () => {
+      notifications.show({
+        title: "Gộp thành công",
+        message: "Đã gộp 2 snapshot thành công",
+        color: "green"
+      })
+      refetch()
+    },
+    onError: (error: any) => {
+      notifications.show({
+        title: "Gộp thất bại",
+        message: error?.response?.data?.message || "Có lỗi khi gộp snapshot",
+        color: "red"
+      })
+    }
+  })
+
+  const handleMergeSnapshots = async (
+    livestreamId: string,
+    snapshotId1: string,
+    snapshotId2: string
+  ) => {
+    mergeSnapshotsMutation({
+      livestreamId,
+      snapshotId1,
+      snapshotId2
+    })
+  }
+
   // Prepare channel options
   const channelOptions = useMemo(() => {
     if (!channelsData) return []
@@ -537,6 +583,7 @@ function RouteComponent() {
             onUpdateRequestStatus={updateAltRequestStatus}
             onGetRequest={getAltRequestBySnapshot}
             onRefetch={refetch}
+            onMergeSnapshots={handleMergeSnapshots}
           />
         </Can>
 
@@ -568,6 +615,7 @@ function RouteComponent() {
             onUpdateRequestStatus={updateAltRequestStatus}
             onGetRequest={getAltRequestBySnapshot}
             onRefetch={refetch}
+            onMergeSnapshots={handleMergeSnapshots}
           />
         </Can>
       </Stack>
