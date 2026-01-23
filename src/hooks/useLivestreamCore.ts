@@ -2,8 +2,11 @@ import { useUserStore } from "../store/userStore"
 import { toQueryString } from "../utils/toQuery"
 import { callApi } from "./axios"
 import {
+  AddExternalSnapshotRequest,
+  AddExternalSnapshotResponse,
   AddLivestreamSnapshotRequest,
   CreateLivestreamRangeRequest,
+  DeleteLivestreamSnapshotRequest,
   FixLivestreamRequest,
   FixLivestreamResponse,
   GetLivestreamByDateRangeRequest,
@@ -15,7 +18,9 @@ import {
   SyncSnapshotResponse,
   UpdateLivestreamSnapshotRequest,
   UpdateSnapshotAltRequest,
-  UpdateSnapshotAltResponse
+  UpdateSnapshotAltResponse,
+  UpdateTimeDirectRequest,
+  UpdateTimeDirectResponse
 } from "./models"
 
 /**
@@ -124,6 +129,39 @@ export const useLivestreamCore = () => {
     })
   }
 
+  const deleteSnapshot = async (req: DeleteLivestreamSnapshotRequest) => {
+    return callApi<never, never>({
+      method: "DELETE",
+      path: `/v1/livestreamcore/${req.livestreamId}/snapshots/${req.snapshotId}`,
+      token: accessToken
+    })
+  }
+
+  const updateTimeDirect = async (
+    livestreamId: string,
+    snapshotId: string,
+    req: UpdateTimeDirectRequest
+  ) => {
+    return callApi<UpdateTimeDirectRequest, UpdateTimeDirectResponse>({
+      method: "PATCH",
+      path: `/v1/livestreamcore/${livestreamId}/snapshots/${snapshotId}/time-direct`,
+      data: req,
+      token: accessToken
+    })
+  }
+
+  const addExternalSnapshot = async (
+    livestreamId: string,
+    req: AddExternalSnapshotRequest
+  ) => {
+    return callApi<AddExternalSnapshotRequest, AddExternalSnapshotResponse>({
+      method: "POST",
+      path: `/v1/livestreamcore/${livestreamId}/snapshots/external`,
+      data: req,
+      token: accessToken
+    })
+  }
+
   return {
     createLivestreamRange,
     addLivestreamSnapshot,
@@ -133,6 +171,9 @@ export const useLivestreamCore = () => {
     syncSnapshot,
     reportLivestream,
     updateSnapshotAltRequest,
-    fixLivestream
+    fixLivestream,
+    deleteSnapshot,
+    updateTimeDirect,
+    addExternalSnapshot
   }
 }

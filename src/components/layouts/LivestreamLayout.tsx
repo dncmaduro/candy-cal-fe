@@ -1,4 +1,6 @@
-import { Badge, Box, Container, Group, rem } from "@mantine/core"
+import { ActionIcon, Badge, Box, Container, Group, Stack, Text, rem } from "@mantine/core"
+import { modals } from "@mantine/modals"
+import { IconInfoCircle } from "@tabler/icons-react"
 import pkg from "../../../package.json"
 import { useNavigate } from "@tanstack/react-router"
 import { ReactNode, useEffect } from "react"
@@ -115,6 +117,35 @@ export const LivestreamLayout = ({ children }: { children: ReactNode }) => {
           </Group>
           <Group gap={8} style={{ marginRight: rem(16) }}>
             <MyTasksPopover />
+            <ActionIcon
+              variant="subtle"
+              color="gray"
+              size="lg"
+              aria-label="Lưu ý sử dụng"
+              onClick={() => {
+                modals.open({
+                  title: "Lưu ý sử dụng",
+                  size: "lg",
+                  children: (
+                    <Stack gap="xs">
+                      <Text size="sm">
+                        Một số thao tác nhanh trong lịch livestream:
+                      </Text>
+                      <Text size="sm">- Click khoảng trống: thêm snapshot</Text>
+                      <Text size="sm">- Kéo viền trên/dưới snapshot: chỉnh giờ</Text>
+                      <Text size="sm">
+                        - Zoom dọc: Mac dùng Cmd + scroll, Windows dùng Ctrl + scroll
+                      </Text>
+                      <Text size="sm" c="dimmed">
+                        Nếu gặp lỗi hiển thị hoặc thao tác không đúng, thử refresh trang.
+                      </Text>
+                    </Stack>
+                  )
+                })
+              }}
+            >
+              <IconInfoCircle size={18} />
+            </ActionIcon>
             <Notifications />
             <UserMenu />
           </Group>
