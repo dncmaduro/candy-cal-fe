@@ -2156,9 +2156,27 @@ export interface GetAggregatedMetricsResponse {
 }
 
 /** @interface */
+export interface GetMonthMetricsRequest {
+  month: number
+  year: number
+  channel: string
+  for: "host" | "assistant"
+  assignee?: string
+}
+
+/** @interface */
+export interface GetMonthMetricsResponse {
+  totalIncome: number
+  totalAdsCost: number
+  totalComments: number
+  totalOrders: number
+}
+
+/** @interface */
 export interface GetHostRevenueRankingsRequest {
   startDate: string
   endDate: string
+  channel?: string
 }
 
 /** @interface */
@@ -2173,13 +2191,50 @@ export interface GetHostRevenueRankingsResponse {
 }
 
 /** @interface */
+export interface GetHostRevenueRankingsByMonthRequest {
+  month: number
+  year: number
+  channel?: string
+}
+
+/** @interface */
+export interface GetHostRevenueRankingsByMonthResponse {
+  rankings: {
+    hostId: string
+    hostName: string
+    totalRevenue: number
+    totalAdsCost: number
+    totalOrders: number
+  }[]
+}
+
+/** @interface */
 export interface GetAssistantRevenueRankingsRequest {
   startDate: string
   endDate: string
+  channel?: string
 }
 
 /** @interface */
 export interface GetAssistantRevenueRankingsResponse {
+  rankings: {
+    assistantId: string
+    assistantName: string
+    totalRevenue: number
+    totalAdsCost: number
+    totalOrders: number
+  }[]
+}
+
+/** @interface */
+export interface GetAssistantRevenueRankingsByMonthRequest {
+  month: number
+  year: number
+  channel?: string
+}
+
+/** @interface */
+export interface GetAssistantRevenueRankingsByMonthResponse {
   rankings: {
     assistantId: string
     assistantName: string
