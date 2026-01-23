@@ -4,14 +4,20 @@ import { callApi } from "./axios"
 import {
   GetAggregatedMetricsRequest,
   GetAggregatedMetricsResponse,
+  GetAssistantRevenueRankingsByMonthRequest,
+  GetAssistantRevenueRankingsByMonthResponse,
   GetAssistantRevenueRankingsRequest,
   GetAssistantRevenueRankingsResponse,
+  GetHostRevenueRankingsByMonthRequest,
+  GetHostRevenueRankingsByMonthResponse,
   GetHostRevenueRankingsRequest,
   GetHostRevenueRankingsResponse,
   GetLivestreamStatsRequest,
   GetLivestreamStatsResponse,
   GetMonthlyTotalsLivestreamRequest,
-  GetMonthlyTotalsLivestreamResponse
+  GetMonthlyTotalsLivestreamResponse,
+  GetMonthMetricsRequest,
+  GetMonthMetricsResponse
 } from "./models"
 
 /**
@@ -53,12 +59,34 @@ export const useLivestreamAnalytics = () => {
     })
   }
 
+  const getMonthMetrics = async (req: GetMonthMetricsRequest) => {
+    const query = toQueryString(req)
+
+    return callApi<GetMonthMetricsRequest, GetMonthMetricsResponse>({
+      method: "GET",
+      path: `/v1/livestreamanalytics/month-metrics?${query}`,
+      token: accessToken
+    })
+  }
+
   const getHostRevenueRankings = async (req: GetHostRevenueRankingsRequest) => {
     const query = toQueryString(req)
 
     return callApi<never, GetHostRevenueRankingsResponse>({
       method: "GET",
       path: `/v1/livestreamanalytics/host-revenue-rankings?${query}`,
+      token: accessToken
+    })
+  }
+
+  const getHostRevenueRankingsByMonth = async (
+    req: GetHostRevenueRankingsByMonthRequest
+  ) => {
+    const query = toQueryString(req)
+
+    return callApi<never, GetHostRevenueRankingsByMonthResponse>({
+      method: "GET",
+      path: `/v1/livestreamanalytics/host-revenue-rankings-by-month?${query}`,
       token: accessToken
     })
   }
@@ -75,11 +103,26 @@ export const useLivestreamAnalytics = () => {
     })
   }
 
+  const getAssistantRevenueRankingsByMonth = async (
+    req: GetAssistantRevenueRankingsByMonthRequest
+  ) => {
+    const query = toQueryString(req)
+
+    return callApi<never, GetAssistantRevenueRankingsByMonthResponse>({
+      method: "GET",
+      path: `/v1/livestreamanalytics/assistant-revenue-rankings-by-month?${query}`,
+      token: accessToken
+    })
+  }
+
   return {
     getMonthlyTotalsLivestreams,
     getLivestreamStats,
     getAggregatedMetrics,
+    getMonthMetrics,
     getHostRevenueRankings,
-    getAssistantRevenueRankings
+    getHostRevenueRankingsByMonth,
+    getAssistantRevenueRankings,
+    getAssistantRevenueRankingsByMonth
   }
 }
