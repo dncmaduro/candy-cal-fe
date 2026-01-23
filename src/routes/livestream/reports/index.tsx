@@ -20,19 +20,47 @@ import {
   NumberFormatter,
   SegmentedControl
 } from "@mantine/core"
-import { DatePickerInput } from "@mantine/dates"
-import { useState, useMemo } from "react"
-import { format } from "date-fns"
+import { DatePickerInput, MonthPickerInput } from "@mantine/dates"
+import { useState, useMemo, useEffect } from "react"
+import { format, startOfMonth, endOfMonth } from "date-fns"
 import { CDataTable } from "../../../components/common/CDataTable"
 import { ColumnDef } from "@tanstack/react-table"
 import { HostRevenueRankingsChart } from "../../../components/livestream/HostRevenueRankingsChart"
 import { AssistantRevenueRankingsChart } from "../../../components/livestream/AssistantRevenueRankingsChart"
 
+type SearchParams = {
+  mode?: "range" | "month"
+  viewMode?: "reports" | "host-rankings" | "assistant-rankings"
+  channelId?: string
+  assigneeId?: string
+  startDate?: string
+  endDate?: string
+  month?: string
+}
+
 export const Route = createFileRoute("/livestream/reports/")({
-  component: RouteComponent
+  component: RouteComponent,
+  validateSearch: (search: Record<string, unknown>): SearchParams => {
+    return {
+      mode: (search.mode as "range" | "month") || "range",
+      viewMode:
+        (search.viewMode as
+          | "reports"
+          | "host-rankings"
+          | "assistant-rankings") || "reports",
+      channelId: search.channelId as string,
+      assigneeId: search.assigneeId as string,
+      startDate: search.startDate as string,
+      endDate: search.endDate as string,
+      month: search.month as string
+    }
+  }
 })
 
 function RouteComponent() {
+  const navigate = Route.useNavigate()
+  const searchParams = Route.useSearch()
+
   const { getLivestreamsByDateRange } = useLivestreamCore()
   const { searchLivestreamChannels } = useLivestreamChannels()
   const {
@@ -42,18 +70,69 @@ function RouteComponent() {
   } = useLivestreamAnalytics()
   const { publicSearchUser } = useUsers()
 
-  const [startDate, setStartDate] = useState<Date | null>(new Date())
-  const [endDate, setEndDate] = useState<Date | null>(new Date())
-  const [channelId, setChannelId] = useState<string | null>(null)
-  const [assigneeId, setAssigneeId] = useState<string | null>(null)
+  // Initialize state from URL params
+  const [mode, setMode] = useState<"range" | "month">(
+    searchParams.mode || "range"
+  )
+  const [selectedMonth, setSelectedMonth] = useState<Date | null>(
+    searchParams.month ? new Date(searchParams.month) : new Date()
+  )
+  const [startDate, setStartDate] = useState<Date | null>(
+    searchParams.startDate ? new Date(searchParams.startDate) : new Date()
+  )
+  const [endDate, setEndDate] = useState<Date | null>(
+    searchParams.endDate ? new Date(searchParams.endDate) : new Date()
+  )
+  const [channelId, setChannelId] = useState<string | null>(
+    searchParams.channelId || null
+  )
+  const [assigneeId, setAssigneeId] = useState<string | null>(
+    searchParams.assigneeId || null
+  )
   const [viewMode, setViewMode] = useState<
     "reports" | "host-rankings" | "assistant-rankings"
-  >("reports")
+  >(searchParams.viewMode || "reports")
 
-  const dateRange = useMemo<[Date | null, Date | null]>(
-    () => [startDate, endDate],
-    [startDate, endDate]
-  )
+  // Sync state to URL
+  useEffect(() => {
+    const params: SearchParams = {
+      mode,
+      viewMode,
+      channelId: channelId || undefined,
+      assigneeId: assigneeId || undefined
+    }
+
+    if (mode === "range") {
+      params.startDate = startDate ? format(startDate, "yyyy-MM-dd") : undefined
+      params.endDate = endDate ? format(endDate, "yyyy-MM-dd") : undefined
+    } else {
+      params.month = selectedMonth
+        ? format(selectedMonth, "yyyy-MM")
+        : undefined
+    }
+
+    navigate({
+      search: params,
+      replace: true
+    })
+  }, [
+    mode,
+    viewMode,
+    channelId,
+    assigneeId,
+    startDate,
+    endDate,
+    selectedMonth,
+    navigate
+  ])
+
+  // Calculate date range based on mode
+  const dateRange = useMemo<[Date | null, Date | null]>(() => {
+    if (mode === "month" && selectedMonth) {
+      return [startOfMonth(selectedMonth), endOfMonth(selectedMonth)]
+    }
+    return [startDate, endDate]
+  }, [mode, selectedMonth, startDate, endDate])
 
   // Fetch channels
   const { data: channelsData } = useQuery({
@@ -321,11 +400,11 @@ function RouteComponent() {
       const totalKpi = dateRows.reduce((sum, row) => sum + row.snapshotKpi, 0)
       const totalOrders = dateRows.reduce((sum, row) => sum + row.orders, 0)
 
-      const firstRow = dateRows[0]
+      // const firstRow = dateRows[0]
       finalRows.push({
         dateKey: dateStr,
         date: dateStr,
-        dayOfWeek: firstRow.dayOfWeek,
+        dayOfWeek: "",
         period: `Tổng ${dateRows.length} ca`,
         assignee: "",
         assigneeId: "",
@@ -776,6 +855,20 @@ function RouteComponent() {
         <Divider my={0} />
 
         <Box px={{ base: 4, md: 28 }} py={20}>
+          {/* Mode Selector */}
+          <Box mb="lg">
+            <SegmentedControl
+              value={mode}
+              onChange={(value) => setMode(value as "range" | "month")}
+              size="sm"
+              data={[
+                { label: "Theo khoảng", value: "range" },
+                { label: "Theo tháng", value: "month" }
+              ]}
+              fullWidth
+            />
+          </Box>
+
           {/* Filter Controls */}
           <Paper
             p="md"
@@ -788,37 +881,54 @@ function RouteComponent() {
             }}
           >
             <Stack gap="md">
-              {/* Date Range */}
-              <Group grow>
+              {/* Date Range or Month Picker */}
+              {mode === "range" ? (
+                <Group grow>
+                  <Stack gap={4}>
+                    <Text size="xs" fw={600} c="dimmed" tt="uppercase">
+                      Từ ngày
+                    </Text>
+                    <DatePickerInput
+                      placeholder="Chọn ngày bắt đầu"
+                      value={startDate}
+                      onChange={setStartDate}
+                      size="sm"
+                      radius="md"
+                      clearable
+                      valueFormat="DD/MM/YYYY"
+                    />
+                  </Stack>
+                  <Stack gap={4}>
+                    <Text size="xs" fw={600} c="dimmed" tt="uppercase">
+                      Đến ngày
+                    </Text>
+                    <DatePickerInput
+                      placeholder="Chọn ngày kết thúc"
+                      value={endDate}
+                      onChange={setEndDate}
+                      size="sm"
+                      radius="md"
+                      clearable
+                      valueFormat="DD/MM/YYYY"
+                    />
+                  </Stack>
+                </Group>
+              ) : (
                 <Stack gap={4}>
                   <Text size="xs" fw={600} c="dimmed" tt="uppercase">
-                    Từ ngày
+                    Chọn tháng
                   </Text>
-                  <DatePickerInput
-                    placeholder="Chọn ngày bắt đầu"
-                    value={startDate}
-                    onChange={setStartDate}
+                  <MonthPickerInput
+                    placeholder="Chọn tháng"
+                    value={selectedMonth}
+                    onChange={setSelectedMonth}
                     size="sm"
                     radius="md"
                     clearable
-                    valueFormat="DD/MM/YYYY"
+                    valueFormat="MM/YYYY"
                   />
                 </Stack>
-                <Stack gap={4}>
-                  <Text size="xs" fw={600} c="dimmed" tt="uppercase">
-                    Đến ngày
-                  </Text>
-                  <DatePickerInput
-                    placeholder="Chọn ngày kết thúc"
-                    value={endDate}
-                    onChange={setEndDate}
-                    size="sm"
-                    radius="md"
-                    clearable
-                    valueFormat="DD/MM/YYYY"
-                  />
-                </Stack>
-              </Group>
+              )}
 
               {/* Channel select */}
               <Stack gap={4}>
@@ -828,6 +938,7 @@ function RouteComponent() {
                 <Select
                   placeholder="Chọn kênh"
                   value={channelId || ""}
+                  clearable
                   onChange={(v) => setChannelId(v || null)}
                   data={channelOptions}
                   size="sm"
