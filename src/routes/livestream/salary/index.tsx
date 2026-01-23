@@ -222,9 +222,16 @@ function SalaryModal({
   } = useForm<SalaryFormData>({
     defaultValues: {
       name: salary?.name || "",
-      livestreamEmployees: salary?.livestreamEmployees?.map((e) => e._id) || [],
-      livestreamPerformances:
-        salary?.livestreamPerformances?.map((p) => p._id) || []
+      livestreamEmployees: salary?.livestreamEmployees
+        ? salary.livestreamEmployees.map((e) =>
+            typeof e === "string" ? e : e._id
+          )
+        : [],
+      livestreamPerformances: salary?.livestreamPerformances
+        ? salary.livestreamPerformances.map((p) =>
+            typeof p === "string" ? p : p._id
+          )
+        : []
     }
   })
 
