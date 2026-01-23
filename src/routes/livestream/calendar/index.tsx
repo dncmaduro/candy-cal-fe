@@ -20,7 +20,8 @@ import {
   Center,
   SegmentedControl,
   ActionIcon,
-  Tooltip
+  Tooltip,
+  SimpleGrid
 } from "@mantine/core"
 import {
   IconPlus,
@@ -32,7 +33,8 @@ import {
 } from "@tabler/icons-react"
 import { notifications } from "@mantine/notifications"
 import { CToast } from "../../../components/common/CToast"
-import { LivestreamCalendarTable } from "../../../components/livestream/LivestreamCalendarTable"
+// import { LivestreamCalendarTable } from "../../../components/livestream/LivestreamCalendarTable"
+import { LivestreamCalendarRegion } from "../../../components/livestream/LivestreamCalendarRegion"
 import { openLivestreamReportModal } from "../../../components/livestream/LivestreamReportModal"
 import { useState, useMemo, useEffect } from "react"
 import {
@@ -73,10 +75,10 @@ function RouteComponent() {
   const { searchLivestreamChannels } = useLivestreamChannels()
   const {
     createAltRequest,
-    updateAltRequests,
+    // updateAltRequests,
     getAltRequestBySnapshot,
-    updateAltRequestStatus,
-    deleteAltRequest
+    updateAltRequestStatus
+    // deleteAltRequest
   } = useLivestreamAltRequests()
   const { publicSearchUser } = useUsers()
   const { getMe } = useUsers()
@@ -519,25 +521,43 @@ function RouteComponent() {
             "livestream-accounting"
           ]}
         >
-          <LivestreamCalendarTable
-            role="host"
-            weekDays={weekDays}
-            employeesData={livestreamEmpOptions || []}
-            livestreamData={livestreamData || []}
-            onAssignEmployee={assignEmployee}
-            onUnassignEmployee={unassignEmployee}
-            viewMode={viewMode}
-            onOpenReport={handleOpenReport}
-            isWeekFixed={isWeekFixed}
-            currentUser={me}
-            onUpdateAlt={updateSnapshotAltRequest}
-            onCreateRequest={createAltRequest}
-            onUpdateRequest={updateAltRequests}
-            onDeleteRequest={deleteAltRequest}
-            onUpdateRequestStatus={updateAltRequestStatus}
-            onGetRequest={getAltRequestBySnapshot}
-            onRefetch={refetch}
-          />
+          <SimpleGrid cols={{ base: 1, lg: 1 }} spacing="lg">
+            {/* <LivestreamCalendarTable
+              role="host"
+              weekDays={weekDays}
+              employeesData={livestreamEmpOptions || []}
+              livestreamData={livestreamData || []}
+              onAssignEmployee={assignEmployee}
+              onUnassignEmployee={unassignEmployee}
+              viewMode={viewMode}
+              onOpenReport={handleOpenReport}
+              isWeekFixed={isWeekFixed}
+              currentUser={me}
+              onUpdateAlt={updateSnapshotAltRequest}
+              onCreateRequest={createAltRequest}
+              onUpdateRequest={updateAltRequests}
+              onDeleteRequest={deleteAltRequest}
+              onUpdateRequestStatus={updateAltRequestStatus}
+              onGetRequest={getAltRequestBySnapshot}
+              onRefetch={refetch}
+            /> */}
+            <LivestreamCalendarRegion
+              role="host"
+              weekDays={weekDays}
+              employeesData={livestreamEmpOptions || []}
+              livestreamData={livestreamData || []}
+              onAssignEmployee={assignEmployee}
+              onUnassignEmployee={unassignEmployee}
+              onOpenReport={handleOpenReport}
+              isWeekFixed={isWeekFixed}
+              currentUser={me}
+              onUpdateAlt={updateSnapshotAltRequest}
+              onCreateRequest={createAltRequest}
+              onUpdateRequestStatus={updateAltRequestStatus}
+              onGetRequest={getAltRequestBySnapshot}
+              onRefetch={refetch}
+            />
+          </SimpleGrid>
         </Can>
 
         <Can
@@ -550,25 +570,43 @@ function RouteComponent() {
             "livestream-emp"
           ]}
         >
-          <LivestreamCalendarTable
-            role="assistant"
-            weekDays={weekDays}
-            employeesData={livestreamAstOptions || []}
-            livestreamData={livestreamData || []}
-            onAssignEmployee={assignEmployee}
-            onUnassignEmployee={unassignEmployee}
-            viewMode={viewMode}
-            onOpenReport={handleOpenReport}
-            isWeekFixed={isWeekFixed}
-            currentUser={me}
-            onUpdateAlt={updateSnapshotAltRequest}
-            onCreateRequest={createAltRequest}
-            onUpdateRequest={updateAltRequests}
-            onDeleteRequest={deleteAltRequest}
-            onUpdateRequestStatus={updateAltRequestStatus}
-            onGetRequest={getAltRequestBySnapshot}
-            onRefetch={refetch}
-          />
+          <SimpleGrid cols={{ base: 1, lg: 1 }} spacing="lg">
+            {/* <LivestreamCalendarTable
+              role="assistant"
+              weekDays={weekDays}
+              employeesData={livestreamAstOptions || []}
+              livestreamData={livestreamData || []}
+              onAssignEmployee={assignEmployee}
+              onUnassignEmployee={unassignEmployee}
+              viewMode={viewMode}
+              onOpenReport={handleOpenReport}
+              isWeekFixed={isWeekFixed}
+              currentUser={me}
+              onUpdateAlt={updateSnapshotAltRequest}
+              onCreateRequest={createAltRequest}
+              onUpdateRequest={updateAltRequests}
+              onDeleteRequest={deleteAltRequest}
+              onUpdateRequestStatus={updateAltRequestStatus}
+              onGetRequest={getAltRequestBySnapshot}
+              onRefetch={refetch}
+            /> */}
+            <LivestreamCalendarRegion
+              role="assistant"
+              weekDays={weekDays}
+              employeesData={livestreamAstOptions || []}
+              livestreamData={livestreamData || []}
+              onAssignEmployee={assignEmployee}
+              onUnassignEmployee={unassignEmployee}
+              onOpenReport={handleOpenReport}
+              isWeekFixed={isWeekFixed}
+              currentUser={me}
+              onUpdateAlt={updateSnapshotAltRequest}
+              onCreateRequest={createAltRequest}
+              onUpdateRequestStatus={updateAltRequestStatus}
+              onGetRequest={getAltRequestBySnapshot}
+              onRefetch={refetch}
+            />
+          </SimpleGrid>
         </Can>
       </Stack>
     )
