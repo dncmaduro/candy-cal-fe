@@ -29,7 +29,7 @@ import { CToast } from "../../../components/common/CToast"
 import { useState, useMemo, useEffect } from "react"
 import { MonthPickerInput } from "@mantine/dates"
 import { format, startOfWeek, endOfWeek, eachDayOfInterval } from "date-fns"
-import { LivestreamCalendarTable } from "../../../components/livestream/LivestreamCalendarTable"
+import { LivestreamCalendarRegion } from "../../../components/livestream/LivestreamCalendarRegion"
 import { MonthlySalaryTable } from "../../../components/livestream/MonthlySalaryTable"
 import { CalculateIncomeModal } from "../../../components/livestream/CalculateIncomeModal"
 import { openLivestreamReportModal } from "../../../components/livestream/LivestreamReportModal"
@@ -717,27 +717,25 @@ function RouteComponent() {
                     "system-emp"
                   ]}
                 >
-                  <LivestreamCalendarTable
+                  <LivestreamCalendarRegion
                     role="host"
                     weekDays={weekDays}
                     employeesData={employeesData}
                     livestreamData={livestreamData}
                     onAssignEmployee={() => {}}
                     onUnassignEmployee={() => {}}
-                    viewMode="schedule"
                     onOpenReport={handleOpenReport}
                     isWeekFixed={true}
                     currentUser={me}
                     onUpdateAlt={() => Promise.resolve({} as any)}
                     onCreateRequest={() => Promise.resolve({} as any)}
-                    onUpdateRequest={() => Promise.resolve({} as any)}
-                    onDeleteRequest={() => Promise.resolve({} as any)}
                     onUpdateRequestStatus={() => Promise.resolve({} as any)}
                     onGetRequest={() => Promise.resolve({} as any)}
                     onRefetch={() => {}}
                     onCalculateDailySalary={handleCalculateDailySalary}
                     isCalculatingSalary={calculatingDailySalary}
                     onCalculateIncome={handleCalculateIncome}
+                    isCalculatingIncome={false}
                     hideEditButtons={true}
                   />
                 </Can>
@@ -751,21 +749,18 @@ function RouteComponent() {
                     "system-emp"
                   ]}
                 >
-                  <LivestreamCalendarTable
+                  <LivestreamCalendarRegion
                     role="assistant"
                     weekDays={weekDays}
                     employeesData={[]}
                     livestreamData={livestreamData}
                     onAssignEmployee={() => {}}
                     onUnassignEmployee={() => {}}
-                    viewMode="schedule"
                     onOpenReport={handleOpenReport}
                     isWeekFixed={true}
                     currentUser={undefined}
                     onUpdateAlt={() => Promise.resolve({} as any)}
                     onCreateRequest={() => Promise.resolve({} as any)}
-                    onUpdateRequest={() => Promise.resolve({} as any)}
-                    onDeleteRequest={() => Promise.resolve({} as any)}
                     onUpdateRequestStatus={() => Promise.resolve({} as any)}
                     onGetRequest={() => Promise.resolve({} as any)}
                     onRefetch={() => {}}
