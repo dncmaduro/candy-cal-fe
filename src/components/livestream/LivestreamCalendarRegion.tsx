@@ -11,6 +11,7 @@ import {
   Text
 } from "@mantine/core"
 import { TimeInput } from "@mantine/dates"
+import { modals } from "@mantine/modals"
 import { notifications } from "@mantine/notifications"
 import {
   IconAlertCircle,
@@ -155,6 +156,12 @@ const CreateRequestPopover = ({
           variant="subtle"
           color="yellow"
           title="Tạo yêu cầu thay thế"
+          styles={{
+            root: {
+              color: "white",
+              "&:hover": { backgroundColor: "rgba(255,255,255,0.14)" }
+            }
+          }}
           onClick={(e) => {
             e.stopPropagation()
             setOpened(true)
@@ -314,6 +321,12 @@ const AltRequestInfoPopover = ({
           variant="subtle"
           color={iconProps.color}
           title="Xem yêu cầu"
+          styles={{
+            root: {
+              color: "white",
+              "&:hover": { backgroundColor: "rgba(255,255,255,0.14)" }
+            }
+          }}
           onClick={(e) => {
             e.stopPropagation()
             setOpened(true)
@@ -344,7 +357,9 @@ const AltRequestInfoPopover = ({
                         onChange={setSelectedAlt}
                         data={employees
                           .map((e) => ({ label: e.name, value: e._id }))
-                          .filter((e) => e.value !== requestData.createdBy?._id)}
+                          .filter(
+                            (e) => e.value !== requestData.createdBy?._id
+                          )}
                         searchable
                         size="sm"
                         comboboxProps={{ withinPortal: false }}
@@ -447,7 +462,9 @@ const UpdateAltPopover = ({
   const [selectedAlt, setSelectedAlt] = useState<string | null>(
     snapshot.altAssignee || null
   )
-  const [altOtherName, setAltOtherName] = useState(snapshot.altOtherAssignee || "")
+  const [altOtherName, setAltOtherName] = useState(
+    snapshot.altOtherAssignee || ""
+  )
   const [altNote, setAltNote] = useState(snapshot.altNote || "")
   const [loading, setLoading] = useState(false)
 
@@ -465,7 +482,8 @@ const UpdateAltPopover = ({
     try {
       await onUpdateAlt(livestreamId, snapshot._id, {
         altAssignee: selectedAlt,
-        altOtherAssignee: selectedAlt === "other" ? altOtherName.trim() : undefined,
+        altOtherAssignee:
+          selectedAlt === "other" ? altOtherName.trim() : undefined,
         altNote: altNote.trim() || undefined
       })
       notifications.show({
@@ -520,6 +538,12 @@ const UpdateAltPopover = ({
           variant="subtle"
           color="indigo"
           title="Chỉ định người thay thế"
+          styles={{
+            root: {
+              color: "white",
+              "&:hover": { backgroundColor: "rgba(255,255,255,0.14)" }
+            }
+          }}
           onClick={(e) => {
             e.stopPropagation()
             setOpened(true)
@@ -556,7 +580,12 @@ const UpdateAltPopover = ({
             size="sm"
           />
           <Group justify="apart">
-            <Button size="xs" onClick={handleSave} loading={loading} disabled={!selectedAlt}>
+            <Button
+              size="xs"
+              onClick={handleSave}
+              loading={loading}
+              disabled={!selectedAlt}
+            >
               Lưu
             </Button>
             {snapshot.altAssignee && (
@@ -594,8 +623,12 @@ const EditTimePopover = ({
   loadingSave: boolean
 }) => {
   const [opened, setOpened] = useState(false)
-  const [startStr, setStartStr] = useState(formatTimeString(snapshot.period.startTime))
-  const [endStr, setEndStr] = useState(formatTimeString(snapshot.period.endTime))
+  const [startStr, setStartStr] = useState(
+    formatTimeString(snapshot.period.startTime)
+  )
+  const [endStr, setEndStr] = useState(
+    formatTimeString(snapshot.period.endTime)
+  )
 
   useEffect(() => {
     if (!opened) return
@@ -611,6 +644,12 @@ const EditTimePopover = ({
           variant="subtle"
           color="gray"
           title="Chỉnh giờ / xóa"
+          styles={{
+            root: {
+              color: "white",
+              "&:hover": { backgroundColor: "rgba(255,255,255,0.14)" }
+            }
+          }}
           onClick={(e) => {
             e.stopPropagation()
             setOpened(true)
@@ -767,7 +806,6 @@ const SnapshotActions = ({
   snapshot,
   employeesData,
   currentUser,
-  roleColor,
   role,
   hideEditButtons,
   isWeekFixed,
@@ -790,7 +828,6 @@ const SnapshotActions = ({
   snapshot: LivestreamSnapshot
   employeesData: LivestreamEmployee[]
   currentUser: GetMeResponse | undefined
-  roleColor: string
   role: "host" | "assistant"
   hideEditButtons: boolean
   isWeekFixed: boolean
@@ -840,7 +877,6 @@ const SnapshotActions = ({
       ? snapshot.altOtherAssignee || "Khác"
       : altEmployee?.name
     : snapshot.assignee?.name
-
   const isUserLivestreamAst = currentUser?.roles?.includes("livestream-ast")
 
   const { data: requestData } = useQuery({
@@ -865,12 +901,7 @@ const SnapshotActions = ({
 
   return (
     <Group gap={4} justify="space-between" wrap="nowrap">
-      <Text
-        size="xs"
-        fw={600}
-        c={hasAltAssignee ? "orange" : roleColor}
-        lineClamp={1}
-      >
+      <Text size="xs" fw={600} c="white" lineClamp={1}>
         {displayName || "Chưa phân"}
       </Text>
 
@@ -902,6 +933,12 @@ const SnapshotActions = ({
                   variant="subtle"
                   color="indigo"
                   title="Phân công nhân sự"
+                  styles={{
+                    root: {
+                      color: "white",
+                      "&:hover": { backgroundColor: "rgba(255,255,255,0.14)" }
+                    }
+                  }}
                 >
                   <IconUserPlus size={16} />
                 </ActionIcon>
@@ -1011,24 +1048,23 @@ const SnapshotActions = ({
             snapshot={snapshot}
             loadingDelete={loadingDeleteSnapshot}
             loadingSave={loadingUpdateTime}
-            onDelete={() =>
-              onDeleteSnapshot(dayData._id, snapshot._id)
-            }
-            onSave={(req) =>
-              onUpdateTime(dayData._id, snapshot._id, req)
-            }
+            onDelete={() => onDeleteSnapshot(dayData._id, snapshot._id)}
+            onSave={(req) => onUpdateTime(dayData._id, snapshot._id, req)}
           />
         )}
 
-        {!hideEditButtons && isWeekFixed && isAdminOrLeader && !!snapshot.assignee && (
-          <UpdateAltPopover
-            livestreamId={dayData._id}
-            snapshot={snapshot}
-            employees={employeesData}
-            onUpdateAlt={onUpdateAlt}
-            onRefetch={onRefetch}
-          />
-        )}
+        {!hideEditButtons &&
+          isWeekFixed &&
+          isAdminOrLeader &&
+          !!snapshot.assignee && (
+            <UpdateAltPopover
+              livestreamId={dayData._id}
+              snapshot={snapshot}
+              employees={employeesData}
+              onUpdateAlt={onUpdateAlt}
+              onRefetch={onRefetch}
+            />
+          )}
 
         {onOpenReport &&
           dayData &&
@@ -1047,6 +1083,12 @@ const SnapshotActions = ({
                   ? "blue"
                   : "gray"
               }
+              styles={{
+                root: {
+                  color: "white",
+                  "&:hover": { backgroundColor: "rgba(255,255,255,0.14)" }
+                }
+              }}
               onClick={(e) => {
                 e.stopPropagation()
                 onOpenReport(dayData._id, snapshot)
@@ -1072,6 +1114,12 @@ const SnapshotActions = ({
               size="sm"
               variant="subtle"
               color="blue"
+              styles={{
+                root: {
+                  color: "white",
+                  "&:hover": { backgroundColor: "rgba(255,255,255,0.14)" }
+                }
+              }}
               onClick={(e) => {
                 e.stopPropagation()
                 onOpenReport(dayData._id, snapshot)
@@ -1110,8 +1158,10 @@ export const LivestreamCalendarRegion = ({
     useLivestreamCore()
 
   const roleLabel = role === "host" ? "Host" : "Trợ live"
-  const roleColor = role === "host" ? "blue" : "green"
-  const [pxPerMinute, setPxPerMinute] = useState(2)
+  const viewportHeightPx = 800
+  const initialMinPxPerMinute = Math.max(0.75, viewportHeightPx / (24 * 60))
+  const [pxPerMinute, setPxPerMinute] = useState(() => initialMinPxPerMinute)
+  const [now, setNow] = useState(() => new Date())
   const snapStepMinutes = 5
 
   const isAdminOrLeader = useMemo(() => {
@@ -1139,11 +1189,11 @@ export const LivestreamCalendarRegion = ({
 
   const viewportStartMin = 8 * 60
   // const viewportEndMin = 16 * 60
-  const viewportHeightPx = 800
   const timelineHeight = (timeRange.endMin - timeRange.startMin) * pxPerMinute
   const timelineScrollRef = useRef<HTMLDivElement | null>(null)
   const minPxPerMinute = Math.max(0.75, viewportHeightPx / (24 * 60))
   const maxPxPerMinute = 6
+  const nowMinutes = now.getHours() * 60 + now.getMinutes()
 
   useEffect(() => {
     const el = timelineScrollRef.current
@@ -1196,6 +1246,11 @@ export const LivestreamCalendarRegion = ({
       Math.max(0, timelineHeight - viewportHeightPx)
     )
   }, [pxPerMinute, timeRange.startMin, timelineHeight])
+
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 30_000)
+    return () => clearInterval(t)
+  }, [])
 
   const { mutate: mutateAddSnapshot } = useMutation({
     mutationFn: async (payload: {
@@ -1549,6 +1604,8 @@ export const LivestreamCalendarRegion = ({
                     dayData?.snapshots.filter((s) => s.period.for === role) ||
                     []
                   const dayKey = day.toISOString()
+                  const isToday =
+                    format(day, "yyyy-MM-dd") === format(now, "yyyy-MM-dd")
 
                   return (
                     <Box
@@ -1590,6 +1647,20 @@ export const LivestreamCalendarRegion = ({
                           })
                         }}
                       >
+                        {isToday && (
+                          <Box
+                            style={{
+                              position: "absolute",
+                              left: 0,
+                              right: 0,
+                              top: (nowMinutes - timeRange.startMin) * pxPerMinute,
+                              height: 2,
+                              background: "var(--mantine-color-red-6)",
+                              zIndex: 4,
+                              pointerEvents: "none"
+                            }}
+                          />
+                        )}
                         {snapshots.map((snapshot) => {
                           const startMin = timeObjToMinutes(
                             snapshot.period.startTime
@@ -1601,14 +1672,17 @@ export const LivestreamCalendarRegion = ({
                             dragPreview?.snapshotId === snapshot._id
                               ? dragPreview
                               : null
+                          const visualGapPx = 2
                           const top =
                             ((preview?.startMin ?? startMin) -
                               timeRange.startMin) *
-                            pxPerMinute
+                              pxPerMinute +
+                            visualGapPx / 2
                           const height =
                             ((preview?.endMin ?? endMin) -
                               (preview?.startMin ?? startMin)) *
-                            pxPerMinute
+                              pxPerMinute -
+                            visualGapPx
                           const isResizable =
                             !hideEditButtons &&
                             !!dayData &&
@@ -1624,23 +1698,24 @@ export const LivestreamCalendarRegion = ({
                                 right: 6,
                                 height: Math.max(18, height),
                                 backgroundColor: snapshot.altAssignee
-                                  ? "rgba(255, 193, 7, 0.18)"
+                                  ? "var(--mantine-color-orange-5)"
                                   : role === "host"
-                                    ? "rgba(34, 139, 230, 0.12)"
-                                    : "rgba(64, 192, 87, 0.12)",
-                                border: "1px solid rgba(0,0,0,0.08)",
-                                borderLeft: `3px solid var(--mantine-color-${roleColor}-6)`,
-                                borderRadius: 8,
-                                padding: "6px 8px",
+                                    ? "var(--mantine-color-indigo-5)"
+                                    : "var(--mantine-color-green-5)",
+                                border: "1px solid rgba(255,255,255,0.22)",
+                                borderLeft: "3px solid rgba(255,255,255,0.55)",
+                                borderRadius: 16,
+                                padding: "2px 10px",
                                 cursor: hideEditButtons ? "default" : "pointer",
                                 userSelect: "none",
-                                boxShadow: "0 2px 10px rgba(0,0,0,0.06)"
+                                boxShadow: "0 2px 10px rgba(0,0,0,0.12)"
                               }}
                               onClick={(e) => {
                                 e.stopPropagation()
                                 if (suppressSnapshotClickRef.current) return
                                 if (!dayData || hideEditButtons) return
-                                if (onOpenReport) onOpenReport(dayData._id, snapshot)
+                                if (onOpenReport)
+                                  onOpenReport(dayData._id, snapshot)
                               }}
                               onMouseEnter={() =>
                                 setHoveredSnapshotId(snapshot._id)
@@ -1681,7 +1756,7 @@ export const LivestreamCalendarRegion = ({
                                         width: 26,
                                         height: 2,
                                         borderRadius: 2,
-                                        background: "rgba(0,0,0,0.18)"
+                                        background: "rgba(255,255,255,0.5)"
                                       }}
                                     />
                                   </Box>
@@ -1716,13 +1791,17 @@ export const LivestreamCalendarRegion = ({
                                         width: 26,
                                         height: 2,
                                         borderRadius: 2,
-                                        background: "rgba(0,0,0,0.18)"
+                                        background: "rgba(255,255,255,0.5)"
                                       }}
                                     />
                                   </Box>
                                 )}
 
-                              <Text size="xs" c="dimmed" mb={4}>
+                              <Text
+                                size="xs"
+                                c="white"
+                                style={{ opacity: 0.9 }}
+                              >
                                 {formatTimeString(
                                   minutesToTimeObj(
                                     Math.round(preview?.startMin ?? startMin)
@@ -1736,34 +1815,81 @@ export const LivestreamCalendarRegion = ({
                                 )}
                               </Text>
                               {dayData && (
-                                <SnapshotActions
-                                  dayData={dayData}
-                                  snapshot={snapshot}
-                                  employeesData={employeesData}
-                                  currentUser={currentUser}
-                                  roleColor={roleColor}
-                                  role={role}
-                                  hideEditButtons={hideEditButtons}
-                                  isWeekFixed={isWeekFixed}
-                                  isAdminOrLeader={isAdminOrLeader}
-                                  canEditSnapshot={canEditSnapshot}
-                                  onGetRequest={onGetRequest}
-                                  onCreateRequest={onCreateRequest}
-                                  onUpdateRequestStatus={onUpdateRequestStatus}
-                                  onUpdateAlt={onUpdateAlt}
-                                  onUnassignEmployee={onUnassignEmployee}
-                                  onAssignEmployee={onAssignEmployee}
-                                  onRefetch={onRefetch}
-                                  onOpenReport={onOpenReport}
-                                  loadingDeleteSnapshot={deletingSnapshot}
-                                  loadingUpdateTime={updatingTime}
-                                  onDeleteSnapshot={(livestreamId, snapshotId) =>
-                                    mutateDeleteSnapshot({ livestreamId, snapshotId })
-                                  }
-                                  onUpdateTime={(livestreamId, snapshotId, req) =>
-                                    mutateUpdateTime({ livestreamId, snapshotId, req })
-                                  }
-                                />
+                                <>
+                                  <SnapshotActions
+                                    dayData={dayData}
+                                    snapshot={snapshot}
+                                    employeesData={employeesData}
+                                    currentUser={currentUser}
+                                    role={role}
+                                    hideEditButtons={hideEditButtons}
+                                    isWeekFixed={isWeekFixed}
+                                    isAdminOrLeader={isAdminOrLeader}
+                                    canEditSnapshot={canEditSnapshot}
+                                    onGetRequest={onGetRequest}
+                                    onCreateRequest={onCreateRequest}
+                                    onUpdateRequestStatus={onUpdateRequestStatus}
+                                    onUpdateAlt={onUpdateAlt}
+                                    onUnassignEmployee={onUnassignEmployee}
+                                    onAssignEmployee={onAssignEmployee}
+                                    onRefetch={onRefetch}
+                                    onOpenReport={onOpenReport}
+                                    loadingDeleteSnapshot={deletingSnapshot}
+                                    loadingUpdateTime={updatingTime}
+                                    onDeleteSnapshot={(livestreamId, snapshotId) =>
+                                      mutateDeleteSnapshot({ livestreamId, snapshotId })
+                                    }
+                                    onUpdateTime={(livestreamId, snapshotId, req) =>
+                                      mutateUpdateTime({ livestreamId, snapshotId, req })
+                                    }
+                                  />
+
+                                  {!hideEditButtons && isAdminOrLeader && (
+                                    <ActionIcon
+                                      size="sm"
+                                      variant="subtle"
+                                      color="red"
+                                      title="Xóa snapshot"
+                                      styles={{
+                                        root: {
+                                          position: "absolute",
+                                          right: 6,
+                                          bottom: 4,
+                                          color: "white",
+                                          "&:hover": {
+                                            backgroundColor:
+                                              "rgba(255,255,255,0.14)"
+                                          }
+                                        }
+                                      }}
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        modals.openConfirmModal({
+                                          title: <b>Xóa snapshot</b>,
+                                          children: (
+                                            <Text size="sm">
+                                              Bạn có chắc muốn xóa snapshot này
+                                              không?
+                                            </Text>
+                                          ),
+                                          centered: true,
+                                          labels: {
+                                            confirm: "Xóa",
+                                            cancel: "Hủy"
+                                          },
+                                          confirmProps: { color: "red" },
+                                          onConfirm: () =>
+                                            mutateDeleteSnapshot({
+                                              livestreamId: dayData._id,
+                                              snapshotId: snapshot._id
+                                            })
+                                        })
+                                      }}
+                                    >
+                                      <IconTrash size={16} />
+                                    </ActionIcon>
+                                  )}
+                                </>
                               )}
                             </Box>
                           )
