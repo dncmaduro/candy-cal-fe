@@ -104,14 +104,14 @@ export function RevenueKPICards({
             <>
               <Group justify="space-between" mb="xs">
                 <Text size="sm" c="dimmed">
-                  Tổng đơn hàng
+                  Tổng số thùng
                 </Text>
-                <ThemeIcon variant="light" size="lg" color="green">
-                  <IconShoppingCart size={20} />
+                <ThemeIcon variant="light" size="lg" color="yellow">
+                  <IconPackageExport />
                 </ThemeIcon>
               </Group>
               <Text fw={700} fz="xl">
-                {totalOrders}
+                {totalQuantity}
               </Text>
             </>
           )}
@@ -126,14 +126,14 @@ export function RevenueKPICards({
             <>
               <Group justify="space-between" mb="xs">
                 <Text size="sm" c="dimmed">
-                  Tổng số thùng
+                  Tổng đơn hàng
                 </Text>
-                <ThemeIcon variant="light" size="lg" color="yellow">
-                  <IconPackageExport />
+                <ThemeIcon variant="light" size="lg" color="green">
+                  <IconShoppingCart size={20} />
                 </ThemeIcon>
               </Group>
               <Text fw={700} fz="xl">
-                {totalQuantity}
+                {totalOrders}
               </Text>
             </>
           )}
