@@ -18,7 +18,6 @@ import {
   Paper,
   Stack,
   Center,
-  SegmentedControl,
   ActionIcon,
   Tooltip,
   SimpleGrid
@@ -102,15 +101,7 @@ function RouteComponent() {
   const [channelId, setChannelId] = useState<string | null>(
     searchParams.channel || null
   )
-  const [viewMode, setViewMode] = useState<"assign" | "schedule">("schedule")
   const [isWeekFixed, setIsWeekFixed] = useState(false)
-
-  // Force schedule mode when week is fixed
-  useMemo(() => {
-    if (isWeekFixed && viewMode === "assign") {
-      setViewMode("schedule")
-    }
-  }, [isWeekFixed, viewMode])
 
   // Calculate week range
   const weekRange = useMemo(() => {
@@ -312,7 +303,7 @@ function RouteComponent() {
     }: {
       livestreamId: string
       snapshotId?: string
-      periodId: string
+      periodId?: string
       userId: string
       role: "host" | "assistant"
     }) => {
@@ -322,6 +313,7 @@ function RouteComponent() {
           assignee: userId
         })
       } else {
+        if (!periodId) throw new Error("Missing periodId")
         // Create new snapshot
         await addLivestreamSnapshot(livestreamId, {
           period: periodId,
@@ -712,48 +704,7 @@ function RouteComponent() {
                   </Group>
                 </Stack>
 
-                {/* View Mode */}
                 <Can roles={["admin", "livestream-leader"]}>
-                  <Stack
-                    gap={4}
-                    style={{
-                      flexBasis: "260px",
-                      flexShrink: 0
-                    }}
-                  >
-                    <Text size="xs" fw={600} c="dimmed" tt="uppercase">
-                      Chế độ xem
-                    </Text>
-                    <Tooltip
-                      label="Không thể phân ca do đã chốt lịch"
-                      disabled={!isWeekFixed}
-                      position="bottom"
-                    >
-                      <SegmentedControl
-                        value={viewMode}
-                        onChange={(value) =>
-                          setViewMode(value as "assign" | "schedule")
-                        }
-                        size="sm"
-                        radius="md"
-                        fullWidth
-                        color="indigo"
-                        disabled={isWeekFixed}
-                        data={[
-                          { label: "Phân ca", value: "assign" },
-                          { label: "Xem lịch đã đặt", value: "schedule" }
-                        ]}
-                        styles={{
-                          root: {
-                            opacity: isWeekFixed ? 0.6 : 1,
-                            cursor: isWeekFixed ? "not-allowed" : "pointer"
-                          }
-                        }}
-                      />
-                    </Tooltip>
-                  </Stack>
-
-                  {/* Sync Button */}
                   <Group gap="xs" style={{ flexShrink: 0 }}>
                     <Tooltip
                       label={

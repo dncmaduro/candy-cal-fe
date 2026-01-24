@@ -4,6 +4,7 @@ import {
   Button,
   Divider,
   Group,
+  Popover,
   TextInput,
   Paper,
   Select,
@@ -19,11 +20,12 @@ import {
   IconCircleDashedX,
   IconCalculator,
   IconEye,
-  IconPencil,
   IconRefresh,
   IconReport,
   IconTrash,
-  IconUserEdit
+  IconUserPlus,
+  IconUserEdit,
+  IconClock
 } from "@tabler/icons-react"
 import { format } from "date-fns"
 import { useEffect, useMemo, useRef, useState } from "react"
@@ -101,7 +103,7 @@ interface LivestreamCalendarRegionProps {
   onAssignEmployee: (params: {
     livestreamId: string
     snapshotId?: string
-    periodId: string
+    periodId?: string
     userId: string
     role: "host" | "assistant"
   }) => void
@@ -177,11 +179,667 @@ const getErrorMessage = (error: unknown) => {
   return undefined
 }
 
+const SnapshotActions = ({
+  dayData,
+  snapshot,
+  employeesData,
+  currentUser,
+  roleColor,
+  role,
+  hideEditButtons,
+  isWeekFixed,
+  isAdminOrLeader,
+  canEditSnapshot,
+  onGetRequest,
+  onCreateRequest,
+  onUpdateRequestStatus,
+  onUpdateAlt,
+  onUnassignEmployee,
+  onAssignEmployee,
+  onRefetch,
+  onOpenReport,
+  openEditSnapshotModal,
+  queryClient
+}: {
+  dayData: LivestreamData
+  snapshot: LivestreamSnapshot
+  employeesData: LivestreamEmployee[]
+  currentUser: GetMeResponse | undefined
+  roleColor: string
+  role: "host" | "assistant"
+  hideEditButtons: boolean
+  isWeekFixed: boolean
+  isAdminOrLeader: boolean
+  canEditSnapshot: (snapshot: LivestreamSnapshot) => boolean
+  onGetRequest: (
+    req: GetAltRequestBySnapshotRequest
+  ) => Promise<{ data: GetAltRequestBySnapshotResponse }>
+  onCreateRequest: (
+    req: CreateAltRequestRequest
+  ) => Promise<{ data: CreateAltRequestResponse }>
+  onUpdateRequestStatus: (
+    id: string,
+    req: UpdateAltRequestStatusRequest
+  ) => Promise<{ data: UpdateAltRequestStatusResponse }>
+  onUpdateAlt: (
+    livestreamId: string,
+    snapshotId: string,
+    req: UpdateSnapshotAltRequest
+  ) => Promise<{ data: UpdateSnapshotAltResponse }>
+  onUnassignEmployee: (params: {
+    livestreamId: string
+    snapshotId: string
+  }) => void
+  onAssignEmployee: (params: {
+    livestreamId: string
+    snapshotId?: string
+    periodId?: string
+    userId: string
+    role: "host" | "assistant"
+  }) => void
+  onRefetch: () => void
+  onOpenReport?: (livestreamId: string, snapshot: LivestreamSnapshot) => void
+  openEditSnapshotModal: (opts: {
+    dayData: LivestreamData
+    snapshot: LivestreamSnapshot
+  }) => void
+  queryClient: ReturnType<typeof useQueryClient>
+}) => {
+  const hasAltAssignee = !!snapshot.altAssignee
+  const altEmployee = employeesData.find((e) => e._id === snapshot.altAssignee)
+  const displayName = hasAltAssignee
+    ? snapshot.altAssignee === "other"
+      ? snapshot.altOtherAssignee || "Khác"
+      : altEmployee?.name
+    : snapshot.assignee?.name
+
+  const isUserLivestreamAst = currentUser?.roles?.includes("livestream-ast")
+
+  const { data: requestData } = useQuery({
+    queryKey: ["getAltRequestBySnapshot", snapshot._id, dayData._id],
+    queryFn: () =>
+      onGetRequest({
+        livestreamId: dayData._id,
+        snapshotId: snapshot._id
+      }),
+    enabled: !!dayData?._id && !!snapshot?._id
+  })
+
+  const [assignOpen, setAssignOpen] = useState(false)
+  const [selectedAssignee, setSelectedAssignee] = useState<string | null>(
+    snapshot.assignee?._id || null
+  )
+
+  useEffect(() => {
+    if (!assignOpen) return
+    setSelectedAssignee(snapshot.assignee?._id || null)
+  }, [assignOpen, snapshot.assignee?._id])
+
+  const openCreateRequestModal = () => {
+    let reason = ""
+    modals.open({
+      title: "Yêu cầu thay đổi nhân sự",
+      children: (
+        <Stack gap="sm">
+          <Text size="sm" c="dimmed">
+            {snapshot.assignee?.name} ·{" "}
+            {format(new Date(dayData.date), "dd/MM/yyyy")}
+          </Text>
+          <TextInput
+            placeholder="Nhập lý do..."
+            onChange={(e) => (reason = e.currentTarget.value)}
+          />
+          <Group justify="flex-end">
+            <Button variant="outline" onClick={() => modals.closeAll()}>
+              Hủy
+            </Button>
+            <Button
+              onClick={async () => {
+                if (!reason.trim()) {
+                  notifications.show({
+                    title: "Thiếu thông tin",
+                    message: "Vui lòng nhập lý do",
+                    color: "red"
+                  })
+                  return
+                }
+                try {
+                  await onCreateRequest({
+                    livestreamId: dayData._id,
+                    snapshotId: snapshot._id,
+                    altNote: reason.trim()
+                  })
+                  notifications.show({
+                    title: "Tạo yêu cầu thành công",
+                    message: "Yêu cầu thay đổi đã được gửi",
+                    color: "green"
+                  })
+                  queryClient.invalidateQueries({
+                    queryKey: [
+                      "getAltRequestBySnapshot",
+                      snapshot._id,
+                      dayData._id
+                    ]
+                  })
+                  modals.closeAll()
+                  onRefetch()
+                } catch (error: unknown) {
+                  notifications.show({
+                    title: "Tạo yêu cầu thất bại",
+                    message: getErrorMessage(error) || "Có lỗi xảy ra",
+                    color: "red"
+                  })
+                }
+              }}
+            >
+              Gửi
+            </Button>
+          </Group>
+        </Stack>
+      )
+    })
+  }
+
+  const openRequestInfoModal = (req: GetAltRequestBySnapshotResponse) => {
+    let selectedAlt: string | null = null
+    modals.open({
+      title: "Yêu cầu thay đổi nhân sự",
+      children: (
+        <Stack gap="sm">
+          <Group gap={8}>
+            <ActionIcon
+              variant="light"
+              color={
+                req.status === "pending"
+                  ? "yellow"
+                  : req.status === "accepted"
+                    ? "green"
+                    : "red"
+              }
+            >
+              {req.status === "pending" ? (
+                <IconAlertCircle size={16} />
+              ) : req.status === "accepted" ? (
+                <IconCircleDashedCheck size={16} />
+              ) : (
+                <IconCircleDashedX size={16} />
+              )}
+            </ActionIcon>
+            <Text size="sm" fw={600}>
+              {req.status === "pending"
+                ? "Đang chờ duyệt"
+                : req.status === "accepted"
+                  ? "Đã chấp nhận"
+                  : "Đã từ chối"}
+            </Text>
+          </Group>
+
+          <Text size="xs">
+            <strong>Người tạo:</strong> {req.createdBy?.name}
+          </Text>
+          <Text size="xs">
+            <strong>Lý do:</strong> {req.altNote}
+          </Text>
+
+          {req.status === "pending" && isAdminOrLeader && (
+            <>
+              <Select
+                placeholder="Chọn người thay thế"
+                value={selectedAlt}
+                onChange={(v) => (selectedAlt = v)}
+                data={employeesData
+                  .map((e) => ({ label: e.name, value: e._id }))
+                  .filter((e) => e.value !== req.createdBy?._id)}
+                searchable
+                comboboxProps={{ withinPortal: false }}
+              />
+              <Group justify="apart">
+                <Button
+                  size="xs"
+                  variant="light"
+                  color="red"
+                  onClick={async () => {
+                    try {
+                      await onUpdateRequestStatus(req._id, {
+                        status: "rejected"
+                      })
+                      notifications.show({
+                        title: "Đã từ chối",
+                        message: "Yêu cầu đã được từ chối",
+                        color: "orange"
+                      })
+                      queryClient.invalidateQueries({
+                        queryKey: [
+                          "getAltRequestBySnapshot",
+                          snapshot._id,
+                          dayData._id
+                        ]
+                      })
+                      modals.closeAll()
+                      onRefetch()
+                    } catch (error: unknown) {
+                      notifications.show({
+                        title: "Lỗi",
+                        message: getErrorMessage(error) || "Có lỗi xảy ra",
+                        color: "red"
+                      })
+                    }
+                  }}
+                >
+                  Từ chối
+                </Button>
+                <Button
+                  size="xs"
+                  color="green"
+                  disabled={!selectedAlt}
+                  onClick={async () => {
+                    if (!selectedAlt) return
+                    try {
+                      await onUpdateRequestStatus(req._id, {
+                        status: "accepted",
+                        altAssignee: selectedAlt
+                      })
+                      notifications.show({
+                        title: "Đã chấp nhận",
+                        message: "Yêu cầu đã được chấp nhận",
+                        color: "green"
+                      })
+                      queryClient.invalidateQueries({
+                        queryKey: [
+                          "getAltRequestBySnapshot",
+                          snapshot._id,
+                          dayData._id
+                        ]
+                      })
+                      modals.closeAll()
+                      onRefetch()
+                    } catch (error: unknown) {
+                      notifications.show({
+                        title: "Lỗi",
+                        message: getErrorMessage(error) || "Có lỗi xảy ra",
+                        color: "red"
+                      })
+                    }
+                  }}
+                >
+                  Chấp nhận
+                </Button>
+              </Group>
+            </>
+          )}
+        </Stack>
+      )
+    })
+  }
+
+  return (
+    <Group gap={4} justify="space-between" wrap="nowrap">
+      <Text
+        size="xs"
+        fw={600}
+        c={hasAltAssignee ? "orange" : roleColor}
+        lineClamp={1}
+      >
+        {displayName || "Chưa phân"}
+      </Text>
+
+      <Group gap={4} wrap="nowrap">
+        {!hideEditButtons && !dayData.fixed && isAdminOrLeader && (
+          <Popover
+            opened={assignOpen}
+            onChange={setAssignOpen}
+            position="bottom-start"
+            withArrow
+            shadow="md"
+            withinPortal={false}
+            closeOnClickOutside={false}
+            closeOnEscape={false}
+          >
+            <Popover.Target>
+              <Box
+                onMouseDownCapture={(e) => {
+                  e.stopPropagation()
+                  e.preventDefault()
+                }}
+                onClickCapture={(e) => {
+                  e.stopPropagation()
+                  setAssignOpen((v) => !v)
+                }}
+              >
+                <ActionIcon
+                  size="sm"
+                  variant="subtle"
+                  color="indigo"
+                  title="Phân công nhân sự"
+                >
+                  <IconUserPlus size={16} />
+                </ActionIcon>
+              </Box>
+            </Popover.Target>
+            <Popover.Dropdown
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+              style={{ minWidth: 320 }}
+            >
+              <Stack gap="xs">
+                <Text size="sm" fw={600}>
+                  Phân công nhân sự
+                </Text>
+                <Select
+                  placeholder="Chọn nhân sự"
+                  value={selectedAssignee}
+                  onChange={setSelectedAssignee}
+                  data={employeesData.map((e) => ({
+                    label: e.name,
+                    value: e._id
+                  }))}
+                  searchable
+                  comboboxProps={{
+                    withinPortal: false,
+                    position: "bottom-start"
+                  }}
+                />
+                <Group justify="space-between">
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    onClick={() => setAssignOpen(false)}
+                  >
+                    Đóng
+                  </Button>
+                  <Group>
+                    {snapshot.assignee && (
+                      <Button
+                        size="xs"
+                        variant="light"
+                        color="red"
+                        leftSection={<IconTrash size={14} />}
+                        onClick={() => {
+                          onUnassignEmployee({
+                            livestreamId: dayData._id,
+                            snapshotId: snapshot._id
+                          })
+                          setAssignOpen(false)
+                        }}
+                      >
+                        Bỏ
+                      </Button>
+                    )}
+                    <Button
+                      size="xs"
+                      disabled={!selectedAssignee}
+                      onClick={() => {
+                        if (!selectedAssignee) return
+                        onAssignEmployee({
+                          livestreamId: dayData._id,
+                          snapshotId: snapshot._id,
+                          periodId: snapshot.period._id,
+                          userId: selectedAssignee,
+                          role
+                        })
+                        setAssignOpen(false)
+                      }}
+                    >
+                      Lưu
+                    </Button>
+                  </Group>
+                </Group>
+              </Stack>
+            </Popover.Dropdown>
+          </Popover>
+        )}
+
+        {!hideEditButtons &&
+          isWeekFixed &&
+          snapshot.assignee &&
+          canEditSnapshot(snapshot) &&
+          !hasAltAssignee &&
+          !requestData?.data && (
+            <ActionIcon
+              size="sm"
+              variant="subtle"
+              color="yellow"
+              title="Tạo yêu cầu thay thế"
+              onClick={(e) => {
+                e.stopPropagation()
+                openCreateRequestModal()
+              }}
+            >
+              <IconAlertCircle size={16} />
+            </ActionIcon>
+          )}
+
+        {!hideEditButtons && requestData?.data && (
+          <ActionIcon
+            size="sm"
+            variant="subtle"
+            color={
+              requestData.data.status === "pending"
+                ? "yellow"
+                : requestData.data.status === "accepted"
+                  ? "green"
+                  : "red"
+            }
+            title="Xem yêu cầu"
+            onClick={(e) => {
+              e.stopPropagation()
+              openRequestInfoModal(requestData.data)
+            }}
+          >
+            {requestData.data.status === "pending" ? (
+              <IconAlertCircle size={16} />
+            ) : requestData.data.status === "accepted" ? (
+              <IconCircleDashedCheck size={16} />
+            ) : (
+              <IconCircleDashedX size={16} />
+            )}
+          </ActionIcon>
+        )}
+
+        {!hideEditButtons && (
+          <ActionIcon
+            size="sm"
+            variant="subtle"
+            title="Chỉnh giờ / xóa"
+            onClick={(e) => {
+              e.stopPropagation()
+              openEditSnapshotModal({ dayData, snapshot })
+            }}
+          >
+            <IconClock size={16} />
+          </ActionIcon>
+        )}
+
+        {!hideEditButtons && isWeekFixed && isAdminOrLeader && dayData && (
+          <ActionIcon
+            size="sm"
+            variant="subtle"
+            color="indigo"
+            title="Chỉ định người thay thế"
+            onClick={async (e) => {
+              e.stopPropagation()
+              const currentAlt = snapshot.altAssignee || ""
+              const currentAltOther = snapshot.altOtherAssignee || ""
+              const currentNote = snapshot.altNote || ""
+              let selectedAlt = currentAlt || null
+              let altOtherName = currentAltOther
+              let altNote = currentNote
+
+              modals.open({
+                title: "Chỉ định người thay thế",
+                children: (
+                  <Stack gap="sm">
+                    <Select
+                      placeholder="Chọn người thay thế"
+                      value={selectedAlt}
+                      onChange={(v) => (selectedAlt = v)}
+                      data={employeesData
+                        .map((emp) => ({ label: emp.name, value: emp._id }))
+                        .filter((emp) => emp.value !== snapshot.assignee?._id)
+                        .concat({ label: "Khác", value: "other" })}
+                      searchable
+                      comboboxProps={{ withinPortal: false }}
+                    />
+                    {selectedAlt === "other" && (
+                      <TextInput
+                        placeholder="Nhập tên người thay thế"
+                        defaultValue={altOtherName}
+                        onChange={(e) => (altOtherName = e.currentTarget.value)}
+                        size="sm"
+                      />
+                    )}
+                    <TextInput
+                      placeholder="Lý do (tùy chọn)"
+                      defaultValue={altNote}
+                      onChange={(e) => (altNote = e.currentTarget.value)}
+                      size="sm"
+                    />
+                    <Group justify="apart">
+                      <Button
+                        size="xs"
+                        onClick={async () => {
+                          if (!selectedAlt) return
+                          if (selectedAlt === "other" && !altOtherName.trim()) {
+                            notifications.show({
+                              title: "Thiếu thông tin",
+                              message: "Vui lòng nhập tên người thay thế",
+                              color: "red"
+                            })
+                            return
+                          }
+                          try {
+                            await onUpdateAlt(dayData._id, snapshot._id, {
+                              altAssignee: selectedAlt || undefined,
+                              altOtherAssignee:
+                                selectedAlt === "other"
+                                  ? altOtherName.trim()
+                                  : undefined,
+                              altNote: altNote?.trim() || undefined
+                            })
+                            notifications.show({
+                              title: "Cập nhật thành công",
+                              message: "Đã cập nhật người thay thế",
+                              color: "green"
+                            })
+                            modals.closeAll()
+                            onRefetch()
+                          } catch (error: unknown) {
+                            notifications.show({
+                              title: "Cập nhật thất bại",
+                              message:
+                                getErrorMessage(error) || "Có lỗi xảy ra",
+                              color: "red"
+                            })
+                          }
+                        }}
+                      >
+                        Lưu
+                      </Button>
+                      {!!snapshot.altAssignee && (
+                        <Button
+                          size="xs"
+                          variant="light"
+                          color="red"
+                          onClick={async () => {
+                            try {
+                              await onUpdateAlt(dayData._id, snapshot._id, {
+                                altAssignee: undefined,
+                                altOtherAssignee: undefined,
+                                altNote: undefined
+                              })
+                              notifications.show({
+                                title: "Xóa thành công",
+                                message: "Đã xóa người thay thế",
+                                color: "green"
+                              })
+                              modals.closeAll()
+                              onRefetch()
+                            } catch (error: unknown) {
+                              notifications.show({
+                                title: "Xóa thất bại",
+                                message:
+                                  getErrorMessage(error) || "Có lỗi xảy ra",
+                                color: "red"
+                              })
+                            }
+                          }}
+                          leftSection={<IconTrash size={14} />}
+                        >
+                          Xóa
+                        </Button>
+                      )}
+                    </Group>
+                  </Stack>
+                )
+              })
+            }}
+          >
+            <IconUserEdit size={16} />
+          </ActionIcon>
+        )}
+
+        {onOpenReport &&
+          dayData &&
+          isUserLivestreamAst &&
+          role === "host" &&
+          snapshot.assignee && (
+            <ActionIcon
+              size="sm"
+              variant="subtle"
+              color={
+                snapshot.income !== undefined &&
+                snapshot.clickRate !== undefined &&
+                snapshot.avgViewingDuration !== undefined &&
+                snapshot.comments !== undefined &&
+                snapshot.ordersNote !== undefined
+                  ? "blue"
+                  : "gray"
+              }
+              onClick={(e) => {
+                e.stopPropagation()
+                onOpenReport(dayData._id, snapshot)
+              }}
+            >
+              {snapshot.income !== undefined &&
+              snapshot.clickRate !== undefined &&
+              snapshot.avgViewingDuration !== undefined &&
+              snapshot.comments !== undefined &&
+              snapshot.ordersNote !== undefined ? (
+                <IconEye size={16} />
+              ) : (
+                <IconReport size={16} />
+              )}
+            </ActionIcon>
+          )}
+        {onOpenReport &&
+          dayData &&
+          isUserLivestreamAst &&
+          role === "assistant" &&
+          snapshot.assignee && (
+            <ActionIcon
+              size="sm"
+              variant="subtle"
+              color="blue"
+              onClick={(e) => {
+                e.stopPropagation()
+                onOpenReport(dayData._id, snapshot)
+              }}
+            >
+              <IconEye size={16} />
+            </ActionIcon>
+          )}
+      </Group>
+    </Group>
+  )
+}
+
 export const LivestreamCalendarRegion = ({
   role,
   weekDays,
   employeesData,
   livestreamData,
+  onAssignEmployee,
+  onUnassignEmployee,
   onOpenReport,
   isWeekFixed,
   currentUser,
@@ -565,494 +1223,6 @@ export const LivestreamCalendarRegion = ({
     window.addEventListener("mouseup", onMouseUpResize)
   }
 
-  const SnapshotActions = ({
-    dayData,
-    snapshot
-  }: {
-    dayData: LivestreamData
-    snapshot: LivestreamSnapshot
-  }) => {
-    const hasAltAssignee = !!snapshot.altAssignee
-    const altEmployee = employeesData.find(
-      (e) => e._id === snapshot.altAssignee
-    )
-    const displayName = hasAltAssignee
-      ? snapshot.altAssignee === "other"
-        ? snapshot.altOtherAssignee || "Khác"
-        : altEmployee?.name
-      : snapshot.assignee?.name
-
-    const isUserLivestreamAst = currentUser?.roles?.includes("livestream-ast")
-
-    const { data: requestData } = useQuery({
-      queryKey: ["getAltRequestBySnapshot", snapshot._id, dayData._id],
-      queryFn: () =>
-        onGetRequest({
-          livestreamId: dayData._id,
-          snapshotId: snapshot._id
-        }),
-      enabled: !!dayData?._id && !!snapshot?._id
-    })
-
-    const openCreateRequestModal = () => {
-      let reason = ""
-      modals.open({
-        title: "Yêu cầu thay đổi nhân sự",
-        children: (
-          <Stack gap="sm">
-            <Text size="sm" c="dimmed">
-              {snapshot.assignee?.name} ·{" "}
-              {format(new Date(dayData.date), "dd/MM/yyyy")}
-            </Text>
-            <TextInput
-              placeholder="Nhập lý do..."
-              onChange={(e) => (reason = e.currentTarget.value)}
-            />
-            <Group justify="flex-end">
-              <Button variant="outline" onClick={() => modals.closeAll()}>
-                Hủy
-              </Button>
-              <Button
-                onClick={async () => {
-                  if (!reason.trim()) {
-                    notifications.show({
-                      title: "Thiếu thông tin",
-                      message: "Vui lòng nhập lý do",
-                      color: "red"
-                    })
-                    return
-                  }
-                  try {
-                    await onCreateRequest({
-                      livestreamId: dayData._id,
-                      snapshotId: snapshot._id,
-                      altNote: reason.trim()
-                    })
-                    notifications.show({
-                      title: "Tạo yêu cầu thành công",
-                      message: "Yêu cầu thay đổi đã được gửi",
-                      color: "green"
-                    })
-                    queryClient.invalidateQueries({
-                      queryKey: [
-                        "getAltRequestBySnapshot",
-                        snapshot._id,
-                        dayData._id
-                      ]
-                    })
-                    modals.closeAll()
-                    onRefetch()
-                  } catch (error: unknown) {
-                    notifications.show({
-                      title: "Tạo yêu cầu thất bại",
-                      message: getErrorMessage(error) || "Có lỗi xảy ra",
-                      color: "red"
-                    })
-                  }
-                }}
-              >
-                Gửi
-              </Button>
-            </Group>
-          </Stack>
-        )
-      })
-    }
-
-    const openRequestInfoModal = (req: GetAltRequestBySnapshotResponse) => {
-      let selectedAlt: string | null = null
-      modals.open({
-        title: "Yêu cầu thay đổi nhân sự",
-        children: (
-          <Stack gap="sm">
-            <Group gap={8}>
-              <ActionIcon
-                variant="light"
-                color={
-                  req.status === "pending"
-                    ? "yellow"
-                    : req.status === "accepted"
-                      ? "green"
-                      : "red"
-                }
-              >
-                {req.status === "pending" ? (
-                  <IconAlertCircle size={16} />
-                ) : req.status === "accepted" ? (
-                  <IconCircleDashedCheck size={16} />
-                ) : (
-                  <IconCircleDashedX size={16} />
-                )}
-              </ActionIcon>
-              <Text size="sm" fw={600}>
-                {req.status === "pending"
-                  ? "Đang chờ duyệt"
-                  : req.status === "accepted"
-                    ? "Đã chấp nhận"
-                    : "Đã từ chối"}
-              </Text>
-            </Group>
-
-            <Text size="xs">
-              <strong>Người tạo:</strong> {req.createdBy?.name}
-            </Text>
-            <Text size="xs">
-              <strong>Lý do:</strong> {req.altNote}
-            </Text>
-
-            {req.status === "pending" && isAdminOrLeader && (
-              <>
-                <Select
-                  placeholder="Chọn người thay thế"
-                  value={selectedAlt}
-                  onChange={(v) => (selectedAlt = v)}
-                  data={employeesData
-                    .map((e) => ({ label: e.name, value: e._id }))
-                    .filter((e) => e.value !== req.createdBy?._id)}
-                  searchable
-                  comboboxProps={{ withinPortal: false }}
-                />
-                <Group justify="apart">
-                  <Button
-                    size="xs"
-                    variant="light"
-                    color="red"
-                    onClick={async () => {
-                      try {
-                        await onUpdateRequestStatus(req._id, {
-                          status: "rejected"
-                        })
-                        notifications.show({
-                          title: "Đã từ chối",
-                          message: "Yêu cầu đã được từ chối",
-                          color: "orange"
-                        })
-                        queryClient.invalidateQueries({
-                          queryKey: [
-                            "getAltRequestBySnapshot",
-                            snapshot._id,
-                            dayData._id
-                          ]
-                        })
-                        modals.closeAll()
-                        onRefetch()
-                      } catch (error: unknown) {
-                        notifications.show({
-                          title: "Lỗi",
-                          message: getErrorMessage(error) || "Có lỗi xảy ra",
-                          color: "red"
-                        })
-                      }
-                    }}
-                  >
-                    Từ chối
-                  </Button>
-                  <Button
-                    size="xs"
-                    color="green"
-                    disabled={!selectedAlt}
-                    onClick={async () => {
-                      if (!selectedAlt) return
-                      try {
-                        await onUpdateRequestStatus(req._id, {
-                          status: "accepted",
-                          altAssignee: selectedAlt
-                        })
-                        notifications.show({
-                          title: "Đã chấp nhận",
-                          message: "Yêu cầu đã được chấp nhận",
-                          color: "green"
-                        })
-                        queryClient.invalidateQueries({
-                          queryKey: [
-                            "getAltRequestBySnapshot",
-                            snapshot._id,
-                            dayData._id
-                          ]
-                        })
-                        modals.closeAll()
-                        onRefetch()
-                      } catch (error: unknown) {
-                        notifications.show({
-                          title: "Lỗi",
-                          message: getErrorMessage(error) || "Có lỗi xảy ra",
-                          color: "red"
-                        })
-                      }
-                    }}
-                  >
-                    Chấp nhận
-                  </Button>
-                </Group>
-              </>
-            )}
-          </Stack>
-        )
-      })
-    }
-
-    return (
-      <Group gap={4} justify="space-between" wrap="nowrap">
-        <Text
-          size="xs"
-          fw={600}
-          c={hasAltAssignee ? "orange" : roleColor}
-          lineClamp={1}
-        >
-          {displayName || "Chưa phân"}
-        </Text>
-
-        <Group gap={4} wrap="nowrap">
-          {!hideEditButtons &&
-            isWeekFixed &&
-            snapshot.assignee &&
-            canEditSnapshot(snapshot) &&
-            !hasAltAssignee &&
-            !requestData?.data && (
-              <ActionIcon
-                size="sm"
-                variant="subtle"
-                color="yellow"
-                title="Tạo yêu cầu thay thế"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  openCreateRequestModal()
-                }}
-              >
-                <IconAlertCircle size={16} />
-              </ActionIcon>
-            )}
-
-          {!hideEditButtons && requestData?.data && (
-            <ActionIcon
-              size="sm"
-              variant="subtle"
-              color={
-                requestData.data.status === "pending"
-                  ? "yellow"
-                  : requestData.data.status === "accepted"
-                    ? "green"
-                    : "red"
-              }
-              title="Xem yêu cầu"
-              onClick={(e) => {
-                e.stopPropagation()
-                openRequestInfoModal(requestData.data)
-              }}
-            >
-              {requestData.data.status === "pending" ? (
-                <IconAlertCircle size={16} />
-              ) : requestData.data.status === "accepted" ? (
-                <IconCircleDashedCheck size={16} />
-              ) : (
-                <IconCircleDashedX size={16} />
-              )}
-            </ActionIcon>
-          )}
-
-          {!hideEditButtons && snapshot.assignee && (
-            <ActionIcon
-              size="sm"
-              variant="subtle"
-              color="gray"
-              title="Chỉnh giờ / xóa"
-              onClick={(e) => {
-                e.stopPropagation()
-                openEditSnapshotModal({ dayData, snapshot })
-              }}
-            >
-              <IconPencil size={16} />
-            </ActionIcon>
-          )}
-
-          {!hideEditButtons && isWeekFixed && isAdminOrLeader && dayData && (
-            <ActionIcon
-              size="sm"
-              variant="subtle"
-              color="indigo"
-              title="Chỉ định người thay thế"
-              onClick={async (e) => {
-                e.stopPropagation()
-                const currentAlt = snapshot.altAssignee || ""
-                const currentAltOther = snapshot.altOtherAssignee || ""
-                const currentNote = snapshot.altNote || ""
-                let selectedAlt = currentAlt || null
-                let altOtherName = currentAltOther
-                let altNote = currentNote
-
-                modals.open({
-                  title: "Chỉ định người thay thế",
-                  children: (
-                    <Stack gap="sm">
-                      <Select
-                        placeholder="Chọn người thay thế"
-                        value={selectedAlt}
-                        onChange={(v) => (selectedAlt = v)}
-                        data={employeesData
-                          .map((emp) => ({ label: emp.name, value: emp._id }))
-                          .filter((emp) => emp.value !== snapshot.assignee?._id)
-                          .concat({ label: "Khác", value: "other" })}
-                        searchable
-                        comboboxProps={{ withinPortal: false }}
-                      />
-                      {selectedAlt === "other" && (
-                        <TextInput
-                          placeholder="Nhập tên người thay thế"
-                          defaultValue={altOtherName}
-                          onChange={(e) =>
-                            (altOtherName = e.currentTarget.value)
-                          }
-                          size="sm"
-                        />
-                      )}
-                      <TextInput
-                        placeholder="Lý do (tùy chọn)"
-                        defaultValue={altNote}
-                        onChange={(e) => (altNote = e.currentTarget.value)}
-                        size="sm"
-                      />
-                      <Group justify="apart">
-                        <Button
-                          size="xs"
-                          onClick={async () => {
-                            if (!selectedAlt) return
-                            if (
-                              selectedAlt === "other" &&
-                              !altOtherName.trim()
-                            ) {
-                              notifications.show({
-                                title: "Thiếu thông tin",
-                                message: "Vui lòng nhập tên người thay thế",
-                                color: "red"
-                              })
-                              return
-                            }
-                            try {
-                              await onUpdateAlt(dayData._id, snapshot._id, {
-                                altAssignee: selectedAlt || undefined,
-                                altOtherAssignee:
-                                  selectedAlt === "other"
-                                    ? altOtherName.trim()
-                                    : undefined,
-                                altNote: altNote?.trim() || undefined
-                              })
-                              notifications.show({
-                                title: "Cập nhật thành công",
-                                message: "Đã cập nhật người thay thế",
-                                color: "green"
-                              })
-                              modals.closeAll()
-                              onRefetch()
-                            } catch (error: unknown) {
-                              notifications.show({
-                                title: "Cập nhật thất bại",
-                                message:
-                                  getErrorMessage(error) || "Có lỗi xảy ra",
-                                color: "red"
-                              })
-                            }
-                          }}
-                        >
-                          Lưu
-                        </Button>
-                        {!!snapshot.altAssignee && (
-                          <Button
-                            size="xs"
-                            variant="light"
-                            color="red"
-                            onClick={async () => {
-                              try {
-                                await onUpdateAlt(dayData._id, snapshot._id, {
-                                  altAssignee: undefined,
-                                  altOtherAssignee: undefined,
-                                  altNote: undefined
-                                })
-                                notifications.show({
-                                  title: "Xóa thành công",
-                                  message: "Đã xóa người thay thế",
-                                  color: "green"
-                                })
-                                modals.closeAll()
-                                onRefetch()
-                              } catch (error: unknown) {
-                                notifications.show({
-                                  title: "Xóa thất bại",
-                                  message:
-                                    getErrorMessage(error) || "Có lỗi xảy ra",
-                                  color: "red"
-                                })
-                              }
-                            }}
-                            leftSection={<IconTrash size={14} />}
-                          >
-                            Xóa
-                          </Button>
-                        )}
-                      </Group>
-                    </Stack>
-                  )
-                })
-              }}
-            >
-              <IconUserEdit size={16} />
-            </ActionIcon>
-          )}
-
-          {onOpenReport &&
-            dayData &&
-            isUserLivestreamAst &&
-            role === "host" &&
-            snapshot.assignee && (
-              <ActionIcon
-                size="sm"
-                variant="subtle"
-                color={
-                  snapshot.income !== undefined &&
-                  snapshot.clickRate !== undefined &&
-                  snapshot.avgViewingDuration !== undefined &&
-                  snapshot.comments !== undefined &&
-                  snapshot.ordersNote !== undefined
-                    ? "blue"
-                    : "gray"
-                }
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onOpenReport(dayData._id, snapshot)
-                }}
-              >
-                {snapshot.income !== undefined &&
-                snapshot.clickRate !== undefined &&
-                snapshot.avgViewingDuration !== undefined &&
-                snapshot.comments !== undefined &&
-                snapshot.ordersNote !== undefined ? (
-                  <IconEye size={16} />
-                ) : (
-                  <IconReport size={16} />
-                )}
-              </ActionIcon>
-            )}
-          {onOpenReport &&
-            dayData &&
-            isUserLivestreamAst &&
-            role === "assistant" &&
-            snapshot.assignee && (
-              <ActionIcon
-                size="sm"
-                variant="subtle"
-                color="blue"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onOpenReport(dayData._id, snapshot)
-                }}
-              >
-                <IconEye size={16} />
-              </ActionIcon>
-            )}
-        </Group>
-      </Group>
-    )
-  }
-
   const getDayData = (day: Date) =>
     livestreamData.find((ls) => {
       const d = new Date(ls.date)
@@ -1188,7 +1358,13 @@ export const LivestreamCalendarRegion = ({
 
             <Box
               ref={timelineScrollRef}
-              style={{ height: viewportHeightPx, overflowY: "auto" }}
+              style={{
+                height: viewportHeightPx,
+                overflowY: "auto",
+                scrollbarWidth: "none",
+                msOverflowStyle: "none"
+              }}
+              className="hide-scrollbar"
             >
               <Group wrap="nowrap" gap={0} align="stretch">
                 <Box
@@ -1413,6 +1589,24 @@ export const LivestreamCalendarRegion = ({
                                 <SnapshotActions
                                   dayData={dayData}
                                   snapshot={snapshot}
+                                  employeesData={employeesData}
+                                  currentUser={currentUser}
+                                  roleColor={roleColor}
+                                  role={role}
+                                  hideEditButtons={hideEditButtons}
+                                  isWeekFixed={isWeekFixed}
+                                  isAdminOrLeader={isAdminOrLeader}
+                                  canEditSnapshot={canEditSnapshot}
+                                  onGetRequest={onGetRequest}
+                                  onCreateRequest={onCreateRequest}
+                                  onUpdateRequestStatus={onUpdateRequestStatus}
+                                  onUpdateAlt={onUpdateAlt}
+                                  onUnassignEmployee={onUnassignEmployee}
+                                  onAssignEmployee={onAssignEmployee}
+                                  onRefetch={onRefetch}
+                                  onOpenReport={onOpenReport}
+                                  openEditSnapshotModal={openEditSnapshotModal}
+                                  queryClient={queryClient}
                                 />
                               )}
                             </Box>
