@@ -1,4 +1,13 @@
-import { ActionIcon, Badge, Box, Container, Group, Stack, Text, rem } from "@mantine/core"
+import {
+  ActionIcon,
+  Badge,
+  Box,
+  Container,
+  Group,
+  Stack,
+  Text,
+  rem
+} from "@mantine/core"
 import { modals } from "@mantine/modals"
 import { IconInfoCircle } from "@tabler/icons-react"
 import pkg from "../../../package.json"
@@ -124,7 +133,7 @@ export const LivestreamLayout = ({ children }: { children: ReactNode }) => {
               aria-label="Lưu ý sử dụng"
               onClick={() => {
                 modals.open({
-                  title: "Lưu ý sử dụng",
+                  title: <b>Lưu ý sử dụng phần lịch livestream</b>,
                   size: "lg",
                   children: (
                     <Stack gap="xs">
@@ -132,12 +141,19 @@ export const LivestreamLayout = ({ children }: { children: ReactNode }) => {
                         Một số thao tác nhanh trong lịch livestream:
                       </Text>
                       <Text size="sm">- Click khoảng trống: thêm snapshot</Text>
-                      <Text size="sm">- Kéo viền trên/dưới snapshot: chỉnh giờ</Text>
                       <Text size="sm">
-                        - Zoom dọc: Mac dùng Cmd + scroll, Windows dùng Ctrl + scroll
+                        - Kéo viền trên/dưới snapshot: chỉnh giờ
+                      </Text>
+                      <Text size="sm">
+                        - Zoom dọc: Mac dùng Cmd + scroll, Windows dùng Ctrl +
+                        scroll
+                      </Text>
+                      <Text size="sm">
+                        - Xem thông tin chi tiết bằng cách bấm vào lịch
                       </Text>
                       <Text size="sm" c="dimmed">
-                        Nếu gặp lỗi hiển thị hoặc thao tác không đúng, thử refresh trang.
+                        Nếu gặp lỗi hiển thị hoặc thao tác không đúng, thử
+                        refresh trang.
                       </Text>
                     </Stack>
                   )
