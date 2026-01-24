@@ -4,10 +4,13 @@ import {
   Textarea,
   NumberInput,
   Button,
-  Group
+  Group,
+  Text
 } from "@mantine/core"
 import { useForm } from "@mantine/form"
 import { modals } from "@mantine/modals"
+import { useQuery } from "@tanstack/react-query"
+import { useUsers } from "../../hooks/useUsers"
 
 type LivestreamSnapshot = {
   _id: string
@@ -20,6 +23,14 @@ type LivestreamSnapshot = {
     _id: string
     name: string
   }
+  altAssignee?:
+    | string
+    | {
+        _id: string
+        name: string
+      }
+  altOtherAssignee?: string
+  altNote?: string
   income?: number
   adsCost?: number
   clickRate?: number
@@ -70,7 +81,39 @@ export const openLivestreamReportModal = ({
     snapshot.comments !== undefined &&
     snapshot.ordersNote !== undefined
 
+  const altAssigneeId =
+    typeof snapshot.altAssignee === "string" && snapshot.altAssignee !== "other"
+      ? snapshot.altAssignee
+      : undefined
+
   const ReportForm = () => {
+    const { publicSearchUser } = useUsers()
+    const { data: altUserName } = useQuery({
+      queryKey: ["publicSearchUser", altAssigneeId],
+      queryFn: () =>
+        publicSearchUser({
+          page: 1,
+          limit: 100
+        }),
+      select: (res) => {
+        const items = res.data.data || []
+        console.log(items)
+        const exact = items.find((u) => u._id === altAssigneeId)
+        return exact?.name || items[0]?.name
+      },
+      enabled: !!altAssigneeId
+    })
+
+    const altAssigneeLabel = (() => {
+      const alt = snapshot.altAssignee
+      if (!alt) return undefined
+      if (typeof alt === "string") {
+        if (alt === "other") return "Khác"
+        return altUserName || alt
+      }
+      return alt.name
+    })()
+
     const form = useForm<LivestreamReportFormValues>({
       initialValues: {
         income: snapshot.income ?? 0,
@@ -118,11 +161,47 @@ export const openLivestreamReportModal = ({
 
             {snapshot.assignee && (
               <TextInput
-                label="Người phụ trách"
+                label="Host"
                 value={snapshot.assignee.name}
                 readOnly
                 disabled
               />
+            )}
+
+            {(snapshot.altAssignee ||
+              snapshot.altNote ||
+              snapshot.altOtherAssignee) && (
+              <Stack gap="xs" mt={4}>
+                <Text size="xs" fw={600} c="dimmed">
+                  Thông tin thay thế
+                </Text>
+                {snapshot.altAssignee && (
+                  <TextInput
+                    label="Host thay thế"
+                    value={altAssigneeLabel || ""}
+                    readOnly
+                    disabled
+                  />
+                )}
+                {!!snapshot.altOtherAssignee &&
+                  snapshot.altAssignee === "other" && (
+                    <TextInput
+                      label="Host khác"
+                      value={snapshot.altOtherAssignee}
+                      readOnly
+                      disabled
+                    />
+                  )}
+                {!!snapshot.altNote && (
+                  <Textarea
+                    label="Ghi chú"
+                    value={snapshot.altNote}
+                    readOnly
+                    disabled
+                    rows={2}
+                  />
+                )}
+              </Stack>
             )}
           </Stack>
 
