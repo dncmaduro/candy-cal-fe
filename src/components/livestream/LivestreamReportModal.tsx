@@ -66,12 +66,18 @@ export const openLivestreamReportModal = ({
   snapshot,
   onSubmit,
   isSubmitting,
-  forceEdit = false
+  forceEdit = false,
+  canDelete = false,
+  onDelete,
+  isDeleting
 }: {
   snapshot: LivestreamSnapshot
   onSubmit: (data: LivestreamReportFormValues) => void
   isSubmitting?: boolean
   forceEdit?: boolean
+  canDelete?: boolean
+  onDelete?: () => void
+  isDeleting?: boolean
 }) => {
   const hasData =
     !forceEdit &&
@@ -161,7 +167,7 @@ export const openLivestreamReportModal = ({
 
             {snapshot.assignee && (
               <TextInput
-                label="Host"
+                label="Nhân viên"
                 value={snapshot.assignee.name}
                 readOnly
                 disabled
@@ -177,7 +183,7 @@ export const openLivestreamReportModal = ({
                 </Text>
                 {snapshot.altAssignee && (
                   <TextInput
-                    label="Host thay thế"
+                    label="Nhân viên thay thế"
                     value={altAssigneeLabel || ""}
                     readOnly
                     disabled
@@ -186,7 +192,7 @@ export const openLivestreamReportModal = ({
                 {!!snapshot.altOtherAssignee &&
                   snapshot.altAssignee === "other" && (
                     <TextInput
-                      label="Host khác"
+                      label="Nhân viên khác"
                       value={snapshot.altOtherAssignee}
                       readOnly
                       disabled
@@ -293,7 +299,33 @@ export const openLivestreamReportModal = ({
           />
 
           {!hasData ? (
-            <Group justify="flex-end" mt="md">
+            <Group justify="space-between" mt="md">
+              {canDelete && onDelete ? (
+                <Button
+                  color="red"
+                  variant="light"
+                  loading={!!isDeleting}
+                  disabled={!!isSubmitting || !!isDeleting}
+                  onClick={() => {
+                    modals.openConfirmModal({
+                      title: <b>Xóa snapshot</b>,
+                      children: (
+                        <Text size="sm">
+                          Bạn có chắc muốn xóa snapshot này không?
+                        </Text>
+                      ),
+                      centered: true,
+                      labels: { confirm: "Xóa", cancel: "Hủy" },
+                      confirmProps: { color: "red" },
+                      onConfirm: () => onDelete()
+                    })
+                  }}
+                >
+                  Xóa
+                </Button>
+              ) : (
+                <div />
+              )}
               <Button
                 variant="subtle"
                 onClick={() => modals.closeAll()}
@@ -306,7 +338,32 @@ export const openLivestreamReportModal = ({
               </Button>
             </Group>
           ) : (
-            <Group justify="flex-end" mt="md">
+            <Group justify="space-between" mt="md">
+              {canDelete && onDelete ? (
+                <Button
+                  color="red"
+                  variant="light"
+                  loading={!!isDeleting}
+                  onClick={() => {
+                    modals.openConfirmModal({
+                      title: <b>Xóa snapshot</b>,
+                      children: (
+                        <Text size="sm">
+                          Bạn có chắc muốn xóa snapshot này không?
+                        </Text>
+                      ),
+                      centered: true,
+                      labels: { confirm: "Xóa", cancel: "Hủy" },
+                      confirmProps: { color: "red" },
+                      onConfirm: () => onDelete()
+                    })
+                  }}
+                >
+                  Xóa
+                </Button>
+              ) : (
+                <div />
+              )}
               <Button
                 variant="light"
                 onClick={() => {
@@ -315,7 +372,10 @@ export const openLivestreamReportModal = ({
                     snapshot,
                     onSubmit,
                     isSubmitting,
-                    forceEdit: true
+                    forceEdit: true,
+                    canDelete,
+                    onDelete,
+                    isDeleting
                   })
                 }}
               >

@@ -130,7 +130,7 @@ const AltAssigneeInfo = ({
     <Popover width={300} position="bottom" withArrow>
       <Popover.Target>
         <div onMouseEnter={fetchAltRequestData} style={{ cursor: "pointer" }}>
-          <Text size="sm" fw={600} c="orange">
+          <Text size="sm" fw={600} c="white">
             {altEmployeeName}
           </Text>
         </div>
@@ -164,7 +164,6 @@ const ScheduleCell = ({
   hasAltAssignee,
   altEmployee,
   displayName,
-  roleColor,
   role,
   currentUser,
   isLivestreamFixed,
@@ -185,7 +184,6 @@ const ScheduleCell = ({
   hasAltAssignee: boolean
   altEmployee: LivestreamEmployee | null | undefined
   displayName: string | undefined
-  roleColor: string
   role: "host" | "assistant"
   currentUser: GetMeResponse | undefined
   isLivestreamFixed: boolean
@@ -245,11 +243,11 @@ const ScheduleCell = ({
         padding: "8px",
         verticalAlign: "middle",
         backgroundColor: hasAltAssignee
-          ? "rgba(255, 193, 7, 0.15)"
+          ? "var(--mantine-color-orange-5)"
           : snapshot?.assignee
             ? role === "host"
-              ? "rgba(34, 139, 230, 0.08)"
-              : "rgba(64, 192, 87, 0.08)"
+              ? "var(--mantine-color-indigo-5)"
+              : "var(--mantine-color-green-5)"
             : "#fff"
       }}
       onMouseEnter={() => setIsHovering(true)}
@@ -291,7 +289,7 @@ const ScheduleCell = ({
             </Group>
           ) : (
             <Group align="center" gap={2}>
-              <Text size="sm" fw={600} c={roleColor}>
+              <Text size="sm" fw={600} c="white">
                 {displayName}
               </Text>
 
@@ -363,6 +361,12 @@ const ScheduleCell = ({
                         ? "blue"
                         : "gray"
                     }
+                    styles={{
+                      root: {
+                        color: "white",
+                        "&:hover": { backgroundColor: "rgba(255,255,255,0.14)" }
+                      }
+                    }}
                     onClick={() => onOpenReport(dayData._id, snapshot)}
                   >
                     {snapshot.income !== undefined &&
@@ -385,6 +389,12 @@ const ScheduleCell = ({
                     size="sm"
                     variant="subtle"
                     color="blue"
+                    styles={{
+                      root: {
+                        color: "white",
+                        "&:hover": { backgroundColor: "rgba(255,255,255,0.14)" }
+                      }
+                    }}
                     onClick={() => onOpenReport(dayData._id, snapshot)}
                   >
                     <IconEye size={16} />
@@ -514,6 +524,12 @@ const UpdateAltPopover = ({
           size="sm"
           variant="subtle"
           color="indigo"
+          styles={{
+            root: {
+              color: "white",
+              "&:hover": { backgroundColor: "rgba(255,255,255,0.14)" }
+            }
+          }}
           onClick={() => setOpened(true)}
         >
           <IconUserEdit size={16} />
@@ -727,12 +743,21 @@ const AltRequestInfo = ({
           size="sm"
           variant="subtle"
           color={iconProps.color}
-          onClick={() => setOpened(true)}
+          styles={{
+            root: {
+              color: "white",
+              "&:hover": { backgroundColor: "rgba(255,255,255,0.14)" }
+            }
+          }}
+          onClick={(e) => {
+            e.stopPropagation()
+            setOpened(true)
+          }}
         >
           <IconComponent size={16} />
         </ActionIcon>
       </Popover.Target>
-      <Popover.Dropdown>
+      <Popover.Dropdown onClick={(e) => e.stopPropagation()}>
         <Stack gap="sm">
           <Text size="sm" fw={600}>
             Yêu cầu thay đổi
@@ -912,12 +937,21 @@ const CreateRequestPopover = ({
           size="sm"
           variant="subtle"
           color="yellow"
-          onClick={() => setOpened(true)}
+          styles={{
+            root: {
+              color: "white",
+              "&:hover": { backgroundColor: "rgba(255,255,255,0.14)" }
+            }
+          }}
+          onClick={(e) => {
+            e.stopPropagation()
+            setOpened(true)
+          }}
         >
           <IconAlertCircle size={16} />
         </ActionIcon>
       </Popover.Target>
-      <Popover.Dropdown>
+      <Popover.Dropdown onClick={(e) => e.stopPropagation()}>
         <Stack gap="sm">
           <Text size="sm" fw={600}>
             Yêu cầu thay đổi nhân sự
@@ -1183,7 +1217,6 @@ export const LivestreamCalendarTable = ({
                         hasAltAssignee={hasAltAssignee}
                         altEmployee={altEmployee}
                         displayName={displayName}
-                        roleColor={roleColor}
                         role={role}
                         currentUser={currentUser}
                         isLivestreamFixed={isLivestreamFixed}
