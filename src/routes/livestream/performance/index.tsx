@@ -44,7 +44,8 @@ function RouteComponent() {
     useLivestreamPerformance()
 
   const { searchLivestreamSalary } = useLivestreamSalary()
-  const { getLivestreamsByDateRange, reportLivestream } = useLivestreamCore()
+  const { getLivestreamsByDateRange, reportLivestream, deleteSnapshot } =
+    useLivestreamCore()
   const { searchLivestreamChannels } = useLivestreamChannels()
   const { getMe, publicSearchUser } = useUsers()
   const queryClient = useQueryClient()
@@ -152,15 +153,46 @@ function RouteComponent() {
       }
     })
 
+  const { mutate: deleteSnapshotMutation, isPending: isDeletingSnapshot } =
+    useMutation({
+      mutationFn: async (payload: { livestreamId: string; snapshotId: string }) =>
+        deleteSnapshot(payload),
+      onSuccess: () => {
+        notifications.show({
+          title: "Đã xóa snapshot",
+          message: "Snapshot đã được xóa",
+          color: "green"
+        })
+        queryClient.invalidateQueries({
+          queryKey: ["getLivestreamsByDateRange"]
+        })
+        modals.closeAll()
+      },
+      onError: (error: any) => {
+        notifications.show({
+          title: "Xóa thất bại",
+          message: error?.response?.data?.message || "Có lỗi khi xóa snapshot",
+          color: "red"
+        })
+      }
+    })
+
   const handleCalculateDailySalary = (date: Date) => {
     calculateDailyFromCalendar({ date })
   }
 
   // Handle opening report modal
   const handleOpenReport = (livestreamId: string, snapshot: any) => {
+    const isAdminOrLeader =
+      !!me?.roles?.includes("admin") || !!me?.roles?.includes("livestream-leader")
+
     openLivestreamReportModal({
       snapshot,
       isSubmitting: isReporting,
+      canDelete: isAdminOrLeader,
+      isDeleting: isDeletingSnapshot,
+      onDelete: () =>
+        deleteSnapshotMutation({ livestreamId, snapshotId: snapshot._id }),
       onSubmit: (reportData) => {
         reportLivestreamMutation({
           livestreamId,
