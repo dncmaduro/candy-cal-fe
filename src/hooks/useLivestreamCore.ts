@@ -5,6 +5,8 @@ import {
   AddExternalSnapshotRequest,
   AddExternalSnapshotResponse,
   AddLivestreamSnapshotRequest,
+  AssignOtherSnapshotRequest,
+  AssignOtherSnapshotResponse,
   CreateLivestreamRangeRequest,
   DeleteLivestreamSnapshotRequest,
   FixLivestreamRequest,
@@ -162,6 +164,19 @@ export const useLivestreamCore = () => {
     })
   }
 
+  const assignOtherSnapshot = async (
+    livestreamId: string,
+    snapshotId: string,
+    req: AssignOtherSnapshotRequest
+  ) => {
+    return callApi<AssignOtherSnapshotRequest, AssignOtherSnapshotResponse>({
+      method: "PATCH",
+      path: `/v1/livestreamcore/${livestreamId}/snapshots/${snapshotId}/assign-other`,
+      data: req,
+      token: accessToken
+    })
+  }
+
   return {
     createLivestreamRange,
     addLivestreamSnapshot,
@@ -174,6 +189,7 @@ export const useLivestreamCore = () => {
     fixLivestream,
     deleteSnapshot,
     updateTimeDirect,
-    addExternalSnapshot
+    addExternalSnapshot,
+    assignOtherSnapshot
   }
 }

@@ -2417,6 +2417,60 @@ export interface UpdateSnapshotAltResponse {
 }
 
 /** @interface */
+export interface AssignOtherSnapshotRequest {
+  altOtherAssignee: string
+  altNote: string
+}
+
+/** @interface */
+export interface AssignOtherSnapshotResponse {
+  _id: string
+  date: string
+  snapshots: {
+    _id: string
+    period: {
+      _id?: string
+      startTime: { hour: number; minute: number }
+      endTime: { hour: number; minute: number }
+      channel: {
+        _id: string
+        name: string
+      }
+      for: "host" | "assistant"
+    }
+    assignee?: {
+      _id: string
+      username: string
+      name: string
+    }
+    income?: number
+    adsCost?: number
+    clickRate?: number
+    avgViewingDuration?: number
+    comments?: number
+    ordersNote?: string
+    rating?: string
+    altAssignee?: string
+    altOtherAssignee?: string
+    altNote?: string
+    altRequest?: string
+    snapshotKpi?: number
+    salary?: {
+      salaryPerHour: number
+      bonusPercentage: number
+      total?: number
+    }
+    realIncome?: number
+    orders?: number
+  }[]
+  totalOrders: number
+  totalIncome: number
+  ads: number
+  fixed: boolean
+  dateKpi?: number
+}
+
+/** @interface */
 export interface FixLivestreamRequest {
   startDate: Date
   endDate: Date
