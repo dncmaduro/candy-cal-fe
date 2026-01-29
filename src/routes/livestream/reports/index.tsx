@@ -447,11 +447,17 @@ function RouteComponent() {
         <Paper p="md" radius="md" withBorder>
           <Stack gap={4}>
             <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
-              Tổng doanh thu
+              Tổng doanh thu / KPI
             </Text>
             <Text size="xl" fw={700} c="blue.6">
               <NumberFormatter
                 value={Math.round(metricsData.totalIncome)}
+                thousandSeparator
+                suffix=" VNĐ"
+              />
+              <span> / </span>
+              <NumberFormatter
+                value={Math.round(metricsData.kpi)}
                 thousandSeparator
                 suffix=" VNĐ"
               />
