@@ -155,8 +155,10 @@ function RouteComponent() {
 
   const { mutate: deleteSnapshotMutation, isPending: isDeletingSnapshot } =
     useMutation({
-      mutationFn: async (payload: { livestreamId: string; snapshotId: string }) =>
-        deleteSnapshot(payload),
+      mutationFn: async (payload: {
+        livestreamId: string
+        snapshotId: string
+      }) => deleteSnapshot(payload),
       onSuccess: () => {
         notifications.show({
           title: "Đã xóa snapshot",
@@ -184,7 +186,8 @@ function RouteComponent() {
   // Handle opening report modal
   const handleOpenReport = (livestreamId: string, snapshot: any) => {
     const isAdminOrLeader =
-      !!me?.roles?.includes("admin") || !!me?.roles?.includes("livestream-leader")
+      !!me?.roles?.includes("admin") ||
+      !!me?.roles?.includes("livestream-leader")
 
     openLivestreamReportModal({
       snapshot,
@@ -340,6 +343,7 @@ function RouteComponent() {
         salaryPerHour: number
         bonusPercentage: number
         income: number
+        realIncome: number
         snapshotsCount: number
       }>
     >()
@@ -386,6 +390,10 @@ function RouteComponent() {
           (sum, s) => sum + (s.income || 0),
           0
         )
+        const dailyRealIncome = snapshots.reduce(
+          (sum, s) => sum + (s.realIncome || 0),
+          0
+        )
         const avgSalaryPerHour =
           snapshots.reduce(
             (sum, s) => sum + (s.salary?.salaryPerHour || 0),
@@ -407,6 +415,7 @@ function RouteComponent() {
           salaryPerHour: avgSalaryPerHour,
           bonusPercentage: avgBonusPercentage,
           income: dailyIncome,
+          realIncome: dailyRealIncome,
           snapshotsCount: snapshots.length
         })
       })

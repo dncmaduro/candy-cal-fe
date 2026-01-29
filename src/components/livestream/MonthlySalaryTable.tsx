@@ -24,6 +24,7 @@ interface DailySalary {
   salaryPerHour: number
   bonusPercentage: number
   income: number
+  realIncome: number
   snapshotsCount: number
 }
 
@@ -222,6 +223,17 @@ export const MonthlySalaryTable = ({
                                                 </Text>
                                                 <Text size="xs" fw={600}>
                                                   {day.income.toLocaleString(
+                                                    "vi-VN"
+                                                  )}{" "}
+                                                  VNĐ
+                                                </Text>
+                                              </Group>
+                                              <Group justify="space-between">
+                                                <Text size="xs" c="dimmed">
+                                                  Doanh thu thực
+                                                </Text>
+                                                <Text size="xs" fw={600}>
+                                                  {day.realIncome.toLocaleString(
                                                     "vi-VN"
                                                   )}{" "}
                                                   VNĐ
