@@ -2269,6 +2269,7 @@ export interface GetAggregatedMetricsResponse {
   totalAdsCost: number
   totalComments: number
   totalOrders: number
+  kpi: number
 }
 
 /** @interface */
