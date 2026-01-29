@@ -1749,6 +1749,12 @@ export interface GetAdsCostSplitByMonthRequest {
 export interface GetAdsCostSplitByMonthResponse {
   liveAdsCost: number
   shopAdsCost: number
+  kpi: {
+    liveKpi: number
+    shopKpi: number
+    liveKpiPercentage: number
+    shopKpiPercentage: number
+  }
   percentages: { liveAdsToLiveIncome: number; shopAdsToShopIncome: number }
   totalIncome: { live: number; shop: number }
 }
