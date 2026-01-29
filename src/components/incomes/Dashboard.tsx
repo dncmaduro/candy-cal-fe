@@ -280,6 +280,19 @@ export const Dashboard = () => {
   const monthlyLiveAdsCost = adsCostSelected?.liveAdsCost
   const monthlyShopAdsCost = adsCostSelected?.shopAdsCost
 
+  const liveKpi = adsCostSplitMonthData?.kpi?.liveKpi
+  const shopKpi = adsCostSplitMonthData?.kpi?.shopKpi
+
+  const liveKpiAchievedPercent =
+    typeof liveKpi === "number" && liveKpi > 0 && typeof monthlyLiveIncome === "number"
+      ? (monthlyLiveIncome / liveKpi) * 100
+      : undefined
+
+  const shopKpiAchievedPercent =
+    typeof shopKpi === "number" && shopKpi > 0 && typeof monthlyShopIncome === "number"
+      ? (monthlyShopIncome / shopKpi) * 100
+      : undefined
+
   const fmtVnd = (n?: number) =>
     typeof n === "number" ? n.toLocaleString() : "..."
 
@@ -441,7 +454,7 @@ export const Dashboard = () => {
                 color="gray"
               />
               <KPIBox
-                label="% đạt KPI"
+                label="% KPI Kế hoạch / thời gian"
                 value={percentageDisplay}
                 color={percentageColor}
               />
@@ -481,6 +494,7 @@ export const Dashboard = () => {
                   <Table.Th ta={"center"}>Chi phí Ads</Table.Th>
                   <Table.Th ta={"center"}>Doanh thu (sau Ads)</Table.Th>
                   <Table.Th ta={"center"}>Tỉ lệ Ads/Doanh thu</Table.Th>
+                  <Table.Th ta={"center"}>% KPI kế hoạch / thời gian</Table.Th>
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
@@ -529,6 +543,13 @@ export const Dashboard = () => {
                       )}
                     </Text>
                   </Table.Td>
+                  <Table.Td>
+                    <Text ta="center">
+                      {liveKpiAchievedPercent === undefined
+                        ? "..."
+                        : `${fmtPercent(liveKpiAchievedPercent)} / ${fmtPercent(currentExpectedKPI)}`}
+                    </Text>
+                  </Table.Td>
                 </Table.Tr>
 
                 <Table.Tr>
@@ -574,6 +595,13 @@ export const Dashboard = () => {
                           monthlyShopIncome || 0
                         )
                       )}
+                    </Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Text ta="center">
+                      {shopKpiAchievedPercent === undefined
+                        ? "..."
+                        : `${fmtPercent(shopKpiAchievedPercent)} / ${fmtPercent(currentExpectedKPI)}`}
                     </Text>
                   </Table.Td>
                 </Table.Tr>
