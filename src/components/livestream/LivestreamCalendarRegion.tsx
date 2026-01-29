@@ -37,6 +37,7 @@ import type {
   GetAltRequestBySnapshotResponse,
   GetMeResponse,
   AddExternalSnapshotRequest,
+  AssignOtherSnapshotRequest,
   UpdateAltRequestStatusRequest,
   UpdateAltRequestStatusResponse,
   UpdateSnapshotAltRequest,
@@ -817,12 +818,14 @@ const SnapshotActions = ({
   onUpdateAlt,
   onUnassignEmployee,
   onAssignEmployee,
+  onAssignOther,
   onRefetch,
   onOpenReport,
   onDeleteSnapshot,
   onUpdateTime,
   loadingDeleteSnapshot,
-  loadingUpdateTime
+  loadingUpdateTime,
+  loadingAssignOther
 }: {
   dayData: LivestreamData
   snapshot: LivestreamSnapshot
@@ -859,6 +862,11 @@ const SnapshotActions = ({
     userId: string
     role: "host" | "assistant"
   }) => void
+  onAssignOther: (
+    livestreamId: string,
+    snapshotId: string,
+    req: AssignOtherSnapshotRequest
+  ) => void
   onRefetch: () => void
   onOpenReport?: (livestreamId: string, snapshot: LivestreamSnapshot) => void
   onDeleteSnapshot: (livestreamId: string, snapshotId: string) => void
@@ -869,6 +877,7 @@ const SnapshotActions = ({
   ) => void
   loadingDeleteSnapshot: boolean
   loadingUpdateTime: boolean
+  loadingAssignOther: boolean
 }) => {
   const hasAltAssignee = !!snapshot.altAssignee
   const altEmployee = employeesData.find((e) => e._id === snapshot.altAssignee)
@@ -893,10 +902,14 @@ const SnapshotActions = ({
   const [selectedAssignee, setSelectedAssignee] = useState<string | null>(
     snapshot.assignee?._id || null
   )
+  const [otherAssigneeName, setOtherAssigneeName] = useState("")
+  const [otherAssigneeNote, setOtherAssigneeNote] = useState("")
 
   useEffect(() => {
     if (!assignOpen) return
     setSelectedAssignee(snapshot.assignee?._id || null)
+    setOtherAssigneeName("")
+    setOtherAssigneeNote("")
   }, [assignOpen, snapshot.assignee?._id])
 
   return (
@@ -906,7 +919,10 @@ const SnapshotActions = ({
       </Text>
 
       <Group gap={4} wrap="nowrap">
-        {!hideEditButtons && !dayData.fixed && isAdminOrLeader && (
+        {!hideEditButtons &&
+          isAdminOrLeader &&
+          !snapshot.assignee &&
+          !snapshot.altAssignee && (
           <Popover
             opened={assignOpen}
             onChange={setAssignOpen}
@@ -957,16 +973,44 @@ const SnapshotActions = ({
                   placeholder="Chọn nhân sự"
                   value={selectedAssignee}
                   onChange={setSelectedAssignee}
-                  data={employeesData.map((e) => ({
-                    label: e.name,
-                    value: e._id
-                  }))}
+                  data={employeesData
+                    .map((e) => ({
+                      label: e.name,
+                      value: e._id
+                    }))
+                    .concat(
+                      snapshot.assignee
+                        ? []
+                        : [{ label: "Khác", value: "other" }]
+                    )}
                   searchable
                   comboboxProps={{
                     withinPortal: false,
                     position: "bottom-start"
                   }}
                 />
+                {selectedAssignee === "other" && (
+                  <Stack gap="xs">
+                    <TextInput
+                      label="Tên người khác"
+                      placeholder="Nhập tên..."
+                      value={otherAssigneeName}
+                      onChange={(e) =>
+                        setOtherAssigneeName(e.currentTarget.value)
+                      }
+                      size="sm"
+                    />
+                    <TextInput
+                      label="Ghi chú"
+                      placeholder="Nhập ghi chú..."
+                      value={otherAssigneeNote}
+                      onChange={(e) =>
+                        setOtherAssigneeNote(e.currentTarget.value)
+                      }
+                      size="sm"
+                    />
+                  </Stack>
+                )}
                 <Group justify="space-between">
                   <Button
                     variant="outline"
@@ -995,9 +1039,24 @@ const SnapshotActions = ({
                     )}
                     <Button
                       size="xs"
-                      disabled={!selectedAssignee}
+                      loading={
+                        selectedAssignee === "other" ? loadingAssignOther : false
+                      }
+                      disabled={
+                        !selectedAssignee ||
+                        (selectedAssignee === "other" &&
+                          !otherAssigneeName.trim())
+                      }
                       onClick={() => {
                         if (!selectedAssignee) return
+                        if (selectedAssignee === "other") {
+                          onAssignOther(dayData._id, snapshot._id, {
+                            altOtherAssignee: otherAssigneeName.trim(),
+                            altNote: otherAssigneeNote.trim()
+                          })
+                          setAssignOpen(false)
+                          return
+                        }
                         onAssignEmployee({
                           livestreamId: dayData._id,
                           snapshotId: snapshot._id,
@@ -1056,7 +1115,7 @@ const SnapshotActions = ({
         {!hideEditButtons &&
           isWeekFixed &&
           isAdminOrLeader &&
-          !!snapshot.assignee && (
+          (!!snapshot.assignee || !!snapshot.altAssignee) && (
             <UpdateAltPopover
               livestreamId={dayData._id}
               snapshot={snapshot}
@@ -1154,7 +1213,12 @@ export const LivestreamCalendarRegion = ({
   isCalculatingIncome = false,
   hideEditButtons = false
 }: LivestreamCalendarRegionProps) => {
-  const { addExternalSnapshot, deleteSnapshot, updateTimeDirect } =
+  const {
+    addExternalSnapshot,
+    deleteSnapshot,
+    updateTimeDirect,
+    assignOtherSnapshot
+  } =
     useLivestreamCore()
 
   const roleLabel = role === "host" ? "Host" : "Trợ live"
@@ -1318,6 +1382,35 @@ export const LivestreamCalendarRegion = ({
       })
     }
   })
+
+  const { mutate: mutateAssignOtherSnapshot, isPending: assigningOtherSnapshot } =
+    useMutation({
+      mutationFn: (payload: {
+        livestreamId: string
+        snapshotId: string
+        req: AssignOtherSnapshotRequest
+      }) =>
+        assignOtherSnapshot(
+          payload.livestreamId,
+          payload.snapshotId,
+          payload.req
+        ),
+      onSuccess: () => {
+        notifications.show({
+          title: "Phân công thành công",
+          message: "Đã phân công người khác cho snapshot",
+          color: "green"
+        })
+        onRefetch()
+      },
+      onError: (error: unknown) => {
+        notifications.show({
+          title: "Phân công thất bại",
+          message: getErrorMessage(error) || "Có lỗi xảy ra",
+          color: "red"
+        })
+      }
+    })
 
   const defaultNewSnapshotMinutes = 60
 
@@ -1832,10 +1925,18 @@ export const LivestreamCalendarRegion = ({
                                     onUpdateAlt={onUpdateAlt}
                                     onUnassignEmployee={onUnassignEmployee}
                                     onAssignEmployee={onAssignEmployee}
+                                    onAssignOther={(livestreamId, snapshotId, req) =>
+                                      mutateAssignOtherSnapshot({
+                                        livestreamId,
+                                        snapshotId,
+                                        req
+                                      })
+                                    }
                                     onRefetch={onRefetch}
                                     onOpenReport={onOpenReport}
                                     loadingDeleteSnapshot={deletingSnapshot}
                                     loadingUpdateTime={updatingTime}
+                                    loadingAssignOther={assigningOtherSnapshot}
                                     onDeleteSnapshot={(livestreamId, snapshotId) =>
                                       mutateDeleteSnapshot({ livestreamId, snapshotId })
                                     }
