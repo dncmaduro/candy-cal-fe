@@ -1,0 +1,173 @@
+# Changelog
+
+> Internal Use Only — ghi nhận lịch sử thay đổi nội bộ.
+
+## 4.2.1
+
+- Chức năng xuất file lương xlsx
+- Sửa lỗi cho giao diện mới của lịch livestream
+- Bổ sung 1 số trường thông tin cho dashboard của TiktokShop
+
+## 4.2.0
+
+- Sử dụng giao diện mới cho phần lịch Livestream
+- Sửa lỗi tính doanh thu thực cho livestream
+- Sửa lỗi Select màn hình cập nhật cơ chế cho nhân viên livestream
+
+## 4.1.2
+
+- Sửa text hiển thị ở phiếu báo giá
+- Hiển thị lần cuối mua hàng của từng khách
+- Hiển thị phần KPI theo tháng cho Sales
+- Hiển thị phần KPI còn thiếu cho TTS
+
+## 4.1.1
+
+- Thêm tốc độ KPI cho Dashboard của TTS
+- Sửa lỗi trong phần báo cáo của Livestream
+
+## 4.1.0
+
+- Thêm chỉ số AOV và CPO cho báo cáo livestream
+- Officially release module livestream
+
+## 4.0.6
+
+- Cập nhật thêm tổng số thùng cho sales
+- Bổ sung cấu trúc lương cho host livestream
+- PWA cho iOS
+
+## 4.0.5
+
+- Cập nhật, đồng bộ toàn bộ giao diện cho phần kho vận
+- Beta chức năng tính doanh thu thực của các ca livestream bằng file doanh thu và tách nguồn
+- Sửa lỗi không xuất được file excel của sales
+
+## 4.0.4
+
+- Beta chức năng tính toán lương cho các host livestream và setup hiệu suất các phiên live
+
+## 4.0.3
+
+- Cập nhật công thức tính doanh thu mới cho sales
+- Fix các lỗi liên quan đến timezone ảnh hưởng đến phần tính doanh thu của Tiktok Shop
+- Beta các chức năng liên quan đến lên lịch livestream, tổng kết chỉ số
+
+## 4.0.2
+
+- Cập nhật logic cho đơn hàng, báo giá
+- Cho sao chép ảnh tạo lệnh xuất hàng gửi kho
+- Cập nhật UI tạo đơn hàng
+- Cập nhật logic và UI báo cáo hàng ngày
+- Fix các lỗi UI trên các bảng
+
+## 4.0.1
+
+- Cập nhật logic phí vận chuyển, chiết khấu 2 level
+- Cho phép chọn ngày khi tạo báo cáo
+
+## 4.0.0
+
+- **Module Sales (Telesales)**: Hệ thống quản lý bán hàng telesales hoàn chỉnh với 8 màn hình chính:
+  - **Funnel khách hàng**:
+    - Quản lý danh sách khách hàng theo 4 giai đoạn (Lead → Đã liên hệ → Khách hàng → Đã đóng)
+    - Upload danh sách khách hàng từ Excel
+    - Phân loại theo nguồn (ads/seeding/referral) và hạng khách hàng (vàng/bạc/đồng)
+    - Cập nhật thông tin, chi phí marketing, chuyển đổi giai đoạn
+    - Lịch sử hoạt động và tạo công việc cho từng khách
+  - **Công việc**: Quản lý task của nhân viên sales với lọc theo loại (call/message/other), trạng thái, người được giao
+  - **Đơn hàng**:
+    - Quản lý đơn hàng sales với phân quyền (sales-emp chỉ thấy đơn của mình)
+    - Tạo đơn từ funnel, upload hàng loạt từ Excel
+    - Lọc theo khách hàng, loại vận chuyển, trạng thái, người phụ trách, ngày
+    - Xuất Excel đơn hàng
+    - Hỗ trợ đơn returning (khách quay lại mua)
+  - **Kênh bán hàng**: Quản lý các kênh (Facebook, Zalo, hotline...) với thông tin page ID, số điện thoại, nhân viên phụ trách
+  - **Mặt hàng**: Quản lý danh mục sản phẩm sales với giá bán, đơn vị, mô tả, upload hàng loạt
+  - **Dashboard chỉ số**:
+    - KPI cards hiển thị tổng doanh thu, số đơn, giá trị đơn trung bình, chi phí marketing
+    - Biểu đồ phân tích theo kênh bán hàng, top sản phẩm, hiệu suất nhân viên
+    - Bảng chi tiết doanh thu theo kênh và theo người dùng
+    - Metrics tháng: tổng quan KPI và chi tiết theo ngày
+  - **Báo cáo hàng ngày**:
+    - Tab "Báo cáo hàng ngày": Tạo và quản lý báo cáo hàng ngày của từng nhân viên sales
+    - Tab "KPI tháng": Quản lý và theo dõi KPI tháng của từng nhân viên
+  - **Hạng khách hàng**: Cấu hình các mức hạng (vàng/bạc/đồng) dựa theo doanh thu tối thiểu
+
+## 3.5.1
+
+- Bổ sung màn hình Bảo trì
+- Giao diện bảng DataTable mới
+- Hỗ trợ tính toán trên nhiều channel Tiktok
+- Bổ sung logic unique cho Tiktok Products
+
+## 3.5.0
+
+- Cal từ Excel & Cal Orders:
+  - Dùng trực tiếp storageItems thay cho items trong toàn bộ flow tính toán
+  - Tìm kiếm storageItems có cả deleted=true/false; hiển thị tên màu đỏ cho item đã xóa
+  - CalFileResultModal: build map storageItems theo \_id, CalItems hiển thị màu đỏ khi deleted
+  - CalOrders: bỏ SendDeliveredRequestModal; gửi yêu cầu xuất kho trực tiếp qua API createDeliveredRequest với tổng hợp theo storageItemId + quantity
+  - Thêm checkbox “Chọn tất cả” để chọn/bỏ chọn toàn bộ đơn theo bộ lọc hiện tại; trạng thái indeterminate khi chọn một phần
+  - Loading/disabled và toast khi gửi yêu cầu
+- Dọn dẹp:
+  - Loại bỏ phụ thuộc searchItems trong các màn Cal; chuẩn hóa sang searchStorageItems
+
+## 3.4.1
+
+- **Upload Excel**:
+  - Cho phép kéo thả file
+  - Hiển thị tên file và dung lượng
+  - Lưu lại file cuối cùng đã upload
+  - Kết quả lưu trữ với tooltips thời gian
+- **An toàn kiểu dữ liệu**: Hoàn toàn loại bỏ kiểu `any`, sử dụng TypeScript interfaces đúng cho tất cả kết quả tính toán.
+- **Điều hướng**: Cập nhật cấu trúc điều hướng, deprecated route `/calfile` với hỗ trợ redirectTo.
+
+## 3.2.0
+
+- **Doanh thu**: Tái cấu trúc quy trình thêm doanh thu thành 1 bước duy nhất — chỉ upload 1 file tổng doanh thu (không còn upload nhiều file nguồn). Tích hợp gọi API mới `insertIncomeAndUpdateSource` và modal `InsertIncomeModalV2` để gom toàn bộ flow: upload file tổng → (tự động xử lý nguồn) → nhập chi phí ads. Giữ nguyên validation ngày và confirm khi đóng modal.
+
+## 3.1.3
+
+- **Giao diện**: Cập nhật giao diện thống kê doanh thu hàng ngày thành giao diện theo khoảng (hỗ trợ xem theo ngày/tuần/tháng) với khả năng so sánh với giai đoạn trước (hiển thị phần trăm thay đổi).
+
+## 3.1.2
+
+- **Doanh thu**: Thêm bước thứ 3 cho việc nhập doanh thu quảng cáo (Daily Ads) trong quy trình thêm doanh thu. Flow: Upload file doanh thu → Cập nhật affiliate → Thêm chi phí ads (livestream/video). Ngày được lưu từ bước đầu và truyền qua các bước tiếp theo.
+- **Modal chi phí quảng cáo**: Modal nhập chi phí ads với form validation, hiển thị tổng chi phí và breakdown theo loại (livestream/video). Style nhất quán với AffTypeModal.
+
+## 3.1.1
+
+- **Modal thống kê hàng ngày**: Bổ sung bảng "Theo đơn vị vận chuyển" hiển thị số đơn và tỉ lệ theo `shippingProviders` trong GetDailyStatsResponse.
+- **Nhỏ**: Tối ưu tính phần trăm và format số liệu.
+
+## 3.1.0
+
+- **Nhiệm vụ**: Thêm tab "Theo người dùng", bảng tổng hợp và modal chi tiết từng người (API getAllUsersTasks/getUserTasks). Gọi API chi tiết chỉ khi mở modal (modals.open).
+- **Popover nhiệm vụ của tôi**: Ẩn nút "Xong" với task HTTP; Việt hoá nhãn/badge; sửa Popover.Target luôn là element hợp lệ.
+- **Modal định nghĩa nhiệm vụ**: Form có kiểu dữ liệu với Controller, tách create/update mutations; Select endpoint HTTP với preview; validate giờ HH:MM; size xl.
+- **Trang nhiệm vụ**: Phân trang Mantine + cải thiện UI bảng (Paper, hover highlight), nút "Tạo task theo ngày" với modal GenerateTasks; title modals đẹp hơn.
+- **Giao diện**: Làm tối overlay của tất cả modal (global), tinh chỉnh màu bảng để đỡ "trong suốt".
+
+## 3.0.2
+
+- Thêm liveIncome vào Daily Stats & refactor DailyStatsModal sang dùng React Query (useQuery).
+- Chuẩn hoá queryKey theo tên hàm (getDailyStats, getIncomesByDateRange...).
+- Dọn rác code incomes (bỏ comment thừa, helper chuẩn hoá start/end day).
+
+## 3.0.1
+
+- Thêm component Can cho kiểm soát hiển thị theo role.
+- Siết quyền mutation: chỉ role phù hợp mới thấy nút thêm / sửa / xoá / gửi yêu cầu ở các màn hình (Incomes, MonthGoals, PackingRules, Storage Items/Logs, Products, ReadyCombos, Delivered Requests, Cal Orders, Cal Result Save...).
+- Bổ sung gating phần lưu lịch sử vận đơn & gửi yêu cầu xuất kho.
+- Cập nhật tài liệu đơn giản hoá nội dung tránh lộ chi tiết triển khai.
+
+## 3.0.0
+
+- Refactor KPI tách LiveStream & Shop + chế độ Tổng.
+- Dual Month Goals (liveStreamGoal + shopGoal).
+- Daily Stats modal & phân bổ nguồn.
+- Top Creators (bảng + biểu đồ + nhóm "Khác").
+- Việt hoá System Logs & chuẩn hoá tiêu đề trang.
+- Thêm thống kê kho theo ngày & ca.
+- Ready combos & yêu cầu xuất kho.
