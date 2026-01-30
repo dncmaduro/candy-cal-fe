@@ -8,6 +8,7 @@ import {
   CalculateLivestreamMonthSalaryResponse,
   CalculateLivestreamRealIncomeRequest,
   CalculateLivestreamRealIncomeResponse,
+  ExportMonthlySalaryToXlsxRequest,
   CreateLivestreamPerformanceRequest,
   CreateLivestreamPerformanceResponse,
   DeleteLivestreamPerformanceRequest,
@@ -121,6 +122,23 @@ export const useLivestreamPerformance = () => {
     })
   }
 
+  const exportMonthlySalaryToXlsx = async (
+    req: ExportMonthlySalaryToXlsxRequest
+  ) => {
+    const query = toQueryString(req)
+
+    return callApi<never, Blob>({
+      path: `/v1/livestreamperformance/monthly-salary/export-xlsx?${query}`,
+      method: "GET",
+      token: accessToken,
+      headers: {
+        "Content-Type":
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      },
+      responseType: "blob"
+    })
+  }
+
   return {
     createLivestreamPerformance,
     updateLivestreamPerformance,
@@ -128,6 +146,7 @@ export const useLivestreamPerformance = () => {
     searchLivestreamPerformance,
     calculateDailyPerformance,
     calculateLivestreamMonthSalary,
-    calculateLivestreamRealIncome
+    calculateLivestreamRealIncome,
+    exportMonthlySalaryToXlsx
   }
 }

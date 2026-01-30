@@ -10,13 +10,23 @@ import {
   ScrollArea,
   Skeleton,
   ThemeIcon,
-  Table
+  Table,
+  Button
 } from "@mantine/core"
 import { useMemo } from "react"
 import type { CalculateLivestreamMonthSalaryResponse } from "../../hooks/models"
-import { format } from "date-fns"
-import { vi } from "date-fns/locale"
-import { IconInfoCircle, IconCash } from "@tabler/icons-react"
+import {
+  format,
+  startOfMonth,
+  endOfMonth,
+  startOfWeek,
+  endOfWeek,
+  eachDayOfInterval
+} from "date-fns"
+import { IconInfoCircle, IconCash, IconDownload } from "@tabler/icons-react"
+import { useMutation } from "@tanstack/react-query"
+import { useLivestreamPerformance } from "../../hooks/useLivestreamPerformance"
+import { CToast } from "../common/CToast"
 
 interface DailySalary {
   date: string
@@ -26,6 +36,25 @@ interface DailySalary {
   income: number
   realIncome: number
   snapshotsCount: number
+  shifts?: Array<{
+    snapshotId: string
+    for: "host" | "assistant"
+    channelId: string
+    channelName: string
+    startTime?: { hour: number; minute: number }
+    endTime?: { hour: number; minute: number }
+    income: number
+    realIncome: number
+    salaryPerHour: number
+    bonusPercentage: number
+    total: number
+  }>
+}
+
+interface ChannelDailySalary {
+  channelId: string
+  channelName: string
+  days: DailySalary[]
 }
 
 interface MonthlySalaryTableProps {
@@ -34,6 +63,9 @@ interface MonthlySalaryTableProps {
   currentUserId?: string
   isAdmin: boolean
   dailyDetails?: Map<string, DailySalary[]>
+  channelDailyDetails?: Map<string, Map<string, ChannelDailySalary>>
+  channelId?: string | null
+  channelName?: string | null
 }
 
 export const MonthlySalaryTable = ({
@@ -41,13 +73,145 @@ export const MonthlySalaryTable = ({
   isLoading,
   currentUserId,
   isAdmin,
-  dailyDetails
+  dailyDetails,
+  channelDailyDetails,
+  channelId,
+  channelName
 }: MonthlySalaryTableProps) => {
+  const { exportMonthlySalaryToXlsx } = useLivestreamPerformance()
+
+  const { mutate: exportXlsx, isPending: isExporting } = useMutation({
+    mutationFn: async () => {
+      if (!salaryData) throw new Error("Missing salary data")
+      const response = await exportMonthlySalaryToXlsx({
+        month: salaryData.month,
+        year: salaryData.year,
+        channelId: channelId || undefined
+      })
+
+      const safeChannel =
+        channelId && channelName
+          ? channelName
+          : channelId
+            ? channelId
+            : "tat-ca"
+      const filename = `bang-luong-livestream-${salaryData.month}-${salaryData.year}-${safeChannel}.xlsx`
+
+      const blob = response.data instanceof Blob ? response.data : new Blob([])
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+    },
+    onSuccess: () => {
+      CToast.success({ title: "Đã export file lương (.xlsx)" })
+    },
+    onError: (error: any) => {
+      CToast.error({
+        title: "Export thất bại",
+        subtitle: error?.response?.data?.message || error?.message
+      })
+    }
+  })
+
   const displayData = useMemo(() => {
     if (!salaryData) return []
     if (isAdmin) return salaryData.users
     return salaryData.users.filter((user) => user.userId === currentUserId)
   }, [salaryData, currentUserId, isAdmin])
+
+  type DayCell = DailySalary | null
+
+  const weekdayLabel = (date: Date) => {
+    const labels = [
+      "Chủ nhật",
+      "Thứ hai",
+      "Thứ ba",
+      "Thứ tư",
+      "Thứ năm",
+      "Thứ sáu",
+      "Thứ bảy"
+    ] as const
+    return labels[date.getDay()]
+  }
+
+  const monthGridDates = useMemo(() => {
+    if (!salaryData) return []
+    const monthStart = startOfMonth(
+      new Date(salaryData.year, salaryData.month - 1, 1)
+    )
+    const monthEnd = endOfMonth(monthStart)
+    const gridStart = startOfWeek(monthStart, { weekStartsOn: 0 })
+    const gridEnd = endOfWeek(monthEnd, { weekStartsOn: 0 })
+    return eachDayOfInterval({ start: gridStart, end: gridEnd })
+  }, [salaryData])
+
+  const toWeeks = (cells: DayCell[]) =>
+    cells.reduce((rows, cell, index) => {
+      if (index % 7 === 0) rows.push([])
+      rows[rows.length - 1].push(cell)
+      return rows
+    }, [] as DayCell[][])
+
+  const buildMonthCells = (days: DailySalary[]) => {
+    if (!salaryData) return []
+
+    const monthStart = startOfMonth(
+      new Date(salaryData.year, salaryData.month - 1, 1)
+    )
+    const monthEnd = endOfMonth(monthStart)
+
+    const byDate = new Map<string, DailySalary>()
+    days.forEach((d) => {
+      byDate.set(format(new Date(d.date), "yyyy-MM-dd"), d)
+    })
+
+    return monthGridDates.map((d) => {
+      const inMonth = d >= monthStart && d <= monthEnd
+      if (!inMonth) return null
+
+      const key = format(d, "yyyy-MM-dd")
+      const existing = byDate.get(key)
+      if (existing) return existing
+
+      return {
+        date: key,
+        total: 0,
+        salaryPerHour: 0,
+        bonusPercentage: 0,
+        income: 0,
+        realIncome: 0,
+        snapshotsCount: 0
+      }
+    })
+  }
+
+  const weekdayHeaders = useMemo(() => {
+    const labels = [
+      "Chủ nhật",
+      "Thứ hai",
+      "Thứ ba",
+      "Thứ tư",
+      "Thứ năm",
+      "Thứ sáu",
+      "Thứ bảy"
+    ] as const
+    return labels
+  }, [])
+
+  const fmtTime = (t?: { hour: number; minute: number }) => {
+    if (!t) return "--:--"
+    const hh = String(t.hour).padStart(2, "0")
+    const mm = String(t.minute).padStart(2, "0")
+    return `${hh}:${mm}`
+  }
+
+  const shiftRoleLabel = (role: "host" | "assistant") =>
+    role === "host" ? "Host" : "Assistant"
 
   if (isLoading) {
     return (
@@ -85,18 +249,27 @@ export const MonthlySalaryTable = ({
         <Text fw={700}>
           Bảng lương tháng {salaryData.month}/{salaryData.year}
         </Text>
-        <Text fw={700}>
-          Tổng: {salaryData.totalSalaryPaid.toLocaleString("vi-VN")} VNĐ
-        </Text>
+        <Group gap="sm" wrap="wrap">
+          <Text fw={700}>
+            Tổng: {salaryData.totalSalaryPaid.toLocaleString("vi-VN")} VNĐ
+          </Text>
+          <Button
+            variant="light"
+            leftSection={<IconDownload size={16} />}
+            loading={isExporting}
+            onClick={() => exportXlsx()}
+            color="green"
+          >
+            Xuất file lương
+          </Button>
+        </Group>
       </Group>
 
       {displayData.map((userData) => {
+        const hasChannelBreakdown =
+          !!channelDailyDetails && channelDailyDetails.has(userData.userId)
         const days = dailyDetails?.get(userData.userId) ?? []
-        const weeks: DailySalary[][] = days.reduce((rows, day, index) => {
-          if (index % 7 === 0) rows.push([])
-          rows[rows.length - 1].push(day)
-          return rows
-        }, [] as DailySalary[][])
+        const weeks = toWeeks(buildMonthCells(days))
 
         return (
           <Paper
@@ -122,182 +295,381 @@ export const MonthlySalaryTable = ({
 
               <Divider />
 
-              {dailyDetails && dailyDetails.has(userData.userId) ? (
-                <ScrollArea offsetScrollbars type="auto">
-                  <Table
-                    withTableBorder={false}
-                    withColumnBorders={false}
-                    striped={false}
-                    highlightOnHover={false}
-                    style={{ minWidth: 720 }}
-                  >
-                    <Table.Tbody>
-                      {weeks.map((week, weekIndex) => (
-                        <Box component="tr" key={`week-${weekIndex}`}>
-                          {/* Row: dates */}
-                          <Table.Td p="xs" style={{ padding: 0 }} colSpan={7}>
-                            <Table
-                              withTableBorder={false}
-                              withColumnBorders={false}
+              {(() => {
+                const renderWeeks = (weeksToRender: DayCell[][]) => (
+                  <ScrollArea offsetScrollbars type="auto">
+                    <Table
+                      withTableBorder={false}
+                      withColumnBorders={false}
+                      striped={false}
+                      highlightOnHover={false}
+                      style={{ minWidth: 900, tableLayout: "fixed" }}
+                    >
+                      <Table.Thead>
+                        <Table.Tr>
+                          {weekdayHeaders.map((label) => (
+                            <Table.Th
+                              key={label}
+                              ta="center"
+                              style={{
+                                fontSize: 12,
+                                fontWeight: 600,
+                                color: "var(--mantine-color-dimmed)",
+                                padding: "10px 8px"
+                              }}
                             >
-                              <Table.Tbody>
-                                <Table.Tr>
-                                  {week.map((day) => (
-                                    <Table.Td
-                                      key={`date-${day.date}`}
-                                      ta="center"
-                                      style={{ width: "14.28%", padding: 10 }}
-                                    >
-                                      <Text size="sm" fw={600}>
-                                        {format(new Date(day.date), "dd/MM")}
-                                      </Text>
-                                      <Text size="xs" c="dimmed">
-                                        {format(new Date(day.date), "EEE", {
-                                          locale: vi
-                                        })}
-                                      </Text>
-                                    </Table.Td>
-                                  ))}
-                                  {Array.from({ length: 7 - week.length }).map(
-                                    (_, i) => (
-                                      <Table.Td
-                                        key={`empty-date-${weekIndex}-${i}`}
-                                        style={{ width: "14.28%", padding: 10 }}
-                                      />
-                                    )
-                                  )}
-                                </Table.Tr>
+                              {label}
+                            </Table.Th>
+                          ))}
+                        </Table.Tr>
+                      </Table.Thead>
+                      <Table.Tbody>
+                        {weeksToRender.map((week, weekIndex) => (
+                          <Table.Tr key={`week-${weekIndex}`}>
+                            {week.map((day, idx) => {
+                              const key =
+                                day?.date ?? `empty-${weekIndex}-${idx}`
+                              const isWeekend =
+                                day &&
+                                [0, 6].includes(new Date(day.date).getDay())
 
-                                {/* Row: totals */}
-                                <Table.Tr>
-                                  {week.map((day) => (
-                                    <Table.Td
-                                      key={`total-${day.date}`}
-                                      ta="center"
-                                      style={{ width: "14.28%", padding: 10 }}
+                              return (
+                                <Table.Td
+                                  key={key}
+                                  style={{
+                                    padding: 8,
+                                    verticalAlign: "top"
+                                  }}
+                                >
+                                  {day ? (
+                                    <Paper
+                                      radius="md"
+                                      p="sm"
+                                      withBorder
+                                      style={{
+                                        height: "100%",
+                                        background:
+                                          day.snapshotsCount === 0
+                                            ? "var(--mantine-color-gray-0)"
+                                            : "white",
+                                        borderColor: isWeekend
+                                          ? "var(--mantine-color-gray-4)"
+                                          : "var(--mantine-color-gray-3)"
+                                      }}
                                     >
-                                      <Group
-                                        gap={6}
-                                        justify="center"
-                                        wrap="nowrap"
-                                      >
-                                        <Text size="sm" fw={700}>
-                                          {day.total.toLocaleString("vi-VN")}
-                                        </Text>
-
-                                        <Popover
-                                          width={280}
-                                          position="bottom"
-                                          withArrow
-                                          shadow="md"
+                                      <Stack gap={6}>
+                                        <Group
+                                          justify="space-between"
+                                          align="baseline"
+                                          wrap="nowrap"
                                         >
-                                          <Popover.Target>
-                                            <ActionIcon
-                                              variant="subtle"
-                                              color="gray"
-                                              size="sm"
+                                          <Text size="sm" fw={700}>
+                                            {format(
+                                              new Date(day.date),
+                                              "dd/MM"
+                                            )}
+                                          </Text>
+                                          <Text size="xs" c="dimmed">
+                                            {weekdayLabel(new Date(day.date))}
+                                          </Text>
+                                        </Group>
+
+                                        <Group
+                                          justify="space-between"
+                                          align="center"
+                                          wrap="nowrap"
+                                          gap={8}
+                                        >
+                                          <Text
+                                            size="sm"
+                                            fw={700}
+                                            c={
+                                              day.snapshotsCount === 0
+                                                ? "dimmed"
+                                                : undefined
+                                            }
+                                          >
+                                            {day.total.toLocaleString("vi-VN")}
+                                          </Text>
+
+                                          {day.snapshotsCount > 0 ? (
+                                            <Popover
+                                              width={280}
+                                              position="bottom"
+                                              withArrow
+                                              shadow="md"
                                             >
-                                              <IconInfoCircle size={16} />
-                                            </ActionIcon>
-                                          </Popover.Target>
-                                          <Popover.Dropdown>
-                                            <Stack gap="xs">
-                                              <Text size="sm" fw={600}>
-                                                {format(
-                                                  new Date(day.date),
-                                                  "dd/MM/yyyy"
-                                                )}
-                                              </Text>
-                                              <Divider />
-                                              <Group justify="space-between">
-                                                <Text size="xs" c="dimmed">
-                                                  Số ca
-                                                </Text>
-                                                <Text size="xs" fw={600}>
-                                                  {day.snapshotsCount}
-                                                </Text>
-                                              </Group>
-                                              <Group justify="space-between">
-                                                <Text size="xs" c="dimmed">
-                                                  Doanh thu
-                                                </Text>
-                                                <Text size="xs" fw={600}>
-                                                  {day.income.toLocaleString(
-                                                    "vi-VN"
-                                                  )}{" "}
-                                                  VNĐ
-                                                </Text>
-                                              </Group>
-                                              <Group justify="space-between">
-                                                <Text size="xs" c="dimmed">
-                                                  Doanh thu thực
-                                                </Text>
-                                                <Text size="xs" fw={600}>
-                                                  {day.realIncome.toLocaleString(
-                                                    "vi-VN"
-                                                  )}{" "}
-                                                  VNĐ
-                                                </Text>
-                                              </Group>
-                                              <Group justify="space-between">
-                                                <Text size="xs" c="dimmed">
-                                                  Lương/giờ
-                                                </Text>
-                                                <Text size="xs" fw={600}>
-                                                  {day.salaryPerHour.toLocaleString(
-                                                    "vi-VN"
-                                                  )}{" "}
-                                                  VNĐ
-                                                </Text>
-                                              </Group>
-                                              <Group justify="space-between">
-                                                <Text size="xs" c="dimmed">
-                                                  % Thưởng
-                                                </Text>
-                                                <Text size="xs" fw={600}>
-                                                  {day.bonusPercentage}%
-                                                </Text>
-                                              </Group>
-                                              <Divider />
-                                              <Group justify="space-between">
-                                                <Text size="sm" fw={700}>
-                                                  Tổng
-                                                </Text>
-                                                <Text size="sm" fw={700}>
-                                                  {day.total.toLocaleString(
-                                                    "vi-VN"
-                                                  )}{" "}
-                                                  VNĐ
-                                                </Text>
-                                              </Group>
-                                            </Stack>
-                                          </Popover.Dropdown>
-                                        </Popover>
-                                      </Group>
-                                    </Table.Td>
-                                  ))}
-                                  {Array.from({ length: 7 - week.length }).map(
-                                    (_, i) => (
-                                      <Table.Td
-                                        key={`empty-total-${weekIndex}-${i}`}
-                                        style={{ width: "14.28%", padding: 10 }}
-                                      />
-                                    )
+                                              <Popover.Target>
+                                                <ActionIcon
+                                                  variant="subtle"
+                                                  color="gray"
+                                                  size="sm"
+                                                >
+                                                  <IconInfoCircle size={16} />
+                                                </ActionIcon>
+                                              </Popover.Target>
+                                              <Popover.Dropdown>
+                                                <Stack gap="xs">
+                                                  <Text size="sm" fw={600}>
+                                                    {format(
+                                                      new Date(day.date),
+                                                      "dd/MM/yyyy"
+                                                    )}
+                                                  </Text>
+                                                  <Divider />
+                                                  {day.shifts?.length ? (
+                                                    <>
+                                                      <Text
+                                                        size="xs"
+                                                        c="dimmed"
+                                                        fw={600}
+                                                      >
+                                                        Chi tiết từng ca
+                                                      </Text>
+                                                      <Stack gap={6}>
+                                                        {day.shifts.map(
+                                                          (s, i) => (
+                                                            <Paper
+                                                              key={
+                                                                s.snapshotId ??
+                                                                `${day.date}-${i}`
+                                                              }
+                                                              withBorder
+                                                              radius="sm"
+                                                              p="xs"
+                                                            >
+                                                              <Stack gap={2}>
+                                                                <Group
+                                                                  justify="space-between"
+                                                                  gap="xs"
+                                                                  wrap="nowrap"
+                                                                >
+                                                                  <Text
+                                                                    size="xs"
+                                                                    fw={600}
+                                                                  >
+                                                                    {fmtTime(
+                                                                      s.startTime
+                                                                    )}{" "}
+                                                                    -{" "}
+                                                                    {fmtTime(
+                                                                      s.endTime
+                                                                    )}
+                                                                  </Text>
+                                                                  <Text
+                                                                    size="xs"
+                                                                    c="dimmed"
+                                                                  >
+                                                                    {shiftRoleLabel(
+                                                                      s.for
+                                                                    )}
+                                                                  </Text>
+                                                                </Group>
+
+                                                                <Group
+                                                                  justify="space-between"
+                                                                  gap="xs"
+                                                                  wrap="nowrap"
+                                                                >
+                                                                  <Text
+                                                                    size="xs"
+                                                                    c="dimmed"
+                                                                  >
+                                                                    Lương
+                                                                  </Text>
+                                                                  <Text
+                                                                    size="xs"
+                                                                    fw={700}
+                                                                  >
+                                                                    {s.total.toLocaleString(
+                                                                      "vi-VN"
+                                                                    )}{" "}
+                                                                    VNĐ
+                                                                  </Text>
+                                                                </Group>
+
+                                                                <Group
+                                                                  justify="space-between"
+                                                                  gap="xs"
+                                                                  wrap="nowrap"
+                                                                >
+                                                                  <Text
+                                                                    size="xs"
+                                                                    c="dimmed"
+                                                                  >
+                                                                    Doanh thu
+                                                                  </Text>
+                                                                  <Text
+                                                                    size="xs"
+                                                                    fw={600}
+                                                                  >
+                                                                    {s.income.toLocaleString(
+                                                                      "vi-VN"
+                                                                    )}{" "}
+                                                                    VNĐ
+                                                                  </Text>
+                                                                </Group>
+                                                              </Stack>
+                                                            </Paper>
+                                                          )
+                                                        )}
+                                                      </Stack>
+                                                      <Divider />
+                                                    </>
+                                                  ) : null}
+                                                  <Group justify="space-between">
+                                                    <Text size="xs" c="dimmed">
+                                                      Số ca
+                                                    </Text>
+                                                    <Text size="xs" fw={600}>
+                                                      {day.snapshotsCount}
+                                                    </Text>
+                                                  </Group>
+                                                  <Group justify="space-between">
+                                                    <Text size="xs" c="dimmed">
+                                                      Doanh thu
+                                                    </Text>
+                                                    <Text size="xs" fw={600}>
+                                                      {day.income.toLocaleString(
+                                                        "vi-VN"
+                                                      )}{" "}
+                                                      VNĐ
+                                                    </Text>
+                                                  </Group>
+                                                  <Group justify="space-between">
+                                                    <Text size="xs" c="dimmed">
+                                                      Doanh thu thực
+                                                    </Text>
+                                                    <Text size="xs" fw={600}>
+                                                      {day.realIncome.toLocaleString(
+                                                        "vi-VN"
+                                                      )}{" "}
+                                                      VNĐ
+                                                    </Text>
+                                                  </Group>
+                                                  <Group justify="space-between">
+                                                    <Text size="xs" c="dimmed">
+                                                      Lương/giờ
+                                                    </Text>
+                                                    <Text size="xs" fw={600}>
+                                                      {day.salaryPerHour.toLocaleString(
+                                                        "vi-VN"
+                                                      )}{" "}
+                                                      VNĐ
+                                                    </Text>
+                                                  </Group>
+                                                  <Group justify="space-between">
+                                                    <Text size="xs" c="dimmed">
+                                                      % Thưởng
+                                                    </Text>
+                                                    <Text size="xs" fw={600}>
+                                                      {day.bonusPercentage}%
+                                                    </Text>
+                                                  </Group>
+                                                  <Divider />
+                                                  <Group justify="space-between">
+                                                    <Text size="sm" fw={700}>
+                                                      Tổng
+                                                    </Text>
+                                                    <Text size="sm" fw={700}>
+                                                      {day.total.toLocaleString(
+                                                        "vi-VN"
+                                                      )}{" "}
+                                                      VNĐ
+                                                    </Text>
+                                                  </Group>
+                                                </Stack>
+                                              </Popover.Dropdown>
+                                            </Popover>
+                                          ) : null}
+                                        </Group>
+                                      </Stack>
+                                    </Paper>
+                                  ) : (
+                                    <Paper
+                                      radius="md"
+                                      p="sm"
+                                      withBorder
+                                      style={{
+                                        height: "100%",
+                                        background: "transparent",
+                                        borderStyle: "dashed",
+                                        borderColor:
+                                          "var(--mantine-color-gray-3)"
+                                      }}
+                                    />
                                   )}
-                                </Table.Tr>
-                              </Table.Tbody>
-                            </Table>
-                          </Table.Td>
-                        </Box>
-                      ))}
-                    </Table.Tbody>
-                  </Table>
-                </ScrollArea>
-              ) : (
-                <Text size="sm" c="dimmed">
-                  Chi tiết lương từng ngày chỉ hiển thị khi xem lịch livestream
-                </Text>
-              )}
+                                </Table.Td>
+                              )
+                            })}
+                          </Table.Tr>
+                        ))}
+                      </Table.Tbody>
+                    </Table>
+                  </ScrollArea>
+                )
+
+                if (hasChannelBreakdown) {
+                  const channels = Array.from(
+                    channelDailyDetails!.get(userData.userId)!.values()
+                  ).sort((a, b) =>
+                    a.channelName.localeCompare(b.channelName, "vi")
+                  )
+
+                  if (channels.length === 0) {
+                    return (
+                      <Text size="sm" c="dimmed">
+                        Chi tiết lương từng ngày chỉ hiển thị khi xem lịch
+                        livestream
+                      </Text>
+                    )
+                  }
+
+                  return (
+                    <Stack gap="sm">
+                      {channels.map((ch, idx) => {
+                        const channelCells = buildMonthCells(ch.days)
+                        const channelTotal = channelCells.reduce((sum, d) => {
+                          if (!d) return sum
+                          return sum + (d.total || 0)
+                        }, 0)
+
+                        return (
+                          <Stack gap="xs" key={ch.channelId}>
+                            <Group
+                              justify="space-between"
+                              align="baseline"
+                              wrap="wrap"
+                            >
+                              <Text fw={600} size="sm">
+                                {ch.channelName}
+                              </Text>
+                              <Text fw={700} size="sm">
+                                {channelTotal.toLocaleString("vi-VN")} VNĐ
+                              </Text>
+                            </Group>
+
+                            {renderWeeks(toWeeks(channelCells))}
+
+                            {idx < channels.length - 1 && <Divider />}
+                          </Stack>
+                        )
+                      })}
+                    </Stack>
+                  )
+                }
+
+                if (dailyDetails && dailyDetails.has(userData.userId)) {
+                  return renderWeeks(weeks)
+                }
+
+                return (
+                  <Text size="sm" c="dimmed">
+                    Chi tiết lương từng ngày chỉ hiển thị khi xem lịch
+                    livestream
+                  </Text>
+                )
+              })()}
             </Stack>
           </Paper>
         )

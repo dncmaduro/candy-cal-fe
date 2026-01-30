@@ -2902,6 +2902,7 @@ export interface CalculateDailyPerformanceResponse {
 export interface CalculateLivestreamMonthSalaryRequest {
   month: number
   year: number
+  channelId?: string
 }
 
 /** @interface */
@@ -2915,6 +2916,13 @@ export interface CalculateLivestreamMonthSalaryResponse {
     snapshotsCount: number
   }>
   totalSalaryPaid: number
+}
+
+/** @interface */
+export interface ExportMonthlySalaryToXlsxRequest {
+  month: number
+  year: number
+  channelId?: string
 }
 
 /** @interface */
