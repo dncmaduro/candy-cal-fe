@@ -59,6 +59,7 @@ function RouteComponent() {
 
   // Salary view filter
   const [salaryMonth, setSalaryMonth] = useState<Date>(new Date())
+  const [salaryChannelId, setSalaryChannelId] = useState<string | null>(null)
 
   // Get current user
   const { data: me } = useQuery({
@@ -301,11 +302,17 @@ function RouteComponent() {
   const currentYear = salaryMonth.getFullYear()
 
   const { data: monthlySalaryData, isLoading: isLoadingSalary } = useQuery({
-    queryKey: ["calculateLivestreamMonthSalary", currentMonth, currentYear],
+    queryKey: [
+      "calculateLivestreamMonthSalary",
+      currentMonth,
+      currentYear,
+      salaryChannelId
+    ],
     queryFn: () =>
       calculateLivestreamMonthSalary({
         month: currentMonth,
-        year: currentYear
+        year: currentYear,
+        channelId: salaryChannelId || undefined
       }),
     select: (data) => data.data,
     enabled: viewMode === "salary"
@@ -317,14 +324,16 @@ function RouteComponent() {
       "getLivestreamsByDateRange",
       "monthly",
       currentMonth,
-      currentYear
+      currentYear,
+      salaryChannelId
     ],
     queryFn: async () => {
       const startDate = new Date(currentYear, currentMonth - 1, 1)
       const endDate = new Date(currentYear, currentMonth, 0)
       const response = await getLivestreamsByDateRange({
         startDate: format(startDate, "yyyy-MM-dd"),
-        endDate: format(endDate, "yyyy-MM-dd")
+        endDate: format(endDate, "yyyy-MM-dd"),
+        channel: salaryChannelId || undefined
       })
       return response.data.livestreams
     },
@@ -345,11 +354,23 @@ function RouteComponent() {
         income: number
         realIncome: number
         snapshotsCount: number
+        shifts: Array<{
+          snapshotId: string
+          for: "host" | "assistant"
+          channelId: string
+          channelName: string
+          startTime?: { hour: number; minute: number }
+          endTime?: { hour: number; minute: number }
+          income: number
+          realIncome: number
+          salaryPerHour: number
+          bonusPercentage: number
+          total: number
+        }>
       }>
     >()
 
     monthlyLivestreamData.forEach((livestream) => {
-      // Group snapshots by userId with correct priority logic
       const userSnapshotsMap = new Map<string, any[]>()
 
       livestream.snapshots.forEach((snapshot) => {
@@ -357,13 +378,8 @@ function RouteComponent() {
 
         let userId: string | null = null
 
-        // Priority logic:
-        // 1. If altAssignee exists and is "other" -> skip (no salary)
-        // 2. If altAssignee exists and is not "other" -> use altAssignee._id
-        // 3. If no altAssignee -> use assignee._id
         if (snapshot.altAssignee) {
           if (snapshot.altAssignee === "other") {
-            // Skip this snapshot - no salary for "other"
             return
           } else if (typeof snapshot.altAssignee === "string") {
             userId = snapshot.altAssignee
@@ -380,7 +396,6 @@ function RouteComponent() {
         userSnapshotsMap.get(userId)!.push(snapshot)
       })
 
-      // Calculate daily totals for each user
       userSnapshotsMap.forEach((snapshots, userId) => {
         const dailyTotal = snapshots.reduce(
           (sum, s) => sum + (s.salary?.total || 0),
@@ -405,6 +420,27 @@ function RouteComponent() {
             0
           ) / snapshots.length
 
+        const shifts = snapshots
+          .map((s) => ({
+            snapshotId: s._id,
+            for: s.period?.for,
+            channelId: s.period?.channel?._id,
+            channelName: s.period?.channel?.name,
+            startTime: s.period?.startTime,
+            endTime: s.period?.endTime,
+            income: s.income || 0,
+            realIncome: s.realIncome || 0,
+            salaryPerHour: s.salary?.salaryPerHour || 0,
+            bonusPercentage: s.salary?.bonusPercentage || 0,
+            total: s.salary?.total || 0
+          }))
+          .filter((x) => !!x.for && !!x.channelId && !!x.channelName)
+          .sort((a, b) => {
+            const aMin = (a.startTime?.hour ?? 0) * 60 + (a.startTime?.minute ?? 0)
+            const bMin = (b.startTime?.hour ?? 0) * 60 + (b.startTime?.minute ?? 0)
+            return aMin - bMin
+          })
+
         if (!detailsMap.has(userId)) {
           detailsMap.set(userId, [])
         }
@@ -416,12 +452,12 @@ function RouteComponent() {
           bonusPercentage: avgBonusPercentage,
           income: dailyIncome,
           realIncome: dailyRealIncome,
-          snapshotsCount: snapshots.length
+          snapshotsCount: snapshots.length,
+          shifts
         })
       })
     })
 
-    // Sort each user's daily data by date
     detailsMap.forEach((days) => {
       days.sort(
         (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
@@ -430,6 +466,164 @@ function RouteComponent() {
 
     return detailsMap
   }, [monthlyLivestreamData])
+
+  const dailySalaryDetailsByChannel = useMemo(() => {
+    if (!monthlyLivestreamData) return undefined
+    if (salaryChannelId) return undefined
+
+    const result = new Map<
+      string,
+      Map<
+        string,
+        {
+          channelId: string
+          channelName: string
+          days: Array<{
+            date: string
+            total: number
+            salaryPerHour: number
+            bonusPercentage: number
+            income: number
+            realIncome: number
+            snapshotsCount: number
+            shifts: Array<{
+              snapshotId: string
+              for: "host" | "assistant"
+              channelId: string
+              channelName: string
+              startTime?: { hour: number; minute: number }
+              endTime?: { hour: number; minute: number }
+              income: number
+              realIncome: number
+              salaryPerHour: number
+              bonusPercentage: number
+              total: number
+            }>
+          }>
+        }
+      >
+    >()
+
+    monthlyLivestreamData.forEach((livestream) => {
+      const userChannelSnapshotsMap = new Map<string, Map<string, any[]>>()
+
+      livestream.snapshots.forEach((snapshot) => {
+        if (!snapshot.salary?.total) return
+
+        let userId: string | null = null
+
+        if (snapshot.altAssignee) {
+          if (snapshot.altAssignee === "other") {
+            return
+          } else if (typeof snapshot.altAssignee === "string") {
+            userId = snapshot.altAssignee
+          }
+        } else if (snapshot.assignee) {
+          userId = snapshot.assignee._id
+        }
+
+        if (!userId) return
+
+        const channelId = snapshot.period?.channel?._id
+        const channelName = snapshot.period?.channel?.name
+
+        if (!channelId || !channelName) return
+
+        if (!userChannelSnapshotsMap.has(userId)) {
+          userChannelSnapshotsMap.set(userId, new Map())
+        }
+
+        const channelMap = userChannelSnapshotsMap.get(userId)!
+        if (!channelMap.has(channelId)) {
+          channelMap.set(channelId, [])
+        }
+        channelMap.get(channelId)!.push(snapshot)
+      })
+
+      userChannelSnapshotsMap.forEach((channelMap, userId) => {
+        channelMap.forEach((snapshots, channelId) => {
+          const channelName = snapshots[0]?.period?.channel?.name || ""
+
+          const dailyTotal = snapshots.reduce(
+            (sum, s) => sum + (s.salary?.total || 0),
+            0
+          )
+          const dailyIncome = snapshots.reduce(
+            (sum, s) => sum + (s.income || 0),
+            0
+          )
+          const dailyRealIncome = snapshots.reduce(
+            (sum, s) => sum + (s.realIncome || 0),
+            0
+          )
+          const avgSalaryPerHour =
+            snapshots.reduce(
+              (sum, s) => sum + (s.salary?.salaryPerHour || 0),
+              0
+            ) / snapshots.length
+          const avgBonusPercentage =
+            snapshots.reduce(
+              (sum, s) => sum + (s.salary?.bonusPercentage || 0),
+              0
+            ) / snapshots.length
+
+          if (!result.has(userId)) {
+            result.set(userId, new Map())
+          }
+          const perUser = result.get(userId)!
+          if (!perUser.has(channelId)) {
+            perUser.set(channelId, {
+              channelId,
+              channelName,
+              days: []
+            })
+          }
+
+          perUser.get(channelId)!.days.push({
+            date: livestream.date,
+            total: dailyTotal,
+            salaryPerHour: avgSalaryPerHour,
+            bonusPercentage: avgBonusPercentage,
+            income: dailyIncome,
+            realIncome: dailyRealIncome,
+            snapshotsCount: snapshots.length,
+            shifts: snapshots
+              .map((s) => ({
+                snapshotId: s._id,
+                for: s.period?.for,
+                channelId: s.period?.channel?._id,
+                channelName: s.period?.channel?.name,
+                startTime: s.period?.startTime,
+                endTime: s.period?.endTime,
+                income: s.income || 0,
+                realIncome: s.realIncome || 0,
+                salaryPerHour: s.salary?.salaryPerHour || 0,
+                bonusPercentage: s.salary?.bonusPercentage || 0,
+                total: s.salary?.total || 0
+              }))
+              .filter((x) => !!x.for && !!x.channelId && !!x.channelName)
+              .sort((a, b) => {
+                const aMin =
+                  (a.startTime?.hour ?? 0) * 60 + (a.startTime?.minute ?? 0)
+                const bMin =
+                  (b.startTime?.hour ?? 0) * 60 + (b.startTime?.minute ?? 0)
+                return aMin - bMin
+              })
+          })
+        })
+      })
+    })
+
+    result.forEach((channels) => {
+      channels.forEach((channel) => {
+        channel.days.sort(
+          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+        )
+      })
+    })
+
+    return result
+  }, [monthlyLivestreamData, salaryChannelId])
 
   // Week navigation
   const goToPreviousWeek = () => {
@@ -466,6 +660,10 @@ function RouteComponent() {
       value: channel._id
     }))
   }, [channelsData])
+
+  const salaryChannelOptions = useMemo(() => {
+    return [{ label: "Tất cả kênh", value: "" }, ...channelOptions]
+  }, [channelOptions])
 
   return (
     <LivestreamLayout>
@@ -712,21 +910,38 @@ function RouteComponent() {
               )}
 
               {viewMode === "salary" && (
-                <Stack gap={4}>
-                  <Text size="xs" fw={600} c="dimmed" tt="uppercase">
-                    Tháng xem lương
-                  </Text>
-                  <MonthPickerInput
-                    placeholder="Chọn tháng"
-                    value={salaryMonth}
-                    onChange={(date) => setSalaryMonth(date || new Date())}
-                    locale="vi"
-                    size="sm"
-                    radius="md"
-                    maxDate={new Date()}
-                    valueFormat="MM/YYYY"
-                  />
-                </Stack>
+                <>
+                  <Stack gap={4}>
+                    <Text size="xs" fw={600} c="dimmed" tt="uppercase">
+                      Tháng xem lương
+                    </Text>
+                    <MonthPickerInput
+                      placeholder="Chọn tháng"
+                      value={salaryMonth}
+                      onChange={(date) => setSalaryMonth(date || new Date())}
+                      locale="vi"
+                      size="sm"
+                      radius="md"
+                      maxDate={new Date()}
+                      valueFormat="MM/YYYY"
+                    />
+                  </Stack>
+
+                  <Stack gap={4}>
+                    <Text size="xs" fw={600} c="dimmed" tt="uppercase">
+                      Kênh livestream
+                    </Text>
+                    <Select
+                      placeholder="Tất cả kênh"
+                      value={salaryChannelId || ""}
+                      onChange={(v) => setSalaryChannelId(v || null)}
+                      data={salaryChannelOptions}
+                      size="sm"
+                      radius="md"
+                      clearable
+                    />
+                  </Stack>
+                </>
               )}
             </Stack>
           </Paper>
@@ -817,6 +1032,11 @@ function RouteComponent() {
               currentUserId={me?._id}
               isAdmin={isAdmin || false}
               dailyDetails={dailySalaryDetails}
+              channelDailyDetails={dailySalaryDetailsByChannel}
+              channelId={salaryChannelId}
+              channelName={
+                channelsData?.find((c) => c._id === salaryChannelId)?.name || null
+              }
             />
           )}
         </Box>
