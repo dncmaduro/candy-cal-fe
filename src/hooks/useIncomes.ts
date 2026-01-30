@@ -24,7 +24,9 @@ import {
   GetTotalLiveAndShopIncomeByMonthResponse,
   GetAdsCostSplitByMonthResponse,
   InsertIncomeAndUpdateSourceRequest,
-  InsertIncomeAndUpdateSourceResponse
+  InsertIncomeAndUpdateSourceResponse,
+  GetTotalCountIncomeByMonthRequest,
+  GetTotalCountIncomeByMonthResponse
 } from "./models"
 
 export const useIncomes = () => {
@@ -210,6 +212,18 @@ export const useIncomes = () => {
     })
   }
 
+  const getTotalCountIncomeByMonth = async (
+    req: GetTotalCountIncomeByMonthRequest
+  ) => {
+    const query = toQueryString(req)
+
+    return callApi<never, GetTotalCountIncomeByMonthResponse>({
+      path: `/v1/incomes/total-orders-by-month?${query}`,
+      method: "GET",
+      token: accessToken
+    })
+  }
+
   return {
     /** @deprecated */
     insertIncome,
@@ -226,6 +240,7 @@ export const useIncomes = () => {
     exportXlsxIncomes,
     getLiveShopIncomeByMonth,
     getAdsCostSplitByMonth,
-    insertIncomeAndUpdateSource
+    insertIncomeAndUpdateSource,
+    getTotalCountIncomeByMonth
   }
 }
