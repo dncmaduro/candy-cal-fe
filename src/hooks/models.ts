@@ -391,6 +391,27 @@ export interface CreateStorageLogResponse {
 }
 
 /** @interface */
+export interface GetDeliveredSummaryRequest {
+  startDate: Date
+  endDate: Date
+}
+
+/** @interface */
+export interface GetDeliveredSummaryResponse {
+  startDate: string
+  endDate: string
+  totalDeliveredQuantity: number
+  days: number
+  averagePerDay: number
+  items: {
+    itemId: string
+    totalDeliveredQuantity: number
+    averagePerDay: number
+    item?: { _id: string; code: string; name: string; quantityPerBox: number }
+  }[]
+}
+
+/** @interface */
 export interface UpdateStorageLogRequest {
   items: {
     _id: string
