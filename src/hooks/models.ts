@@ -1775,6 +1775,18 @@ export interface CreateSimpleDailyAdsRequest {
   channel: string
 }
 
+/** @interface */
+export interface GetTotalCountIncomeByMonthRequest {
+  month: number
+  year: number
+  channelId?: string
+}
+
+/** @interface */
+export interface GetTotalCountIncomeByMonthResponse {
+  totalCount: number
+}
+
 // -------------------- INCOME AND SOURCE --------------------
 
 /** @interface */

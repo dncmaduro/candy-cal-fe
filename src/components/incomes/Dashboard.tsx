@@ -55,7 +55,8 @@ export const Dashboard = () => {
     getTotalIncomesByMonth,
     getTotalQuantityByMonth,
     getLiveShopIncomeByMonth,
-    getAdsCostSplitByMonth
+    getAdsCostSplitByMonth,
+    getTotalCountIncomeByMonth
   } = useIncomes()
 
   const { getGoal } = useMonthGoals()
@@ -147,6 +148,22 @@ export const Dashboard = () => {
     queryKey: ["getGoal", currentMonth, currentYear, selectedChannelId],
     queryFn: () =>
       getGoal({
+        month: currentMonth,
+        year: currentYear,
+        channelId: selectedChannelId || undefined
+      }),
+    select: (data) => data.data
+  })
+
+  const { data: totalCountIncomeData } = useQuery({
+    queryKey: [
+      "getTotalCountIncomeByMonth",
+      currentMonth,
+      currentYear,
+      selectedChannelId
+    ],
+    queryFn: () =>
+      getTotalCountIncomeByMonth({
         month: currentMonth,
         year: currentYear,
         channelId: selectedChannelId || undefined
@@ -284,12 +301,16 @@ export const Dashboard = () => {
   const shopKpi = adsCostSplitMonthData?.kpi?.shopKpi
 
   const liveKpiAchievedPercent =
-    typeof liveKpi === "number" && liveKpi > 0 && typeof monthlyLiveIncome === "number"
+    typeof liveKpi === "number" &&
+    liveKpi > 0 &&
+    typeof monthlyLiveIncome === "number"
       ? (monthlyLiveIncome / liveKpi) * 100
       : undefined
 
   const shopKpiAchievedPercent =
-    typeof shopKpi === "number" && shopKpi > 0 && typeof monthlyShopIncome === "number"
+    typeof shopKpi === "number" &&
+    shopKpi > 0 &&
+    typeof monthlyShopIncome === "number"
       ? (monthlyShopIncome / shopKpi) * 100
       : undefined
 
@@ -623,7 +644,7 @@ export const Dashboard = () => {
               </Group>
             </Group>
 
-            <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="sm">
+            <SimpleGrid cols={{ base: 1, sm: 2, lg: 5 }} spacing="sm">
               <KPIBox
                 label="Tổng doanh thu"
                 value={fmtVnd(totalIncome)}
@@ -645,6 +666,12 @@ export const Dashboard = () => {
               <KPIBox
                 label="Tỉ lệ Ads/Doanh thu tổng"
                 value={fmtPercent(calculateAdsRatio(totalAdsCost, totalIncome))}
+                color="gray"
+              />
+              <KPIBox
+                label="Tổng số đơn"
+                value={totalCountIncomeData?.totalCount || "..."}
+                unit="đơn"
                 color="gray"
               />
             </SimpleGrid>
