@@ -7,6 +7,8 @@ import {
   CreateLogSessionResponse,
   CreateStorageLogRequest,
   CreateStorageLogResponse,
+  GetDeliveredSummaryRequest,
+  GetDeliveredSummaryResponse,
   GetLogsRangeRequest,
   GetLogsRangeResponse,
   GetLogsRequest,
@@ -143,6 +145,16 @@ export const useLogs = () => {
     })
   }
 
+  const getDeliveredSummary = async (req: GetDeliveredSummaryRequest) => {
+    const query = toQueryString(req)
+
+    return callApi<never, GetDeliveredSummaryResponse>({
+      path: `/v1/storagelogs/delivered/summary?${query}`,
+      method: "GET",
+      token: accessToken
+    })
+  }
+
   return {
     createLog,
     getLogs,
@@ -154,6 +166,7 @@ export const useLogs = () => {
     getStorageLogsByMonth,
     getOrderLogs,
     createLogSession,
-    getOrderLogsByRange
+    getOrderLogsByRange,
+    getDeliveredSummary
   }
 }
