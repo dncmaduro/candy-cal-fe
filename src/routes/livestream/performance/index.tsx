@@ -180,8 +180,11 @@ function RouteComponent() {
       }
     })
 
-  const handleCalculateDailySalary = (date: Date) => {
-    calculateDailyFromCalendar({ date })
+  const handleCalculateDailySalary = (
+    date: Date,
+    baseOnRealIncome: boolean
+  ) => {
+    calculateDailyFromCalendar({ date, baseOnRealIncome })
   }
 
   // Handle opening report modal
@@ -436,8 +439,10 @@ function RouteComponent() {
           }))
           .filter((x) => !!x.for && !!x.channelId && !!x.channelName)
           .sort((a, b) => {
-            const aMin = (a.startTime?.hour ?? 0) * 60 + (a.startTime?.minute ?? 0)
-            const bMin = (b.startTime?.hour ?? 0) * 60 + (b.startTime?.minute ?? 0)
+            const aMin =
+              (a.startTime?.hour ?? 0) * 60 + (a.startTime?.minute ?? 0)
+            const bMin =
+              (b.startTime?.hour ?? 0) * 60 + (b.startTime?.minute ?? 0)
             return aMin - bMin
           })
 
@@ -1035,7 +1040,8 @@ function RouteComponent() {
               channelDailyDetails={dailySalaryDetailsByChannel}
               channelId={salaryChannelId}
               channelName={
-                channelsData?.find((c) => c._id === salaryChannelId)?.name || null
+                channelsData?.find((c) => c._id === salaryChannelId)?.name ||
+                null
               }
             />
           )}

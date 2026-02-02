@@ -753,7 +753,7 @@ interface LivestreamCalendarRegionProps {
     req: GetAltRequestBySnapshotRequest
   ) => Promise<{ data: GetAltRequestBySnapshotResponse }>
   onRefetch: () => void
-  onCalculateDailySalary?: (date: Date) => void
+  onCalculateDailySalary?: (date: Date, baseOnRealIncome: boolean) => void
   isCalculatingSalary?: boolean
   onCalculateIncome?: (date: Date) => void
   isCalculatingIncome?: boolean
@@ -923,158 +923,160 @@ const SnapshotActions = ({
           isAdminOrLeader &&
           !snapshot.assignee &&
           !snapshot.altAssignee && (
-          <Popover
-            opened={assignOpen}
-            onChange={setAssignOpen}
-            position="bottom-start"
-            withArrow
-            shadow="md"
-            withinPortal={false}
-            closeOnClickOutside={false}
-            closeOnEscape={false}
-          >
-            <Popover.Target>
-              <Box
-                onMouseDownCapture={(e) => {
-                  e.stopPropagation()
-                  e.preventDefault()
-                }}
-                onClickCapture={(e) => {
-                  e.stopPropagation()
-                  setAssignOpen((v) => !v)
-                }}
-              >
-                <ActionIcon
-                  size="sm"
-                  variant="subtle"
-                  color="indigo"
-                  title="Phân công nhân sự"
-                  styles={{
-                    root: {
-                      color: "white",
-                      "&:hover": { backgroundColor: "rgba(255,255,255,0.14)" }
-                    }
+            <Popover
+              opened={assignOpen}
+              onChange={setAssignOpen}
+              position="bottom-start"
+              withArrow
+              shadow="md"
+              withinPortal={false}
+              closeOnClickOutside={false}
+              closeOnEscape={false}
+            >
+              <Popover.Target>
+                <Box
+                  onMouseDownCapture={(e) => {
+                    e.stopPropagation()
+                    e.preventDefault()
+                  }}
+                  onClickCapture={(e) => {
+                    e.stopPropagation()
+                    setAssignOpen((v) => !v)
                   }}
                 >
-                  <IconUserPlus size={16} />
-                </ActionIcon>
-              </Box>
-            </Popover.Target>
-            <Popover.Dropdown
-              onClick={(e) => e.stopPropagation()}
-              onMouseDown={(e) => e.stopPropagation()}
-              style={{ minWidth: 320 }}
-            >
-              <Stack gap="xs">
-                <Text size="sm" fw={600}>
-                  Phân công nhân sự
-                </Text>
-                <Select
-                  placeholder="Chọn nhân sự"
-                  value={selectedAssignee}
-                  onChange={setSelectedAssignee}
-                  data={employeesData
-                    .map((e) => ({
-                      label: e.name,
-                      value: e._id
-                    }))
-                    .concat(
-                      snapshot.assignee
-                        ? []
-                        : [{ label: "Khác", value: "other" }]
-                    )}
-                  searchable
-                  comboboxProps={{
-                    withinPortal: false,
-                    position: "bottom-start"
-                  }}
-                />
-                {selectedAssignee === "other" && (
-                  <Stack gap="xs">
-                    <TextInput
-                      label="Tên người khác"
-                      placeholder="Nhập tên..."
-                      value={otherAssigneeName}
-                      onChange={(e) =>
-                        setOtherAssigneeName(e.currentTarget.value)
+                  <ActionIcon
+                    size="sm"
+                    variant="subtle"
+                    color="indigo"
+                    title="Phân công nhân sự"
+                    styles={{
+                      root: {
+                        color: "white",
+                        "&:hover": { backgroundColor: "rgba(255,255,255,0.14)" }
                       }
-                      size="sm"
-                    />
-                    <TextInput
-                      label="Ghi chú"
-                      placeholder="Nhập ghi chú..."
-                      value={otherAssigneeNote}
-                      onChange={(e) =>
-                        setOtherAssigneeNote(e.currentTarget.value)
-                      }
-                      size="sm"
-                    />
-                  </Stack>
-                )}
-                <Group justify="space-between">
-                  <Button
-                    variant="outline"
-                    size="xs"
-                    onClick={() => setAssignOpen(false)}
+                    }}
                   >
-                    Đóng
-                  </Button>
-                  <Group>
-                    {snapshot.assignee && (
+                    <IconUserPlus size={16} />
+                  </ActionIcon>
+                </Box>
+              </Popover.Target>
+              <Popover.Dropdown
+                onClick={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+                style={{ minWidth: 320 }}
+              >
+                <Stack gap="xs">
+                  <Text size="sm" fw={600}>
+                    Phân công nhân sự
+                  </Text>
+                  <Select
+                    placeholder="Chọn nhân sự"
+                    value={selectedAssignee}
+                    onChange={setSelectedAssignee}
+                    data={employeesData
+                      .map((e) => ({
+                        label: e.name,
+                        value: e._id
+                      }))
+                      .concat(
+                        snapshot.assignee
+                          ? []
+                          : [{ label: "Khác", value: "other" }]
+                      )}
+                    searchable
+                    comboboxProps={{
+                      withinPortal: false,
+                      position: "bottom-start"
+                    }}
+                  />
+                  {selectedAssignee === "other" && (
+                    <Stack gap="xs">
+                      <TextInput
+                        label="Tên người khác"
+                        placeholder="Nhập tên..."
+                        value={otherAssigneeName}
+                        onChange={(e) =>
+                          setOtherAssigneeName(e.currentTarget.value)
+                        }
+                        size="sm"
+                      />
+                      <TextInput
+                        label="Ghi chú"
+                        placeholder="Nhập ghi chú..."
+                        value={otherAssigneeNote}
+                        onChange={(e) =>
+                          setOtherAssigneeNote(e.currentTarget.value)
+                        }
+                        size="sm"
+                      />
+                    </Stack>
+                  )}
+                  <Group justify="space-between">
+                    <Button
+                      variant="outline"
+                      size="xs"
+                      onClick={() => setAssignOpen(false)}
+                    >
+                      Đóng
+                    </Button>
+                    <Group>
+                      {snapshot.assignee && (
+                        <Button
+                          size="xs"
+                          variant="light"
+                          color="red"
+                          leftSection={<IconTrash size={14} />}
+                          onClick={() => {
+                            onUnassignEmployee({
+                              livestreamId: dayData._id,
+                              snapshotId: snapshot._id
+                            })
+                            setAssignOpen(false)
+                          }}
+                        >
+                          Bỏ
+                        </Button>
+                      )}
                       <Button
                         size="xs"
-                        variant="light"
-                        color="red"
-                        leftSection={<IconTrash size={14} />}
+                        loading={
+                          selectedAssignee === "other"
+                            ? loadingAssignOther
+                            : false
+                        }
+                        disabled={
+                          !selectedAssignee ||
+                          (selectedAssignee === "other" &&
+                            !otherAssigneeName.trim())
+                        }
                         onClick={() => {
-                          onUnassignEmployee({
+                          if (!selectedAssignee) return
+                          if (selectedAssignee === "other") {
+                            onAssignOther(dayData._id, snapshot._id, {
+                              altOtherAssignee: otherAssigneeName.trim(),
+                              altNote: otherAssigneeNote.trim()
+                            })
+                            setAssignOpen(false)
+                            return
+                          }
+                          onAssignEmployee({
                             livestreamId: dayData._id,
-                            snapshotId: snapshot._id
+                            snapshotId: snapshot._id,
+                            periodId: snapshot.period._id,
+                            userId: selectedAssignee,
+                            role
                           })
                           setAssignOpen(false)
                         }}
                       >
-                        Bỏ
+                        Lưu
                       </Button>
-                    )}
-                    <Button
-                      size="xs"
-                      loading={
-                        selectedAssignee === "other" ? loadingAssignOther : false
-                      }
-                      disabled={
-                        !selectedAssignee ||
-                        (selectedAssignee === "other" &&
-                          !otherAssigneeName.trim())
-                      }
-                      onClick={() => {
-                        if (!selectedAssignee) return
-                        if (selectedAssignee === "other") {
-                          onAssignOther(dayData._id, snapshot._id, {
-                            altOtherAssignee: otherAssigneeName.trim(),
-                            altNote: otherAssigneeNote.trim()
-                          })
-                          setAssignOpen(false)
-                          return
-                        }
-                        onAssignEmployee({
-                          livestreamId: dayData._id,
-                          snapshotId: snapshot._id,
-                          periodId: snapshot.period._id,
-                          userId: selectedAssignee,
-                          role
-                        })
-                        setAssignOpen(false)
-                      }}
-                    >
-                      Lưu
-                    </Button>
+                    </Group>
                   </Group>
-                </Group>
-              </Stack>
-            </Popover.Dropdown>
-          </Popover>
-        )}
+                </Stack>
+              </Popover.Dropdown>
+            </Popover>
+          )}
 
         {!hideEditButtons &&
           isWeekFixed &&
@@ -1218,8 +1220,7 @@ export const LivestreamCalendarRegion = ({
     deleteSnapshot,
     updateTimeDirect,
     assignOtherSnapshot
-  } =
-    useLivestreamCore()
+  } = useLivestreamCore()
 
   const roleLabel = role === "host" ? "Host" : "Trợ live"
   const viewportHeightPx = 800
@@ -1230,10 +1231,8 @@ export const LivestreamCalendarRegion = ({
 
   const isAdminOrLeader = useMemo(() => {
     if (!currentUser) return false
-    return (
-      currentUser.roles?.includes("admin") ||
-      currentUser.roles?.includes("livestream-leader")
-    )
+    return currentUser.roles?.includes("admin")
+    // currentUser.roles?.includes("livestream-leader")
   }, [currentUser])
 
   const canEditSnapshot = (snapshot: LivestreamSnapshot) => {
@@ -1383,34 +1382,36 @@ export const LivestreamCalendarRegion = ({
     }
   })
 
-  const { mutate: mutateAssignOtherSnapshot, isPending: assigningOtherSnapshot } =
-    useMutation({
-      mutationFn: (payload: {
-        livestreamId: string
-        snapshotId: string
-        req: AssignOtherSnapshotRequest
-      }) =>
-        assignOtherSnapshot(
-          payload.livestreamId,
-          payload.snapshotId,
-          payload.req
-        ),
-      onSuccess: () => {
-        notifications.show({
-          title: "Phân công thành công",
-          message: "Đã phân công người khác cho snapshot",
-          color: "green"
-        })
-        onRefetch()
-      },
-      onError: (error: unknown) => {
-        notifications.show({
-          title: "Phân công thất bại",
-          message: getErrorMessage(error) || "Có lỗi xảy ra",
-          color: "red"
-        })
-      }
-    })
+  const {
+    mutate: mutateAssignOtherSnapshot,
+    isPending: assigningOtherSnapshot
+  } = useMutation({
+    mutationFn: (payload: {
+      livestreamId: string
+      snapshotId: string
+      req: AssignOtherSnapshotRequest
+    }) =>
+      assignOtherSnapshot(
+        payload.livestreamId,
+        payload.snapshotId,
+        payload.req
+      ),
+    onSuccess: () => {
+      notifications.show({
+        title: "Phân công thành công",
+        message: "Đã phân công người khác cho snapshot",
+        color: "green"
+      })
+      onRefetch()
+    },
+    onError: (error: unknown) => {
+      notifications.show({
+        title: "Phân công thất bại",
+        message: getErrorMessage(error) || "Có lỗi xảy ra",
+        color: "red"
+      })
+    }
+  })
 
   const defaultNewSnapshotMinutes = 60
 
@@ -1616,23 +1617,38 @@ export const LivestreamCalendarRegion = ({
                       }}
                     >
                       {onCalculateDailySalary && (
-                        <Button
-                          size="xs"
-                          color={hasCalculatedSalary ? "yellow" : "indigo"}
-                          variant="light"
-                          leftSection={
-                            hasCalculatedSalary ? (
-                              <IconRefresh size={14} />
-                            ) : (
-                              <IconCalculator size={14} />
-                            )
-                          }
-                          onClick={() => onCalculateDailySalary(day)}
-                          loading={isCalculatingSalary}
-                          fullWidth
-                        >
-                          {hasCalculatedSalary ? "Tính lại" : "Tính lương"}
-                        </Button>
+                        <>
+                          <Button
+                            size="xs"
+                            color={hasCalculatedSalary ? "yellow" : "indigo"}
+                            variant="light"
+                            leftSection={
+                              hasCalculatedSalary ? (
+                                <IconRefresh size={14} />
+                              ) : (
+                                <IconCalculator size={14} />
+                              )
+                            }
+                            onClick={() => onCalculateDailySalary(day, true)}
+                            loading={isCalculatingSalary}
+                            fullWidth
+                          >
+                            {hasCalculatedSalary ? "Tính lại" : "Tính lương"}
+                          </Button>
+                          {isAdminOrLeader && (
+                            <Button
+                              size="xs"
+                              color="grape"
+                              variant="light"
+                              leftSection={<IconCalculator size={14} />}
+                              onClick={() => onCalculateDailySalary(day, false)}
+                              loading={isCalculatingSalary}
+                              fullWidth
+                            >
+                              Tính lương (DT gốc)
+                            </Button>
+                          )}
+                        </>
                       )}
 
                       {role === "host" && onCalculateIncome && (
@@ -1746,7 +1762,8 @@ export const LivestreamCalendarRegion = ({
                               position: "absolute",
                               left: 0,
                               right: 0,
-                              top: (nowMinutes - timeRange.startMin) * pxPerMinute,
+                              top:
+                                (nowMinutes - timeRange.startMin) * pxPerMinute,
                               height: 2,
                               background: "var(--mantine-color-red-6)",
                               zIndex: 4,
@@ -1921,11 +1938,17 @@ export const LivestreamCalendarRegion = ({
                                     canEditSnapshot={canEditSnapshot}
                                     onGetRequest={onGetRequest}
                                     onCreateRequest={onCreateRequest}
-                                    onUpdateRequestStatus={onUpdateRequestStatus}
+                                    onUpdateRequestStatus={
+                                      onUpdateRequestStatus
+                                    }
                                     onUpdateAlt={onUpdateAlt}
                                     onUnassignEmployee={onUnassignEmployee}
                                     onAssignEmployee={onAssignEmployee}
-                                    onAssignOther={(livestreamId, snapshotId, req) =>
+                                    onAssignOther={(
+                                      livestreamId,
+                                      snapshotId,
+                                      req
+                                    ) =>
                                       mutateAssignOtherSnapshot({
                                         livestreamId,
                                         snapshotId,
@@ -1937,11 +1960,25 @@ export const LivestreamCalendarRegion = ({
                                     loadingDeleteSnapshot={deletingSnapshot}
                                     loadingUpdateTime={updatingTime}
                                     loadingAssignOther={assigningOtherSnapshot}
-                                    onDeleteSnapshot={(livestreamId, snapshotId) =>
-                                      mutateDeleteSnapshot({ livestreamId, snapshotId })
+                                    onDeleteSnapshot={(
+                                      livestreamId,
+                                      snapshotId
+                                    ) =>
+                                      mutateDeleteSnapshot({
+                                        livestreamId,
+                                        snapshotId
+                                      })
                                     }
-                                    onUpdateTime={(livestreamId, snapshotId, req) =>
-                                      mutateUpdateTime({ livestreamId, snapshotId, req })
+                                    onUpdateTime={(
+                                      livestreamId,
+                                      snapshotId,
+                                      req
+                                    ) =>
+                                      mutateUpdateTime({
+                                        livestreamId,
+                                        snapshotId,
+                                        req
+                                      })
                                     }
                                   />
 

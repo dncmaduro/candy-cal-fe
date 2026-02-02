@@ -2957,6 +2957,7 @@ export interface DeleteLivestreamPerformanceRequest {
 /** @interface */
 export interface CalculateDailyPerformanceRequest {
   date: Date
+  baseOnRealIncome?: boolean
 }
 
 /** @interface */
