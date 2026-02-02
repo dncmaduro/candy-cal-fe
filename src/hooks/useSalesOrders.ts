@@ -6,6 +6,7 @@ import {
   CreateSalesOrderResponse,
   DeleteSalesOrderRequest,
   ExportXlsxSalesOrderByIdsRequest,
+  ExportXlsxSalesOrderForAccountingRequest,
   ExportXlsxSalesOrderRequest,
   GetOrdersByFunnelRequest,
   GetOrdersByFunnelResponse,
@@ -178,6 +179,26 @@ export const useSalesOrders = () => {
     })
   }
 
+  const exportXlsxSalesOrderForAccounting = async (
+    req: ExportXlsxSalesOrderForAccountingRequest
+  ) => {
+    const query = toQueryString(req)
+
+    return callApi<never, Blob>({
+      path: `/v1/salesorders/export/xlsx/accounting?${query}`,
+      method: "GET",
+      token: accessToken,
+      headers: {
+        // request body là JSON
+        "Content-Type": "application/json",
+        // response mong muốn là file excel
+        Accept:
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      },
+      responseType: "blob"
+    })
+  }
+
   const exportXlsxSalesOrderByIds = async (
     req: ExportXlsxSalesOrderByIdsRequest
   ) => {
@@ -219,6 +240,7 @@ export const useSalesOrders = () => {
     getSalesOrderById,
     searchSalesOrders,
     exportXlsxSalesOrder,
+    exportXlsxSalesOrderForAccounting,
     updateSalesOrderTaxShipping,
     moveSalesOrderToOfficial,
     getOrdersByFunnel,
