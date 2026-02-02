@@ -189,25 +189,25 @@ export const ShopeeIncomes = () => {
         header: "Giá",
         size: 120,
         cell: ({ row }) => (
-          <Box>
+          <Stack>
             {row.original.products.map((product, idx) => (
               <Text key={idx} size="sm" c="dimmed">
                 {product.price.toLocaleString("vi-VN")}đ
               </Text>
             ))}
-          </Box>
+          </Stack>
         )
       },
-      {
-        accessorKey: "affPercentage",
-        header: "Aff %",
-        size: 80,
-        cell: ({ getValue }) => (
-          <Text size="sm" c="dimmed">
-            {getValue<number>()}%
-          </Text>
-        )
-      },
+      // {
+      //   accessorKey: "affPercentage",
+      //   header: "Aff %",
+      //   size: 80,
+      //   cell: ({ getValue }) => (
+      //     <Text size="sm" c="dimmed">
+      //       {getValue<number>()}%
+      //     </Text>
+      //   )
+      // },
       {
         accessorKey: "total",
         header: "Tổng tiền",
