@@ -4080,6 +4080,21 @@ export interface ExportXlsxSalesOrderRequest {
 }
 
 /** @interface */
+export interface ExportXlsxSalesOrderForAccountingRequest {
+  salesFunnelId?: string
+  userId?: string
+  channelId?: string
+  returning?: boolean
+  startDate?: string
+  endDate?: string
+  searchText?: string
+  shippingType?: "shipping_vtp" | "shipping_cargo"
+  status?: "draft" | "official"
+  page: number
+  limit: number
+}
+
+/** @interface */
 export interface ExportXlsxSalesOrderByIdsRequest {
   orderIds: string[]
 }

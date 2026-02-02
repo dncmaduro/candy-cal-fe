@@ -83,7 +83,8 @@ function RouteComponent() {
     searchSalesOrders,
     deleteSalesOrder,
     exportXlsxSalesOrder,
-    exportXlsxSalesOrderByIds
+    exportXlsxSalesOrderByIds,
+    exportXlsxSalesOrderForAccounting
   } = useSalesOrders()
   const { searchFunnel, getFunnelByUser } = useSalesFunnel()
   const { getMe } = useUsers()
@@ -137,6 +138,9 @@ function RouteComponent() {
   const isSystemEmp = me?.roles.includes("system-emp")
   const isSalesLeader = me?.roles.includes("sales-leader")
   const isSalesEmp = me?.roles.includes("sales-emp")
+  const isAccountingEmp =
+    me?.roles.includes("accounting-emp") ||
+    me?.roles.includes("sales-accounting")
 
   const formMethods = useForm<CreateSalesOrderFormData>({
     defaultValues: {
@@ -268,6 +272,24 @@ function RouteComponent() {
       CToast.success({ title: "Xuất file Excel (đã chọn) thành công" })
     },
     onError: () => CToast.error({ title: "Có lỗi xảy ra khi xuất file Excel" })
+  })
+
+  const { mutate: exportXlsxForAccounting } = useMutation({
+    mutationFn: exportXlsxSalesOrderForAccounting,
+    onSuccess: (response) => {
+      const url = URL.createObjectURL(response.data)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = `Don_hang_ke_toan_${format(new Date(), "ddMMyyyy")}_${
+        startDate ? format(startDate, "ddMMyyyy") : ""
+      }_${endDate ? format(endDate, "ddMMyyyy") : ""}.xlsx`
+      link.click()
+      URL.revokeObjectURL(url)
+      CToast.success({ title: "Xuất file Excel kế toán thành công" })
+    },
+    onError: () => {
+      CToast.error({ title: "Có lỗi xảy ra khi xuất file Excel kế toán" })
+    }
   })
 
   useEffect(() => {
@@ -978,6 +1000,156 @@ function RouteComponent() {
                     ? `Xuất Excel (${selectedOrderIds.length} đã chọn)`
                     : "Xuất Excel"}
                 </Button>
+                {isAccountingEmp && (
+                  <Button
+                    onClick={() => {
+                      modals.openConfirmModal({
+                        title: <b>Xác nhận xuất file Excel kế toán</b>,
+                        children: (
+                          <Box>
+                            <Text mb="md">
+                              Bạn có chắc chắn muốn xuất file Excel kế toán với
+                              các bộ lọc hiện tại?
+                            </Text>
+
+                            <Box
+                              style={{
+                                background: "#f8f9fa",
+                                padding: "12px",
+                                borderRadius: "8px"
+                              }}
+                            >
+                              <Text size="sm" fw={600} mb="xs">
+                                Thông tin xuất:
+                              </Text>
+                              <Text size="sm" mb={4}>
+                                • Tổng số đơn hàng:{" "}
+                                <strong>{data?.data.total || 0}</strong> đơn
+                              </Text>
+                              {searchText && (
+                                <Text size="sm" mb={4}>
+                                  • Tìm kiếm: <strong>{searchText}</strong>
+                                </Text>
+                              )}
+                              {returningFilter && (
+                                <Text size="sm" mb={4}>
+                                  • Loại khách:{" "}
+                                  <strong>
+                                    {returningFilter === "true"
+                                      ? "Khách cũ"
+                                      : "Khách mới"}
+                                  </strong>
+                                </Text>
+                              )}
+                              {funnelFilter && (
+                                <Text size="sm" mb={4}>
+                                  • Khách hàng:{" "}
+                                  <strong>
+                                    {
+                                      funnelOptions.find(
+                                        (f) => f.value === funnelFilter
+                                      )?.label
+                                    }
+                                  </strong>
+                                </Text>
+                              )}
+                              {shippingTypeFilter && (
+                                <Text size="sm" mb={4}>
+                                  • Đơn vị vận chuyển:{" "}
+                                  <strong>
+                                    {shippingTypeFilter === "shipping_vtp"
+                                      ? "Viettel Post"
+                                      : "Shipcode lên chành"}
+                                  </strong>
+                                </Text>
+                              )}
+                              {statusFilter && (
+                                <Text size="sm" mb={4}>
+                                  • Trạng thái:{" "}
+                                  <strong>
+                                    {statusFilter === "draft"
+                                      ? "Báo giá"
+                                      : "Chính thức"}
+                                  </strong>
+                                </Text>
+                              )}
+                              {startDate && (
+                                <Text size="sm" mb={4}>
+                                  • Từ ngày:{" "}
+                                  <strong>
+                                    {format(startDate, "dd/MM/yyyy")}
+                                  </strong>
+                                </Text>
+                              )}
+                              {endDate && (
+                                <Text size="sm" mb={4}>
+                                  • Đến ngày:{" "}
+                                  <strong>
+                                    {format(endDate, "dd/MM/yyyy")}
+                                  </strong>
+                                </Text>
+                              )}
+                              {!searchText &&
+                                !returningFilter &&
+                                !funnelFilter &&
+                                !shippingTypeFilter &&
+                                !statusFilter &&
+                                !startDate &&
+                                !endDate && (
+                                  <Text size="sm" c="orange" mb={4}>
+                                    ⚠️ Không có bộ lọc nào được áp dụng. Tất cả
+                                    đơn hàng sẽ được xuất.
+                                  </Text>
+                                )}
+                            </Box>
+                          </Box>
+                        ),
+                        labels: {
+                          confirm: "Xuất Excel kế toán",
+                          cancel: "Hủy"
+                        },
+                        confirmProps: { color: "blue" },
+                        onConfirm: () => {
+                          exportXlsxForAccounting({
+                            page: 1,
+                            limit: 9999,
+                            searchText: searchText || undefined,
+                            channelId: channelIdFilter || undefined,
+                            userId: userIdFilter || undefined,
+                            returning:
+                              returningFilter === ""
+                                ? undefined
+                                : returningFilter === "true",
+                            salesFunnelId: funnelFilter || undefined,
+                            shippingType:
+                              shippingTypeFilter === ""
+                                ? undefined
+                                : (shippingTypeFilter as
+                                    | "shipping_vtp"
+                                    | "shipping_cargo"),
+                            status:
+                              statusFilter === ""
+                                ? undefined
+                                : (statusFilter as "draft" | "official"),
+                            startDate: startDate
+                              ? format(startDate, "yyyy-MM-dd")
+                              : undefined,
+                            endDate: endDate
+                              ? format(endDate, "yyyy-MM-dd")
+                              : undefined
+                          })
+                        }
+                      })
+                    }}
+                    leftSection={<IconDownload size={16} />}
+                    size="sm"
+                    radius="md"
+                    color="blue"
+                    variant="light"
+                  >
+                    Xuất Excel kế toán
+                  </Button>
+                )}
                 <Can roles={["admin", "sales-leader", "sales-emp"]}>
                   <Button
                     onClick={handleUploadOrders}
