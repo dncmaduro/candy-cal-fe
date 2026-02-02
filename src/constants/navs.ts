@@ -181,7 +181,7 @@ export const SALES_NAVS = [
   {
     to: `${SALES_NAVS_URL}/orders`,
     label: "Đơn hàng",
-    roles: ["admin", "sales-emp", "system-emp"],
+    roles: ["admin", "sales-emp", "system-emp", "sales-accounting"],
     icon: "IconClipboardList"
   },
   {
