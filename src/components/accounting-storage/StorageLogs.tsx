@@ -329,9 +329,10 @@ export const StorageLogs = ({ activeTab }: Props) => {
               </Can>
 
               <Can roles={["admin", "accounting-emp"]}>
-                {log.tag === "deliver-tiktokshop" ? (
+                {log.tag === "deliver-tiktokshop" ||
+                log.tag === "deliver-shopee" ? (
                   <Tooltip
-                    label="Xoá log xuất của TiktokShop bằng cách hoàn tác yêu cầu xuất hàng"
+                    label="Xoá log xuất của TiktokShop/Shopee bằng cách hoàn tác yêu cầu xuất hàng"
                     withArrow
                   >
                     <Button

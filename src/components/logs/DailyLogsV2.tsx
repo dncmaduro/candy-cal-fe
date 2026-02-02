@@ -1,5 +1,6 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { useDailyLogs } from "../../hooks/useDailyLogs"
+import { useLivestreamChannels } from "../../hooks/useLivestreamChannels"
 import { useQuery } from "@tanstack/react-query"
 import {
   Box,
@@ -7,11 +8,8 @@ import {
   Divider,
   Flex,
   Group,
-  Loader,
-  NumberInput,
-  Pagination,
+  Select,
   rem,
-  Table,
   Text
 } from "@mantine/core"
 import { IconHistory, IconListDetails } from "@tabler/icons-react"
@@ -20,18 +18,64 @@ import { modals } from "@mantine/modals"
 import { CalFileResultModal } from "../cal/CalFileResultModal"
 import { Link } from "@tanstack/react-router"
 import { NAVS_URL } from "../../constants/navs"
+import type { ColumnDef } from "@tanstack/react-table"
+import { CDataTable } from "../common/CDataTable"
+import type { GetDailyLogsResponse } from "../../hooks/models"
+
+type DailyLogRow = Omit<GetDailyLogsResponse["data"][number], "date"> & {
+  date: string | Date
+}
+
+type DeliveredRequestChannel = {
+  _id: string
+  name: string
+  username: string
+  link: string
+  platform: string
+}
+
+const getChannelsFromLog = (log: DailyLogRow): DeliveredRequestChannel[] => {
+  const anyLog = log as any
+
+  const fromOrders: DeliveredRequestChannel[] = Array.isArray(anyLog?.orders)
+    ? anyLog.orders
+        .map((o: any) => o?.channel)
+        .filter(Boolean)
+        .filter((c: any) => typeof c === "object")
+    : []
+
+  const fromLog: DeliveredRequestChannel[] =
+    anyLog?.channel && typeof anyLog.channel === "object"
+      ? [anyLog.channel]
+      : []
+
+  const all = [...fromOrders, ...fromLog].filter(
+    (c): c is DeliveredRequestChannel => !!c?._id
+  )
+
+  const uniq = new Map<string, DeliveredRequestChannel>()
+  for (const c of all) uniq.set(c._id, c)
+  return Array.from(uniq.values())
+}
 
 export const DailyLogsV2 = () => {
-  const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(10)
+  const [channelId, setChannelId] = useState<string | null>(null)
 
   const { getDailyLogs } = useDailyLogs()
+  const { searchLivestreamChannels } = useLivestreamChannels()
 
   const newVersionDate = new Date(import.meta.env.VITE_NEW_ITEMS_DATE)
 
   const { data: dailyLogsData, isLoading } = useQuery({
-    queryKey: ["dailyLogs", page, limit],
-    queryFn: () => getDailyLogs({ page, limit }),
+    // Không dùng page nữa vì DataTable đang paginate client-side
+    queryKey: ["dailyLogs", limit, channelId],
+    queryFn: () =>
+      getDailyLogs({
+        page: 1,
+        limit: Math.max(200, limit * 20),
+        channelId: channelId || undefined
+      }),
     select: (data) => {
       const newData = data.data.data.filter(
         (log) => new Date(log.date) >= newVersionDate
@@ -41,7 +85,169 @@ export const DailyLogsV2 = () => {
     refetchOnWindowFocus: true
   })
 
-  const colCount = 5
+  const rows: DailyLogRow[] = useMemo(
+    () => (dailyLogsData?.data ?? []) as DailyLogRow[],
+    [dailyLogsData]
+  )
+
+  const { data: channelsData, isLoading: isLoadingChannels } = useQuery({
+    queryKey: ["searchLivestreamChannels", "all"],
+    queryFn: () => searchLivestreamChannels({ page: 1, limit: 200 }),
+    select: (res) => res.data.data ?? [],
+    refetchOnWindowFocus: false
+  })
+
+  const channelOptions = useMemo(() => {
+    const list = channelsData ?? []
+    return list
+      .slice()
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((c) => ({
+        value: c._id,
+        label: c.name
+      }))
+  }, [channelsData])
+
+  const filteredRows = useMemo(() => {
+    if (!channelId) return rows
+
+    return rows.filter((r) => {
+      const channels = getChannelsFromLog(r)
+      if (channelId && !channels.some((c) => c._id === channelId)) return false
+    })
+  }, [rows, channelId])
+
+  // todo: fix typing bug here
+  const columns: ColumnDef<DailyLogRow>[] = useMemo(
+    () => [
+      {
+        accessorKey: "date",
+        header: () => (
+          <Text fw={600} size="sm">
+            Ngày
+          </Text>
+        ),
+        cell: ({ row }) => (
+          <Text size="sm" className="whitespace-nowrap">
+            {format(new Date(row.original.date), "dd/MM/yyyy")}
+          </Text>
+        )
+      },
+      {
+        id: "channelName",
+        header: () => (
+          <Text fw={600} size="sm">
+            Kênh
+          </Text>
+        ),
+        cell: ({ row }) => {
+          const channels = getChannelsFromLog(row.original)
+          if (!channels.length) return <Text size="sm">-</Text>
+          return (
+            <Text size="sm">
+              {channels.length === 1
+                ? channels[0].name
+                : `${channels[0].name} (+${channels.length - 1})`}
+            </Text>
+          )
+        }
+      },
+      {
+        id: "itemsCount",
+        header: () => (
+          <Text fw={600} size="sm">
+            Số mặt hàng
+          </Text>
+        ),
+        cell: ({ row }) => (
+          <Text size="sm">{row.original.items?.length || 0}</Text>
+        )
+      },
+      {
+        id: "ordersCount",
+        header: () => (
+          <Text fw={600} size="sm">
+            Số đơn hàng
+          </Text>
+        ),
+        cell: ({ row }) => (
+          <Text size="sm">{row.original.orders?.length || 0}</Text>
+        )
+      },
+      {
+        accessorKey: "updatedAt",
+        header: () => (
+          <Text fw={600} size="sm">
+            Cập nhật lúc
+          </Text>
+        ),
+        cell: ({ row }) => (
+          <Text size="sm" className="whitespace-nowrap">
+            {format(new Date(row.original.updatedAt), "dd/MM/yyyy HH:mm:ss")}
+          </Text>
+        )
+      },
+      {
+        id: "actions",
+        header: "",
+        enableSorting: false,
+        enableHiding: false,
+        cell: ({ row }) => {
+          const log = row.original
+          return (
+            <Group gap={8} wrap="nowrap">
+              <Button
+                variant="light"
+                size="xs"
+                radius={"xl"}
+                leftSection={<IconListDetails size={14} />}
+                onClick={() =>
+                  modals.open({
+                    title: (
+                      <b>
+                        Chi tiết log kho theo ngày{" "}
+                        {format(new Date(log.date), "dd/MM/yyyy")}
+                      </b>
+                    ),
+                    children: (
+                      <CalFileResultModal
+                        items={log.items}
+                        orders={log.orders}
+                        readOnly
+                        date={new Date(log.date)}
+                        platform={log.channel?.platform}
+                        channelId={log.channel?._id}
+                      />
+                    ),
+                    size: "80vw"
+                  })
+                }
+              >
+                Chi tiết
+              </Button>
+            </Group>
+          )
+        }
+      }
+    ],
+    []
+  )
+
+  const extraFilters = (
+    <Group gap={8} wrap="wrap">
+      <Select
+        w={220}
+        placeholder="Lọc theo kênh"
+        data={channelOptions}
+        value={channelId}
+        onChange={(val) => setChannelId(val)}
+        clearable
+        searchable
+        disabled={isLoading || isLoadingChannels}
+        nothingFoundMessage="Không có kênh"
+      />
+    </Group>
+  )
 
   return (
     <>
@@ -88,109 +294,21 @@ export const DailyLogsV2 = () => {
         </Flex>
         <Divider my={0} />
         <Box px={{ base: 4, md: 28 }} py={20}>
-          <Table
-            highlightOnHover
-            striped
-            withColumnBorders
-            withTableBorder
-            verticalSpacing="sm"
-            horizontalSpacing="md"
-            stickyHeader
-            className="rounded-xl"
-            miw={900}
-          >
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Ngày</Table.Th>
-                <Table.Th>Số mặt hàng</Table.Th>
-                <Table.Th>Số đơn hàng</Table.Th>
-                <Table.Th>Cập nhật lúc</Table.Th>
-                <Table.Th></Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {isLoading ? (
-                <Table.Tr>
-                  <Table.Td colSpan={colCount}>
-                    <Flex justify="center" align="center" h={60}>
-                      <Loader />
-                    </Flex>
-                  </Table.Td>
-                </Table.Tr>
-              ) : dailyLogsData?.data && dailyLogsData.data.length > 0 ? (
-                dailyLogsData.data.map((log) => (
-                  <Table.Tr key={log._id}>
-                    <Table.Td>
-                      {format(new Date(log.date), "dd/MM/yyyy")}
-                    </Table.Td>
-                    <Table.Td>{log.items?.length || 0}</Table.Td>
-                    <Table.Td>{log.orders?.length || 0}</Table.Td>
-                    <Table.Td>
-                      {format(new Date(log.updatedAt), "dd/MM/yyyy HH:mm:ss")}
-                    </Table.Td>
-                    <Table.Td>
-                      <Group gap={8}>
-                        <Button
-                          variant="light"
-                          size="xs"
-                          radius={"xl"}
-                          leftSection={<IconListDetails size={14} />}
-                          onClick={() =>
-                            modals.open({
-                              title: (
-                                <b>
-                                  Chi tiết log kho theo ngày{" "}
-                                  {format(new Date(log.date), "dd/MM/yyyy")}
-                                </b>
-                              ),
-                              children: (
-                                <CalFileResultModal
-                                  items={log.items}
-                                  orders={log.orders}
-                                  readOnly
-                                  date={new Date(log.date)}
-                                />
-                              ),
-                              size: "80vw"
-                            })
-                          }
-                        >
-                          Chi tiết
-                        </Button>
-                      </Group>
-                    </Table.Td>
-                  </Table.Tr>
-                ))
-              ) : (
-                <Table.Tr>
-                  <Table.Td colSpan={colCount}>
-                    <Flex justify="center" align="center" h={60}>
-                      <Text c="dimmed">Không có log kho nào</Text>
-                    </Flex>
-                  </Table.Td>
-                </Table.Tr>
-              )}
-            </Table.Tbody>
-          </Table>
-
-          <Flex justify="space-between" align={"center"} mt={16}>
-            <Text c="dimmed" mr={8}>
-              Tổng số dòng: {dailyLogsData?.total}
-            </Text>
-            <Pagination
-              total={Math.ceil((dailyLogsData?.total ?? 1) / limit)}
-              value={page}
-              onChange={setPage}
-            />
-            <Group>
-              <Text>Số dòng/trang </Text>
-              <NumberInput
-                value={limit}
-                onChange={(val) => setLimit(Number(val))}
-                w={100}
-              />
-            </Group>
-          </Flex>
+          <CDataTable<DailyLogRow, unknown>
+            columns={columns}
+            data={filteredRows}
+            isLoading={isLoading}
+            loadingText="Đang tải danh sách log..."
+            enableGlobalFilter={false}
+            enableRowSelection={false}
+            extraFilters={extraFilters}
+            onPageSizeChange={(n) => {
+              setLimit(n)
+            }}
+            initialPageSize={limit}
+            pageSizeOptions={[10, 20, 50, 100]}
+            getRowId={(row) => row._id}
+          />
         </Box>
       </Box>
     </>

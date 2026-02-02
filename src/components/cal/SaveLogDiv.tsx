@@ -4,8 +4,9 @@ import { useState } from "react"
 import { useSessionLogs } from "../../hooks/useSessionLogs"
 import { useDailyLogs } from "../../hooks/useDailyLogs"
 import { IconDeviceFloppy } from "@tabler/icons-react"
-import { useMutation } from "@tanstack/react-query"
+import { useMutation, useQuery } from "@tanstack/react-query"
 import { CToast } from "../common/CToast"
+import { useLivestreamChannels } from "../../hooks/useLivestreamChannels"
 
 interface Props {
   items: {
@@ -36,11 +37,15 @@ interface Props {
     }[]
     quantity: number
   }[]
+  platform?: string
 }
 
-export const SaveLogDiv = ({ items, orders }: Props) => {
+export const SaveLogDiv = ({ items, orders, platform }: Props) => {
   const { createSessionLog } = useSessionLogs()
   const { createDailyLog } = useDailyLogs()
+  const { searchLivestreamChannels } = useLivestreamChannels()
+
+  console.log(platform)
 
   const { mutate: createSession, isPending: isCreatingSession } = useMutation({
     mutationFn: createSessionLog,
@@ -76,6 +81,29 @@ export const SaveLogDiv = ({ items, orders }: Props) => {
   const [date, setDate] = useState<Date | null>(
     new Date(new Date().setHours(0, 0, 0, 0))
   )
+  const [channelId, setChannelId] = useState<string | null>(null)
+
+  const { data: channelsData, isLoading: isLoadingChannels } = useQuery({
+    queryKey: ["searchLivestreamChannels", "all"],
+    queryFn: () => searchLivestreamChannels({ page: 1, limit: 200 }),
+    select: (res) => {
+      const data = res.data.data ?? []
+      if (!platform) {
+        return data
+      }
+
+      return data.filter((d) => d.platform === platform)
+    },
+    refetchOnWindowFocus: false
+  })
+
+  const channelOptions = (channelsData ?? [])
+    .slice()
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map((ch) => ({
+      value: ch._id,
+      label: ch.name
+    }))
 
   const saveOptions = [
     {
@@ -92,7 +120,11 @@ export const SaveLogDiv = ({ items, orders }: Props) => {
     if (option === "session-log") {
       createSession({ time: date as Date, items, orders })
     } else {
-      createDaily({ date: date as Date, items, orders })
+      if (!channelId) {
+        CToast.error({ title: "Vui lòng chọn kênh" })
+        return
+      }
+      createDaily({ date: date as Date, items, orders, channelId })
     }
   }
 
@@ -130,6 +162,20 @@ export const SaveLogDiv = ({ items, orders }: Props) => {
               valueFormat="DD/MM/YYYY"
               onChange={setDate}
             />
+            <Select
+              data={channelOptions}
+              size="md"
+              radius={"md"}
+              label="Chọn kênh"
+              placeholder="Chọn kênh"
+              value={channelId}
+              onChange={setChannelId}
+              w={220}
+              searchable
+              clearable
+              disabled={isLoadingChannels}
+              nothingFoundMessage="Không có kênh"
+            />
           </>
         )}
         <Button
@@ -141,7 +187,11 @@ export const SaveLogDiv = ({ items, orders }: Props) => {
           onClick={handleSave}
           leftSection={<IconDeviceFloppy size={16} />}
           loading={isCreatingSession || isCreatingDaily}
-          disabled={isCreatingSession || isCreatingDaily}
+          disabled={
+            isCreatingSession ||
+            isCreatingDaily ||
+            (option === "daily-log" && !channelId)
+          }
         >
           Lưu log
         </Button>
