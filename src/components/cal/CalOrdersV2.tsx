@@ -4,6 +4,7 @@ import type { ColumnDef } from "@tanstack/react-table"
 import { isEqual } from "lodash"
 
 import { useProducts } from "../../hooks/useProducts"
+import { useShopeeProducts } from "../../hooks/useShopeeProducts"
 import { useItems } from "../../hooks/useItems"
 import { useReadyCombos } from "../../hooks/useReadyCombos"
 import { useUsers } from "../../hooks/useUsers"
@@ -12,7 +13,8 @@ import { useDeliveredRequests } from "../../hooks/useDeliveredRequests"
 import type {
   SearchStorageItemResponse,
   ProductResponse,
-  ReadyComboResponse
+  ReadyComboResponse,
+  GetAllShopeeProductsResponse
 } from "../../hooks/models"
 
 import {
@@ -42,6 +44,8 @@ interface Props {
   }[]
   allCalItems: { _id: string; quantity: number }[]
   date?: Date
+  platform?: string
+  channelId?: string
 }
 
 const normalizeProducts = (products: { _id: string; quantity: number }[]) =>
@@ -56,8 +60,15 @@ type OrderRow = {
   quantity: number
 }
 
-export const CalOrdersV2 = ({ orders, allCalItems, date }: Props) => {
+export const CalOrdersV2 = ({
+  orders,
+  allCalItems,
+  date,
+  platform,
+  channelId
+}: Props) => {
   const { getAllProducts } = useProducts()
+  const { getAllShopeeProducts } = useShopeeProducts()
   const { searchStorageItems } = useItems()
   const { getMe } = useUsers()
   const { createDeliveredRequest } = useDeliveredRequests()
@@ -78,21 +89,33 @@ export const CalOrdersV2 = ({ orders, allCalItems, date }: Props) => {
     select: (data) => data.data as ReadyComboResponse[]
   })
 
+  const isTiktokshop = platform === "tiktokshop" || !platform
+  type ProductLike = {
+    _id: string
+    name: string
+    items: { _id: string; quantity: number }[]
+  }
+
   const { data: allProducts } = useQuery({
-    queryKey: ["getAllProducts"],
-    queryFn: getAllProducts,
-    select: (data) =>
-      data.data.reduce(
+    queryKey: ["getAllProducts", platform],
+    queryFn: isTiktokshop ? getAllProducts : getAllShopeeProducts,
+    select: (data) => {
+      const products = isTiktokshop
+        ? (data.data as ProductResponse[])
+        : ((data.data as unknown as GetAllShopeeProductsResponse).products ??
+          [])
+      return products.reduce(
         (acc, product) => ({ ...acc, [product._id]: product }),
-        {} as Record<string, ProductResponse>
+        {} as Record<string, ProductLike>
       )
+    }
   })
 
   const allProductsByName = useMemo(() => {
     return allProducts
       ? Object.values(allProducts).reduce(
           (acc, product) => ({ ...acc, [product.name]: product }),
-          {} as Record<string, ProductResponse>
+          {} as Record<string, ProductLike>
         )
       : {}
   }, [allProducts])
@@ -511,7 +534,11 @@ export const CalOrdersV2 = ({ orders, allCalItems, date }: Props) => {
                           quantity
                         }))
                       if (body.length === 0) return
-                      sendRequest({ items: body, date })
+                      sendRequest({
+                        items: body,
+                        date,
+                        channelId: channelId || undefined
+                      })
                     }}
                   >
                     Gửi cho các đơn đã chọn
@@ -533,7 +560,11 @@ export const CalOrdersV2 = ({ orders, allCalItems, date }: Props) => {
                           quantity
                         }))
                       if (body.length === 0) return
-                      sendRequest({ items: body, date })
+                      sendRequest({
+                        items: body,
+                        date,
+                        channelId: channelId || undefined
+                      })
                     }}
                   >
                     Gửi cho đơn chưa sẵn

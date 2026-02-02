@@ -29,17 +29,17 @@ function RouteComponent() {
 
   const tabOptions = [
     {
-      label: "Sản phẩm (Tiktok Shop)",
+      label: "SKU (Tiktok Shop)",
       value: "tiktok-products"
     },
     {
-      label: "Sản phẩm (Shopee)",
+      label: "SKU (Shopee)",
       value: "shopee-products"
-    },
-    {
-      label: "Các combo đóng sẵn",
-      value: "ready-combos"
     }
+    // {
+    //   label: "Các combo đóng sẵn",
+    //   value: "ready-combos"
+    // }
   ]
 
   const handleChange = (value: string | null) => {
@@ -58,7 +58,7 @@ function RouteComponent() {
   return (
     <>
       <Helmet>
-        <title>{`Kho & Sản phẩm - ${tab === "tiktok-products" ? "Sản phẩm (Tiktok Shop)" : tab === "ready-combos" ? "Combo đóng sẵn" : "Mặt hàng"} | MyCandy`}</title>
+        <title>{`Kho & SKU - ${tab === "tiktok-products" ? "SKU (Tiktok Shop)" : tab === "ready-combos" ? "Combo đóng sẵn" : "SKU (Shopee)"} | MyCandy`}</title>
       </Helmet>
       <AppLayout>
         <Tabs

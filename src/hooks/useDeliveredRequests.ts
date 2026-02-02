@@ -55,7 +55,8 @@ export const useDeliveredRequests = () => {
       page: req.page,
       limit: req.limit,
       startDate: req.startDate,
-      endDate: req.endDate
+      endDate: req.endDate,
+      channelId: req.channelId
     })
     return callApi<never, SearchDeliveredRequestsResponse>({
       path: `/v1/deliveredrequests/search?${query}`,
