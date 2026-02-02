@@ -1231,8 +1231,10 @@ export const LivestreamCalendarRegion = ({
 
   const isAdminOrLeader = useMemo(() => {
     if (!currentUser) return false
-    return currentUser.roles?.includes("admin")
-    // currentUser.roles?.includes("livestream-leader")
+    return (
+      currentUser.roles?.includes("admin") ||
+      currentUser.roles?.includes("livestream-leader")
+    )
   }, [currentUser])
 
   const canEditSnapshot = (snapshot: LivestreamSnapshot) => {
