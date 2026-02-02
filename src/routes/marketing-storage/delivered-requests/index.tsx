@@ -3,6 +3,7 @@ import { AppLayout } from "../../../components/layouts/AppLayout"
 import { useAuthGuard } from "../../../hooks/useAuthGuard"
 import { useMemo, useState, useCallback } from "react"
 import { useDeliveredRequests } from "../../../hooks/useDeliveredRequests"
+import { useLivestreamChannels } from "../../../hooks/useLivestreamChannels"
 import { useMutation, useQuery } from "@tanstack/react-query"
 
 import {
@@ -13,7 +14,8 @@ import {
   Group,
   Text,
   rem,
-  Badge
+  Badge,
+  Select
 } from "@mantine/core"
 import { DatePickerInput } from "@mantine/dates"
 import { format } from "date-fns"
@@ -39,6 +41,11 @@ type DeliveredRequestRow = {
   accepted?: boolean
   updatedAt?: string | Date | null
   items: any[]
+  channel?: {
+    _id: string
+    name: string
+    platform: string
+  }
 }
 
 const startOfDayISO = (d: Date) => {
@@ -61,18 +68,35 @@ function RouteComponent() {
 
   const [startDate, setStartDate] = useState<Date | null>(null)
   const [endDate, setEndDate] = useState<Date | null>(null)
+  const [channelId, setChannelId] = useState<string | null>(null)
 
   const { searchDeliveredRequests, acceptDeliveredRequest, undoAcceptRequest } =
     useDeliveredRequests()
+  const { searchLivestreamChannels } = useLivestreamChannels()
+
+  // Fetch channels for filter
+  const { data: channelsData } = useQuery({
+    queryKey: ["livestreamChannels"],
+    queryFn: async () => {
+      const response = await searchLivestreamChannels({ page: 1, limit: 100 })
+      return response.data.data
+    }
+  })
+
+  const channelOptions = useMemo(() => {
+    if (!channelsData) return []
+    return channelsData.map((ch) => ({ label: ch.name, value: ch._id }))
+  }, [channelsData])
 
   const queryParams = useMemo(
     () => ({
       page,
       limit,
       startDate: startDate ? startOfDayISO(startDate) : undefined,
-      endDate: endDate ? endOfDayISO(endDate) : undefined
+      endDate: endDate ? endOfDayISO(endDate) : undefined,
+      channelId: channelId || undefined
     }),
-    [page, limit, startDate, endDate]
+    [page, limit, startDate, endDate, channelId]
   )
 
   const {
@@ -184,10 +208,24 @@ function RouteComponent() {
         )
       },
       {
+        id: "channel",
+        header: "Kênh",
+        cell: ({ row }) => {
+          const channel = row.original.channel
+          return channel ? (
+            <Text fz="sm">{channel.name}</Text>
+          ) : (
+            <Text fz="sm" c="dimmed">
+              -
+            </Text>
+          )
+        }
+      },
+      {
         id: "itemsCount",
         header: "Mặt hàng",
         cell: ({ row }) => (
-          <Text fz="sm" ta="right" fw={700}>
+          <Text fz="sm" ta="left" fw={700}>
             {row.original.items?.length ?? 0}
           </Text>
         )
@@ -324,6 +362,21 @@ function RouteComponent() {
         w={160}
       />
 
+      <Select
+        placeholder="Kênh"
+        value={channelId}
+        onChange={(v) => {
+          setPage(1)
+          setChannelId(v)
+        }}
+        data={channelOptions}
+        searchable
+        clearable
+        size="sm"
+        radius="md"
+        w={180}
+      />
+
       <Button
         size="sm"
         radius="md"
@@ -333,6 +386,7 @@ function RouteComponent() {
           setPage(1)
           setStartDate(null)
           setEndDate(null)
+          setChannelId(null)
         }}
       >
         Xoá lọc

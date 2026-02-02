@@ -24,6 +24,8 @@ import { PackingRules } from "../../../components/incomes/PackingRules"
 import { RangeStats } from "../../../components/incomes/RangeStats"
 import { useLivestreamChannels } from "../../../hooks/useLivestreamChannels"
 import { LivestreamChannelProvider } from "../../../context/LivestreamChannelContext"
+import { ShopeeDashboard } from "../../../components/incomes/ShopeeDashboard"
+import { ShopeeIncomes } from "../../../components/incomes/ShopeeIncomes"
 
 type Subtab = {
   tab: string
@@ -51,6 +53,7 @@ function RouteComponent() {
       _id: string
       name: string
       username: string
+      platform: string
       link: string
     }>
   >([])
@@ -135,6 +138,8 @@ function RouteComponent() {
     })
   }
 
+  const currentChannel = channels.find((c) => c._id === selectedChannelId)
+
   return (
     <>
       <Helmet>
@@ -214,7 +219,7 @@ function RouteComponent() {
                     label: ch.name,
                     value: ch._id
                   }))}
-                  fullWidth={channels.length <= 3}
+                  fullWidth
                   size="md"
                   color="violet.4"
                   styles={{
@@ -247,7 +252,11 @@ function RouteComponent() {
 
                 <ScrollArea.Autosize mah={"95%"} className="panels-scroll-area">
                   <Tabs.Panel value="dashboard">
-                    <Dashboard />
+                    {currentChannel?.platform === "shopee" ? (
+                      <ShopeeDashboard />
+                    ) : (
+                      <Dashboard />
+                    )}
                   </Tabs.Panel>
 
                   <Tabs.Panel value="daily-stats">
@@ -255,7 +264,11 @@ function RouteComponent() {
                   </Tabs.Panel>
 
                   <Tabs.Panel value="incomes">
-                    <Incomes />
+                    {currentChannel?.platform === "shopee" ? (
+                      <ShopeeIncomes />
+                    ) : (
+                      <Incomes />
+                    )}
                   </Tabs.Panel>
 
                   <Tabs.Panel value="kpi">

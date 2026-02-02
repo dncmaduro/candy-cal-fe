@@ -43,13 +43,17 @@ interface Props {
   }[]
   readOnly?: boolean
   date?: Date
+  platform?: string
+  channelId?: string
 }
 
 export const CalFileResultModal = ({
   items,
   orders,
   readOnly,
-  date
+  date,
+  platform,
+  channelId
 }: Props) => {
   const { searchStorageItems } = useItems()
   const [saveLogDiv, { toggle }] = useDisclosure(false)
@@ -114,7 +118,13 @@ export const CalFileResultModal = ({
           value="orders"
           className="mx-2 mb-4 rounded-xl border border-gray-100 p-4 shadow-sm"
         >
-          <CalOrdersV2 orders={orders} allCalItems={items} date={date} />
+          <CalOrdersV2
+            orders={orders}
+            allCalItems={items}
+            date={date}
+            platform={platform}
+            channelId={channelId}
+          />
         </Tabs.Panel>
       </Tabs>
 
@@ -137,7 +147,11 @@ export const CalFileResultModal = ({
               Lưu log
             </Button>
             <Collapse in={saveLogDiv}>
-              <SaveLogDiv items={items} orders={orders} />
+              <SaveLogDiv
+                items={items}
+                orders={orders}
+                platform={"tiktokshop"}
+              />
             </Collapse>
           </Stack>
         </>

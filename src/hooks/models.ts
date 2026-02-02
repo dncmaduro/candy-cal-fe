@@ -499,6 +499,7 @@ export interface CreateDeliveredRequestRequest {
     _id: string
     quantity: number
   }[]
+  channelId?: string
   note?: string
   date: Date
 }
@@ -510,6 +511,13 @@ export interface CreateDeliveredRequestResponse {
     _id: string
     quantity: number
   }[]
+  channel: {
+    _id: string
+    name: string
+    username: string
+    link: string
+    platform: string
+  }
   note?: string
   accepted?: boolean
   updatedAt?: Date
@@ -539,6 +547,13 @@ export interface CreateDeliveredRequestCommentResponse {
     _id: string
     quantity: number
   }[]
+  channel: {
+    _id: string
+    name: string
+    username: string
+    link: string
+    platform: string
+  }
   note?: string
   accepted?: boolean
   updatedAt?: Date
@@ -562,6 +577,13 @@ export interface AcceptDeliveredRequestResponse {
     _id: string
     quantity: number
   }[]
+  channel: {
+    _id: string
+    name: string
+    username: string
+    link: string
+    platform: string
+  }
   note?: string
   accepted?: boolean
   updatedAt?: Date
@@ -577,6 +599,7 @@ export interface AcceptDeliveredRequestResponse {
 export interface SearchDeliveredRequestsRequest {
   startDate?: string
   endDate?: string
+  channelId?: string
   page?: number
   limit?: number
 }
@@ -590,6 +613,13 @@ export interface SearchDeliveredRequestsResponse {
       _id: string
       quantity: number
     }[]
+    channel: {
+      _id: string
+      name: string
+      username: string
+      link: string
+      platform: string
+    }
     note?: string
     accepted?: boolean
     updatedAt?: Date
@@ -615,6 +645,13 @@ export interface GetDeliveredRequestResponse {
     _id: string
     quantity: number
   }[]
+  channel: {
+    _id: string
+    name: string
+    username: string
+    link: string
+    platform: string
+  }
   note?: string
   accepted?: boolean
   updatedAt?: Date
@@ -1219,12 +1256,14 @@ export interface CreateDailyLogRequest {
     }[]
     quantity: number
   }[]
+  channelId: string
 }
 
 /** @interface */
 export interface GetDailyLogsRequest {
   page: number
   limit: number
+  channelId?: string
 }
 
 /** @interface */
@@ -1260,6 +1299,13 @@ export interface GetDailyLogsResponse {
       }[]
       quantity: number
     }[]
+    channel: {
+      _id: string
+      name: string
+      username: string
+      link: string
+      platform: string
+    }
     updatedAt: string
   }[]
   total: number
@@ -1302,6 +1348,13 @@ export interface GetDailyLogByDateResponse {
     }[]
     quantity: number
   }[]
+  channel: {
+    _id: string
+    name: string
+    username: string
+    link: string
+    platform: string
+  }
   updatedAt: string
 }
 
@@ -2693,6 +2746,7 @@ export interface SearchShopeeProductsRequest {
   searchText?: string
   page: number
   limit: number
+  deleted?: boolean
 }
 
 /** @interface */
@@ -2810,6 +2864,7 @@ export interface SearchLivestreamChannelsResponse {
     _id: string
     name: string
     username: string
+    platform: string
     link: string
   }[]
   total: number
@@ -2825,6 +2880,7 @@ export interface GetLivestreamChannelDetailResponse {
   _id: string
   name: string
   username: string
+  platform: string
   link: string
 }
 
@@ -5209,4 +5265,47 @@ export interface GetMonthKpiDetailResponse {
     phoneNumber: string
   }
   kpi: number
+}
+
+/** @interface */
+export interface InsertIncomeShopeeRequest {
+  channel: string
+}
+
+/** @interface */
+export interface SearchShopeeIncomeRequest {
+  startDate?: Date
+  endDate?: Date
+  channelId?: string
+  productCode?: string
+  page: number
+  limit: number
+}
+
+/** @interface */
+export interface SearchShopeeIncomeResponse {
+  data: {
+    _id: string
+    date: Date
+    customer: string
+    creator: string
+    channel: {
+      _id: string
+      name: string
+      username: string
+      link: string
+      platform: string
+    }
+    orderId: string
+    products: {
+      code: string
+      name: string
+      quantity: number
+      price: number
+    }[]
+    source: string
+    total: number
+    affPercentage: number
+  }[]
+  total: number
 }
