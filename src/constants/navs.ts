@@ -199,7 +199,7 @@ export const SALES_NAVS = [
   {
     to: `${SALES_NAVS_URL}/dashboard`,
     label: "Chỉ số",
-    roles: ["admin", "sales-leader", "system-emp"],
+    roles: ["admin", "sales-leader", "system-emp", "sales-accounting"],
     icon: "IconChartBar"
   },
   {

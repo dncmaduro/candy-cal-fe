@@ -13,6 +13,13 @@ import { useUsers } from "../../hooks/useUsers"
 import { useQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { useMediaQuery } from "@mantine/hooks"
+import {
+  NAVS,
+  LANDING_NAVS,
+  LIVESTREAM_NAVS,
+  SALES_NAVS,
+  ADMIN_NAVS
+} from "../../constants/navs"
 
 export const UserMenu = () => {
   const { clearUser } = useUserStore()
@@ -35,7 +42,38 @@ export const UserMenu = () => {
     "livestream-ast": "Trợ live",
     "sales-leader": "Leader sales",
     "sales-emp": "Nhân viên sales",
-    "livestream-accounting": "Kế toán livestream"
+    "livestream-accounting": "Kế toán livestream",
+    "sales-accounting": "Kế toán sales"
+  }
+
+  // Hàm tìm nav đầu tiên mà user có quyền truy cập
+  const getFirstAccessibleNav = (
+    navs: Array<{ to: string; roles: string[]; deprecated?: boolean }>,
+    userRoles: string[]
+  ): string | null => {
+    const accessibleNav = navs.find(
+      (nav) =>
+        !nav.deprecated && nav.roles.some((role) => userRoles.includes(role))
+    )
+    return accessibleNav?.to || null
+  }
+
+  // Map app base paths to their nav arrays
+  const getAppNavs = (basePath: string) => {
+    switch (basePath) {
+      case "/marketing-storage":
+        return NAVS
+      case "/landing":
+        return LANDING_NAVS
+      case "/livestream":
+        return LIVESTREAM_NAVS
+      case "/sales":
+        return SALES_NAVS
+      case "/admin":
+        return ADMIN_NAVS
+      default:
+        return []
+    }
   }
 
   const APPS = [
@@ -68,7 +106,13 @@ export const UserMenu = () => {
       to: "/sales",
       label: "Sales",
       icon: <IconShoppingBag size={isMobile ? 14 : 18} />,
-      roles: ["admin", "system-emp", "sales-leader", "sales-emp"]
+      roles: [
+        "admin",
+        "system-emp",
+        "sales-leader",
+        "sales-emp",
+        "sales-accounting"
+      ]
     },
     {
       to: "/admin",
@@ -140,13 +184,18 @@ export const UserMenu = () => {
             meData?.roles.includes(role)
           )
 
+          // Tìm nav đầu tiên mà user có quyền truy cập
+          const appNavs = getAppNavs(app.to)
+          const firstAccessibleNavPath =
+            getFirstAccessibleNav(appNavs, meData?.roles || []) || app.to
+
           return (
             <Menu.Item
               key={app.to}
               leftSection={app.icon}
               fz={isMobile ? "xs" : "sm"}
               component={Link}
-              to={app.to}
+              to={firstAccessibleNavPath}
               hidden={!hasPermission}
             >
               {app.label}
