@@ -515,6 +515,7 @@ export interface CreateDeliveredRequestResponse {
     _id: string
     name: string
     username: string
+    usernames: string[]
     link: string
     platform: string
   }
@@ -551,6 +552,7 @@ export interface CreateDeliveredRequestCommentResponse {
     _id: string
     name: string
     username: string
+    usernames: string[]
     link: string
     platform: string
   }
@@ -581,6 +583,7 @@ export interface AcceptDeliveredRequestResponse {
     _id: string
     name: string
     username: string
+    usernames: string[]
     link: string
     platform: string
   }
@@ -617,6 +620,7 @@ export interface SearchDeliveredRequestsResponse {
       _id: string
       name: string
       username: string
+      usernames: string[]
       link: string
       platform: string
     }
@@ -649,6 +653,7 @@ export interface GetDeliveredRequestResponse {
     _id: string
     name: string
     username: string
+    usernames: string[]
     link: string
     platform: string
   }
@@ -1303,6 +1308,7 @@ export interface GetDailyLogsResponse {
       _id: string
       name: string
       username: string
+      usernames: string[]
       link: string
       platform: string
     }
@@ -1352,6 +1358,7 @@ export interface GetDailyLogByDateResponse {
     _id: string
     name: string
     username: string
+    usernames: string[]
     link: string
     platform: string
   }
@@ -2848,6 +2855,7 @@ export interface DeleteLivestreamMonthGoalRequest {
 export interface CreateLivestreamChannelRequest {
   name: string
   username: string
+  usernames: string[]
   link: string
 }
 
@@ -2864,6 +2872,7 @@ export interface SearchLivestreamChannelsResponse {
     _id: string
     name: string
     username: string
+    usernames: string[]
     platform: string
     link: string
   }[]
@@ -2880,6 +2889,7 @@ export interface GetLivestreamChannelDetailResponse {
   _id: string
   name: string
   username: string
+  usernames: string[]
   platform: string
   link: string
 }
@@ -2888,6 +2898,7 @@ export interface GetLivestreamChannelDetailResponse {
 export interface UpdateLivestreamChannelRequest {
   name?: string
   username?: string
+  usernames?: string[]
   link?: string
 }
 
@@ -5309,6 +5320,7 @@ export interface SearchShopeeIncomeResponse {
       _id: string
       name: string
       username: string
+      usernames: string[]
       link: string
       platform: string
     }

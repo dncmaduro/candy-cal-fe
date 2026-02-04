@@ -17,6 +17,7 @@ type LivestreamChannel = {
   _id: string
   name: string
   username: string
+  usernames: string[]
   link: string
   createdAt?: string
   updatedAt?: string
@@ -100,9 +101,13 @@ function RouteComponent() {
       )
     },
     {
-      accessorKey: "username",
-      header: "Username",
-      cell: ({ row }) => <Text size="sm">{row.original.username}</Text>
+      accessorKey: "usernames",
+      header: "Usernames",
+      cell: ({ row }) => (
+        <Text size="sm" className="max-w-xs truncate">
+          {row.original.usernames?.length ? row.original.usernames.join(", ") : "-"}
+        </Text>
+      )
     },
     {
       accessorKey: "link",
