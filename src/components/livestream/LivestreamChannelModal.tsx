@@ -14,6 +14,7 @@ interface Props {
     _id: string
     name: string
     username: string
+    usernames: string[]
     link: string
   }
   refetch: () => void
@@ -21,7 +22,7 @@ interface Props {
 
 interface FormData {
   name: string
-  username: string
+  usernamesText: string
   link: string
 }
 
@@ -36,7 +37,7 @@ export const LivestreamChannelModal = ({ channel, refetch }: Props) => {
   } = useForm<FormData>({
     defaultValues: {
       name: channel?.name ?? "",
-      username: channel?.username ?? "",
+      usernamesText: channel?.usernames?.join(", ") ?? "",
       link: channel?.link ?? ""
     }
   })
@@ -73,15 +74,26 @@ export const LivestreamChannelModal = ({ channel, refetch }: Props) => {
   })
 
   const onSubmit = (values: FormData) => {
+    const usernames = values.usernamesText
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean)
+    const legacyUsername = channel?.username || usernames[0] || ""
+    const payload = {
+      name: values.name,
+      link: values.link,
+      usernames,
+      username: legacyUsername
+    }
     if (channel) {
       // Update existing channel
       updateChannel({
         id: channel._id,
-        req: values
+        req: payload
       })
     } else {
       // Create new channel
-      createChannel(values)
+      createChannel(payload)
     }
   }
 
@@ -109,19 +121,19 @@ export const LivestreamChannelModal = ({ channel, refetch }: Props) => {
         />
 
         <Controller
-          name="username"
+          name="usernamesText"
           control={control}
-          rules={{ required: "Vui lòng nhập username" }}
+          rules={{ required: "Vui lòng nhập ít nhất một username" }}
           render={({ field }) => (
             <TextInput
-              label="Username"
-              placeholder="Nhập username của kênh"
+              label="Usernames"
+              placeholder="username1, username2"
               value={field.value}
               onChange={field.onChange}
               required
               disabled={isPending}
               size="md"
-              error={errors.username?.message}
+              error={errors.usernamesText?.message}
               leftSection="@"
             />
           )}
