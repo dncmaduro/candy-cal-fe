@@ -2,6 +2,12 @@
 
 > Internal Use Only — ghi nhận lịch sử thay đổi nội bộ.
 
+## 4.2.2
+
+- Chức năng xuất file sỉ lẻ cho kế toán
+- Sửa một số lỗi trong module livestream
+- Bổ sung tính toán kho vận theo Shopee
+
 ## 4.2.1
 
 - Chức năng xuất file lương xlsx
