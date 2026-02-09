@@ -194,227 +194,245 @@ function RouteComponent() {
 
         {/* Content */}
         <Box px={{ base: 8, md: 28 }} py={20}>
-          {/* ============= REVENUE SECTION ============= */}
-          <Box mb="xl">
-            <Flex
-              justify="space-between"
-              align="flex-start"
-              wrap="wrap"
-              gap="md"
-              mb="lg"
-            >
-              <Box>
-                <Group gap="xs" mb={4}>
-                  <IconChartBar size={24} color="var(--mantine-color-blue-6)" />
-                  <Title order={3}>Báo cáo doanh thu</Title>
-                </Group>
-                <Text c="dimmed" fz="sm">
-                  {startDate && endDate
-                    ? `${format(startDate, "dd/MM/yyyy")} - ${format(endDate, "dd/MM/yyyy")}`
-                    : "Chọn khoảng thời gian"}
-                </Text>
-              </Box>
+          <Flex
+            direction={{ base: "column", md: "row" }}
+            align="stretch"
+            gap="xl"
+          >
+            {/* ============= REVENUE SECTION ============= */}
+            <Box style={{ flex: 1, minWidth: 0 }}>
+              <Flex
+                justify="space-between"
+                align="flex-start"
+                wrap="wrap"
+                gap="md"
+                mb="lg"
+              >
+                <Box>
+                  <Group gap="xs" mb={4}>
+                    <IconChartBar
+                      size={24}
+                      color="var(--mantine-color-blue-6)"
+                    />
+                    <Title order={3}>Theo khoảng ngày</Title>
+                  </Group>
+                  <Text c="dimmed" fz="sm">
+                    {startDate && endDate
+                      ? `${format(startDate, "dd/MM/yyyy")} - ${format(endDate, "dd/MM/yyyy")}`
+                      : "Chọn khoảng thời gian"}
+                  </Text>
+                </Box>
 
-              <Group gap="sm">
-                <Switch
-                  label="Xem theo khoảng ngày"
-                  checked={isRange}
-                  onChange={(e) => setIsRange(e.currentTarget.checked)}
-                />
-                {isRange ? (
-                  <DatePickerInput
-                    type="range"
-                    placeholder="Chọn khoảng ngày"
-                    value={[startDate, endDate]}
-                    onChange={([start, end]) => {
-                      setStartDate(start)
-                      setEndDate(end)
-                    }}
-                    valueFormat="DD/MM/YYYY"
-                    style={{ width: 280 }}
+                <Group gap="sm">
+                  <Switch
+                    label="Xem theo khoảng ngày"
+                    checked={isRange}
+                    onChange={(e) => setIsRange(e.currentTarget.checked)}
+                  />
+                  {isRange ? (
+                    <DatePickerInput
+                      type="range"
+                      placeholder="Chọn khoảng ngày"
+                      value={[startDate, endDate]}
+                      onChange={([start, end]) => {
+                        setStartDate(start)
+                        setEndDate(end)
+                      }}
+                      valueFormat="DD/MM/YYYY"
+                      style={{ width: 280 }}
+                      clearable
+                    />
+                  ) : (
+                    <DatePickerInput
+                      placeholder="Chọn ngày"
+                      value={startDate}
+                      onChange={(value) => {
+                        setStartDate(value)
+                        setEndDate(value)
+                      }}
+                      valueFormat="DD/MM/YYYY"
+                      style={{ width: 180 }}
+                      clearable
+                    />
+                  )}
+                  <Select
+                    data={channelsData || []}
+                    // value={channel}
+                    onChange={(e) => setChannel(e ?? undefined)}
+                    placeholder="Tất cả kênh"
                     clearable
                   />
-                ) : (
-                  <DatePickerInput
-                    placeholder="Chọn ngày"
-                    value={startDate}
-                    onChange={(value) => {
-                      setStartDate(value)
-                      setEndDate(value)
-                    }}
-                    valueFormat="DD/MM/YYYY"
+                  <Button onClick={() => refetchRevenue()} variant="filled">
+                    Áp dụng
+                  </Button>
+                  <Button onClick={handleResetRevenue} variant="light">
+                    Reset
+                  </Button>
+                </Group>
+              </Flex>
+
+              {/* Revenue Error */}
+              {revenueError && (
+                <Alert
+                  color="red"
+                  title="Có lỗi xảy ra"
+                  icon={<IconAlertCircle />}
+                  mb="lg"
+                >
+                  <Group>
+                    <Text size="sm">
+                      {(revenueError as any)?.message ||
+                        "Không thể tải dữ liệu"}
+                    </Text>
+                    <Button
+                      size="xs"
+                      leftSection={<IconRefresh size={14} />}
+                      onClick={() => refetchRevenue()}
+                    >
+                      Thử lại
+                    </Button>
+                  </Group>
+                </Alert>
+              )}
+
+              {/* Revenue KPI Cards */}
+              <RevenueKPICards
+                isLoading={revenueLoading}
+                totalRevenue={revenue?.totalRevenue}
+                totalRevenueBeforeDiscount={
+                  revenue?.totalRevenueBeforeDiscount
+                }
+                totalOrders={revenue?.totalOrders}
+                totalQuantity={revenue?.totalQuantity}
+                totalTax={revenue?.totalTax}
+                totalShippingCost={revenue?.totalShippingCost}
+                revenueFromNewCustomers={revenue?.revenueFromNewCustomers}
+                revenueFromReturningCustomers={
+                  revenue?.revenueFromReturningCustomers
+                }
+              />
+
+              {/* Revenue Charts */}
+              <ChannelMetricsChart
+                isLoading={revenueLoading}
+                data={revenue?.revenueByChannel}
+              />
+
+              <Box mt="md">
+                <TopProductsChart
+                  isLoading={revenueLoading}
+                  topItemsByRevenue={revenue?.topItemsByRevenue}
+                  topItemsByQuantity={revenue?.topItemsByQuantity}
+                  otherItemsRevenue={revenue?.otherItemsRevenue}
+                />
+              </Box>
+
+              <Box mt="md">
+                <UserMetricsChart
+                  isLoading={revenueLoading}
+                  data={revenue?.revenueByUser}
+                />
+              </Box>
+
+              {/* Revenue Tables */}
+              <Box mt="xl">
+                <RevenueTables
+                  isLoading={revenueLoading}
+                  items={revenue?.topItemsByRevenue}
+                  channels={revenue?.revenueByChannel}
+                  users={revenue?.revenueByUser}
+                />
+              </Box>
+            </Box>
+
+            <Divider
+              orientation="vertical"
+              visibleFrom="md"
+              color="#e9ecef"
+            />
+
+            {/* ============= MONTHLY METRICS SECTION ============= */}
+            <Box style={{ flex: 1, minWidth: 0 }}>
+              <Flex
+                justify="space-between"
+                align="flex-start"
+                wrap="wrap"
+                gap="md"
+                mb="lg"
+              >
+                <Box>
+                  <Group gap="xs" mb={4}>
+                    <IconTrendingUp
+                      size={24}
+                      color="var(--mantine-color-green-6)"
+                    />
+                    <Title order={3}>Theo tháng</Title>
+                  </Group>
+                  <Text c="dimmed" fz="sm">
+                    {selectedMonth
+                      ? format(selectedMonth, "MM/yyyy")
+                      : "Chọn tháng"}
+                  </Text>
+                </Box>
+
+                <Group gap="sm">
+                  <MonthPickerInput
+                    placeholder="Chọn tháng"
+                    value={selectedMonth}
+                    onChange={setSelectedMonth}
+                    valueFormat="MM/YYYY"
                     style={{ width: 180 }}
                     clearable
                   />
-                )}
-                <Select
-                  data={channelsData || []}
-                  // value={channel}
-                  onChange={(e) => setChannel(e ?? undefined)}
-                  placeholder="Tất cả kênh"
-                  clearable
-                />
-                <Button onClick={() => refetchRevenue()} variant="filled">
-                  Áp dụng
-                </Button>
-                <Button onClick={handleResetRevenue} variant="light">
-                  Reset
-                </Button>
-              </Group>
-            </Flex>
-
-            {/* Revenue Error */}
-            {revenueError && (
-              <Alert
-                color="red"
-                title="Có lỗi xảy ra"
-                icon={<IconAlertCircle />}
-                mb="lg"
-              >
-                <Group>
-                  <Text size="sm">
-                    {(revenueError as any)?.message || "Không thể tải dữ liệu"}
-                  </Text>
-                  <Button
-                    size="xs"
-                    leftSection={<IconRefresh size={14} />}
-                    onClick={() => refetchRevenue()}
-                  >
-                    Thử lại
-                  </Button>
-                </Group>
-              </Alert>
-            )}
-
-            {/* Revenue KPI Cards */}
-            <RevenueKPICards
-              isLoading={revenueLoading}
-              totalRevenue={revenue?.totalRevenue}
-              totalOrders={revenue?.totalOrders}
-              totalQuantity={revenue?.totalQuantity}
-              totalTax={revenue?.totalTax}
-              totalShippingCost={revenue?.totalShippingCost}
-              revenueFromNewCustomers={revenue?.revenueFromNewCustomers}
-              revenueFromReturningCustomers={
-                revenue?.revenueFromReturningCustomers
-              }
-            />
-
-            {/* Revenue Charts */}
-            <ChannelMetricsChart
-              isLoading={revenueLoading}
-              data={revenue?.revenueByChannel}
-            />
-
-            <Box mt="md">
-              <TopProductsChart
-                isLoading={revenueLoading}
-                topItemsByRevenue={revenue?.topItemsByRevenue}
-                topItemsByQuantity={revenue?.topItemsByQuantity}
-                otherItemsRevenue={revenue?.otherItemsRevenue}
-              />
-            </Box>
-
-            <Box mt="md">
-              <UserMetricsChart
-                isLoading={revenueLoading}
-                data={revenue?.revenueByUser}
-              />
-            </Box>
-
-            {/* Revenue Tables */}
-            <Box mt="xl">
-              <RevenueTables
-                isLoading={revenueLoading}
-                items={revenue?.topItemsByRevenue}
-                channels={revenue?.revenueByChannel}
-                users={revenue?.revenueByUser}
-              />
-            </Box>
-          </Box>
-
-          <Divider my="xl" size="sm" />
-
-          {/* ============= MONTHLY METRICS SECTION ============= */}
-          <Box>
-            <Flex
-              justify="space-between"
-              align="flex-start"
-              wrap="wrap"
-              gap="md"
-              mb="lg"
-            >
-              <Box>
-                <Group gap="xs" mb={4}>
-                  <IconTrendingUp
-                    size={24}
-                    color="var(--mantine-color-green-6)"
+                  <Select
+                    data={channelsData || []}
+                    value={monthlyMetricsChannel}
+                    onChange={(e) => setMonthlyMetricsChannel(e ?? undefined)}
+                    placeholder="Tất cả kênh"
+                    clearable
                   />
-                  <Title order={3}>Chỉ số hiệu suất tháng</Title>
-                </Group>
-                <Text c="dimmed" fz="sm">
-                  {selectedMonth
-                    ? format(selectedMonth, "MM/yyyy")
-                    : "Chọn tháng"}
-                </Text>
-              </Box>
-
-              <Group gap="sm">
-                <MonthPickerInput
-                  placeholder="Chọn tháng"
-                  value={selectedMonth}
-                  onChange={setSelectedMonth}
-                  valueFormat="MM/YYYY"
-                  style={{ width: 180 }}
-                  clearable
-                />
-                <Select
-                  data={channelsData || []}
-                  value={monthlyMetricsChannel}
-                  onChange={(e) => setMonthlyMetricsChannel(e ?? undefined)}
-                  placeholder="Tất cả kênh"
-                  clearable
-                />
-                <Button onClick={() => refetchMetrics()} variant="filled">
-                  Áp dụng
-                </Button>
-                <Button onClick={handleResetMetrics} variant="light">
-                  Reset
-                </Button>
-              </Group>
-            </Flex>
-
-            {/* Metrics Error */}
-            {metricsError && (
-              <Alert
-                color="red"
-                title="Có lỗi xảy ra"
-                icon={<IconAlertCircle />}
-                mb="lg"
-              >
-                <Group>
-                  <Text size="sm">
-                    {(metricsError as any)?.message || "Không thể tải dữ liệu"}
-                  </Text>
-                  <Button
-                    size="xs"
-                    leftSection={<IconRefresh size={14} />}
-                    onClick={() => refetchMetrics()}
-                  >
-                    Thử lại
+                  <Button onClick={() => refetchMetrics()} variant="filled">
+                    Áp dụng
+                  </Button>
+                  <Button onClick={handleResetMetrics} variant="light">
+                    Reset
                   </Button>
                 </Group>
-              </Alert>
-            )}
+              </Flex>
 
-            {/* Monthly Metrics */}
-            <MonthlyMetrics
-              isLoading={metricsLoading}
-              data={metrics}
-              topCustomersData={topCustomers}
-              topCustomersLoading={topCustomersLoading}
-            />
-          </Box>
+              {/* Metrics Error */}
+              {metricsError && (
+                <Alert
+                  color="red"
+                  title="Có lỗi xảy ra"
+                  icon={<IconAlertCircle />}
+                  mb="lg"
+                >
+                  <Group>
+                    <Text size="sm">
+                      {(metricsError as any)?.message ||
+                        "Không thể tải dữ liệu"}
+                    </Text>
+                    <Button
+                      size="xs"
+                      leftSection={<IconRefresh size={14} />}
+                      onClick={() => refetchMetrics()}
+                    >
+                      Thử lại
+                    </Button>
+                  </Group>
+                </Alert>
+              )}
+
+              {/* Monthly Metrics */}
+              <MonthlyMetrics
+                isLoading={metricsLoading}
+                data={metrics}
+                topCustomersData={topCustomers}
+                topCustomersLoading={topCustomersLoading}
+              />
+            </Box>
+          </Flex>
         </Box>
       </Box>
     </SalesLayout>

@@ -74,7 +74,7 @@ export function RevenueTables({
   return (
     <Grid gutter="md">
       {/* Items Table */}
-      <Grid.Col span={{ base: 12, lg: 4 }}>
+      <Grid.Col span={{ base: 12 }}>
         <Card shadow="sm" padding="lg" radius="md" withBorder>
           <Group mb="md" justify="space-between">
             <Text fw={600}>Sản phẩm bán chạy</Text>
@@ -138,7 +138,7 @@ export function RevenueTables({
       </Grid.Col>
 
       {/* Channels Table */}
-      <Grid.Col span={{ base: 12, lg: 4 }}>
+      <Grid.Col span={{ base: 12 }}>
         <Card shadow="sm" padding="lg" radius="md" withBorder>
           <Group mb="md" justify="space-between">
             <Text fw={600}>Theo kênh</Text>
@@ -204,7 +204,7 @@ export function RevenueTables({
       </Grid.Col>
 
       {/* Users Table */}
-      <Grid.Col span={{ base: 12, lg: 4 }}>
+      <Grid.Col span={{ base: 12 }}>
         <Card shadow="sm" padding="lg" radius="md" withBorder>
           <Group mb="md" justify="space-between">
             <Text fw={600}>Theo nhân viên</Text>
