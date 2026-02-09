@@ -4609,6 +4609,7 @@ export interface GetSalesRevenueRequest {
 /** @interface */
 export interface GetSalesRevenueResponse {
   totalRevenue: number
+  totalRevenueBeforeDiscount: number
   totalOrders: number
   totalQuantity: number
   totalTax: number
