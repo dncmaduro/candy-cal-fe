@@ -76,7 +76,7 @@ export function MonthlyMetrics({
     <>
       {/* Metrics KPI Cards */}
       <Grid gutter="md" mb="xl">
-        <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 2.4 }}>
+        <Grid.Col span={{ base: 12, sm: 6, md: 6 }}>
           <Card shadow="sm" padding="lg" radius="md" withBorder>
             {isLoading ? (
               <Skeleton height={100} />
@@ -99,7 +99,7 @@ export function MonthlyMetrics({
             )}
           </Card>
         </Grid.Col>
-        <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 2.4 }}>
+        <Grid.Col span={{ base: 12, sm: 6, md: 6 }}>
           <Card shadow="sm" padding="lg" radius="md" withBorder>
             {isLoading ? (
               <Skeleton height={100} />
@@ -124,6 +124,21 @@ export function MonthlyMetrics({
           </Card>
         </Grid.Col>
       </Grid>
+
+      <Card
+        shadow="sm"
+        padding="lg"
+        radius="md"
+        withBorder
+        mt="xl"
+        maw={"100%"}
+      >
+        <TopCustomersChart
+          isLoading={topCustomersLoading}
+          data={topCustomersData?.data}
+          total={topCustomersData?.total}
+        />
+      </Card>
 
       {/* Stage Transitions */}
       <Card
@@ -234,22 +249,6 @@ export function MonthlyMetrics({
             Không có dữ liệu
           </Alert>
         )}
-      </Card>
-
-      {/* Top Customers Chart & Table */}
-      <Card
-        shadow="sm"
-        padding="lg"
-        radius="md"
-        withBorder
-        mt="xl"
-        maw={"100%"}
-      >
-        <TopCustomersChart
-          isLoading={topCustomersLoading}
-          data={topCustomersData?.data}
-          total={topCustomersData?.total}
-        />
       </Card>
     </>
   )

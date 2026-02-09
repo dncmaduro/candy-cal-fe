@@ -10,6 +10,7 @@ import {
 interface RevenueKPICardsProps {
   isLoading: boolean
   totalRevenue?: number
+  totalRevenueBeforeDiscount?: number
   totalOrders?: number
   totalQuantity?: number
   totalTax?: number
@@ -21,6 +22,7 @@ interface RevenueKPICardsProps {
 export function RevenueKPICards({
   isLoading,
   totalRevenue,
+  totalRevenueBeforeDiscount,
   totalOrders,
   totalQuantity,
   totalTax,
@@ -30,7 +32,7 @@ export function RevenueKPICards({
 }: RevenueKPICardsProps) {
   return (
     <Grid gutter="md" mb="xl">
-      <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+      <Grid.Col span={{ base: 12, sm: 6, md: 6 }}>
         <Card shadow="sm" padding="lg" radius="md" withBorder>
           {isLoading ? (
             <Skeleton height={100} />
@@ -52,7 +54,29 @@ export function RevenueKPICards({
         </Card>
       </Grid.Col>
 
-      <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+      <Grid.Col span={{ base: 12, sm: 6, md: 6 }}>
+        <Card shadow="sm" padding="lg" radius="md" withBorder>
+          {isLoading ? (
+            <Skeleton height={100} />
+          ) : (
+            <>
+              <Group justify="space-between" mb="xs">
+                <Text size="sm" c="dimmed">
+                  DT trước chiết khấu
+                </Text>
+                <ThemeIcon variant="light" size="lg" color="indigo">
+                  <IconCash size={20} />
+                </ThemeIcon>
+              </Group>
+              <Text fw={700} fz="xl">
+                {totalRevenueBeforeDiscount?.toLocaleString("vi-VN")}đ
+              </Text>
+            </>
+          )}
+        </Card>
+      </Grid.Col>
+
+      <Grid.Col span={{ base: 12, sm: 6, md: 6 }}>
         <Card shadow="sm" padding="lg" radius="md" withBorder>
           {isLoading ? (
             <Skeleton height={100} />
@@ -74,7 +98,7 @@ export function RevenueKPICards({
         </Card>
       </Grid.Col>
 
-      <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+      <Grid.Col span={{ base: 12, sm: 6, md: 6 }}>
         <Card shadow="sm" padding="lg" radius="md" withBorder>
           {isLoading ? (
             <Skeleton height={100} />
@@ -96,7 +120,7 @@ export function RevenueKPICards({
         </Card>
       </Grid.Col>
 
-      <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+      <Grid.Col span={{ base: 12, sm: 6, md: 6 }}>
         <Card shadow="sm" padding="lg" radius="md" withBorder>
           {isLoading ? (
             <Skeleton height={100} />
@@ -118,7 +142,7 @@ export function RevenueKPICards({
         </Card>
       </Grid.Col>
 
-      <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+      <Grid.Col span={{ base: 12, sm: 6, md: 6 }}>
         <Card shadow="sm" padding="lg" radius="md" withBorder>
           {isLoading ? (
             <Skeleton height={100} />
@@ -140,7 +164,7 @@ export function RevenueKPICards({
         </Card>
       </Grid.Col>
 
-      <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+      <Grid.Col span={{ base: 12, sm: 6, md: 6 }}>
         <Card shadow="sm" padding="lg" radius="md" withBorder>
           {isLoading ? (
             <Skeleton height={100} />
@@ -162,7 +186,7 @@ export function RevenueKPICards({
         </Card>
       </Grid.Col>
 
-      <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+      <Grid.Col span={{ base: 12, sm: 6, md: 6 }}>
         <Card shadow="sm" padding="lg" radius="md" withBorder>
           {isLoading ? (
             <Skeleton height={100} />

@@ -8,6 +8,7 @@ import { RevenueTables } from "./RevenueTables"
 
 interface RevenueData {
   totalRevenue: number
+  totalRevenueBeforeDiscount: number
   totalOrders: number
   revenueFromNewCustomers: number
   revenueFromReturningCustomers: number
@@ -60,6 +61,7 @@ export function RevenueSection({ isLoading, data }: RevenueSectionProps) {
       <RevenueKPICards
         isLoading={isLoading}
         totalRevenue={data?.totalRevenue}
+        totalRevenueBeforeDiscount={data?.totalRevenueBeforeDiscount}
         totalOrders={data?.totalOrders}
         revenueFromNewCustomers={data?.revenueFromNewCustomers}
         revenueFromReturningCustomers={data?.revenueFromReturningCustomers}
