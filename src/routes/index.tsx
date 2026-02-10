@@ -1,14 +1,16 @@
 import {
   AppShell,
   Button,
+  Checkbox,
   Stack,
   Text,
   TextInput,
   PasswordInput,
   Paper,
-  Center
+  Center,
+  Box
 } from "@mantine/core"
-import { IconCandy } from "@tabler/icons-react"
+import { IconCandy, IconLock, IconUser } from "@tabler/icons-react"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useEffect } from "react"
 import { Helmet } from "react-helmet-async"
@@ -75,25 +77,45 @@ function RouteComponent() {
         <title>Đăng nhập | MyCandy</title>
       </Helmet>
       <AppShell>
-        <AppShell.Main h={"100vh"} w={"100vw"} bg="gray.0">
+        <AppShell.Main
+          h={"100vh"}
+          w={"100vw"}
+          style={{
+            background:
+              "radial-gradient(520px 520px at 12% 12%, #eef0ff 0%, rgba(238,240,255,0.55) 42%, rgba(255,255,255,0) 60%), radial-gradient(520px 520px at 88% 88%, #eef0ff 0%, rgba(238,240,255,0.55) 42%, rgba(255,255,255,0) 60%), #f8fafc"
+          }}
+        >
           <Center h="100%">
             <Paper
               withBorder
-              shadow="md"
+              shadow="xl"
               p={32}
-              pt={40}
-              w={400}
-              radius={24}
+              pt={36}
+              w={420}
+              radius={28}
               style={{
                 background: "rgba(255,255,255,0.99)",
-                border: "1.5px solid #ececec",
+                border: "1.5px solid #eef2ff",
                 minWidth: 330,
                 position: "relative"
               }}
             >
               <Stack align="center" mb={18} gap={6}>
-                {/* Có logo thì để dưới đây */}
-                <IconCandy size={48} color="#6366f1" />
+                <Box
+                  w={58}
+                  h={58}
+                  style={{
+                    borderRadius: 16,
+                    background: "#eef0ff",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    boxShadow:
+                      "0 8px 18px rgba(99,102,241,0.15), inset 0 1px 0 rgba(255,255,255,0.7)"
+                  }}
+                >
+                  <IconCandy size={30} color="#6366f1" />
+                </Box>
                 <Text
                   fw={800}
                   fz={24}
@@ -104,11 +126,11 @@ function RouteComponent() {
                   Đăng nhập vào CandyCal
                 </Text>
                 <Text c="dimmed" fz={13} ta="center" mb={2}>
-                  Quản lý kho vận MyCandy
+                  Hệ thống quản lý nội bộ Marketing FMCG
                 </Text>
               </Stack>
               <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
-                <Stack gap={12}>
+                <Stack gap={14}>
                   <Controller
                     control={control}
                     name="username"
@@ -120,6 +142,8 @@ function RouteComponent() {
                         placeholder="Nhập tên tài khoản"
                         error={errors.username?.message}
                         size="md"
+                        leftSection={<IconUser size={16} color="#94a3b8" />}
+                        leftSectionPointerEvents="none"
                         autoFocus
                         radius="md"
                         required
@@ -139,24 +163,50 @@ function RouteComponent() {
                         error={errors.password?.message}
                         size="md"
                         radius="md"
+                        leftSection={<IconLock size={16} color="#94a3b8" />}
+                        leftSectionPointerEvents="none"
                         required
                       />
                     )}
+                  />
+                  <Checkbox
+                    label="Ghi nhớ đăng nhập"
+                    color="indigo"
+                    radius="xl"
+                    styles={{
+                      label: {
+                        color: "#475569",
+                        fontSize: 13
+                      }
+                    }}
                   />
                   <Button
                     type="submit"
                     loading={isLogging}
                     fullWidth
                     size="md"
-                    radius="xl"
+                    radius="md"
                     fw={700}
-                    mt={6}
+                    mt={8}
                     disabled={isLogging}
+                    style={{
+                      background: "#6366f1",
+                      boxShadow: "0 12px 24px rgba(99,102,241,0.3)"
+                    }}
                   >
                     Đăng nhập
                   </Button>
                 </Stack>
               </form>
+              <Text
+                c="dimmed"
+                fz={12}
+                ta="center"
+                mt={22}
+                style={{ letterSpacing: 0.2 }}
+              >
+                © 2026 CandyCal. All rights reserved.
+              </Text>
             </Paper>
           </Center>
         </AppShell.Main>
