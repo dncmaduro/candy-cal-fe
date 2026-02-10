@@ -198,6 +198,73 @@ export interface CheckTokenRequest {
 }
 
 /** @interface */
+export interface AskAiRequest {
+  question: string
+  conversationId?: string
+}
+
+/** @interface */
+export interface AskAiResponse {
+  answer: string
+  conversationId: string
+}
+
+/** @interface */
+export interface AiUsageResponse {
+  date: string
+  count: number
+  limit: number
+  remaining: number
+}
+
+/** @interface */
+export interface ListAiConversationsRequest {
+  limit?: number
+}
+
+/** @interface */
+export interface AiConversationItem {
+  conversationId: string
+  updatedAt: string
+  expireAt: string
+  lastMessage?: string
+}
+
+/** @interface */
+export interface ListAiConversationsResponse {
+  data: AiConversationItem[]
+}
+
+/** @interface */
+export interface GetAiConversationHistoryRequest {
+  conversationId?: string
+  limit?: number
+  cursor?: number
+}
+
+/** @interface */
+export interface GetAiConversationHistoryResponse {
+  conversationId: string
+  messages: {
+    role: "user" | "assistant"
+    content: string
+    createdAt: string
+  }[]
+  nextCursor: number | null
+  total: number
+}
+
+/** @interface */
+export interface DeleteAiConversationRequest {
+  conversationId?: string
+}
+
+/** @interface */
+export interface ClearAiConversationHistoryRequest {
+  conversationId?: string
+}
+
+/** @interface */
 export interface CheckTokenResponse {
   valid: boolean
 }

@@ -41,6 +41,7 @@ import { Route as MarketingStorageIncomesIndexImport } from './routes/marketing-
 import { Route as MarketingStorageDeliveredRequestsIndexImport } from './routes/marketing-storage/delivered-requests/index'
 import { Route as MarketingStorageCalfileIndexImport } from './routes/marketing-storage/calfile/index'
 import { Route as MarketingStorageCalIndexImport } from './routes/marketing-storage/cal/index'
+import { Route as MarketingStorageAiIndexImport } from './routes/marketing-storage/ai/index'
 import { Route as MarketingStorageAccountingStorageIndexImport } from './routes/marketing-storage/accounting-storage/index'
 import { Route as LivestreamStatsIndexImport } from './routes/livestream/stats/index'
 import { Route as LivestreamSalaryIndexImport } from './routes/livestream/salary/index'
@@ -248,6 +249,12 @@ const MarketingStorageCalfileIndexRoute =
 const MarketingStorageCalIndexRoute = MarketingStorageCalIndexImport.update({
   id: '/marketing-storage/cal/',
   path: '/marketing-storage/cal/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const MarketingStorageAiIndexRoute = MarketingStorageAiIndexImport.update({
+  id: '/marketing-storage/ai/',
+  path: '/marketing-storage/ai/',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -620,6 +627,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MarketingStorageAccountingStorageIndexImport
       parentRoute: typeof rootRoute
     }
+    '/marketing-storage/ai/': {
+      id: '/marketing-storage/ai/'
+      path: '/marketing-storage/ai'
+      fullPath: '/marketing-storage/ai'
+      preLoaderRoute: typeof MarketingStorageAiIndexImport
+      parentRoute: typeof rootRoute
+    }
     '/marketing-storage/cal/': {
       id: '/marketing-storage/cal/'
       path: '/marketing-storage/cal'
@@ -797,6 +811,7 @@ export interface FileRoutesByFullPath {
   '/livestream/salary': typeof LivestreamSalaryIndexRoute
   '/livestream/stats': typeof LivestreamStatsIndexRoute
   '/marketing-storage/accounting-storage': typeof MarketingStorageAccountingStorageIndexRoute
+  '/marketing-storage/ai': typeof MarketingStorageAiIndexRoute
   '/marketing-storage/cal': typeof MarketingStorageCalIndexRoute
   '/marketing-storage/calfile': typeof MarketingStorageCalfileIndexRoute
   '/marketing-storage/delivered-requests': typeof MarketingStorageDeliveredRequestsIndexRoute
@@ -850,6 +865,7 @@ export interface FileRoutesByTo {
   '/livestream/salary': typeof LivestreamSalaryIndexRoute
   '/livestream/stats': typeof LivestreamStatsIndexRoute
   '/marketing-storage/accounting-storage': typeof MarketingStorageAccountingStorageIndexRoute
+  '/marketing-storage/ai': typeof MarketingStorageAiIndexRoute
   '/marketing-storage/cal': typeof MarketingStorageCalIndexRoute
   '/marketing-storage/calfile': typeof MarketingStorageCalfileIndexRoute
   '/marketing-storage/delivered-requests': typeof MarketingStorageDeliveredRequestsIndexRoute
@@ -905,6 +921,7 @@ export interface FileRoutesById {
   '/livestream/salary/': typeof LivestreamSalaryIndexRoute
   '/livestream/stats/': typeof LivestreamStatsIndexRoute
   '/marketing-storage/accounting-storage/': typeof MarketingStorageAccountingStorageIndexRoute
+  '/marketing-storage/ai/': typeof MarketingStorageAiIndexRoute
   '/marketing-storage/cal/': typeof MarketingStorageCalIndexRoute
   '/marketing-storage/calfile/': typeof MarketingStorageCalfileIndexRoute
   '/marketing-storage/delivered-requests/': typeof MarketingStorageDeliveredRequestsIndexRoute
@@ -961,6 +978,7 @@ export interface FileRouteTypes {
     | '/livestream/salary'
     | '/livestream/stats'
     | '/marketing-storage/accounting-storage'
+    | '/marketing-storage/ai'
     | '/marketing-storage/cal'
     | '/marketing-storage/calfile'
     | '/marketing-storage/delivered-requests'
@@ -1013,6 +1031,7 @@ export interface FileRouteTypes {
     | '/livestream/salary'
     | '/livestream/stats'
     | '/marketing-storage/accounting-storage'
+    | '/marketing-storage/ai'
     | '/marketing-storage/cal'
     | '/marketing-storage/calfile'
     | '/marketing-storage/delivered-requests'
@@ -1066,6 +1085,7 @@ export interface FileRouteTypes {
     | '/livestream/salary/'
     | '/livestream/stats/'
     | '/marketing-storage/accounting-storage/'
+    | '/marketing-storage/ai/'
     | '/marketing-storage/cal/'
     | '/marketing-storage/calfile/'
     | '/marketing-storage/delivered-requests/'
@@ -1120,6 +1140,7 @@ export interface RootRouteChildren {
   LivestreamSalaryIndexRoute: typeof LivestreamSalaryIndexRoute
   LivestreamStatsIndexRoute: typeof LivestreamStatsIndexRoute
   MarketingStorageAccountingStorageIndexRoute: typeof MarketingStorageAccountingStorageIndexRoute
+  MarketingStorageAiIndexRoute: typeof MarketingStorageAiIndexRoute
   MarketingStorageCalIndexRoute: typeof MarketingStorageCalIndexRoute
   MarketingStorageCalfileIndexRoute: typeof MarketingStorageCalfileIndexRoute
   MarketingStorageDeliveredRequestsIndexRoute: typeof MarketingStorageDeliveredRequestsIndexRoute
@@ -1174,6 +1195,7 @@ const rootRouteChildren: RootRouteChildren = {
   LivestreamStatsIndexRoute: LivestreamStatsIndexRoute,
   MarketingStorageAccountingStorageIndexRoute:
     MarketingStorageAccountingStorageIndexRoute,
+  MarketingStorageAiIndexRoute: MarketingStorageAiIndexRoute,
   MarketingStorageCalIndexRoute: MarketingStorageCalIndexRoute,
   MarketingStorageCalfileIndexRoute: MarketingStorageCalfileIndexRoute,
   MarketingStorageDeliveredRequestsIndexRoute:
@@ -1237,6 +1259,7 @@ export const routeTree = rootRoute
         "/livestream/salary/",
         "/livestream/stats/",
         "/marketing-storage/accounting-storage/",
+        "/marketing-storage/ai/",
         "/marketing-storage/cal/",
         "/marketing-storage/calfile/",
         "/marketing-storage/delivered-requests/",
@@ -1359,6 +1382,9 @@ export const routeTree = rootRoute
     },
     "/marketing-storage/accounting-storage/": {
       "filePath": "marketing-storage/accounting-storage/index.tsx"
+    },
+    "/marketing-storage/ai/": {
+      "filePath": "marketing-storage/ai/index.tsx"
     },
     "/marketing-storage/cal/": {
       "filePath": "marketing-storage/cal/index.tsx"
