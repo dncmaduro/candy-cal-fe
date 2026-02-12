@@ -56,6 +56,24 @@ export const NAVS = [
     icon: "IconCoin",
     roles: ["accounting-emp", "order-emp", "system-emp"]
   }
+  // {
+  //   to: `${NAVS_URL}/ai`,
+  //   label: "Trợ lý AI",
+  //   icon: "IconSparkles",
+  //   roles: [
+  //     "admin",
+  //     "order-emp",
+  //     "accounting-emp",
+  //     "system-emp",
+  //     "sales-emp",
+  //     "sales-leader",
+  //     "sales-accounting",
+  //     "livestream-emp",
+  //     "livestream-ast",
+  //     "livestream-leader",
+  //     "livestream-accounting"
+  //   ]
+  // }
 ]
 
 /** @constant */

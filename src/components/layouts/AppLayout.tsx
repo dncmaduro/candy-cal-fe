@@ -14,6 +14,7 @@ import { useUIStore } from "../../store/uiStore"
 import { MeContext } from "../../context/MeContext"
 import { MyTasksPopover } from "../tasks/MyTasksPopover.tsx"
 import { NAVS } from "../../constants/navs.ts"
+import { AiChatSidebar } from "../ai/AiChatSidebar"
 
 export const AppLayout = ({ children }: { children: ReactNode }) => {
   const { accessToken, setUser, clearUser } = useUserStore()
@@ -147,6 +148,7 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
             </Box>
           </Container>
         </main>
+        <AiChatSidebar />
       </div>
     </div>
   )
