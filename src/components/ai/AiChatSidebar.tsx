@@ -581,6 +581,22 @@ export const AiChatSidebar = () => {
       >
         <IconSparkles size={22} />
       </ActionIcon>
+      <Badge
+        size="xs"
+        variant="filled"
+        color="grape"
+        style={{
+          position: "fixed",
+          right: 20,
+          bottom: 78,
+          zIndex: 301,
+          textTransform: "uppercase",
+          letterSpacing: 0.4,
+          boxShadow: "0 6px 14px rgba(124,58,237,0.35)"
+        }}
+      >
+        Beta
+      </Badge>
     </>
   )
 }
