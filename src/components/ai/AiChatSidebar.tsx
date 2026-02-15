@@ -9,6 +9,7 @@ import {
   LoadingOverlay,
   Menu,
   Paper,
+  Rating,
   ScrollArea,
   Stack,
   Text,
@@ -18,6 +19,7 @@ import {
 import {
   IconDots,
   IconEraser,
+  IconMessageReport,
   IconMessagePlus,
   IconSend,
   IconSparkles,
@@ -33,6 +35,88 @@ type ChatMessage = {
   role: "user" | "assistant"
   content: string
   at: string
+}
+
+const AiFeedbackForm = ({
+  conversationId
+}: {
+  conversationId: string
+}) => {
+  const { createFeedback } = useAi()
+  const [description, setDescription] = useState("")
+  const [expected, setExpected] = useState("")
+  const [actual, setActual] = useState("")
+  const [rating, setRating] = useState<number | undefined>(undefined)
+
+  const { mutate: submitFeedback, isPending } = useMutation({
+    mutationFn: createFeedback,
+    onSuccess: () => {
+      CToast.success({ title: "Đã gửi feedback" })
+      modals.closeAll()
+    },
+    onError: () => {
+      CToast.error({ title: "Không thể gửi feedback" })
+    }
+  })
+
+  const handleSubmit = () => {
+    const trimmedDescription = description.trim()
+    if (!trimmedDescription) {
+      CToast.error({ title: "Vui lòng nhập nội dung feedback" })
+      return
+    }
+
+    submitFeedback({
+      conversationId,
+      description: trimmedDescription,
+      expected: expected.trim() || undefined,
+      actual: actual.trim() || undefined,
+      rating
+    })
+  }
+
+  return (
+    <Stack gap={10}>
+      <Text size="xs" c="dimmed">
+        Conversation: {conversationId.slice(0, 8)}
+      </Text>
+      <Textarea
+        label="Mô tả vấn đề"
+        placeholder="AI trả lời sai/chưa rõ ở điểm nào?"
+        required
+        minRows={3}
+        value={description}
+        onChange={(e) => setDescription(e.currentTarget.value)}
+      />
+      <Textarea
+        label="Kỳ vọng"
+        placeholder="Bạn muốn AI trả lời thế nào?"
+        minRows={2}
+        value={expected}
+        onChange={(e) => setExpected(e.currentTarget.value)}
+      />
+      <Textarea
+        label="Kết quả thực tế"
+        placeholder="AI đã trả lời gì?"
+        minRows={2}
+        value={actual}
+        onChange={(e) => setActual(e.currentTarget.value)}
+      />
+      <Rating
+        count={5}
+        value={rating}
+        onChange={(value) => setRating(value || undefined)}
+      />
+      <Group justify="flex-end">
+        <Button variant="light" onClick={() => modals.closeAll()} disabled={isPending}>
+          Hủy
+        </Button>
+        <Button onClick={handleSubmit} loading={isPending}>
+          Gửi feedback
+        </Button>
+      </Group>
+    </Stack>
+  )
 }
 
 export const AiChatSidebar = () => {
@@ -275,6 +359,16 @@ export const AiChatSidebar = () => {
     }
   }
 
+  const handleOpenFeedback = (conversationId: string) => {
+    modals.close("ai-feedback-modal")
+    modals.open({
+      modalId: "ai-feedback-modal",
+      title: "Gửi feedback cho AI",
+      centered: true,
+      children: <AiFeedbackForm conversationId={conversationId} />
+    })
+  }
+
   return (
     <>
       {isChatOpen && (
@@ -362,10 +456,26 @@ export const AiChatSidebar = () => {
                           : "0 3px 10px rgba(15,23,42,0.06)"
                       }}
                     >
-                      <Text fw={600} fz={12} lineClamp={2}>
-                        {conv.lastMessage || "Cuộc trò chuyện mới"}
+                      <Group justify="space-between" gap={8} wrap="nowrap">
+                        <Text fw={600} fz={12} lineClamp={2}>
+                          {conv.title || conv.lastMessage || "Cuộc trò chuyện mới"}
+                        </Text>
+                        <ActionIcon
+                          size="sm"
+                          variant="subtle"
+                          color="indigo"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleOpenFeedback(conv.conversationId)
+                          }}
+                        >
+                          <IconMessageReport size={14} />
+                        </ActionIcon>
+                      </Group>
+                      <Text fz={10} c="dimmed" mt={4} lineClamp={1}>
+                        {conv.lastMessage}
                       </Text>
-                      <Text fz={10} c="dimmed" mt={4}>
+                      <Text fz={10} c="dimmed" mt={2}>
                         {new Date(conv.updatedAt).toLocaleString("vi-VN")}
                       </Text>
                     </Box>
@@ -587,8 +697,8 @@ export const AiChatSidebar = () => {
         color="grape"
         style={{
           position: "fixed",
-          right: 20,
-          bottom: 78,
+          right: 28,
+          bottom: 70,
           zIndex: 301,
           textTransform: "uppercase",
           letterSpacing: 0.4,
