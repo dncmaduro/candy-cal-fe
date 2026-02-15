@@ -5,9 +5,13 @@ import {
   AskAiResponse,
   AiUsageResponse,
   ClearAiConversationHistoryRequest,
+  CreateAiFeedbackRequest,
+  CreateAiFeedbackResponse,
   DeleteAiConversationRequest,
   GetAiConversationHistoryRequest,
   GetAiConversationHistoryResponse,
+  ListAiFeedbackRequest,
+  ListAiFeedbackResponse,
   ListAiConversationsRequest,
   ListAiConversationsResponse
 } from "./models"
@@ -73,12 +77,32 @@ export const useAi = () => {
     })
   }
 
+  const createFeedback = async (req: CreateAiFeedbackRequest) => {
+    return callApi<CreateAiFeedbackRequest, CreateAiFeedbackResponse>({
+      path: `/v1/ai/feedback`,
+      method: "POST",
+      data: req,
+      token: accessToken
+    })
+  }
+
+  const listFeedback = async (req: ListAiFeedbackRequest = {}) => {
+    const query = toQueryString(req)
+    return callApi<never, ListAiFeedbackResponse>({
+      path: `/v1/ai/feedback${query ? `?${query}` : ""}`,
+      method: "GET",
+      token: accessToken
+    })
+  }
+
   return {
     ask,
     getUsage,
     listConversations,
     getConversationHistory,
     deleteConversation,
-    clearConversationHistory
+    clearConversationHistory,
+    createFeedback,
+    listFeedback
   }
 }
