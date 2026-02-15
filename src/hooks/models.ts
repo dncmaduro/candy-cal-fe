@@ -225,6 +225,7 @@ export interface ListAiConversationsRequest {
 /** @interface */
 export interface AiConversationItem {
   conversationId: string
+  title: string
   updatedAt: string
   expireAt: string
   lastMessage?: string
@@ -262,6 +263,41 @@ export interface DeleteAiConversationRequest {
 /** @interface */
 export interface ClearAiConversationHistoryRequest {
   conversationId?: string
+}
+
+/** @interface */
+export interface CreateAiFeedbackRequest {
+  conversationId: string
+  description: string
+  expected?: string
+  actual?: string
+  rating?: number
+}
+
+/** @interface */
+export interface CreateAiFeedbackResponse {
+  feedbackId: string
+  conversationId: string
+  createdAt: string
+}
+
+/** @interface */
+export interface ListAiFeedbackRequest {
+  conversationId?: string
+  limit?: number
+}
+
+/** @interface */
+export interface ListAiFeedbackResponse {
+  data: Array<{
+    feedbackId: string
+    conversationId: string
+    description: string
+    expected?: string
+    actual?: string
+    rating?: number
+    createdAt: string
+  }>
 }
 
 /** @interface */
