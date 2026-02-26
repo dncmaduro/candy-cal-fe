@@ -180,7 +180,7 @@ export const LivestreamLayout = ({ children }: { children: ReactNode }) => {
             </Box>
           </Container>
         </main>
-        <AiChatSidebar />
+        <AiChatSidebar module="livestream" />
       </div>
     </div>
   )

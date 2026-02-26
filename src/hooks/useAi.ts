@@ -29,9 +29,10 @@ export const useAi = () => {
     })
   }
 
-  const getUsage = async () => {
+  const getUsage = async (req?: { module?: string }) => {
+    const query = toQueryString(req ?? {})
     return callApi<never, AiUsageResponse>({
-      path: `/v1/ai/usage`,
+      path: `/v1/ai/usage${query ? `?${query}` : ""}`,
       method: "GET",
       token: accessToken
     })
