@@ -148,7 +148,7 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
             </Box>
           </Container>
         </main>
-        <AiChatSidebar />
+        <AiChatSidebar module="storage" />
       </div>
     </div>
   )
