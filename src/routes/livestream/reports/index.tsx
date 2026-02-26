@@ -461,6 +461,13 @@ function RouteComponent() {
                 thousandSeparator
                 suffix=" VNĐ"
               />
+              <span> (</span>
+              <NumberFormatter
+                value={(metricsData.totalIncome / metricsData.kpi) * 100}
+                suffix="%"
+                decimalScale={2}
+              />
+              <span>)</span>
             </Text>
           </Stack>
         </Paper>
