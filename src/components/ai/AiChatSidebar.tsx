@@ -119,7 +119,7 @@ const AiFeedbackForm = ({
   )
 }
 
-export const AiChatSidebar = () => {
+export const AiChatSidebar = ({ module }: { module: string }) => {
   const {
     ask,
     getUsage,
@@ -141,8 +141,8 @@ export const AiChatSidebar = () => {
   const isFetchingMoreRef = useRef(false)
 
   const { data: usage } = useQuery({
-    queryKey: ["aiUsage"],
-    queryFn: getUsage,
+    queryKey: ["aiUsage", module],
+    queryFn: () => getUsage({ module }),
     select: (d) => d.data
   })
 
@@ -151,8 +151,8 @@ export const AiChatSidebar = () => {
     isLoading: isLoadingConversations,
     refetch: refetchConversations
   } = useQuery({
-    queryKey: ["aiConversations"],
-    queryFn: () => listConversations({ limit: 50 }),
+    queryKey: ["aiConversations", module],
+    queryFn: () => listConversations({ limit: 50, module }),
     select: (d) => d.data.data
   })
 
@@ -163,18 +163,19 @@ export const AiChatSidebar = () => {
     isLoading: isLoadingHistory,
     refetch: refetchHistory
   } = useQuery({
-    queryKey: ["aiConversationHistory", activeConversationId],
+    queryKey: ["aiConversationHistory", module, activeConversationId],
     queryFn: () =>
       getConversationHistory({
         conversationId: activeConversationId ?? undefined,
-        limit: 40
+        limit: 40,
+        module
       }),
     enabled: !!activeConversationId,
     select: (d) => d.data
   })
 
   const { mutate: askAi, isPending } = useMutation({
-    mutationKey: ["aiAsk"],
+    mutationKey: ["aiAsk", module],
     mutationFn: ask,
     onSuccess: async (res) => {
       setMessages((prev) => [
@@ -186,7 +187,7 @@ export const AiChatSidebar = () => {
           at: new Date().toISOString()
         }
       ])
-      queryClient.invalidateQueries({ queryKey: ["aiUsage"] })
+      queryClient.invalidateQueries({ queryKey: ["aiUsage", module] })
       if (!activeConversationId && res.data.conversationId) {
         setActiveConversationId(res.data.conversationId)
       }
@@ -241,7 +242,11 @@ export const AiChatSidebar = () => {
       }
     ])
     setInput("")
-    askAi({ question, conversationId: activeConversationId ?? undefined })
+    askAi({
+      question,
+      conversationId: activeConversationId ?? undefined,
+      module
+    })
   }
 
   const handleSelectConversation = (conversationId: string) => {
@@ -267,7 +272,7 @@ export const AiChatSidebar = () => {
       labels: { confirm: "Xóa", cancel: "Hủy" },
       confirmProps: { color: "red" },
       onConfirm: () =>
-        removeConversation({ conversationId: activeConversationId })
+        removeConversation({ conversationId: activeConversationId, module })
     })
   }
 
@@ -282,7 +287,8 @@ export const AiChatSidebar = () => {
       ),
       labels: { confirm: "Xóa", cancel: "Hủy" },
       confirmProps: { color: "red" },
-      onConfirm: () => clearHistory({ conversationId: activeConversationId })
+      onConfirm: () =>
+        clearHistory({ conversationId: activeConversationId, module })
     })
   }
 
@@ -335,7 +341,8 @@ export const AiChatSidebar = () => {
       const res = await getConversationHistory({
         conversationId: activeConversationId,
         limit: 40,
-        cursor: historyCursor
+        cursor: historyCursor,
+        module
       })
       const next = res.data
       if (next.messages.length > 0) {

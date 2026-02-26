@@ -201,6 +201,7 @@ export interface CheckTokenRequest {
 export interface AskAiRequest {
   question: string
   conversationId?: string
+  module?: string
 }
 
 /** @interface */
@@ -220,6 +221,7 @@ export interface AiUsageResponse {
 /** @interface */
 export interface ListAiConversationsRequest {
   limit?: number
+  module?: string
 }
 
 /** @interface */
@@ -241,6 +243,7 @@ export interface GetAiConversationHistoryRequest {
   conversationId?: string
   limit?: number
   cursor?: number
+  module?: string
 }
 
 /** @interface */
@@ -258,11 +261,13 @@ export interface GetAiConversationHistoryResponse {
 /** @interface */
 export interface DeleteAiConversationRequest {
   conversationId?: string
+  module?: string
 }
 
 /** @interface */
 export interface ClearAiConversationHistoryRequest {
   conversationId?: string
+  module?: string
 }
 
 /** @interface */
