@@ -25,6 +25,7 @@ import { useUIStore } from "../../store/uiStore"
 import { MeContext } from "../../context/MeContext"
 import { MyTasksPopover } from "../tasks/MyTasksPopover.tsx"
 import { LIVESTREAM_NAVS } from "../../constants/navs.ts"
+import { AiChatSidebar } from "../ai/AiChatSidebar"
 
 export const LivestreamLayout = ({ children }: { children: ReactNode }) => {
   const { accessToken, setUser, clearUser } = useUserStore()
@@ -179,6 +180,7 @@ export const LivestreamLayout = ({ children }: { children: ReactNode }) => {
             </Box>
           </Container>
         </main>
+        <AiChatSidebar />
       </div>
     </div>
   )
