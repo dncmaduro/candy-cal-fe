@@ -30,7 +30,11 @@ import { AssistantRevenueRankingsChart } from "../../../components/livestream/As
 
 type SearchParams = {
   mode?: "range" | "month"
-  viewMode?: "reports" | "host-rankings" | "assistant-rankings"
+  viewMode?:
+    | "reports"
+    | "host-rankings"
+    | "assistant-rankings"
+    | "top-products"
   channelId?: string
   assigneeId?: string
   startDate?: string
@@ -47,7 +51,8 @@ export const Route = createFileRoute("/livestream/reports/")({
         (search.viewMode as
           | "reports"
           | "host-rankings"
-          | "assistant-rankings") || "reports",
+          | "assistant-rankings"
+          | "top-products") || "reports",
       channelId: search.channelId as string,
       assigneeId: search.assigneeId as string,
       startDate: search.startDate as string,
@@ -61,7 +66,8 @@ function RouteComponent() {
   const navigate = Route.useNavigate()
   const searchParams = Route.useSearch()
 
-  const { getLivestreamsByDateRange } = useLivestreamCore()
+  const { getLivestreamsByDateRange, getTopProductsLivestream } =
+    useLivestreamCore()
   const { searchLivestreamChannels } = useLivestreamChannels()
   const {
     getAggregatedMetrics,
@@ -90,7 +96,7 @@ function RouteComponent() {
     searchParams.assigneeId || null
   )
   const [viewMode, setViewMode] = useState<
-    "reports" | "host-rankings" | "assistant-rankings"
+    "reports" | "host-rankings" | "assistant-rankings" | "top-products"
   >(searchParams.viewMode || "reports")
 
   // Sync state to URL
@@ -280,6 +286,21 @@ function RouteComponent() {
       return response.data.livestreams
     },
     enabled: !!dateRange[0] && !!dateRange[1] && !!channelId
+  })
+
+  // Fetch top products
+  const { data: topProductsData, isLoading: isLoadingTopProducts } = useQuery({
+    queryKey: ["getTopProductsLivestream", dateRange[0], dateRange[1], channelId],
+    queryFn: async () => {
+      if (!dateRange[0] || !dateRange[1]) return null
+      const response = await getTopProductsLivestream({
+        startDate: dateRange[0],
+        endDate: dateRange[1],
+        channel: channelId || undefined
+      })
+      return response.data
+    },
+    enabled: !!dateRange[0] && !!dateRange[1]
   })
 
   // Prepare table data - only host snapshots
@@ -832,6 +853,52 @@ function RouteComponent() {
     []
   )
 
+  const topProductsTableData = useMemo(() => {
+    if (!topProductsData?.productsQuantity) return []
+    return Object.entries(topProductsData.productsQuantity)
+      .sort(([, quantityA], [, quantityB]) => quantityB - quantityA)
+      .map(([code, quantity], index) => ({
+        rank: index + 1,
+        code,
+        quantity
+      }))
+  }, [topProductsData])
+
+  const topProductsColumns = useMemo<
+    ColumnDef<(typeof topProductsTableData)[0]>[]
+  >(
+    () => [
+      {
+        accessorKey: "rank",
+        header: "Top",
+        cell: ({ getValue }) => (
+          <Text fw={700} size="sm">
+            #{getValue() as number}
+          </Text>
+        )
+      },
+      {
+        accessorKey: "code",
+        header: "Mã sản phẩm",
+        cell: ({ getValue }) => (
+          <Text size="sm" fw={600}>
+            {getValue() as string}
+          </Text>
+        )
+      },
+      {
+        accessorKey: "quantity",
+        header: "Số lượng",
+        cell: ({ getValue }) => (
+          <Text size="sm" fw={700} c="blue.6">
+            <NumberFormatter value={getValue() as number} thousandSeparator />
+          </Text>
+        )
+      }
+    ],
+    []
+  )
+
   return (
     <LivestreamLayout>
       <Box
@@ -987,14 +1054,19 @@ function RouteComponent() {
               value={viewMode}
               onChange={(value) =>
                 setViewMode(
-                  value as "reports" | "host-rankings" | "assistant-rankings"
+                  value as
+                    | "reports"
+                    | "host-rankings"
+                    | "assistant-rankings"
+                    | "top-products"
                 )
               }
               size="sm"
               data={[
                 { label: "Bảng báo cáo", value: "reports" },
                 { label: "Xếp hạng host", value: "host-rankings" },
-                { label: "Xếp hạng trợ live", value: "assistant-rankings" }
+                { label: "Xếp hạng trợ live", value: "assistant-rankings" },
+                { label: "Top sản phẩm", value: "top-products" }
               ]}
               fullWidth
             />
@@ -1059,6 +1131,33 @@ function RouteComponent() {
               isLoadingRankings={isLoadingAssistantRankings}
               rankingsData={assistantRankingsData}
             />
+          )}
+
+          {viewMode === "top-products" && (
+            <Paper p="md" radius="md" withBorder>
+              <Stack gap="xs" mb="sm">
+                <Text fw={700}>Top sản phẩm theo số lượng</Text>
+                <Text size="sm" c="dimmed">
+                  Dữ liệu theo khoảng thời gian đã chọn
+                  {channelId ? " và kênh livestream hiện tại." : "."}
+                </Text>
+              </Stack>
+              <CDataTable
+                columns={topProductsColumns}
+                data={topProductsTableData}
+                isLoading={isLoadingTopProducts}
+                page={1}
+                totalPages={1}
+                onPageChange={() => {}}
+                onPageSizeChange={() => {}}
+                initialPageSize={20}
+                pageSizeOptions={[20, 50, 100]}
+                hideSearch
+                hideColumnToggle
+                hidePagination
+                hidePaginationInformation
+              />
+            </Paper>
           )}
         </Box>
       </Box>

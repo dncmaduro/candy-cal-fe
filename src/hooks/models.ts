@@ -2804,6 +2804,20 @@ export interface DeleteAltRequestRequest {
   id: string
 }
 
+/** @interface */
+export interface GetTopProductsLivestreamRequest {
+  startDate: Date
+  endDate: Date
+  channel?: string
+}
+
+/** @interface */
+export interface GetTopProductsLivestreamResponse {
+  productsQuantity: {
+    [code: string]: number
+  }
+}
+
 // -------------------- SHOPEE PRODUCTS --------------------
 
 /** @interface */
