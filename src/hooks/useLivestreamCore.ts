@@ -13,6 +13,8 @@ import {
   FixLivestreamResponse,
   GetLivestreamByDateRangeRequest,
   GetLivestreamByDateRangeResponse,
+  GetTopProductsLivestreamRequest,
+  GetTopProductsLivestreamResponse,
   ReportLivestreamRequest,
   ReportLivestreamResponse,
   SetMetricsRequest,
@@ -177,6 +179,18 @@ export const useLivestreamCore = () => {
     })
   }
 
+  const getTopProductsLivestream = async (
+    req: GetTopProductsLivestreamRequest
+  ) => {
+    const query = toQueryString(req)
+
+    return callApi<never, GetTopProductsLivestreamResponse>({
+      method: "GET",
+      path: `/v1/livestreamcore/products-quantity-by-date-range?${query}`,
+      token: accessToken
+    })
+  }
+
   return {
     createLivestreamRange,
     addLivestreamSnapshot,
@@ -190,6 +204,7 @@ export const useLivestreamCore = () => {
     deleteSnapshot,
     updateTimeDirect,
     addExternalSnapshot,
-    assignOtherSnapshot
+    assignOtherSnapshot,
+    getTopProductsLivestream
   }
 }
