@@ -1,5 +1,6 @@
 import {
   Button,
+  Badge,
   Group,
   Select,
   NumberInput,
@@ -15,6 +16,7 @@ import { DatePickerInput } from "@mantine/dates"
 import { Controller, useFormContext, useFieldArray } from "react-hook-form"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { IconPlus, IconTrash } from "@tabler/icons-react"
+import type { AxiosError } from "axios"
 import { CToast } from "../common/CToast"
 import { useSalesOrders } from "../../hooks/useSalesOrders"
 import { useSalesFunnel } from "../../hooks/useSalesFunnel"
@@ -66,6 +68,7 @@ export const CreateSalesOrderModal = ({
   } = useFormContext<CreateSalesOrderFormData>()
 
   const watchIsNewCustomer = watch("isNewCustomer")
+  const watchItems = watch("items") || []
 
   // Use useFieldArray to manage items and secondaryPhones
   const {
@@ -166,10 +169,13 @@ export const CreateSalesOrderModal = ({
       CToast.success({ title: "Tạo đơn hàng thành công" })
       onSuccess()
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      const message = (
+        error as AxiosError<{ message?: string }>
+      )?.response?.data?.message
+
       CToast.error({
-        title:
-          error?.response?.data?.message || "Có lỗi xảy ra khi tạo đơn hàng"
+        title: message || "Có lỗi xảy ra khi tạo đơn hàng"
       })
     }
   })
@@ -216,6 +222,22 @@ export const CreateSalesOrderModal = ({
   const handleRemoveItem = (index: number) => {
     removeItem(index)
   }
+
+  const duplicateCodeIndexes = watchItems.reduce(
+    (acc, item, index) => {
+      if (!item?.code) return acc
+      if (!acc[item.code]) {
+        acc[item.code] = []
+      }
+      acc[item.code].push(index)
+      return acc
+    },
+    {} as Record<string, number[]>
+  )
+
+  const duplicatedCodes = Object.entries(duplicateCodeIndexes).filter(
+    ([, indexes]) => indexes.length > 1
+  )
 
   const funnelOptions =
     funnelData?.data.data.map((item) => ({
@@ -565,21 +587,65 @@ export const CreateSalesOrderModal = ({
         </Button>
       </Group>
 
+      {duplicatedCodes.length > 0 && (
+        <Stack gap={4} mb="sm">
+          <Text size="xs" c="orange.7" fw={600}>
+            Có {duplicatedCodes.length} mã sản phẩm đang bị trùng dòng.
+          </Text>
+          <Group gap={6}>
+            {duplicatedCodes.map(([code, indexes]) => (
+              <Badge key={code} variant="light" color="orange">
+                {code}: dòng {indexes.map((i) => i + 1).join(", ")}
+              </Badge>
+            ))}
+          </Group>
+        </Stack>
+      )}
+
       {itemFields.map((field, index) => (
-        <Group key={field.id} mb="sm" align="flex-end">
+        <Group key={field.id} mb="sm" align="flex-end" wrap="nowrap">
           <Controller
             name={`items.${index}.code` as const}
             control={control}
-            render={({ field: inputField }) => (
-              <Select
-                {...inputField}
-                label={index === 0 ? "Mã sản phẩm" : undefined}
-                placeholder="Chọn sản phẩm"
-                data={salesItemOptions}
-                searchable
-                style={{ flex: 1 }}
-              />
-            )}
+            render={({ field: inputField }) => {
+              const currentCode = inputField.value
+              const sameCodeIndexes = currentCode
+                ? duplicateCodeIndexes[currentCode] || []
+                : []
+              const duplicateIndexes = sameCodeIndexes.filter((i) => i !== index)
+              const rowSalesItemOptions = salesItemOptions.map((option) => {
+                const selectedIndexes = duplicateCodeIndexes[option.value] || []
+                const isSelected = selectedIndexes.length > 0
+                const selectedOnAnotherRow = selectedIndexes.some(
+                  (selectedIndex) => selectedIndex !== index
+                )
+
+                return {
+                  ...option,
+                  label: `${option.label}${isSelected ? " (đã chọn)" : ""}`,
+                  disabled:
+                    selectedOnAnotherRow && option.value !== currentCode
+                }
+              })
+
+              return (
+                <Select
+                  {...inputField}
+                  label={index === 0 ? "Mã sản phẩm" : undefined}
+                  placeholder="Chọn sản phẩm"
+                  data={rowSalesItemOptions}
+                  searchable
+                  style={{ flex: 1 }}
+                  description={
+                    duplicateIndexes.length > 0
+                      ? `Mã này đang trùng với dòng ${duplicateIndexes
+                          .map((i) => i + 1)
+                          .join(", ")}`
+                      : undefined
+                  }
+                />
+              )
+            }}
           />
           <Controller
             name={`items.${index}.quantity` as const}
