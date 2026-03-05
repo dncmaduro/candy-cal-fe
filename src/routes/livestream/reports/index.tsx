@@ -27,6 +27,7 @@ import { CDataTable } from "../../../components/common/CDataTable"
 import { ColumnDef } from "@tanstack/react-table"
 import { HostRevenueRankingsChart } from "../../../components/livestream/HostRevenueRankingsChart"
 import { AssistantRevenueRankingsChart } from "../../../components/livestream/AssistantRevenueRankingsChart"
+import { ProductsQuantityStats } from "../../../components/incomes/ProductsQuantityStats"
 
 type SearchParams = {
   mode?: "range" | "month"
@@ -378,7 +379,7 @@ function RouteComponent() {
           assignee:
             snapshot.altAssignee === "other"
               ? snapshot.altOtherAssignee || "Khác"
-              : !!snapshot.altAssignee
+              : snapshot.altAssignee
                 ? employeesData.find((e) => e._id === snapshot.altAssignee)
                     ?.name || "Khác"
                 : snapshot.assignee?.name || "Chưa phân",
@@ -444,7 +445,7 @@ function RouteComponent() {
     })
 
     return finalRows
-  }, [livestreamData, assigneeId])
+  }, [livestreamData, assigneeId, employeesData])
 
   const renderMetricsCards = () => {
     if (isLoadingMetrics) {
@@ -853,52 +854,6 @@ function RouteComponent() {
     []
   )
 
-  const topProductsTableData = useMemo(() => {
-    if (!topProductsData?.productsQuantity) return []
-    return Object.entries(topProductsData.productsQuantity)
-      .sort(([, quantityA], [, quantityB]) => quantityB - quantityA)
-      .map(([code, quantity], index) => ({
-        rank: index + 1,
-        code,
-        quantity
-      }))
-  }, [topProductsData])
-
-  const topProductsColumns = useMemo<
-    ColumnDef<(typeof topProductsTableData)[0]>[]
-  >(
-    () => [
-      {
-        accessorKey: "rank",
-        header: "Top",
-        cell: ({ getValue }) => (
-          <Text fw={700} size="sm">
-            #{getValue() as number}
-          </Text>
-        )
-      },
-      {
-        accessorKey: "code",
-        header: "Mã sản phẩm",
-        cell: ({ getValue }) => (
-          <Text size="sm" fw={600}>
-            {getValue() as string}
-          </Text>
-        )
-      },
-      {
-        accessorKey: "quantity",
-        header: "Số lượng",
-        cell: ({ getValue }) => (
-          <Text size="sm" fw={700} c="blue.6">
-            <NumberFormatter value={getValue() as number} thousandSeparator />
-          </Text>
-        )
-      }
-    ],
-    []
-  )
-
   return (
     <LivestreamLayout>
       <Box
@@ -1134,30 +1089,19 @@ function RouteComponent() {
           )}
 
           {viewMode === "top-products" && (
-            <Paper p="md" radius="md" withBorder>
-              <Stack gap="xs" mb="sm">
-                <Text fw={700}>Top sản phẩm theo số lượng</Text>
-                <Text size="sm" c="dimmed">
-                  Dữ liệu theo khoảng thời gian đã chọn
-                  {channelId ? " và kênh livestream hiện tại." : "."}
-                </Text>
-              </Stack>
-              <CDataTable
-                columns={topProductsColumns}
-                data={topProductsTableData}
-                isLoading={isLoadingTopProducts}
-                page={1}
-                totalPages={1}
-                onPageChange={() => {}}
-                onPageSizeChange={() => {}}
-                initialPageSize={20}
-                pageSizeOptions={[20, 50, 100]}
-                hideSearch
-                hideColumnToggle
-                hidePagination
-                hidePaginationInformation
-              />
-            </Paper>
+            <Box>
+              {isLoadingTopProducts ? (
+                <Paper withBorder p="xl" radius="lg">
+                  <Center h={140}>
+                    <Loader size="md" />
+                  </Center>
+                </Paper>
+              ) : (
+                <ProductsQuantityStats
+                  productsQuantity={topProductsData?.productsQuantity || {}}
+                />
+              )}
+            </Box>
           )}
         </Box>
       </Box>
