@@ -1,8 +1,9 @@
-import { useState, useMemo } from "react"
+import { useMemo, useState } from "react"
 import { useIncomes } from "../../hooks/useIncomes"
 import { useLivestreamChannels } from "../../hooks/useLivestreamChannels"
 import { DatePickerInput } from "@mantine/dates"
 import {
+  Alert,
   Flex,
   Loader,
   Stack,
@@ -10,7 +11,6 @@ import {
   Paper,
   Divider,
   Group,
-  Select,
   Badge,
   SegmentedControl
 } from "@mantine/core"
@@ -24,10 +24,9 @@ import { ProductsQuantityStats } from "./ProductsQuantityStats"
 import { ShippingProvidersStats } from "./ShippingProvidersStats"
 import { BoxesStats } from "./BoxesStats"
 import { CDashboardLayout } from "../common/CDashboardLayout"
-import { IconCalendarStats, IconFilter } from "@tabler/icons-react"
+import { IconAlertCircle, IconCalendarStats, IconFilter } from "@tabler/icons-react"
 import { useLivestreamChannel } from "../../context/LivestreamChannelContext"
 
-type RangeType = "day" | "range"
 type DiscountMode = "beforeDiscount" | "afterDiscount"
 
 type RangeSelectorProps = {
@@ -35,9 +34,6 @@ type RangeSelectorProps = {
   endDate: Date | null
   onChangeStartDate: (d: Date | null) => void
   onChangeEndDate: (d: Date | null) => void
-  channelId: string | null
-  setChannelId: (id: string | null) => void
-  channelsData: any[]
 }
 
 const RangeSelector = ({
@@ -46,84 +42,54 @@ const RangeSelector = ({
   onChangeStartDate,
   onChangeEndDate
 }: RangeSelectorProps) => {
-  const [rangeType, setRangeType] = useState<RangeType>("day")
+  const handleChangeStartDate = (date: Date | null) => {
+    const normalizedStart = date
+      ? new Date(new Date(date).setHours(0, 0, 0, 0))
+      : null
 
-  // value cho DatePickerInput type="range"
-  const rangeValue: [Date | null, Date | null] | undefined =
-    startDate || endDate ? [startDate, endDate] : undefined
+    onChangeStartDate(normalizedStart)
+  }
 
-  const handleRangeTypeChange = (newType: RangeType) => {
-    setRangeType(newType)
-    // Khi chuyển sang mode "range", reset end date để user chọn lại
-    if (newType === "range" && startDate && endDate) {
-      const sameDay = startDate.toDateString() === endDate.toDateString()
-      if (sameDay) {
-        onChangeEndDate(null)
-      }
+  const handleChangeEndDate = (date: Date | null) => {
+    if (!date) {
+      onChangeEndDate(null)
+      return
     }
+
+    const normalizedEnd = new Date(new Date(date).setHours(23, 59, 59, 999))
+
+    onChangeEndDate(normalizedEnd)
   }
 
   return (
     <Group align="flex-end" gap={12} wrap="nowrap">
-      <Select
-        value={rangeType}
-        onChange={(v) => handleRangeTypeChange((v as RangeType) || "day")}
-        data={[
-          { label: "Ngày", value: "day" },
-          { label: "Khoảng ngày", value: "range" }
-        ]}
+      <DatePickerInput
+        label="Từ ngày"
+        type="default"
+        value={startDate}
+        onChange={handleChangeStartDate}
+        valueFormat="DD/MM/YYYY"
         size="sm"
-        w={140}
-        label="Loại"
+        radius="md"
+        maxDate={new Date()}
+        w={160}
+        placeholder="Chọn ngày bắt đầu"
+        clearable
       />
 
-      {rangeType === "day" && (
-        <DatePickerInput
-          label="Ngày"
-          type="default"
-          value={startDate}
-          onChange={(date) => {
-            onChangeStartDate(
-              date ? new Date(new Date(date).setHours(1, 0, 0, 0)) : null
-            )
-            onChangeEndDate(
-              date ? new Date(new Date(date).setHours(23, 59, 59, 999)) : null
-            )
-          }}
-          valueFormat="DD/MM/YYYY"
-          size="sm"
-          radius="md"
-          maxDate={new Date()}
-          w={160}
-          placeholder="Chọn ngày"
-          clearable
-        />
-      )}
-
-      {rangeType === "range" && (
-        <DatePickerInput
-          label="Khoảng ngày"
-          type="range"
-          value={rangeValue}
-          onChange={(value) => {
-            const [start, end] = value || [null, null]
-            onChangeStartDate(
-              start ? new Date(new Date(start).setHours(0, 0, 0, 0)) : null
-            )
-            // Chỉ set end khi user thực sự chọn ngày thứ 2, không force = start
-            onChangeEndDate(
-              end ? new Date(new Date(end).setHours(23, 59, 59, 999)) : null
-            )
-          }}
-          valueFormat="DD/MM/YYYY"
-          size="sm"
-          radius="md"
-          maxDate={new Date()}
-          w={260}
-          placeholder="Chọn khoảng ngày"
-          clearable
-        />
-      )}
+      <DatePickerInput
+        label="Đến ngày"
+        type="default"
+        value={endDate}
+        onChange={handleChangeEndDate}
+        valueFormat="DD/MM/YYYY"
+        size="sm"
+        radius="md"
+        maxDate={new Date()}
+        w={160}
+        placeholder="Chọn ngày kết thúc"
+        clearable
+      />
     </Group>
   )
 }
@@ -134,7 +100,6 @@ export const RangeStats = () => {
   const { selectedChannelId } = useLivestreamChannel()
 
   const [mode, setMode] = useState<DiscountMode>("afterDiscount")
-  const [channelId, setChannelId] = useState<string | null>(null)
 
   // mặc định: hôm qua
   const [startDate, setStartDate] = useState<Date | null>(() => {
@@ -168,14 +133,13 @@ export const RangeStats = () => {
     const s = new Date(startDate.getTime())
     const e = new Date(endDate.getTime())
 
+    if (e.getTime() < s.getTime()) return null
+
     // chuẩn hóa: start 00:00, end 23:59
     s.setHours(0, 0, 0, 0)
-    e.setHours(1, 59, 59, 999)
+    e.setHours(23, 59, 59, 999)
 
-    const sameDay = s.toDateString() === e.toDateString()
-    const label = sameDay
-      ? format(s, "dd/MM/yyyy")
-      : `${format(s, "dd/MM/yyyy")} - ${format(e, "dd/MM/yyyy")}`
+    const label = `${format(s, "dd/MM/yyyy")} - ${format(e, "dd/MM/yyyy")}`
 
     return {
       start: s.toISOString(),
@@ -206,12 +170,17 @@ export const RangeStats = () => {
 
   const current = data?.current
   const changes = data?.changes
+  const isInvalidDateRange = !!(
+    startDate &&
+    endDate &&
+    endDate.getTime() < startDate.getTime()
+  )
 
   return (
     <CDashboardLayout
       icon={<IconCalendarStats size={28} color="#1971c2" />}
       title="Thống kê theo khoảng"
-      subheader="Xem thống kê doanh thu theo khoảng thời gian (ngày/khoảng ngày)"
+      subheader="Xem thống kê doanh thu theo khoảng thời gian (từ ngày - đến ngày)"
       rightHeader={
         <>
           <RangeSelector
@@ -219,9 +188,6 @@ export const RangeStats = () => {
             endDate={endDate}
             onChangeStartDate={setStartDate}
             onChangeEndDate={setEndDate}
-            channelId={channelId}
-            setChannelId={setChannelId}
-            channelsData={channelsData}
           />
           <SegmentedControl
             value={mode}
@@ -236,6 +202,17 @@ export const RangeStats = () => {
       }
       content={
         <>
+          {isInvalidDateRange && (
+            <Alert
+              color="red"
+              variant="light"
+              mb="lg"
+              icon={<IconAlertCircle size={16} />}
+            >
+              Ngày kết thúc không được nhỏ hơn ngày bắt đầu.
+            </Alert>
+          )}
+
           {/* Filter Summary */}
           {(selectedChannelId || range) && (
             <Paper withBorder p="md" radius="md" mb="lg" bg="blue.0">
