@@ -152,13 +152,11 @@ export const SalesItemModal = ({ item, onSuccess }: SalesItemModalProps) => {
         <Controller
           name="nameCn"
           control={control}
-          rules={{ required: "Tên tiếng Trung là bắt buộc" }}
           render={({ field }) => (
             <TextInput
               {...field}
               label="Tên (Tiếng Trung)"
               placeholder="Nhập tên sản phẩm bằng tiếng Trung"
-              required
               error={errors.nameCn?.message}
             />
           )}
