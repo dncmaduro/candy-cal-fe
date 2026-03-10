@@ -13,11 +13,12 @@ import {
 type SalesItemFormData = {
   code: string
   nameVn: string
+  nameCn: string
   price: number
   size?: string
   area?: number
   mass?: number
-  specification?: number
+  specification?: string
 }
 
 interface SalesItemModalProps {
@@ -38,11 +39,12 @@ export const SalesItemModal = ({ item, onSuccess }: SalesItemModalProps) => {
     defaultValues: {
       code: item?.code || "",
       nameVn: item?.name.vn || "",
+      nameCn: item?.name.cn || "",
       price: item?.price || 0,
       size: item?.size || "",
       area: item?.area || 0,
       mass: item?.mass || 0,
-      specification: item?.specification || 0
+      specification: item?.specification || ""
     }
   })
 
@@ -82,7 +84,8 @@ export const SalesItemModal = ({ item, onSuccess }: SalesItemModalProps) => {
     if (isEdit) {
       updateMutation.mutate({
         name: {
-          vn: data.nameVn
+          vn: data.nameVn,
+          cn: data.nameCn
         },
         price: data.price,
         size: data.size,
@@ -94,7 +97,8 @@ export const SalesItemModal = ({ item, onSuccess }: SalesItemModalProps) => {
       createMutation.mutate({
         code: data.code,
         name: {
-          vn: data.nameVn
+          vn: data.nameVn,
+          cn: data.nameCn
         },
         price: data.price,
         size: data.size,
@@ -141,6 +145,21 @@ export const SalesItemModal = ({ item, onSuccess }: SalesItemModalProps) => {
               placeholder="Nhập tên sản phẩm bằng tiếng Việt"
               required
               error={errors.nameVn?.message}
+            />
+          )}
+        />
+
+        <Controller
+          name="nameCn"
+          control={control}
+          rules={{ required: "Tên tiếng Trung là bắt buộc" }}
+          render={({ field }) => (
+            <TextInput
+              {...field}
+              label="Tên (Tiếng Trung)"
+              placeholder="Nhập tên sản phẩm bằng tiếng Trung"
+              required
+              error={errors.nameCn?.message}
             />
           )}
         />
