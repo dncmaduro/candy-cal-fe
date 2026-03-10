@@ -8,15 +8,26 @@ import {
   Box,
   rem,
   ActionIcon,
-  Tooltip
+  Tooltip,
+  Select
 } from "@mantine/core"
 import { modals } from "@mantine/modals"
 import { useDebouncedValue } from "@mantine/hooks"
 import { useQuery, useMutation } from "@tanstack/react-query"
-import { IconUpload, IconPlus, IconEdit, IconTrash } from "@tabler/icons-react"
+import {
+  IconUpload,
+  IconPlus,
+  IconEdit,
+  IconTrash,
+  IconDownload
+} from "@tabler/icons-react"
 import { CDataTable } from "../../../components/common/CDataTable"
 import { useSalesItems } from "../../../hooks/useSalesItems"
-import { SearchSalesItemsResponse } from "../../../hooks/models"
+import {
+  SalesItemFactory,
+  SalesItemSource,
+  SearchSalesItemsResponse
+} from "../../../hooks/models"
 import { SalesLayout } from "../../../components/layouts/SalesLayout"
 import { UploadSalesItemsModal } from "../../../components/sales/UploadSalesItemsModal"
 import { SalesItemModal } from "../../../components/sales/SalesItemModal"
@@ -31,23 +42,52 @@ type SalesItem = SearchSalesItemsResponse["data"][0]
 
 function RouteComponent() {
   const navigate = useNavigate()
-  const { searchSalesItems, deleteSalesItem, getSalesItemDetail } =
-    useSalesItems()
+  const {
+    searchSalesItems,
+    deleteSalesItem,
+    getSalesItemDetail,
+    getSalesItemsFactory,
+    getSalesItemsSource,
+    exportSalesItemsToXlsx
+  } = useSalesItems()
 
   // Table state
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [searchText, setSearchText] = useState("")
+  const [factoryFilter, setFactoryFilter] = useState<SalesItemFactory | "">("")
+  const [sourceFilter, setSourceFilter] = useState<SalesItemSource | "">("")
 
   // Debounce search text để tránh call API quá nhiều
   const [debouncedSearchText] = useDebouncedValue(searchText, 500)
 
+  const { data: factoriesData } = useQuery({
+    queryKey: ["salesItems", "factories"],
+    queryFn: getSalesItemsFactory,
+    staleTime: 60 * 1000
+  })
+
+  const { data: sourcesData } = useQuery({
+    queryKey: ["salesItems", "sources"],
+    queryFn: getSalesItemsSource,
+    staleTime: 60 * 1000
+  })
+
   // Load sales items data
   const { data, refetch, isLoading } = useQuery({
-    queryKey: ["salesItems", page, pageSize, debouncedSearchText],
+    queryKey: [
+      "salesItems",
+      page,
+      pageSize,
+      debouncedSearchText,
+      factoryFilter,
+      sourceFilter
+    ],
     queryFn: () =>
       searchSalesItems({
         searchText: debouncedSearchText || undefined,
+        factory: factoryFilter || undefined,
+        source: sourceFilter || undefined,
         page,
         limit: pageSize
       })
@@ -64,6 +104,35 @@ function RouteComponent() {
       CToast.error({
         title:
           error?.response?.data?.message || "Có lỗi xảy ra khi xóa sản phẩm"
+      })
+    }
+  })
+
+  const exportMutation = useMutation({
+    mutationFn: exportSalesItemsToXlsx,
+    onSuccess: (response) => {
+      const blob =
+        response.data instanceof Blob
+          ? response.data
+          : new Blob([response.data], {
+              type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            })
+
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = `sales-items-${new Date().getTime()}.xlsx`
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      URL.revokeObjectURL(url)
+
+      CToast.success({ title: "Xuất file Excel thành công" })
+    },
+    onError: (error: any) => {
+      CToast.error({
+        title:
+          error?.response?.data?.message || "Có lỗi xảy ra khi xuất file Excel"
       })
     }
   })
@@ -136,6 +205,14 @@ function RouteComponent() {
       labels: { confirm: "Xóa", cancel: "Hủy" },
       confirmProps: { color: "red" },
       onConfirm: () => deleteMutation.mutate(item._id)
+    })
+  }
+
+  const handleExportItems = () => {
+    exportMutation.mutate({
+      searchText: searchText || undefined,
+      factory: factoryFilter || undefined,
+      source: sourceFilter || undefined
     })
   }
 
@@ -325,28 +402,83 @@ function RouteComponent() {
             onRowClick={(row) =>
               navigate({ to: `/sales/items/${row.original._id}` })
             }
+            extraFilters={
+              <>
+                <Select
+                  label="Nhà máy"
+                  placeholder="Tất cả nhà máy"
+                  value={factoryFilter}
+                  data={[
+                    { value: "", label: "Tất cả nhà máy" },
+                    ...(factoriesData?.data.data || []).map((item) => ({
+                      value: item.value,
+                      label: item.label
+                    }))
+                  ]}
+                  onChange={(value) => {
+                    setFactoryFilter((value as SalesItemFactory | "") || "")
+                    setPage(1)
+                  }}
+                  clearable
+                  style={{ width: 220 }}
+                />
+                <Select
+                  label="Nguồn"
+                  placeholder="Tất cả nguồn"
+                  value={sourceFilter}
+                  data={[
+                    { value: "", label: "Tất cả nguồn" },
+                    ...(sourcesData?.data.data || []).map((item) => ({
+                      value: item.value,
+                      label: item.label
+                    }))
+                  ]}
+                  onChange={(value) => {
+                    setSourceFilter((value as SalesItemSource | "") || "")
+                    setPage(1)
+                  }}
+                  clearable
+                  style={{ width: 200 }}
+                />
+              </>
+            }
             extraActions={
-              <Can roles={["admin", "sales-leader", "sales-emp"]}>
-                <Group gap="xs">
+              <Group gap="xs">
+                <Can roles={["admin", "sales-emp", "system-emp"]}>
                   <Button
-                    leftSection={<IconUpload size={16} />}
-                    onClick={handleUploadItems}
+                    leftSection={<IconDownload size={16} />}
+                    onClick={handleExportItems}
                     variant="light"
                     size="sm"
                     radius="md"
+                    color="green"
+                    loading={exportMutation.isPending}
                   >
-                    Upload XLSX
+                    Xuất XLSX
                   </Button>
-                  <Button
-                    leftSection={<IconPlus size={16} />}
-                    onClick={handleCreateItem}
-                    size="sm"
-                    radius="md"
-                  >
-                    Tạo sản phẩm
-                  </Button>
-                </Group>
-              </Can>
+                </Can>
+                <Can roles={["admin", "sales-leader", "sales-emp"]}>
+                  <Group gap="xs">
+                    <Button
+                      leftSection={<IconUpload size={16} />}
+                      onClick={handleUploadItems}
+                      variant="light"
+                      size="sm"
+                      radius="md"
+                    >
+                      Upload XLSX
+                    </Button>
+                    <Button
+                      leftSection={<IconPlus size={16} />}
+                      onClick={handleCreateItem}
+                      size="sm"
+                      radius="md"
+                    >
+                      Tạo sản phẩm
+                    </Button>
+                  </Group>
+                </Can>
+              </Group>
             }
           />
         </Box>

@@ -4520,45 +4520,57 @@ export interface GetConversationIdByPsidResponse {
 // -------------------- SALES ITEMS --------------------
 
 /** @interface */
+export type SalesItemFactory =
+  | "candy"
+  | "manufacturing"
+  | "position_MongCai"
+  | "jelly"
+  | "import"
+
+/** @interface */
+export type SalesItemSource = "inside" | "outside"
+
+/** @interface */
+export interface SalesItemName {
+  vn: string
+  cn: string
+}
+
+/** @interface */
+export interface SalesItem {
+  _id: string
+  code: string
+  name: SalesItemName
+  factory?: SalesItemFactory
+  price: number
+  source?: SalesItemSource
+  size?: string
+  area?: number
+  specification?: string
+  mass?: number
+  createdAt: string
+  updatedAt: string
+}
+
+/** @interface */
 export interface SearchSalesItemsRequest {
   searchText?: string
-  factory?: string
-  source?: string
+  factory?: SalesItemFactory
+  source?: SalesItemSource
   page: number
   limit: number
 }
 
 /** @interface */
 export interface SearchSalesItemsResponse {
-  data: {
-    _id: string
-    code: string
-    name: {
-      vn: string
-      cn: string
-    }
-    factory?:
-      | "candy"
-      | "manufacturing"
-      | "position_MongCai"
-      | "jelly"
-      | "import"
-    price: number
-    source?: "inside" | "outside"
-    size?: string
-    area?: number
-    specification?: number
-    mass?: number
-    createdAt: string
-    updatedAt: string
-  }[]
+  data: SalesItem[]
   total: number
 }
 
 /** @interface */
 export interface GetSalesItemsFactoriesResponse {
   data: {
-    value: string
+    value: SalesItemFactory
     label: string
   }[]
 }
@@ -4566,7 +4578,7 @@ export interface GetSalesItemsFactoriesResponse {
 /** @interface */
 export interface GetSalesItemsSourcesResponse {
   data: {
-    value: string
+    value: SalesItemSource
     label: string
   }[]
 }
@@ -4574,67 +4586,34 @@ export interface GetSalesItemsSourcesResponse {
 /** @interface */
 export interface CreateSalesItemRequest {
   code: string
-  name: {
-    vn: string
-  }
+  name: SalesItemName
   size?: string
   area?: number
-  specification?: number
+  specification?: string
   mass?: number
-  factory?: "candy" | "manufacturing" | "position_MongCai" | "jelly" | "import"
+  factory?: SalesItemFactory
   price: number
-  source?: "inside" | "outside"
+  source?: SalesItemSource
 }
 
 /** @interface */
-export interface CreateSalesItemResponse {
-  _id: string
-  code: string
-  name: {
-    vn: string
-  }
-  size?: string
-  area?: number
-  specification?: number
-  mass?: number
-  factory?: "candy" | "manufacturing" | "position_MongCai" | "jelly" | "import"
-  price: number
-  source?: "inside" | "outside"
-  createdAt: string
-  updatedAt: string
-}
+export interface CreateSalesItemResponse extends SalesItem {}
 
 /** @interface */
 export interface UpdateSalesItemRequest {
-  name?: {
-    vn: string
-  }
+  code?: string
+  name?: SalesItemName
   size?: string
   area?: number
-  specification?: number
+  specification?: string
   mass?: number
-  factory?: "candy" | "manufacturing" | "position_MongCai" | "jelly" | "import"
+  factory?: SalesItemFactory
   price?: number
-  source?: "inside" | "outside"
+  source?: SalesItemSource
 }
 
 /** @interface */
-export interface UpdateSalesItemResponse {
-  _id: string
-  code: string
-  name: {
-    vn: string
-  }
-  size?: string
-  area?: number
-  specification?: number
-  mass?: number
-  factory?: "candy" | "manufacturing" | "position_MongCai" | "jelly" | "import"
-  price: number
-  source?: "inside" | "outside"
-  createdAt: string
-  updatedAt: string
-}
+export interface UpdateSalesItemResponse extends SalesItem {}
 
 /** @interface */
 export interface DeleteSalesItemRequest {
@@ -4647,27 +4626,19 @@ export interface GetSalesItemDetailRequest {
 }
 
 /** @interface */
-export interface GetSalesItemDetailResponse {
-  _id: string
-  code: string
-  name: {
-    vn: string
-  }
-  size?: string
-  area?: number
-  specification?: number
-  mass?: number
-  factory?: "candy" | "manufacturing" | "position_MongCai" | "jelly" | "import"
-  price: number
-  source?: "inside" | "outside"
-  createdAt: string
-  updatedAt: string
+export interface GetSalesItemDetailResponse extends SalesItem {}
+
+/** @interface */
+export interface ExportXlsxSalesItemsRequest {
+  searchText?: string
+  factory?: SalesItemFactory
+  source?: SalesItemSource
 }
 
 /** @interface */
 export interface GetSalesItemsQuantityByRangeRequest {
-  startDate: Date
-  endDate: Date
+  startDate?: Date
+  endDate?: Date
 }
 
 /** @interface */
@@ -4679,8 +4650,9 @@ export interface GetSalesItemsQuantityByRangeResponse {
 
 /** @interface */
 export interface GetSalesItemsTopCustomersByRangeRequest {
-  startDate: Date
-  endDate: Date
+  startDate?: Date
+  endDate?: Date
+  limit?: number
 }
 
 /** @interface */

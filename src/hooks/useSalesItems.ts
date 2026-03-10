@@ -4,6 +4,7 @@ import { callApi } from "./axios"
 import {
   CreateSalesItemRequest,
   CreateSalesItemResponse,
+  ExportXlsxSalesItemsRequest,
   GetSalesItemsFactoriesResponse,
   GetSalesItemsSourcesResponse,
   GetSalesItemDetailResponse,
@@ -56,6 +57,25 @@ export const useSalesItems = () => {
       path: `/v1/salesitems/search?${query}`,
       method: "GET",
       token: accessToken
+    })
+  }
+
+  const exportSalesItemsToXlsx = async (req: ExportXlsxSalesItemsRequest) => {
+    const query = toQueryString(req)
+    const path = query
+      ? `/v1/salesitems/export/xlsx?${query}`
+      : `/v1/salesitems/export/xlsx`
+
+    return callApi<never, Blob>({
+      path,
+      method: "GET",
+      token: accessToken,
+      headers: {
+        "Content-Type": "application/json",
+        Accept:
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      },
+      responseType: "blob"
     })
   }
 
@@ -139,6 +159,7 @@ export const useSalesItems = () => {
     uploadSalesItems,
     downloadSalesItemsTemplate,
     searchSalesItems,
+    exportSalesItemsToXlsx,
     getSalesItemsFactory,
     getSalesItemsSource,
     createSalesItem,
