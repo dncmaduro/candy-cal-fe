@@ -242,14 +242,14 @@ const QuotationCaptureContent = ({
               <Table.Td />
               <Table.Td colSpan={5}>
                 <Text size="xs">
-                  Phí ship ({calculations.totalWeight < 10 ? "45k" : `5k/kg`})
+                  Phí ship ({calculations.totalWeight < 10 ? "50k" : `5k/kg`})
                 </Text>
               </Table.Td>
               <Table.Td ta="right">
                 <Text size="xs">
                   {calculations.shippingCost > 0
                     ? calculations.totalWeight < 10
-                      ? "45.000"
+                      ? "50.000"
                       : "5.000"
                     : ""}
                 </Text>
@@ -917,7 +917,7 @@ export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
                 <Text size="sm">
                   Phí ship ({calculations.totalWeight.toFixed(2)} kg
                   {calculations.totalWeight < 10
-                    ? " < 10kg → 45k"
+                    ? " < 10kg → 50k"
                     : ` ≥ 10kg → ${calculations.totalWeight.toFixed(2)}kg × 5k`}
                   ):
                 </Text>
