@@ -946,7 +946,7 @@ function RouteComponent() {
                       <Text size="sm">
                         Phí vận chuyển (
                         {enhancedCalculations.totalWeight < 10
-                          ? "45k"
+                          ? "50k"
                           : `5k/kg`}
                         ):
                       </Text>

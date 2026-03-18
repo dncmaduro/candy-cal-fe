@@ -94,8 +94,8 @@ export const ConvertToOfficialModal = ({
   }
 
   const applyShipping = () => {
-    // Nếu khối lượng < 10kg thì 45k, >= 10kg thì 5k/kg (không làm tròn khối lượng)
-    const shippingCost = weight < 10 ? 45000 : weight * 5000
+    // Nếu khối lượng < 10kg thì 50k, >= 10kg thì 5k/kg (không làm tròn khối lượng)
+    const shippingCost = weight < 10 ? 50000 : weight * 5000
     setValue("shippingCost", Math.round(shippingCost))
   }
 
@@ -185,7 +185,7 @@ export const ConvertToOfficialModal = ({
             placeholder="Nhập phí vận chuyển"
             description={
               weight < 10
-                ? `Khối lượng ${weight.toFixed(2)}kg < 10kg → Phí cố định 45.000đ`
+                ? `Khối lượng ${weight.toFixed(2)}kg < 10kg → Phí cố định 50.000đ`
                 : `Khối lượng ${weight.toFixed(2)}kg ≥ 10kg → ${weight.toFixed(2)}kg × 5.000đ = ${(weight * 5000).toLocaleString("vi-VN")}đ`
             }
             error={errors.shippingCost?.message}
