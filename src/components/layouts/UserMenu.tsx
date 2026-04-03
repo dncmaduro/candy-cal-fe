@@ -14,11 +14,8 @@ import { useQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { useMediaQuery } from "@mantine/hooks"
 import {
-  NAVS,
-  LANDING_NAVS,
-  LIVESTREAM_NAVS,
-  SALES_NAVS,
-  ADMIN_NAVS
+  getAppNavs,
+  type AppNavItem
 } from "../../constants/navs"
 
 export const UserMenu = () => {
@@ -34,7 +31,8 @@ export const UserMenu = () => {
 
   const ROLES: Record<string, string> = {
     admin: "Admin",
-    "order-emp": "Nhân viên vận đơn",
+    "order-emp": "Nhân viên Tiktok Shop",
+    "shopee-emp": "Nhân viên Shopee",
     "accounting-emp": "Nhân viên kế toán",
     "system-emp": "Nhân viên hệ thống",
     "livestream-leader": "Leader livestream",
@@ -48,7 +46,7 @@ export const UserMenu = () => {
 
   // Hàm tìm nav đầu tiên mà user có quyền truy cập
   const getFirstAccessibleNav = (
-    navs: Array<{ to: string; roles: string[]; deprecated?: boolean }>,
+    navs: AppNavItem[],
     userRoles: string[]
   ): string | null => {
     const accessibleNav = navs.find(
@@ -58,30 +56,24 @@ export const UserMenu = () => {
     return accessibleNav?.to || null
   }
 
-  // Map app base paths to their nav arrays
-  const getAppNavs = (basePath: string) => {
-    switch (basePath) {
-      case "/marketing-storage":
-        return NAVS
-      case "/landing":
-        return LANDING_NAVS
-      case "/livestream":
-        return LIVESTREAM_NAVS
-      case "/sales":
-        return SALES_NAVS
-      case "/admin":
-        return ADMIN_NAVS
-      default:
-        return []
-    }
-  }
-
   const APPS = [
     {
-      to: "/marketing-storage",
+      to: "/kho-van",
       label: "Kho vận",
       icon: <IconPackages size={isMobile ? 14 : 18} />,
-      roles: ["admin", "order-emp", "accounting-emp", "system-emp"]
+      roles: ["admin", "accounting-emp", "system-emp"]
+    },
+    {
+      to: "/tiktokshop",
+      label: "Tiktok Shop",
+      icon: <IconPackages size={isMobile ? 14 : 18} />,
+      roles: ["admin", "order-emp", "system-emp"]
+    },
+    {
+      to: "/shopee",
+      label: "Shopee",
+      icon: <IconPackages size={isMobile ? 14 : 18} />,
+      roles: ["admin", "shopee-emp", "system-emp"]
     },
     {
       to: "/landing",

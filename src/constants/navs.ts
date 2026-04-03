@@ -1,5 +1,21 @@
+export type AppNavItem = {
+  to: string
+  label: string
+  roles: string[]
+  icon?: string
+  deprecated?: boolean
+  redirectTo?: string
+  beta?: boolean
+}
+
 /** @constant */
 export const NAVS_URL = "/marketing-storage"
+/** @constant */
+export const WAREHOUSE_NAVS_URL = "/kho-van"
+/** @constant */
+export const TIKTOKSHOP_NAVS_URL = "/tiktokshop"
+/** @constant */
+export const SHOPEE_NAVS_URL = "/shopee"
 /** @constant */
 export const LANDING_NAVS_URL = "/landing"
 /** @constant */
@@ -10,74 +26,70 @@ export const SALES_NAVS_URL = "/sales"
 export const ADMIN_NAVS_URL = "/admin"
 
 /** @constant */
-export const NAVS = [
+export const WAREHOUSE_NAVS: AppNavItem[] = [
   {
-    to: `${NAVS_URL}/storage`,
-    label: "Kho chứa",
-    roles: ["order-emp", "system-emp"],
-    icon: "IconBox"
+    to: `${WAREHOUSE_NAVS_URL}/accounting-storage`,
+    label: "Kho hàng",
+    icon: "IconBox",
+    roles: ["admin", "accounting-emp", "system-emp"]
   },
   {
-    to: `${NAVS_URL}/calfile`,
-    label: "Tính đơn vận",
-    roles: ["order-emp", "accounting-emp", "system-emp"],
-    icon: "IconCalculator",
-    deprecated: true,
-    redirectTo: `${NAVS_URL}/storage`
-  },
-  {
-    to: `${NAVS_URL}/orders-logs`,
-    label: "Lịch sử vận đơn",
-    roles: ["order-emp", "system-emp"],
-    icon: "IconHistory",
-    deprecated: true
-  },
-  {
-    to: `${NAVS_URL}/logs`,
+    to: `${WAREHOUSE_NAVS_URL}/logs`,
     label: "Lịch sử kho",
-    roles: ["admin", "order-emp", "accounting-emp", "system-emp"],
+    roles: ["admin", "accounting-emp", "system-emp"],
     icon: "IconHistory"
   },
   {
-    to: `${NAVS_URL}/accounting-storage`,
-    label: "Kho hàng",
-    icon: "IconBox",
-    roles: ["accounting-emp", "system-emp"]
-  },
-  {
-    to: `${NAVS_URL}/delivered-requests`,
+    to: `${WAREHOUSE_NAVS_URL}/delivered-requests`,
     label: "Yêu cầu xuất hàng",
     icon: "IconTruck",
-    roles: ["accounting-emp", "order-emp", "system-emp"]
+    roles: ["admin", "accounting-emp", "system-emp"]
   },
   {
-    to: `${NAVS_URL}/incomes`,
+    to: `${WAREHOUSE_NAVS_URL}/incomes`,
     label: "Doanh thu",
     icon: "IconCoin",
-    roles: ["accounting-emp", "order-emp", "system-emp"]
+    roles: ["admin", "accounting-emp", "system-emp"]
   }
-  // {
-  //   to: `${NAVS_URL}/ai`,
-  //   label: "Trợ lý AI",
-  //   icon: "IconSparkles",
-  //   roles: [
-  //     "admin",
-  //     "order-emp",
-  //     "accounting-emp",
-  //     "system-emp",
-  //     "sales-emp",
-  //     "sales-leader",
-  //     "sales-accounting",
-  //     "livestream-emp",
-  //     "livestream-ast",
-  //     "livestream-leader",
-  //     "livestream-accounting"
-  //   ]
-  // }
 ]
 
 /** @constant */
-export const LANDING_NAVS = [
+export const TIKTOKSHOP_NAVS: AppNavItem[] = [
+  {
+    to: `${TIKTOKSHOP_NAVS_URL}/sku`,
+    label: "SKU",
+    roles: ["admin", "order-emp", "system-emp"],
+    icon: "IconBox"
+  },
+  {
+    to: `${TIKTOKSHOP_NAVS_URL}/incomes`,
+    label: "Doanh thu",
+    icon: "IconCoin",
+    roles: ["admin", "order-emp", "system-emp"]
+  }
+]
+
+/** @constant */
+export const SHOPEE_NAVS: AppNavItem[] = [
+  {
+    to: `${SHOPEE_NAVS_URL}/sku`,
+    label: "SKU",
+    roles: ["admin", "shopee-emp", "system-emp"],
+    icon: "IconBox"
+  },
+  {
+    to: `${SHOPEE_NAVS_URL}/incomes`,
+    label: "Doanh thu",
+    icon: "IconCoin",
+    roles: ["admin", "shopee-emp", "system-emp"]
+  }
+]
+
+/** @constant */
+export const NAVS = WAREHOUSE_NAVS
+
+/** @constant */
+export const LANDING_NAVS: AppNavItem[] = [
   {
     to: `${LANDING_NAVS_URL}/landing-page`,
     label: "Trang chủ",
@@ -86,7 +98,7 @@ export const LANDING_NAVS = [
 ]
 
 /** @constant */
-export const LIVESTREAM_NAVS = [
+export const LIVESTREAM_NAVS: AppNavItem[] = [
   {
     to: `${LIVESTREAM_NAVS_URL}/calendar`,
     label: "Lịch livestream",
@@ -183,7 +195,7 @@ export const LIVESTREAM_NAVS = [
 ]
 
 /** @constant */
-export const SALES_NAVS = [
+export const SALES_NAVS: AppNavItem[] = [
   {
     to: `${SALES_NAVS_URL}/funnel`,
     label: "Funnel khách",
@@ -235,7 +247,7 @@ export const SALES_NAVS = [
 ]
 
 /** @constant */
-export const ADMIN_NAVS = [
+export const ADMIN_NAVS: AppNavItem[] = [
   {
     to: `${ADMIN_NAVS_URL}/system-logs`,
     label: "Lịch sử hệ thống",
@@ -250,3 +262,68 @@ export const ADMIN_NAVS = [
     beta: true
   }
 ]
+
+export const getAppNavs = (basePath: string): AppNavItem[] => {
+  switch (basePath) {
+    case NAVS_URL:
+    case WAREHOUSE_NAVS_URL:
+      return WAREHOUSE_NAVS
+    case TIKTOKSHOP_NAVS_URL:
+      return TIKTOKSHOP_NAVS
+    case SHOPEE_NAVS_URL:
+      return SHOPEE_NAVS
+    case LANDING_NAVS_URL:
+      return LANDING_NAVS
+    case LIVESTREAM_NAVS_URL:
+      return LIVESTREAM_NAVS
+    case SALES_NAVS_URL:
+      return SALES_NAVS
+    case ADMIN_NAVS_URL:
+      return ADMIN_NAVS
+    default:
+      return []
+  }
+}
+
+export const getNavsForPath = (pathname: string): AppNavItem[] => {
+  if (
+    pathname === NAVS_URL ||
+    pathname.startsWith(`${NAVS_URL}/`) ||
+    pathname === WAREHOUSE_NAVS_URL ||
+    pathname.startsWith(`${WAREHOUSE_NAVS_URL}/`)
+  ) {
+    return WAREHOUSE_NAVS
+  }
+
+  if (
+    pathname === TIKTOKSHOP_NAVS_URL ||
+    pathname.startsWith(`${TIKTOKSHOP_NAVS_URL}/`)
+  ) {
+    return TIKTOKSHOP_NAVS
+  }
+
+  if (pathname === SHOPEE_NAVS_URL || pathname.startsWith(`${SHOPEE_NAVS_URL}/`)) {
+    return SHOPEE_NAVS
+  }
+
+  if (pathname === LANDING_NAVS_URL || pathname.startsWith(`${LANDING_NAVS_URL}/`)) {
+    return LANDING_NAVS
+  }
+
+  if (
+    pathname === LIVESTREAM_NAVS_URL ||
+    pathname.startsWith(`${LIVESTREAM_NAVS_URL}/`)
+  ) {
+    return LIVESTREAM_NAVS
+  }
+
+  if (pathname === SALES_NAVS_URL || pathname.startsWith(`${SALES_NAVS_URL}/`)) {
+    return SALES_NAVS
+  }
+
+  if (pathname === ADMIN_NAVS_URL || pathname.startsWith(`${ADMIN_NAVS_URL}/`)) {
+    return ADMIN_NAVS
+  }
+
+  return WAREHOUSE_NAVS
+}

@@ -1,13 +1,17 @@
 import { useMediaQuery } from "@mantine/hooks"
-import { NAVS } from "../../constants/navs"
+import type { AppNavItem } from "../../constants/navs"
 import { NavButton } from "./NavButton"
 import { IconChevronLeft, IconMenu2 } from "@tabler/icons-react"
 
+type SidebarUser = {
+  roles: string[]
+}
+
 type SidebarProps = {
-  meData: any
+  meData?: SidebarUser | null
   collapsed: boolean
   setCollapsed: (c: (prev: boolean) => boolean) => void
-  navs?: typeof NAVS
+  navs?: AppNavItem[]
 }
 
 export const Sidebar = ({
@@ -46,7 +50,7 @@ export const Sidebar = ({
       <div className="flex flex-1 flex-col gap-3 px-2">
         {navs
           ?.filter((n) => {
-            if (!meData || (n as any).deprecated) return false
+            if (!meData || n.deprecated) return false
             return meData.roles.some((role: string) =>
               [...n.roles, "admin"].includes(role)
             )
@@ -56,8 +60,8 @@ export const Sidebar = ({
               key={n.to}
               to={n.to}
               label={n.label}
-              iconName={n.icon as any}
-              beta={(n as any).beta}
+              iconName={n.icon}
+              beta={n.beta}
               collapsed={collapsed}
             />
           ))}

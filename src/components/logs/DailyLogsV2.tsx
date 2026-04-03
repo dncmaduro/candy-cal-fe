@@ -17,7 +17,7 @@ import { format } from "date-fns"
 import { modals } from "@mantine/modals"
 import { CalFileResultModal } from "../cal/CalFileResultModal"
 import { Link } from "@tanstack/react-router"
-import { NAVS_URL } from "../../constants/navs"
+import { WAREHOUSE_NAVS_URL } from "../../constants/navs"
 import type { ColumnDef } from "@tanstack/react-table"
 import { CDataTable } from "../common/CDataTable"
 import type { GetDailyLogsResponse } from "../../hooks/models"
@@ -34,19 +34,32 @@ type DeliveredRequestChannel = {
   platform: string
 }
 
-const getChannelsFromLog = (log: DailyLogRow): DeliveredRequestChannel[] => {
-  const anyLog = log as any
+type DailyLogOrder = GetDailyLogsResponse["data"][number]["orders"][number] & {
+  channel?: DeliveredRequestChannel | null
+}
 
-  const fromOrders: DeliveredRequestChannel[] = Array.isArray(anyLog?.orders)
-    ? anyLog.orders
-        .map((o: any) => o?.channel)
-        .filter(Boolean)
-        .filter((c: any) => typeof c === "object")
+type DailyLogWithRelations = DailyLogRow & {
+  orders?: DailyLogOrder[]
+  channel?: DeliveredRequestChannel | null
+}
+
+const getChannelsFromLog = (log: DailyLogRow): DeliveredRequestChannel[] => {
+  const logWithRelations = log as DailyLogWithRelations
+
+  const fromOrders: DeliveredRequestChannel[] = Array.isArray(
+    logWithRelations.orders
+  )
+    ? logWithRelations.orders
+        .map((order) => (order as DailyLogOrder | undefined)?.channel)
+        .filter(
+          (channel): channel is DeliveredRequestChannel =>
+            !!channel && typeof channel === "object"
+        )
     : []
 
   const fromLog: DeliveredRequestChannel[] =
-    anyLog?.channel && typeof anyLog.channel === "object"
-      ? [anyLog.channel]
+    logWithRelations.channel && typeof logWithRelations.channel === "object"
+      ? [logWithRelations.channel]
       : []
 
   const all = [...fromOrders, ...fromLog].filter(
@@ -58,7 +71,11 @@ const getChannelsFromLog = (log: DailyLogRow): DeliveredRequestChannel[] => {
   return Array.from(uniq.values())
 }
 
-export const DailyLogsV2 = () => {
+export const DailyLogsV2 = ({
+  oldLogsPath = `${WAREHOUSE_NAVS_URL}/old-logs`
+}: {
+  oldLogsPath?: string
+}) => {
   const [limit, setLimit] = useState(10)
   const [channelId, setChannelId] = useState<string | null>(null)
 
@@ -282,7 +299,7 @@ export const DailyLogsV2 = () => {
           </Box>
           <Button
             component={Link}
-            to={`${NAVS_URL}/old-logs`}
+            to={oldLogsPath}
             variant="outline"
             leftSection={<IconHistory size={16} />}
             size="md"

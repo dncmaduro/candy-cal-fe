@@ -19,13 +19,22 @@ import { InsertIncomeModalV2 } from "./InsertIncomeModalV2"
 import { DailyAdsModal } from "./DailyAdsModal"
 import { IconDownload, IconPlus, IconX } from "@tabler/icons-react"
 import { DeleteIncomeModal } from "./DeleteIncomeModal"
-import { ExportXlsxIncomesRequest } from "../../hooks/models"
+import {
+  ExportXlsxIncomesRequest,
+  type IncomeProductSource
+} from "../../hooks/models"
 import { CToast } from "../common/CToast"
 import { Can } from "../common/Can"
 import { CDataTable } from "../common/CDataTable"
 import { ColumnDef } from "@tanstack/react-table"
 import { useNavigate } from "@tanstack/react-router"
 import { useLivestreamChannel } from "../../context/LivestreamChannelContext"
+import {
+  getIncomeSourceBadgeColor,
+  getIncomeSourceFilterOptions,
+  getIncomeSourceLabel,
+  sortIncomeSources
+} from "../../utils/incomeSources"
 
 interface IncomeRow {
   _id: string
@@ -49,12 +58,18 @@ interface IncomeRow {
   totalDiscount: number
 }
 
-export const Incomes = () => {
+export const Incomes = ({
+  incomeDetailRoute = "/marketing-storage/incomes/$incomeId"
+}: {
+  incomeDetailRoute?: string
+}) => {
   const navigate = useNavigate()
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(10)
   const [searchText, setSearchText] = useState("")
-  const [productSource, setProductSource] = useState<string>("")
+  const [productSource, setProductSource] = useState<IncomeProductSource | "">(
+    ""
+  )
   const [startDate, setStartDate] = useState<Date | null>(() => {
     const d = new Date()
     d.setDate(d.getDate() - 30)
@@ -101,7 +116,7 @@ export const Incomes = () => {
           : startOfDayISO(new Date()),
         endDate: endDate ? endOfDayISO(endDate) : endOfDayISO(new Date()),
         orderId: searchText || undefined,
-        productSource,
+        productSource: productSource || undefined,
         channelId: selectedChannelId || undefined
       }),
     select: (data) => data.data
@@ -140,15 +155,7 @@ export const Incomes = () => {
     }
   })
 
-  const sourceOptions = useMemo(() => {
-    return [
-      { label: "Tất cả nguồn", value: "" },
-      { label: "Affiliate", value: "affiliate" },
-      { label: "Affiliate Ads", value: "affiliate-ads" },
-      { label: "Ads", value: "ads" },
-      { label: "Khác", value: "other" }
-    ]
-  }, [])
+  const sourceOptions = useMemo(() => getIncomeSourceFilterOptions(), [])
 
   // Transform data for table
   const tableData: IncomeRow[] = useMemo(() => {
@@ -182,13 +189,6 @@ export const Incomes = () => {
       }) || []
     )
   }, [incomesData])
-
-  const sourceColors: Record<string, string> = {
-    ads: "green",
-    affiliate: "red",
-    "affiliate-ads": "violet",
-    other: "blue"
-  }
 
   const columns: ColumnDef<IncomeRow>[] = useMemo(
     () => [
@@ -250,19 +250,21 @@ export const Incomes = () => {
         header: "Nguồn",
         size: 120,
         cell: ({ row }) => {
-          const sources = Array.from(
-            new Set(row.original.products.map((p) => p.source))
+          const sources = sortIncomeSources(
+            Array.from(
+              new Set(row.original.products.map((p) => p.source))
+            )
           )
           return (
             <Group gap={4}>
               {sources.map((source) => (
                 <Badge
                   key={source}
-                  color={sourceColors[source] || "gray"}
+                  color={getIncomeSourceBadgeColor(source)}
                   variant="light"
                   size="xs"
                 >
-                  {source}
+                  {getIncomeSourceLabel(source)}
                 </Badge>
               ))}
             </Group>
@@ -344,7 +346,7 @@ export const Incomes = () => {
             )}
             {productSource && (
               <Text size="sm" mb={4}>
-                • Nguồn: <strong>{productSource}</strong>
+                • Nguồn: <strong>{getIncomeSourceLabel(productSource)}</strong>
               </Text>
             )}
             {startDate && (
@@ -369,7 +371,7 @@ export const Incomes = () => {
             : startOfDayISO(new Date()),
           endDate: endDate ? endOfDayISO(endDate) : endOfDayISO(new Date()),
           orderId: searchText || undefined,
-          productSource,
+          productSource: productSource || undefined,
           channel: selectedChannelId || undefined
         })
       }
@@ -451,7 +453,7 @@ export const Incomes = () => {
           isLoading={isLoading}
           onRowClick={(row) => {
             navigate({
-              to: "/marketing-storage/incomes/$incomeId",
+              to: incomeDetailRoute,
               params: { incomeId: row.original.orderId }
             })
           }}
@@ -493,7 +495,9 @@ export const Incomes = () => {
                 label="Nguồn sản phẩm"
                 data={sourceOptions}
                 value={productSource}
-                onChange={(val) => setProductSource(val || "")}
+                onChange={(val) =>
+                  setProductSource((val as IncomeProductSource | null) || "")
+                }
                 size="sm"
                 placeholder="Chọn nguồn"
                 clearable

@@ -27,7 +27,14 @@ type FileState = {
 
 const LABELS = {
   totalIncome: "File tổng doanh thu",
-  sourceSplit: "File tách nguồn"
+  sourceSplit: "File affiliate"
+}
+
+const DESCRIPTIONS = {
+  totalIncome:
+    "Import toàn bộ sản phẩm và mặc định gán nguồn Nội bộ.",
+  sourceSplit:
+    "Chỉ dùng để tách Affiliate và Affiliate Ads, không còn tạo Ads hoặc Khác."
 }
 
 interface Props {
@@ -73,7 +80,9 @@ export const CalculateIncomeModal = ({ date, refetch }: Props) => {
 
   const handleCalculate = async () => {
     if (!files.totalIncome.file || !files.sourceSplit.file) {
-      CToast.error({ title: "Vui lòng chọn đủ 2 file" })
+      CToast.error({
+        title: "Vui lòng chọn file tổng doanh thu và file affiliate"
+      })
       return
     }
 
@@ -111,6 +120,9 @@ export const CalculateIncomeModal = ({ date, refetch }: Props) => {
       <Paper p="md" w={"100%"} radius="lg" shadow="sm" withBorder>
         <Stack gap={6}>
           <Text fw={600}>{LABELS[key]}</Text>
+          <Text size="xs" c="dimmed">
+            {DESCRIPTIONS[key]}
+          </Text>
           <Dropzone
             onDrop={(filesArr) =>
               setFiles((prev) => ({
@@ -164,10 +176,16 @@ export const CalculateIncomeModal = ({ date, refetch }: Props) => {
       </Text>
 
       <Alert title="Lưu ý" color="yellow" variant="light">
-        <Text size="sm">
-          Sau khi tải file lên, hệ thống sẽ chạy ngầm việc tính toán doanh thu
-          thực, vui lòng chờ thông báo của hệ thống và kiểm tra.
-        </Text>
+        <Stack gap={6}>
+          <Text size="sm">
+            Sau khi tải file lên, hệ thống sẽ chạy ngầm việc tính toán doanh
+            thu thực, vui lòng chờ thông báo của hệ thống và kiểm tra.
+          </Text>
+          <Text size="sm">
+            File 1 là file tổng doanh thu. File 2 là file affiliate để tách
+            riêng Affiliate và Affiliate Ads.
+          </Text>
+        </Stack>
       </Alert>
 
       <Paper p="md" radius="md" withBorder>

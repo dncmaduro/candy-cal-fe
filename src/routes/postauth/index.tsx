@@ -38,10 +38,12 @@ function RouteComponent() {
 
   if (
     meData?.roles[0] === "admin" ||
-    meData?.roles[0] === "order-emp" ||
     meData?.roles[0] === "system-emp"
   ) {
-    return <Navigate to="/marketing-storage/storage" />
+    return <Navigate to="/kho-van" />
+  }
+  if (meData?.roles[0] === "order-emp") {
+    return <Navigate to="/tiktokshop" />
   }
   if (meData?.roles[0] === "sales-emp" || meData?.roles[0] === "sales-leader") {
     return <Navigate to="/sales/funnel" />
@@ -50,7 +52,10 @@ function RouteComponent() {
     return <Navigate to="/sales/dashboard" />
   }
   if (meData?.roles[0] === "accounting-emp") {
-    return <Navigate to="/marketing-storage/accounting-storage" />
+    return <Navigate to="/kho-van" />
+  }
+  if (meData?.roles[0] === "shopee-emp") {
+    return <Navigate to="/shopee" />
   }
   if (
     meData?.roles[0] === "livestream-emp" ||

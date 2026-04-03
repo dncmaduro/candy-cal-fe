@@ -1,17 +1,28 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { AppLayout } from "../../components/layouts/AppLayout"
-import { NAVS } from "../../constants/navs"
-import { useEffect } from "react"
+import { createFileRoute, Navigate } from "@tanstack/react-router"
+import { useAuthGuard } from "../../hooks/useAuthGuard"
 
 export const Route = createFileRoute("/marketing-storage/")({
   component: RouteComponent
 })
 
 function RouteComponent() {
-  const navigate = useNavigate()
-  useEffect(() => {
-    navigate({ to: `${NAVS[0].to}` })
-  }, [])
+  const { meData, isLoading } = useAuthGuard([
+    "admin",
+    "accounting-emp",
+    "order-emp",
+    "shopee-emp",
+    "system-emp"
+  ])
 
-  return <AppLayout>Hello "/marketing-storage/"!</AppLayout>
+  if (isLoading || !meData) return null
+
+  if (meData.roles.includes("shopee-emp")) {
+    return <Navigate to="/shopee" />
+  }
+
+  if (meData.roles.includes("order-emp")) {
+    return <Navigate to="/tiktokshop" />
+  }
+
+  return <Navigate to="/kho-van" />
 }

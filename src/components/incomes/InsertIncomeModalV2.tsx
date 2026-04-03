@@ -29,7 +29,14 @@ type FileState = {
 
 const LABELS = {
   totalIncome: "File tổng doanh thu",
-  sourceSplit: "File tách nguồn"
+  sourceSplit: "File affiliate"
+}
+
+const DESCRIPTIONS = {
+  totalIncome:
+    "Import toàn bộ sản phẩm và mặc định gán nguồn Nội bộ.",
+  sourceSplit:
+    "Chỉ dùng để tách Affiliate và Affiliate Ads, không còn tạo Ads hoặc Khác."
 }
 
 interface Props {
@@ -94,7 +101,9 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
       !files.totalIncome.file ||
       !files.sourceSplit.file
     ) {
-      CToast.error({ title: "Vui lòng chọn ngày, kênh và đủ 2 file" })
+      CToast.error({
+        title: "Vui lòng chọn ngày, kênh, file tổng doanh thu và file affiliate"
+      })
       return
     }
 
@@ -136,6 +145,9 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
       <Paper p="md" w={"100%"} radius="lg" shadow="sm" withBorder>
         <Stack gap={6}>
           <Text fw={600}>{LABELS[key]}</Text>
+          <Text size="xs" c="dimmed">
+            {DESCRIPTIONS[key]}
+          </Text>
           <Dropzone
             onDrop={(filesArr) =>
               setFiles((prev) => ({
@@ -188,11 +200,17 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
         Thêm doanh thu theo ngày
       </Text>
       <Alert title="Lưu ý" color="yellow" variant="light">
-        <Text size="sm">
-          Sau khi tải file lên, hệ thống sẽ chạy ngầm việc thêm doanh thu, vui
-          lòng chờ thông báo của hệ thống và kiểm tra. Trong thời gian đó, bạn
-          vẫn có thể đóng cửa sổ này và làm việc khác.
-        </Text>
+        <Stack gap={6}>
+          <Text size="sm">
+            Sau khi tải file lên, hệ thống sẽ chạy ngầm việc thêm doanh thu,
+            vui lòng chờ thông báo của hệ thống và kiểm tra. Trong thời gian
+            đó, bạn vẫn có thể đóng cửa sổ này và làm việc khác.
+          </Text>
+          <Text size="sm">
+            File 1 là file tổng doanh thu. File 2 là file affiliate để tách
+            riêng Affiliate và Affiliate Ads.
+          </Text>
+        </Stack>
       </Alert>
 
       <Group align="flex-end" gap={12} w={"100%"}>

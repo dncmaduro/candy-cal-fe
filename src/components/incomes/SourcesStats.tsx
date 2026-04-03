@@ -6,6 +6,14 @@ import { CDataTable } from "../common/CDataTable"
 import { DashboardSectionCard } from "./DashboardSectionCard"
 import { fmtPercent } from "../../utils/fmt"
 import { IconHierarchy2 } from "@tabler/icons-react"
+import {
+  getIncomeSourceChangeValue,
+  getIncomeSourceChartColor,
+  getIncomeSourceLabel,
+  sortIncomeSources,
+  type IncomeSourceStats,
+  type IncomeSourceStatsChanges
+} from "../../utils/incomeSources"
 
 interface SourceRow {
   key: string
@@ -19,39 +27,37 @@ export const SourcesStats = ({
   sources,
   changes
 }: {
-  sources: Record<string, number>
-  changes?: any
+  sources: IncomeSourceStats
+  changes?: IncomeSourceStatsChanges
 }) => {
   const [mode, setMode] = useState<"table" | "chart">("table")
 
-  const entries = Object.entries(sources || {})
-  if (!entries.length) return null
+  const orderedKeys = useMemo(
+    () =>
+      sortIncomeSources(
+        Object.keys(sources || {}).filter(
+          (key) => typeof sources[key] === "number"
+        )
+      ),
+    [sources]
+  )
 
-  const sum = entries.reduce((s, [, v]) => s + v, 0) || 1
-  const labels: Record<string, string> = {
-    ads: "Ads",
-    affiliate: "Affiliate",
-    affiliateAds: "Affiliate Ads",
-    other: "Khác"
-  }
+  const sum =
+    orderedKeys.reduce((total, key) => total + (sources[key] || 0), 0) || 1
 
   const data: SourceRow[] = useMemo(
     () =>
-      entries.map(([k, v]) => ({
-        key: k,
-        label: labels[k] || k,
-        value: v,
-        pct: Math.round(((v / sum) * 100 + Number.EPSILON) * 100) / 100,
-        change:
-          k === "ads"
-            ? changes?.adsPct
-            : k === "affiliate"
-              ? changes?.affiliatePct
-              : k === "affiliateAds"
-                ? changes?.affiliateAdsPct
-                : changes?.otherPct
-      })),
-    [entries, sum, labels, changes]
+      orderedKeys.map((key) => {
+        const value = sources[key] || 0
+        return {
+          key,
+          label: getIncomeSourceLabel(key),
+          value,
+          pct: Math.round(((value / sum) * 100 + Number.EPSILON) * 100) / 100,
+          change: getIncomeSourceChangeValue(changes, key)
+        }
+      }),
+    [orderedKeys, sources, sum, changes]
   )
 
   const columns: ColumnDef<SourceRow>[] = useMemo(
@@ -94,6 +100,8 @@ export const SourcesStats = ({
     []
   )
 
+  if (!data.length) return null
+
   return (
     <DashboardSectionCard
       title="Chi tiết theo nguồn"
@@ -127,6 +135,7 @@ export const SourcesStats = ({
           <Box style={{ minWidth: 280 }}>
             <CPiechart
               data={data.map((s) => ({ label: s.label, value: s.value }))}
+              palette={data.map((item) => getIncomeSourceChartColor(item.key))}
               width={280}
               radius={110}
               donut={false}

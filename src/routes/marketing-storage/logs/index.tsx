@@ -1,12 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { useAuthGuard } from "../../../hooks/useAuthGuard"
-import { AppLayout } from "../../../components/layouts/AppLayout"
-import { ScrollArea, Tabs } from "@mantine/core"
-import { Helmet } from "react-helmet-async"
-import { NAVS_URL } from "../../../constants/navs"
-import { SessionLogsV2 } from "../../../components/logs/SessionLogsV2"
-import { useEffect } from "react"
-import { DailyLogsV2 } from "../../../components/logs/DailyLogsV2"
+import { createFileRoute, Navigate } from "@tanstack/react-router"
 
 type LogsTab = {
   tab: string
@@ -22,64 +14,6 @@ export const Route = createFileRoute("/marketing-storage/logs/")({
 })
 
 function RouteComponent() {
-  useAuthGuard(["admin", "order-emp", "accounting-emp", "system-emp"])
-
   const { tab } = Route.useSearch()
-  const navigate = useNavigate()
-
-  const tabOptions = [
-    {
-      label: "Log theo ca",
-      value: "session-logs"
-    },
-    {
-      label: "Log hàng ngày",
-      value: "daily-logs"
-    }
-  ]
-
-  const handleChange = (value: string | null) => {
-    navigate({ to: `${NAVS_URL}/logs?tab=${value ?? "session-logs"}` })
-  }
-
-  useEffect(() => {
-    if (!tab) {
-      navigate({ to: `${NAVS_URL}/logs`, search: { tab: "session-logs" } })
-    }
-  }, [])
-
-  return (
-    <>
-      <Helmet>
-        <title>Lịch sử kho | MyCandy</title>
-      </Helmet>
-      <AppLayout>
-        <Tabs
-          orientation="horizontal"
-          defaultValue={tab}
-          mt={16}
-          onChange={(value) => handleChange(value)}
-          h={"90vh"}
-        >
-          <Tabs.List>
-            {tabOptions.map((tab) => (
-              <Tabs.Tab value={tab.value} key={tab.value}>
-                {tab.label}
-              </Tabs.Tab>
-            ))}
-          </Tabs.List>
-
-          <ScrollArea.Autosize mah={"95%"}>
-            <Tabs.Panel value="session-logs">
-              <SessionLogsV2 />
-            </Tabs.Panel>
-
-            <Tabs.Panel value="daily-logs">
-              <DailyLogsV2 />
-            </Tabs.Panel>
-          </ScrollArea.Autosize>
-        </Tabs>
-      </AppLayout>
-    </>
-  )
+  return <Navigate to="/kho-van/logs" search={{ tab }} />
 }

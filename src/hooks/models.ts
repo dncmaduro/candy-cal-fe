@@ -963,6 +963,34 @@ export interface InsertIncomeRequest {
   date: Date
 }
 
+/** @interface */
+export type IncomeProductSource =
+  | "internal"
+  | "affiliate"
+  | "affiliate-ads"
+  | "ads"
+  | "other"
+
+/** @interface */
+export interface IncomeSourcesStats {
+  internal?: number
+  affiliate?: number
+  affiliateAds?: number
+  ads?: number
+  other?: number
+  [key: string]: number | undefined
+}
+
+/** @interface */
+export interface IncomeSourcesStatsChanges {
+  internalPct?: number
+  affiliatePct?: number
+  affiliateAdsPct?: number
+  adsPct?: number
+  otherPct?: number
+  [key: string]: number | undefined
+}
+
 /** @deprecated */
 /** @interface */
 export interface InsertIncomeResponse {
@@ -988,7 +1016,7 @@ export interface GetIncomesByDateRangeRequest {
   limit: number
   orderId?: string
   productCode?: string
-  productSource?: string
+  productSource?: IncomeProductSource
   channelId?: string
 }
 
@@ -1009,7 +1037,7 @@ export interface GetIncomesByDateRangeResponse {
       creator?: string
       code: string
       name: string
-      source: "affiliate" | "affiliate-ads" | "ads" | "other"
+      source: IncomeProductSource
       quantity: number
       quotation: number
       price: number
@@ -1258,7 +1286,7 @@ export interface ExportXlsxIncomesRequest {
   endDate: string
   orderId?: string
   productCode?: string
-  productSource?: string
+  productSource?: IncomeProductSource
   channel?: string
 }
 
@@ -1576,12 +1604,7 @@ export interface GetRangeStatsResponse {
       ownVideoIncome: number
       otherVideoIncome: number
       otherIncome: number
-      sources: {
-        ads: number
-        affiliate: number
-        affiliateAds: number
-        other: number
-      }
+      sources: IncomeSourcesStats
     }
     afterDiscount: {
       totalIncome: number
@@ -1590,12 +1613,7 @@ export interface GetRangeStatsResponse {
       ownVideoIncome: number
       otherVideoIncome: number
       otherIncome: number
-      sources: {
-        ads: number
-        affiliate: number
-        affiliateAds: number
-        other: number
-      }
+      sources: IncomeSourcesStats
     }
     boxes: { box: string; quantity: number }[]
     shippingProviders: { provider: string; orders: number }[]
@@ -1642,12 +1660,7 @@ export interface GetRangeStatsResponse {
       videoIncomePct: number
       ownVideoIncomePct: number
       otherVideoIncomePct: number
-      sources: {
-        adsPct: number
-        affiliatePct: number
-        affiliateAdsPct: number
-        otherPct: number
-      }
+      sources: IncomeSourcesStatsChanges
     }
     afterDiscount: {
       totalIncomePct: number
@@ -1655,12 +1668,7 @@ export interface GetRangeStatsResponse {
       videoIncomePct: number
       ownVideoIncomePct: number
       otherVideoIncomePct: number
-      sources: {
-        adsPct: number
-        affiliatePct: number
-        affiliateAdsPct: number
-        otherPct: number
-      }
+      sources: IncomeSourcesStatsChanges
     }
     ads: {
       liveAdsCostPct: number

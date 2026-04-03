@@ -13,15 +13,25 @@ import { Sidebar } from "./Sidebar"
 import { useUIStore } from "../../store/uiStore"
 import { MeContext } from "../../context/MeContext"
 import { MyTasksPopover } from "../tasks/MyTasksPopover.tsx"
-import { NAVS } from "../../constants/navs.ts"
+import { getNavsForPath, type AppNavItem } from "../../constants/navs.ts"
 import { AiChatSidebar } from "../ai/AiChatSidebar"
 
-export const AppLayout = ({ children }: { children: ReactNode }) => {
+export const AppLayout = ({
+  children,
+  navs,
+  aiModule = "storage"
+}: {
+  children: ReactNode
+  navs?: AppNavItem[]
+  aiModule?: "storage" | "livestream"
+}) => {
   const { accessToken, setUser, clearUser } = useUserStore()
   const { checkToken, getNewToken, getMe } = useUsers()
   const navigate = useNavigate()
   const collapsed = useUIStore((s) => s.sidebarCollapsed)
   const setCollapsed = useUIStore((s) => s.setSidebarCollapsed)
+  const resolvedNavs =
+    navs || getNavsForPath(window.location.pathname || "/marketing-storage")
 
   const { mutate: getToken } = useMutation({
     mutationKey: ["getNewToken"],
@@ -58,13 +68,13 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
     if (!isTokenValid) {
       getToken()
     }
-  }, [isTokenValid])
+  }, [getToken, isTokenValid])
 
   useEffect(() => {
     if (!accessToken) {
       navigate({ to: "/" })
     }
-  }, [accessToken])
+  }, [accessToken, navigate])
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "#f8fafc" }}>
@@ -72,7 +82,7 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
         meData={meData}
         collapsed={collapsed}
         setCollapsed={setCollapsed}
-        navs={NAVS}
+        navs={resolvedNavs}
       />
       <div
         style={{
@@ -148,7 +158,7 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
             </Box>
           </Container>
         </main>
-        <AiChatSidebar module="storage" />
+        <AiChatSidebar module={aiModule} />
       </div>
     </div>
   )

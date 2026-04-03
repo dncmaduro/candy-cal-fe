@@ -15,6 +15,7 @@ import { useQuery } from "@tanstack/react-query"
 import { useIncomes } from "../../hooks/useIncomes"
 import { CPiechart } from "../common/CPiechart"
 import { TopCreatorItem } from "../../hooks/models"
+import { getIncomeSourceLabel } from "../../utils/incomeSources"
 
 export const TopCreatorsModal = () => {
   const { getTopCreators } = useIncomes()
@@ -113,17 +114,20 @@ export const TopCreatorsModal = () => {
         />
         <SegmentedControl
           value={view}
-          onChange={(val) => setView(val as any)}
+          onChange={(val) => setView(val as "affiliate" | "affiliateAds")}
           data={[
-            { label: "Affiliate", value: "affiliate" },
-            { label: "Affiliate Ads", value: "affiliateAds" }
+            { label: getIncomeSourceLabel("affiliate"), value: "affiliate" },
+            {
+              label: getIncomeSourceLabel("affiliateAds"),
+              value: "affiliateAds"
+            }
           ]}
           radius="xl"
           size="sm"
         />
         <SegmentedControl
           value={mode}
-          onChange={(val) => setMode(val as any)}
+          onChange={(val) => setMode(val as "table" | "pie")}
           data={[
             { label: "Bảng", value: "table" },
             { label: "Pie chart", value: "pie" }
@@ -133,7 +137,9 @@ export const TopCreatorsModal = () => {
         />
         <SegmentedControl
           value={discountMode}
-          onChange={(val) => setDiscountMode(val as any)}
+          onChange={(val) =>
+            setDiscountMode(val as "beforeDiscount" | "afterDiscount")
+          }
           data={[
             { label: "Sau CK", value: "afterDiscount" },
             { label: "Trước CK", value: "beforeDiscount" }

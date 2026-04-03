@@ -2,7 +2,7 @@ import { useUserStore } from "../store/userStore"
 import { useUsers } from "../hooks/useUsers"
 import { useQuery } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
-import { useEffect } from "react"
+import { useEffect, useMemo } from "react"
 
 export const useAuthGuard = (roles: string[]) => {
   const { getMe } = useUsers()
@@ -20,20 +20,29 @@ export const useAuthGuard = (roles: string[]) => {
     select: (data) => data.data
   })
 
+  const allowedRoles = useMemo(
+    () =>
+      roles.includes("all")
+        ? ["admin", "order-emp", "accounting-emp", "shopee-emp", "system-emp"]
+        : roles,
+    [roles]
+  )
+
   useEffect(() => {
-    if (roles.includes("all")) {
-      roles = ["admin", "order-emp", "accounting-emp"]
-    }
     // Nếu chưa login hoặc token fail, về login
     if (!accessToken || isError) {
       clearUser()
       navigate({ to: "/" })
     }
     // Nếu login ok nhưng sai quyền, về home
-    if (roles && meData && !roles.some((role) => meData.roles.includes(role))) {
+    if (
+      allowedRoles &&
+      meData &&
+      !allowedRoles.some((role) => meData.roles.includes(role))
+    ) {
       navigate({ to: "/access-denied" })
     }
-  }, [accessToken, isError, meData])
+  }, [accessToken, allowedRoles, clearUser, isError, meData, navigate])
 
   return { meData, isLoading }
 }

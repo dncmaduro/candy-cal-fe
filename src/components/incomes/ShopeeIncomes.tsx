@@ -92,10 +92,10 @@ export const ShopeeIncomes = () => {
       CToast.success({ title: "Upload file Excel thành công" })
       refetch()
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       CToast.error({
         title: "Upload file Excel thất bại",
-        subtitle: error?.message || "Vui lòng thử lại sau"
+        subtitle: error instanceof Error ? error.message : "Vui lòng thử lại sau"
       })
     }
   })
@@ -340,7 +340,7 @@ export const ShopeeIncomes = () => {
           }
           extraActions={
             <>
-              <Can roles={["admin", "accounting-emp"]}>
+              <Can roles={["admin", "accounting-emp", "shopee-emp"]}>
                 <FileButton
                   onChange={handleFileSelect}
                   accept=".xlsx,.xls"

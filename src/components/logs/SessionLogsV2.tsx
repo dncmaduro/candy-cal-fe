@@ -7,18 +7,18 @@ import { format } from "date-fns"
 import { modals } from "@mantine/modals"
 import { CalFileResultModalV2 } from "../cal/CalFileResultModalV2"
 import { Link } from "@tanstack/react-router"
-import { NAVS_URL } from "../../constants/navs"
+import { WAREHOUSE_NAVS_URL } from "../../constants/navs"
 import type { ColumnDef } from "@tanstack/react-table"
 import { CDataTable } from "../common/CDataTable"
+import type { GetSessionLogsResponse } from "../../hooks/models"
 
-type SessionLogRow = {
-  _id: string
-  time: string | Date
-  items?: any[]
-  orders?: any[]
-}
+type SessionLogRow = GetSessionLogsResponse["data"][number]
 
-export const SessionLogsV2 = () => {
+export const SessionLogsV2 = ({
+  oldLogsPath = `${WAREHOUSE_NAVS_URL}/old-logs`
+}: {
+  oldLogsPath?: string
+}) => {
   const [limit, setLimit] = useState(10)
 
   const { getSessionLogs } = useSessionLogs()
@@ -105,7 +105,7 @@ export const SessionLogsV2 = () => {
   const extraActions = (
     <Button
       component={Link}
-      to={`${NAVS_URL}/old-logs`}
+      to={oldLogsPath}
       variant="outline"
       leftSection={<IconHistory size={16} />}
       size="sm"
@@ -151,7 +151,7 @@ export const SessionLogsV2 = () => {
       <Divider my={0} />
 
       <Box px={{ base: 8, md: 28 }} py={20}>
-        <CDataTable<SessionLogRow, any>
+        <CDataTable<SessionLogRow, unknown>
           columns={columns}
           data={rows}
           isLoading={isLoading}

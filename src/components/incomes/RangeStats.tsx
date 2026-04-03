@@ -28,6 +28,7 @@ import { IconAlertCircle, IconCalendarStats, IconFilter } from "@tabler/icons-re
 import { useLivestreamChannel } from "../../context/LivestreamChannelContext"
 
 type DiscountMode = "beforeDiscount" | "afterDiscount"
+const INTERNAL_EXTERNAL_LAYOUT_CUTOFF = new Date(2026, 3, 1)
 
 type RangeSelectorProps = {
   startDate: Date | null
@@ -170,6 +171,33 @@ export const RangeStats = () => {
 
   const current = data?.current
   const changes = data?.changes
+  const useInternalExternalLayout = useMemo(() => {
+    if (!range) return false
+
+    return (
+      new Date(range.end).getTime() >= INTERNAL_EXTERNAL_LAYOUT_CUTOFF.getTime()
+    )
+  }, [range])
+
+  const internalExternalMetrics = useMemo(() => {
+    if (!current) return null
+
+    const sources = current[mode].sources || {}
+    const internalIncome =
+      (sources.internal || 0) + (sources.ads || 0) + (sources.other || 0)
+    const externalIncome =
+      (sources.affiliate || 0) + (sources.affiliateAds || 0)
+
+    // Backend vẫn trả ads cost theo 2 bucket cũ, nên tạm map bucket 1 -> nội,
+    // bucket 2 -> ngoại cho layout mới.
+    return {
+      internalIncome,
+      externalIncome,
+      internalAdsCost: current.ads.liveAdsCost || 0,
+      externalAdsCost: current.ads.shopAdsCost || 0
+    }
+  }, [current, mode])
+
   const isInvalidDateRange = !!(
     startDate &&
     endDate &&
@@ -334,34 +362,51 @@ export const RangeStats = () => {
                 <Divider my={12} />
 
                 <Stack gap={10}>
-                  <Group gap={12} align="stretch">
-                    <LiveAndVideoStats
-                      title="Livestream"
-                      income={current[mode].liveIncome}
-                      incomePct={current.dailyGoal?.[mode].liveIncomePercentage}
-                      incomeGoal={current.dailyGoal?.goals.dailyLiveIncomeGoal}
-                      adsCost={current.ads.liveAdsCost}
-                      adsCostChangePct={changes?.ads?.liveAdsCostPct}
-                      adsSharePctDiff={changes?.ads?.liveAdsToLiveIncomePctDiff}
-                      flex={1}
-                    />
-                    <LiveAndVideoStats
-                      title="Doanh thu Sàn"
-                      income={
-                        (current[mode].videoIncome || 0) +
-                        (current[mode].otherIncome || 0)
-                      }
-                      incomePct={current.dailyGoal?.[mode].shopIncomePercentage}
-                      incomeGoal={current.dailyGoal?.goals.dailyShopIncomeGoal}
-                      adsCost={current.ads.shopAdsCost}
-                      adsCostChangePct={changes?.ads?.shopAdsCostPct}
-                      adsSharePctDiff={changes?.ads?.shopAdsToShopIncomePctDiff}
-                      ownVideoIncome={current[mode].ownVideoIncome}
-                      otherVideoIncome={current[mode].otherVideoIncome}
-                      otherIncome={current[mode].otherIncome}
-                      flex={2}
-                    />
-                  </Group>
+                  {useInternalExternalLayout && internalExternalMetrics ? (
+                    <Group gap={12} align="stretch" grow>
+                      <LiveAndVideoStats
+                        title="Nội sàn"
+                        income={internalExternalMetrics.internalIncome}
+                        adsCost={internalExternalMetrics.internalAdsCost}
+                        flex={1}
+                      />
+                      <LiveAndVideoStats
+                        title="Ngoại sàn"
+                        income={internalExternalMetrics.externalIncome}
+                        adsCost={internalExternalMetrics.externalAdsCost}
+                        flex={1}
+                      />
+                    </Group>
+                  ) : (
+                    <Group gap={12} align="stretch">
+                      <LiveAndVideoStats
+                        title="Livestream"
+                        income={current[mode].liveIncome}
+                        incomePct={current.dailyGoal?.[mode].liveIncomePercentage}
+                        incomeGoal={current.dailyGoal?.goals.dailyLiveIncomeGoal}
+                        adsCost={current.ads.liveAdsCost}
+                        adsCostChangePct={changes?.ads?.liveAdsCostPct}
+                        adsSharePctDiff={changes?.ads?.liveAdsToLiveIncomePctDiff}
+                        flex={1}
+                      />
+                      <LiveAndVideoStats
+                        title="Doanh thu Sàn"
+                        income={
+                          (current[mode].videoIncome || 0) +
+                          (current[mode].otherIncome || 0)
+                        }
+                        incomePct={current.dailyGoal?.[mode].shopIncomePercentage}
+                        incomeGoal={current.dailyGoal?.goals.dailyShopIncomeGoal}
+                        adsCost={current.ads.shopAdsCost}
+                        adsCostChangePct={changes?.ads?.shopAdsCostPct}
+                        adsSharePctDiff={changes?.ads?.shopAdsToShopIncomePctDiff}
+                        ownVideoIncome={current[mode].ownVideoIncome}
+                        otherVideoIncome={current[mode].otherVideoIncome}
+                        otherIncome={current[mode].otherIncome}
+                        flex={2}
+                      />
+                    </Group>
+                  )}
                 </Stack>
               </Paper>
 
