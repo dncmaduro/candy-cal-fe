@@ -15,7 +15,6 @@ import {
   ThemeIcon
 } from "@mantine/core"
 import { IconBrandYoutube } from "@tabler/icons-react"
-import { NAVS_URL } from "../../../constants/navs"
 import { Incomes } from "../../../components/incomes/Incomes"
 import { Dashboard } from "../../../components/incomes/Dashboard"
 import { Helmet } from "react-helmet-async"
@@ -26,25 +25,44 @@ import { useLivestreamChannels } from "../../../hooks/useLivestreamChannels"
 import { LivestreamChannelProvider } from "../../../context/LivestreamChannelContext"
 import { ShopeeDashboard } from "../../../components/incomes/ShopeeDashboard"
 import { ShopeeIncomes } from "../../../components/incomes/ShopeeIncomes"
+import { KHO_VAN_ROLES, NAVS, NAVS_URL } from "../../../constants/navs"
 
-type Subtab = {
+export type Subtab = {
   tab: string
   channel?: string
 }
 
+export const validateIncomesSearch = (
+  search: Record<string, unknown>
+): Subtab => {
+  return {
+    tab: String(search.tab ?? "dashboard"),
+    channel: search.channel ? String(search.channel) : undefined
+  }
+}
+
 export const Route = createFileRoute("/marketing-storage/incomes/")({
   component: RouteComponent,
-  validateSearch: (search: Record<string, unknown>): Subtab => {
-    return {
-      tab: String(search.tab ?? "dashboard"),
-      channel: search.channel ? String(search.channel) : undefined
-    }
-  }
+  validateSearch: validateIncomesSearch
 })
 
-function RouteComponent() {
-  useAuthGuard(["admin", "accounting-emp", "order-emp", "system-emp"])
-  const { tab, channel } = Route.useSearch()
+type StorageIncomesPageProps = {
+  search: Subtab
+  baseUrl?: string
+  navs?: typeof NAVS
+  allowedRoles?: string[]
+  allowedPlatforms?: string[]
+}
+
+export function StorageIncomesPage({
+  search,
+  baseUrl = NAVS_URL,
+  navs = NAVS,
+  allowedRoles = KHO_VAN_ROLES,
+  allowedPlatforms
+}: StorageIncomesPageProps) {
+  useAuthGuard(allowedRoles)
+  const { tab, channel } = search
   const navigate = useNavigate()
   const { searchLivestreamChannels } = useLivestreamChannels()
 
@@ -61,6 +79,12 @@ function RouteComponent() {
   const [selectedChannelId, setSelectedChannelId] = useState<string | null>(
     channel ?? null
   )
+  const hasSinglePlatform = allowedPlatforms?.length === 1
+  const channelHeaderTitle = hasSinglePlatform
+    ? allowedPlatforms[0] === "shopee"
+      ? "Các shop Shopee"
+      : "Các kênh TikTok Shop"
+    : "Các kênh TTS"
 
   const tabOptions = [
     {
@@ -94,15 +118,22 @@ function RouteComponent() {
           page: 1,
           limit: 100
         })
-        const channelsList = response.data.data
+        const channelsList = response.data.data.filter((item) =>
+          allowedPlatforms?.length
+            ? allowedPlatforms.includes(item.platform)
+            : true
+        )
         setChannels(channelsList)
 
-        // Auto-select first channel if no channel param
-        if (!channel && channelsList.length > 0) {
+        const hasRequestedChannel = channel
+          ? channelsList.some((item) => item._id === channel)
+          : false
+
+        if (channelsList.length > 0 && !hasRequestedChannel) {
           const firstChannelId = channelsList[0]._id
           setSelectedChannelId(firstChannelId)
           navigate({
-            to: `${NAVS_URL}/incomes`,
+            to: `${baseUrl}/incomes`,
             search: { channel: firstChannelId, tab: tab ?? "dashboard" },
             replace: true
           })
@@ -122,7 +153,7 @@ function RouteComponent() {
 
   const handleTabChange = (value: string | null) => {
     navigate({
-      to: `${NAVS_URL}/incomes`,
+      to: `${baseUrl}/incomes`,
       search: {
         channel: selectedChannelId ?? undefined,
         tab: value ?? "dashboard"
@@ -133,7 +164,7 @@ function RouteComponent() {
   const handleChannelChange = (value: string) => {
     setSelectedChannelId(value)
     navigate({
-      to: `${NAVS_URL}/incomes`,
+      to: `${baseUrl}/incomes`,
       search: { channel: value, tab } // Reset to dashboard when changing channel
     })
   }
@@ -145,7 +176,7 @@ function RouteComponent() {
       <Helmet>
         <title>{`Bán hàng - ${tab === "dashboard" ? "Dashboard" : tab === "kpi" ? "KPI Tháng" : tab === "packing-rules" ? "Quy cách đóng hộp" : "Doanh thu"} | MyCandy`}</title>
       </Helmet>
-      <AppLayout>
+      <AppLayout navs={navs}>
         <LivestreamChannelProvider
           value={{
             selectedChannelId,
@@ -205,7 +236,7 @@ function RouteComponent() {
                   </ThemeIcon>
                   <Box>
                     <Text size="sm" fw={700} c="white" opacity={0.9}>
-                      Các kênh TTS
+                      {channelHeaderTitle}
                     </Text>
                     <Text size="xs" c="white" opacity={0.7}>
                       Chọn kênh để xem thống kê
@@ -286,4 +317,10 @@ function RouteComponent() {
       </AppLayout>
     </>
   )
+}
+
+function RouteComponent() {
+  const search = Route.useSearch()
+
+  return <StorageIncomesPage search={search} />
 }

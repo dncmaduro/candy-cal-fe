@@ -22,6 +22,8 @@ import { ColumnDef } from "@tanstack/react-table"
 import { AppLayout } from "../../../components/layouts/AppLayout"
 import { CDataTable } from "../../../components/common/CDataTable"
 import { useIncomes } from "../../../hooks/useIncomes"
+import { KHO_VAN_ROLES, NAVS, NAVS_URL } from "../../../constants/navs"
+import { useAuthGuard } from "../../../hooks/useAuthGuard"
 
 export const Route = createFileRoute("/marketing-storage/incomes/$incomeId")({
   component: RouteComponent
@@ -47,8 +49,20 @@ type IncomeProduct = {
   box?: string
 }
 
-function RouteComponent() {
-  const { incomeId } = Route.useParams()
+type StorageIncomeDetailPageProps = {
+  incomeId: string
+  baseUrl?: string
+  navs?: typeof NAVS
+  allowedRoles?: string[]
+}
+
+export function StorageIncomeDetailPage({
+  incomeId,
+  baseUrl = NAVS_URL,
+  navs = NAVS,
+  allowedRoles = KHO_VAN_ROLES
+}: StorageIncomeDetailPageProps) {
+  useAuthGuard(allowedRoles)
   const navigate = useNavigate()
   const { getIncomesByDateRange } = useIncomes()
 
@@ -278,7 +292,7 @@ function RouteComponent() {
 
   if (isLoading) {
     return (
-      <AppLayout>
+      <AppLayout navs={navs}>
         <Center h={400}>
           <Loader size="lg" />
         </Center>
@@ -288,7 +302,7 @@ function RouteComponent() {
 
   if (!income) {
     return (
-      <AppLayout>
+      <AppLayout navs={navs}>
         <Box
           mt={40}
           mx="auto"
@@ -308,7 +322,7 @@ function RouteComponent() {
               </Text>
               <Button
                 leftSection={<IconArrowLeft size={16} />}
-                onClick={() => navigate({ to: "/marketing-storage/incomes" })}
+                onClick={() => navigate({ to: `${baseUrl}/incomes` })}
               >
                 Quay lại danh sách
               </Button>
@@ -320,7 +334,7 @@ function RouteComponent() {
   }
 
   return (
-    <AppLayout>
+    <AppLayout navs={navs}>
       <Box
         mt={40}
         mx="auto"
@@ -339,7 +353,7 @@ function RouteComponent() {
             <Button
               variant="subtle"
               leftSection={<IconArrowLeft size={16} />}
-              onClick={() => navigate({ to: "/marketing-storage/incomes" })}
+              onClick={() => navigate({ to: `${baseUrl}/incomes` })}
             >
               Quay lại
             </Button>
@@ -500,4 +514,10 @@ function RouteComponent() {
       </Box>
     </AppLayout>
   )
+}
+
+function RouteComponent() {
+  const { incomeId } = Route.useParams()
+
+  return <StorageIncomeDetailPage incomeId={incomeId} />
 }

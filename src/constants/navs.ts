@@ -1,5 +1,11 @@
 /** @constant */
-export const NAVS_URL = "/marketing-storage"
+export const LEGACY_MARKETING_STORAGE_URL = "/marketing-storage"
+/** @constant */
+export const NAVS_URL = "/mkt-storage"
+/** @constant */
+export const TIKTOKSHOP_NAVS_URL = "/tiktokshop"
+/** @constant */
+export const SHOPEE_NAVS_URL = "/shopee"
 /** @constant */
 export const LANDING_NAVS_URL = "/landing"
 /** @constant */
@@ -9,52 +15,46 @@ export const SALES_NAVS_URL = "/sales"
 /** @constant */
 export const ADMIN_NAVS_URL = "/admin"
 
+export const TIKTOKSHOP_EMPLOYEE_ROLES = ["order-emp", "tiktokshop-emp"]
+export const TIKTOKSHOP_ROLES = [
+  "admin",
+  ...TIKTOKSHOP_EMPLOYEE_ROLES,
+  "system-emp"
+]
+export const TIKTOKSHOP_EDITOR_ROLES = [
+  "admin",
+  ...TIKTOKSHOP_EMPLOYEE_ROLES
+]
+export const SHOPEE_ROLES = ["admin", "shopee-emp", "system-emp"]
+export const SHOPEE_EDITOR_ROLES = ["admin", "shopee-emp"]
+export const KHO_VAN_ROLES = ["admin", "accounting-emp", "system-emp"]
+export const KHO_VAN_EDITOR_ROLES = ["admin", "accounting-emp"]
+
 /** @constant */
 export const NAVS = [
   {
-    to: `${NAVS_URL}/storage`,
-    label: "Kho chứa",
-    roles: ["order-emp", "system-emp"],
-    icon: "IconBox"
-  },
-  {
-    to: `${NAVS_URL}/calfile`,
-    label: "Tính đơn vận",
-    roles: ["order-emp", "accounting-emp", "system-emp"],
-    icon: "IconCalculator",
-    deprecated: true,
-    redirectTo: `${NAVS_URL}/storage`
-  },
-  {
-    to: `${NAVS_URL}/orders-logs`,
-    label: "Lịch sử vận đơn",
-    roles: ["order-emp", "system-emp"],
-    icon: "IconHistory",
-    deprecated: true
-  },
-  {
     to: `${NAVS_URL}/logs`,
     label: "Lịch sử kho",
-    roles: ["admin", "order-emp", "accounting-emp", "system-emp"],
+    roles: KHO_VAN_ROLES,
     icon: "IconHistory"
   },
   {
     to: `${NAVS_URL}/accounting-storage`,
     label: "Kho hàng",
     icon: "IconBox",
-    roles: ["accounting-emp", "system-emp"]
+    roles: KHO_VAN_ROLES
   },
   {
     to: `${NAVS_URL}/delivered-requests`,
     label: "Yêu cầu xuất hàng",
     icon: "IconTruck",
-    roles: ["accounting-emp", "order-emp", "system-emp"]
+    roles: KHO_VAN_ROLES
   },
   {
     to: `${NAVS_URL}/incomes`,
     label: "Doanh thu",
     icon: "IconCoin",
-    roles: ["accounting-emp", "order-emp", "system-emp"]
+    roles: KHO_VAN_ROLES
   }
   // {
   //   to: `${NAVS_URL}/ai`,
@@ -77,11 +77,43 @@ export const NAVS = [
 ]
 
 /** @constant */
+export const TIKTOKSHOP_NAVS = [
+  {
+    to: `${TIKTOKSHOP_NAVS_URL}/sku`,
+    label: "SKU",
+    roles: TIKTOKSHOP_ROLES,
+    icon: "IconBox"
+  },
+  {
+    to: `${TIKTOKSHOP_NAVS_URL}/incomes`,
+    label: "Doanh thu",
+    roles: TIKTOKSHOP_ROLES,
+    icon: "IconCoin"
+  }
+]
+
+/** @constant */
+export const SHOPEE_NAVS = [
+  {
+    to: `${SHOPEE_NAVS_URL}/sku`,
+    label: "SKU",
+    roles: SHOPEE_ROLES,
+    icon: "IconBox"
+  },
+  {
+    to: `${SHOPEE_NAVS_URL}/incomes`,
+    label: "Doanh thu",
+    roles: SHOPEE_ROLES,
+    icon: "IconCoin"
+  }
+]
+
+/** @constant */
 export const LANDING_NAVS = [
   {
     to: `${LANDING_NAVS_URL}/landing-page`,
     label: "Trang chủ",
-    roles: ["order-emp", "system-emp"]
+    roles: [...TIKTOKSHOP_EMPLOYEE_ROLES, "system-emp"]
   }
 ]
 
@@ -250,3 +282,42 @@ export const ADMIN_NAVS = [
     beta: true
   }
 ]
+
+export const STORAGE_APP_NAVS = {
+  [NAVS_URL]: NAVS,
+  [TIKTOKSHOP_NAVS_URL]: TIKTOKSHOP_NAVS,
+  [SHOPEE_NAVS_URL]: SHOPEE_NAVS,
+  [LEGACY_MARKETING_STORAGE_URL]: NAVS
+} as const
+
+export const getDefaultStorageAppBasePath = (roles: string[] = []) => {
+  if (roles.includes("accounting-emp")) return NAVS_URL
+  if (roles.includes("shopee-emp")) return SHOPEE_NAVS_URL
+  if (roles.some((role) => TIKTOKSHOP_EMPLOYEE_ROLES.includes(role))) {
+    return TIKTOKSHOP_NAVS_URL
+  }
+  return NAVS_URL
+}
+
+export const getStorageAppBasePath = (
+  pathname: string,
+  roles: string[] = []
+) => {
+  if (pathname.startsWith(TIKTOKSHOP_NAVS_URL)) return TIKTOKSHOP_NAVS_URL
+  if (pathname.startsWith(SHOPEE_NAVS_URL)) return SHOPEE_NAVS_URL
+  if (
+    pathname.startsWith(NAVS_URL) ||
+    pathname.startsWith(LEGACY_MARKETING_STORAGE_URL)
+  ) {
+    return NAVS_URL
+  }
+  return getDefaultStorageAppBasePath(roles)
+}
+
+export const getStorageNavsByPath = (
+  pathname: string,
+  roles: string[] = []
+) => {
+  const basePath = getStorageAppBasePath(pathname, roles)
+  return STORAGE_APP_NAVS[basePath]
+}

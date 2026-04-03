@@ -233,7 +233,14 @@ export const TaskDefinitionModal = ({ taskDefinition, refetch }: Props) => {
           render={({ field }) => (
             <MultiSelect
               label="Roles"
-              data={["admin", "accounting-emp", "order-emp", "system-emp"]}
+              data={[
+                "admin",
+                "accounting-emp",
+                "order-emp",
+                "tiktokshop-emp",
+                "shopee-emp",
+                "system-emp"
+              ]}
               searchable
               value={field.value}
               onChange={field.onChange}

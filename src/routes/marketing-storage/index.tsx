@@ -1,17 +1,10 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { AppLayout } from "../../components/layouts/AppLayout"
-import { NAVS } from "../../constants/navs"
-import { useEffect } from "react"
+import { createFileRoute, redirect } from "@tanstack/react-router"
 
 export const Route = createFileRoute("/marketing-storage/")({
-  component: RouteComponent
+  beforeLoad: () => {
+    throw redirect({
+      to: "/postauth"
+    })
+  },
+  component: () => null
 })
-
-function RouteComponent() {
-  const navigate = useNavigate()
-  useEffect(() => {
-    navigate({ to: `${NAVS[0].to}` })
-  }, [])
-
-  return <AppLayout>Hello "/marketing-storage/"!</AppLayout>
-}

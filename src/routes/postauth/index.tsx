@@ -5,6 +5,12 @@ import { useUserStore } from "../../store/userStore"
 import { useEffect } from "react"
 import { Helmet } from "react-helmet-async"
 import { AppLayout } from "../../components/layouts/AppLayout"
+import {
+  NAVS_URL,
+  TIKTOKSHOP_EMPLOYEE_ROLES,
+  TIKTOKSHOP_NAVS_URL,
+  SHOPEE_NAVS_URL
+} from "../../constants/navs"
 
 export const Route = createFileRoute("/postauth/")({
   component: RouteComponent
@@ -36,27 +42,34 @@ function RouteComponent() {
 
   if (!accessToken || isLoading || isError) return null
 
+  const roles = meData?.roles ?? []
+
   if (
-    meData?.roles[0] === "admin" ||
-    meData?.roles[0] === "order-emp" ||
-    meData?.roles[0] === "system-emp"
+    roles.includes("admin") ||
+    roles.includes("system-emp")
   ) {
-    return <Navigate to="/marketing-storage/storage" />
+    return <Navigate to={`${NAVS_URL}/logs`} />
   }
-  if (meData?.roles[0] === "sales-emp" || meData?.roles[0] === "sales-leader") {
+  if (roles.includes("accounting-emp")) {
+    return <Navigate to={`${NAVS_URL}/accounting-storage`} />
+  }
+  if (roles.some((role) => TIKTOKSHOP_EMPLOYEE_ROLES.includes(role))) {
+    return <Navigate to={`${TIKTOKSHOP_NAVS_URL}/sku`} />
+  }
+  if (roles.includes("shopee-emp")) {
+    return <Navigate to={`${SHOPEE_NAVS_URL}/sku`} />
+  }
+  if (roles.includes("sales-emp") || roles.includes("sales-leader")) {
     return <Navigate to="/sales/funnel" />
   }
-  if (meData?.roles[0] === "sales-accounting") {
+  if (roles.includes("sales-accounting")) {
     return <Navigate to="/sales/dashboard" />
   }
-  if (meData?.roles[0] === "accounting-emp") {
-    return <Navigate to="/marketing-storage/accounting-storage" />
-  }
   if (
-    meData?.roles[0] === "livestream-emp" ||
-    meData?.roles[0] === "livestream-leader" ||
-    meData?.roles[0] === "livestream-ast" ||
-    meData?.roles[0] === "livestream-accounting"
+    roles.includes("livestream-emp") ||
+    roles.includes("livestream-leader") ||
+    roles.includes("livestream-ast") ||
+    roles.includes("livestream-accounting")
   ) {
     return <Navigate to="/livestream/calendar" />
   }
