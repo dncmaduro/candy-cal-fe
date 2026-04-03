@@ -9,13 +9,13 @@ import {
 } from "@mantine/core"
 import { useSalesDailyReports } from "../../../hooks/useSalesDailyReports"
 import { useQuery } from "@tanstack/react-query"
-import { useState, useMemo } from "react"
+import { useMemo } from "react"
 import { useSalesChannels } from "../../../hooks/useSalesChannels"
 import { CDataTable } from "../../common/CDataTable"
 import { ColumnDef } from "@tanstack/react-table"
 import { IconPlus, IconEdit } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
-import { useNavigate } from "@tanstack/react-router"
+import { useNavigate, useSearch } from "@tanstack/react-router"
 import { SalesKPIModal } from "./SalesKPIModal"
 
 interface KpiData {
@@ -32,14 +32,15 @@ interface KpiData {
 
 export const SalesKPI = () => {
   const navigate = useNavigate()
+  const search = useSearch({ from: "/sales/daily-reports/" })
   const { getMonthKpis } = useSalesDailyReports()
   const { searchSalesChannels } = useSalesChannels()
 
-  const [page, setPage] = useState(1)
-  const [limit, setLimit] = useState(10)
-  const [monthFilter, setMonthFilter] = useState<string>("")
-  const [yearFilter, setYearFilter] = useState<string>("")
-  const [channelFilter, setChannelFilter] = useState<string>("")
+  const page = search.kpiPage || 1
+  const limit = search.kpiLimit || 10
+  const monthFilter = search.kpiMonth || ""
+  const yearFilter = search.kpiYear || ""
+  const channelFilter = search.kpiChannelId || ""
 
   const {
     data: kpisData,
@@ -180,8 +181,27 @@ export const SalesKPI = () => {
           data={kpisData?.data || []}
           page={page}
           totalPages={Math.ceil((kpisData?.total || 0) / limit)}
-          onPageChange={setPage}
-          onPageSizeChange={setLimit}
+          onPageChange={(newPage) => {
+            navigate({
+              to: "/sales/daily-reports",
+              search: {
+                ...search,
+                kpiPage: newPage
+              },
+              replace: true
+            })
+          }}
+          onPageSizeChange={(newLimit) => {
+            navigate({
+              to: "/sales/daily-reports",
+              search: {
+                ...search,
+                kpiLimit: newLimit,
+                kpiPage: 1
+              },
+              replace: true
+            })
+          }}
           initialPageSize={limit}
           pageSizeOptions={[10, 20, 50]}
           hideSearch
@@ -195,10 +215,17 @@ export const SalesKPI = () => {
                 label="Tháng"
                 placeholder="Tất cả tháng"
                 data={monthOptions}
-                value={monthFilter}
+                value={monthFilter || null}
                 onChange={(value) => {
-                  setMonthFilter(value || "")
-                  setPage(1)
+                  navigate({
+                    to: "/sales/daily-reports",
+                    search: {
+                      ...search,
+                      kpiMonth: value || undefined,
+                      kpiPage: 1
+                    },
+                    replace: true
+                  })
                 }}
                 clearable
                 style={{ width: 140 }}
@@ -207,10 +234,17 @@ export const SalesKPI = () => {
                 label="Năm"
                 placeholder="Tất cả năm"
                 data={yearOptions}
-                value={yearFilter}
+                value={yearFilter || null}
                 onChange={(value) => {
-                  setYearFilter(value || "")
-                  setPage(1)
+                  navigate({
+                    to: "/sales/daily-reports",
+                    search: {
+                      ...search,
+                      kpiYear: value || undefined,
+                      kpiPage: 1
+                    },
+                    replace: true
+                  })
                 }}
                 clearable
                 style={{ width: 140 }}
@@ -219,10 +253,17 @@ export const SalesKPI = () => {
                 label="Kênh"
                 placeholder="Tất cả kênh"
                 data={channelOptions}
-                value={channelFilter}
+                value={channelFilter || null}
                 onChange={(value) => {
-                  setChannelFilter(value || "")
-                  setPage(1)
+                  navigate({
+                    to: "/sales/daily-reports",
+                    search: {
+                      ...search,
+                      kpiChannelId: value || undefined,
+                      kpiPage: 1
+                    },
+                    replace: true
+                  })
                 }}
                 clearable
                 searchable
