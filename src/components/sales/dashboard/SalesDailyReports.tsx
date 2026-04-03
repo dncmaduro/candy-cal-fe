@@ -25,7 +25,7 @@ import { modals } from "@mantine/modals"
 import { CDataTable } from "../../common/CDataTable"
 import { CreateSalesDailyReportModal } from "./CreateSalesDailyReportModal"
 import { DailyReportByText } from "./DailyReportByText"
-import { useNavigate } from "@tanstack/react-router"
+import { useNavigate, useSearch } from "@tanstack/react-router"
 
 type DailyReportItem = {
   _id: string
@@ -58,14 +58,15 @@ export const SalesDailyReports = () => {
   const { getMyChannel, searchSalesChannels } = useSalesChannels()
   const { getMe } = useUsers()
   const navigate = useNavigate()
+  const search = useSearch({ from: "/sales/daily-reports/" })
 
   const currentDate = new Date()
-  const [month, setMonth] = useState<string>(String(currentDate.getMonth() + 1))
-  const [year, setYear] = useState<string>(String(currentDate.getFullYear()))
-  const [channelId, setChannelId] = useState<string>("")
+  const month = search.reportsMonth || String(currentDate.getMonth() + 1)
+  const year = search.reportsYear || String(currentDate.getFullYear())
+  const channelId = search.reportsChannelId || ""
   const [showDeleted] = useState(false)
-  const [page, setPage] = useState(1)
-  const [limit, setLimit] = useState(10)
+  const page = search.reportsPage || 1
+  const limit = search.reportsLimit || 10
 
   // Get user info
   const { data: meData } = useQuery({
@@ -125,11 +126,29 @@ export const SalesDailyReports = () => {
       !isAdmin &&
       !isSalesLeader &&
       !isSystemEmp &&
-      myChannelData?.channel?._id
+      myChannelData?.channel?._id &&
+      channelId !== myChannelData.channel._id
     ) {
-      setChannelId(myChannelData.channel._id)
+      navigate({
+        to: "/sales/daily-reports",
+        search: {
+          ...search,
+          reportsChannelId: myChannelData.channel._id,
+          reportsPage: 1
+        },
+        replace: true
+      })
     }
-  }, [isSalesEmp, isAdmin, isSalesLeader, isSystemEmp, myChannelData])
+  }, [
+    isSalesEmp,
+    isAdmin,
+    isSalesLeader,
+    isSystemEmp,
+    myChannelData,
+    channelId,
+    search,
+    navigate
+  ])
 
   // Prepare options
   const monthOptions = Array.from({ length: 12 }, (_, i) => ({
@@ -149,7 +168,7 @@ export const SalesDailyReports = () => {
     })) || []
 
   // Paginate data locally
-  const allReports = data?.data.data || []
+  const allReports = useMemo(() => data?.data.data ?? [], [data])
   const paginatedReports = useMemo(() => {
     const startIndex = (page - 1) * limit
     const endIndex = startIndex + limit
@@ -353,11 +372,29 @@ export const SalesDailyReports = () => {
           data={paginatedReports}
           page={page}
           totalPages={totalPages}
-          onPageChange={setPage}
-          onPageSizeChange={(newLimit: number) => {
-            setLimit(newLimit)
-            setPage(1)
+          onPageChange={(newPage) => {
+            navigate({
+              to: "/sales/daily-reports",
+              search: {
+                ...search,
+                reportsPage: newPage
+              },
+              replace: true
+            })
           }}
+          onPageSizeChange={(newLimit: number) => {
+            navigate({
+              to: "/sales/daily-reports",
+              search: {
+                ...search,
+                reportsLimit: newLimit,
+                reportsPage: 1
+              },
+              replace: true
+            })
+          }}
+          initialPageSize={limit}
+          pageSizeOptions={[10, 20, 50, 100]}
           isLoading={isLoading}
           hideSearch
           onRowClick={(row) => {
@@ -374,8 +411,15 @@ export const SalesDailyReports = () => {
                 data={monthOptions}
                 value={month}
                 onChange={(value) => {
-                  setMonth(value || String(currentDate.getMonth() + 1))
-                  setPage(1)
+                  navigate({
+                    to: "/sales/daily-reports",
+                    search: {
+                      ...search,
+                      reportsMonth: value || String(currentDate.getMonth() + 1),
+                      reportsPage: 1
+                    },
+                    replace: true
+                  })
                 }}
               />
               <Select
@@ -384,8 +428,15 @@ export const SalesDailyReports = () => {
                 data={yearOptions}
                 value={year}
                 onChange={(value) => {
-                  setYear(value || String(currentDate.getFullYear()))
-                  setPage(1)
+                  navigate({
+                    to: "/sales/daily-reports",
+                    search: {
+                      ...search,
+                      reportsYear: value || String(currentDate.getFullYear()),
+                      reportsPage: 1
+                    },
+                    replace: true
+                  })
                 }}
               />
               {showChannelFilter && (
@@ -393,10 +444,17 @@ export const SalesDailyReports = () => {
                   label="Kênh"
                   placeholder="Chọn kênh"
                   data={channelOptions}
-                  value={channelId}
+                  value={channelId || null}
                   onChange={(value) => {
-                    setChannelId(value || "")
-                    setPage(1)
+                    navigate({
+                      to: "/sales/daily-reports",
+                      search: {
+                        ...search,
+                        reportsChannelId: value || undefined,
+                        reportsPage: 1
+                      },
+                      replace: true
+                    })
                   }}
                   searchable
                   clearable
