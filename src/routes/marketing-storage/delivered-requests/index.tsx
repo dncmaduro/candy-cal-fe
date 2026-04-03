@@ -27,6 +27,7 @@ import { DeliveredRequestModal } from "../../../components/delivered-requests/De
 import { Helmet } from "react-helmet-async"
 import { Can } from "../../../components/common/Can"
 import { CDataTable } from "../../../components/common/CDataTable"
+import { KHO_VAN_ROLES, NAVS } from "../../../constants/navs"
 
 import type { ColumnDef } from "@tanstack/react-table"
 
@@ -60,8 +61,16 @@ const endOfDayISO = (d: Date) => {
   return x.toISOString()
 }
 
-function RouteComponent() {
-  useAuthGuard(["admin", "accounting-emp", "order-emp", "system-emp"])
+type DeliveredRequestsPageProps = {
+  navs?: typeof NAVS
+  allowedRoles?: string[]
+}
+
+export function DeliveredRequestsPage({
+  navs = NAVS,
+  allowedRoles = KHO_VAN_ROLES
+}: DeliveredRequestsPageProps) {
+  useAuthGuard(allowedRoles)
 
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(10)
@@ -401,7 +410,7 @@ function RouteComponent() {
   )
 
   return (
-    <AppLayout>
+    <AppLayout navs={navs}>
       <Helmet>
         <title>Kho - Yêu cầu xuất kho | MyCandy</title>
       </Helmet>
@@ -467,4 +476,8 @@ function RouteComponent() {
       </Box>
     </AppLayout>
   )
+}
+
+function RouteComponent() {
+  return <DeliveredRequestsPage />
 }

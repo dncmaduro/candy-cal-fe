@@ -7,24 +7,39 @@ import { StorageLogs } from "../../../components/accounting-storage/StorageLogs"
 import { useAuthGuard } from "../../../hooks/useAuthGuard"
 import { MonthlyExports } from "../../../components/accounting-storage/MonthlyExports"
 import { StorageItems } from "../../../components/accounting-storage/StorageItems"
-import { NAVS_URL } from "../../../constants/navs"
+import { KHO_VAN_ROLES, NAVS, NAVS_URL } from "../../../constants/navs"
 
-type StorageTab = {
+export type StorageTab = {
   tab: string
+}
+
+export const validateAccountingStorageSearch = (
+  search: Record<string, unknown>
+): StorageTab => {
+  return {
+    tab: String(search.tab ?? "items")
+  }
 }
 
 export const Route = createFileRoute("/marketing-storage/accounting-storage/")({
   component: RouteComponent,
-  validateSearch: (search: Record<string, unknown>): StorageTab => {
-    return {
-      tab: String(search.tab ?? "items")
-    }
-  }
+  validateSearch: validateAccountingStorageSearch
 })
 
-function RouteComponent() {
-  useAuthGuard(["admin", "accounting-emp", "system-emp"])
-  const { tab } = Route.useSearch()
+type AccountingStoragePageProps = {
+  tab: string
+  baseUrl?: string
+  navs?: typeof NAVS
+  allowedRoles?: string[]
+}
+
+export function AccountingStoragePage({
+  tab,
+  baseUrl = NAVS_URL,
+  navs = NAVS,
+  allowedRoles = KHO_VAN_ROLES
+}: AccountingStoragePageProps) {
+  useAuthGuard(allowedRoles)
   const navigate = useNavigate()
 
   const tabOptions = [
@@ -43,13 +58,15 @@ function RouteComponent() {
   ]
 
   const handleChange = (value: string | null) => {
-    navigate({ to: `${NAVS_URL}/accounting-storage?tab=${value ?? "items"}` })
+    navigate({
+      to: `${baseUrl}/accounting-storage?tab=${value ?? "items"}`
+    })
   }
 
   useEffect(() => {
     if (!tab) {
       navigate({
-        to: `${NAVS_URL}/accounting-storage`,
+        to: `${baseUrl}/accounting-storage`,
         search: { tab: "items" }
       })
     }
@@ -60,7 +77,7 @@ function RouteComponent() {
       <Helmet>
         <title>{`Kho - ${tab === "storagelogs" ? "Lịch sử xuất/nhập" : tab === "monthly-exports" ? "Xuất hàng theo tháng" : "Mặt hàng"} | MyCandy`}</title>
       </Helmet>
-      <AppLayout>
+      <AppLayout navs={navs}>
         <Tabs
           orientation="horizontal"
           defaultValue={tab}
@@ -97,4 +114,10 @@ function RouteComponent() {
       </AppLayout>
     </>
   )
+}
+
+function RouteComponent() {
+  const { tab } = Route.useSearch()
+
+  return <AccountingStoragePage tab={tab} />
 }

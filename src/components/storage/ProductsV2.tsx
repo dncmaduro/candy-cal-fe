@@ -38,6 +38,7 @@ import { useCalResultStore } from "../../store/calResultStore"
 import type { ProductsCalResult } from "../../store/calResultStore"
 
 import { CDataTable } from "../common/CDataTable"
+import { TIKTOKSHOP_EDITOR_ROLES } from "../../constants/navs"
 
 type ProductRow = {
   _id: string
@@ -193,7 +194,7 @@ export const ProductsV2 = () => {
             <Group gap={8} wrap="nowrap">
               {!showDeleted ? (
                 <>
-                  <Can roles={["admin", "order-emp"]}>
+                  <Can roles={TIKTOKSHOP_EDITOR_ROLES}>
                     <Button
                       variant="light"
                       color="indigo"
@@ -308,7 +309,7 @@ export const ProductsV2 = () => {
     <Group gap={10} align="end" wrap="wrap">
       {!showDeleted && (
         <Tooltip label="Thêm sản phẩm mới" withArrow>
-          <Can roles={["admin", "order-emp"]}>
+          <Can roles={TIKTOKSHOP_EDITOR_ROLES}>
             <Button
               color="indigo"
               leftSection={<IconPlus size={18} />}

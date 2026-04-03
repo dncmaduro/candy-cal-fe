@@ -16,8 +16,8 @@ import { IconHistory, IconListDetails } from "@tabler/icons-react"
 import { format } from "date-fns"
 import { modals } from "@mantine/modals"
 import { CalFileResultModal } from "../cal/CalFileResultModal"
-import { Link } from "@tanstack/react-router"
-import { NAVS_URL } from "../../constants/navs"
+import { Link, useLocation } from "@tanstack/react-router"
+import { getStorageAppBasePath } from "../../constants/navs"
 import type { ColumnDef } from "@tanstack/react-table"
 import { CDataTable } from "../common/CDataTable"
 import type { GetDailyLogsResponse } from "../../hooks/models"
@@ -59,6 +59,7 @@ const getChannelsFromLog = (log: DailyLogRow): DeliveredRequestChannel[] => {
 }
 
 export const DailyLogsV2 = () => {
+  const location = useLocation()
   const [limit, setLimit] = useState(10)
   const [channelId, setChannelId] = useState<string | null>(null)
 
@@ -282,7 +283,7 @@ export const DailyLogsV2 = () => {
           </Box>
           <Button
             component={Link}
-            to={`${NAVS_URL}/old-logs`}
+            to={`${getStorageAppBasePath(location.pathname)}/old-logs`}
             variant="outline"
             leftSection={<IconHistory size={16} />}
             size="md"

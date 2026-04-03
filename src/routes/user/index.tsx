@@ -69,8 +69,11 @@ function RouteComponent() {
 
   const roleText = meData?.roles?.includes("admin")
     ? "Quản trị viên"
-    : meData?.roles?.includes("order-emp")
-      ? "Nhân viên vận đơn"
+    : meData?.roles?.includes("tiktokshop-emp") ||
+        meData?.roles?.includes("order-emp")
+      ? "Nhân viên TikTok Shop"
+      : meData?.roles?.includes("shopee-emp")
+        ? "Nhân viên Shopee"
       : meData?.roles?.includes("system-emp")
         ? "Nhân viên hệ thống"
         : meData?.roles?.includes("accounting-emp")
