@@ -212,11 +212,24 @@ function RouteComponent() {
 
   // Handle opening calculate income modal
   const handleCalculateIncome = (date: Date) => {
+    if (!selectedChannelId) {
+      CToast.error({
+        title: "Chưa chọn kênh livestream",
+        subtitle: "Vui lòng chọn kênh livestream trước khi tính doanh thu thực."
+      })
+      return
+    }
+
     modals.open({
       title: <b>Tính doanh thu thực</b>,
       children: (
         <CalculateIncomeModal
           date={date}
+          channelId={selectedChannelId}
+          channelName={
+            channelsData?.find((channel) => channel._id === selectedChannelId)
+              ?.name
+          }
           refetch={() => {
             queryClient.invalidateQueries({
               queryKey: ["getLivestreamsByDateRange"]
