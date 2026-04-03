@@ -1,6 +1,8 @@
 import { Avatar, Box, Group, Menu, Stack, Text } from "@mantine/core"
 import {
   IconAppWindow,
+  IconBrandShopee,
+  IconBrandTiktok,
   IconPackages,
   IconPower,
   IconSettings,
@@ -15,6 +17,14 @@ import { Link } from "@tanstack/react-router"
 import { useMediaQuery } from "@mantine/hooks"
 import {
   NAVS,
+  NAVS_URL,
+  TIKTOKSHOP_NAVS,
+  TIKTOKSHOP_NAVS_URL,
+  TIKTOKSHOP_ROLES,
+  SHOPEE_NAVS,
+  SHOPEE_NAVS_URL,
+  SHOPEE_ROLES,
+  KHO_VAN_ROLES,
   LANDING_NAVS,
   LIVESTREAM_NAVS,
   SALES_NAVS,
@@ -34,7 +44,9 @@ export const UserMenu = () => {
 
   const ROLES: Record<string, string> = {
     admin: "Admin",
-    "order-emp": "Nhân viên vận đơn",
+    "order-emp": "Nhân viên TikTok Shop",
+    "tiktokshop-emp": "Nhân viên TikTok Shop",
+    "shopee-emp": "Nhân viên Shopee",
     "accounting-emp": "Nhân viên kế toán",
     "system-emp": "Nhân viên hệ thống",
     "livestream-leader": "Leader livestream",
@@ -61,8 +73,12 @@ export const UserMenu = () => {
   // Map app base paths to their nav arrays
   const getAppNavs = (basePath: string) => {
     switch (basePath) {
-      case "/marketing-storage":
+      case NAVS_URL:
         return NAVS
+      case TIKTOKSHOP_NAVS_URL:
+        return TIKTOKSHOP_NAVS
+      case SHOPEE_NAVS_URL:
+        return SHOPEE_NAVS
       case "/landing":
         return LANDING_NAVS
       case "/livestream":
@@ -78,10 +94,22 @@ export const UserMenu = () => {
 
   const APPS = [
     {
-      to: "/marketing-storage",
+      to: NAVS_URL,
       label: "Kho vận",
       icon: <IconPackages size={isMobile ? 14 : 18} />,
-      roles: ["admin", "order-emp", "accounting-emp", "system-emp"]
+      roles: KHO_VAN_ROLES
+    },
+    {
+      to: TIKTOKSHOP_NAVS_URL,
+      label: "TikTok Shop",
+      icon: <IconBrandTiktok size={isMobile ? 14 : 18} />,
+      roles: TIKTOKSHOP_ROLES
+    },
+    {
+      to: SHOPEE_NAVS_URL,
+      label: "Shopee",
+      icon: <IconBrandShopee size={isMobile ? 14 : 18} />,
+      roles: SHOPEE_ROLES
     },
     {
       to: "/landing",

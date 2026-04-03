@@ -3,6 +3,11 @@ import { useUsers } from "../hooks/useUsers"
 import { useQuery } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { useEffect } from "react"
+import {
+  KHO_VAN_ROLES,
+  SHOPEE_ROLES,
+  TIKTOKSHOP_ROLES
+} from "../constants/navs"
 
 export const useAuthGuard = (roles: string[]) => {
   const { getMe } = useUsers()
@@ -22,7 +27,7 @@ export const useAuthGuard = (roles: string[]) => {
 
   useEffect(() => {
     if (roles.includes("all")) {
-      roles = ["admin", "order-emp", "accounting-emp"]
+      roles = [...new Set([...KHO_VAN_ROLES, ...TIKTOKSHOP_ROLES, ...SHOPEE_ROLES])]
     }
     // Nếu chưa login hoặc token fail, về login
     if (!accessToken || isError) {

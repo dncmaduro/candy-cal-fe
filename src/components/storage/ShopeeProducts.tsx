@@ -37,6 +37,7 @@ import type { CalResult } from "../../store/calResultStore"
 import type { AxiosResponse } from "axios"
 import type { CalXlsxShopeeResponse } from "../../hooks/models"
 import { CDataTable } from "../common/CDataTable"
+import { SHOPEE_EDITOR_ROLES } from "../../constants/navs"
 
 type ShopeeProductRow = {
   _id: string
@@ -183,7 +184,7 @@ export const ShopeeProducts = () => {
           if (showDeleted) return null
           return (
             <Group gap={8} wrap="nowrap">
-              <Can roles={["admin", "order-emp"]}>
+              <Can roles={SHOPEE_EDITOR_ROLES}>
                 <Button
                   variant="light"
                   color="indigo"
@@ -302,7 +303,7 @@ export const ShopeeProducts = () => {
     <Group gap={10} align="end" wrap="wrap">
       {!showDeleted && (
         <Tooltip label="Thêm SKU Shopee mới" withArrow>
-          <Can roles={["admin", "order-emp"]}>
+          <Can roles={SHOPEE_EDITOR_ROLES}>
             <Button
               color="indigo"
               leftSection={<IconPlus size={18} />}

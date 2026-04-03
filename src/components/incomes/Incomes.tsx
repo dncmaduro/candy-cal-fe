@@ -24,8 +24,9 @@ import { CToast } from "../common/CToast"
 import { Can } from "../common/Can"
 import { CDataTable } from "../common/CDataTable"
 import { ColumnDef } from "@tanstack/react-table"
-import { useNavigate } from "@tanstack/react-router"
+import { useLocation, useNavigate } from "@tanstack/react-router"
 import { useLivestreamChannel } from "../../context/LivestreamChannelContext"
+import { getStorageAppBasePath } from "../../constants/navs"
 
 interface IncomeRow {
   _id: string
@@ -51,6 +52,7 @@ interface IncomeRow {
 
 export const Incomes = () => {
   const navigate = useNavigate()
+  const location = useLocation()
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(10)
   const [searchText, setSearchText] = useState("")
@@ -451,8 +453,7 @@ export const Incomes = () => {
           isLoading={isLoading}
           onRowClick={(row) => {
             navigate({
-              to: "/marketing-storage/incomes/$incomeId",
-              params: { incomeId: row.original.orderId }
+              to: `${getStorageAppBasePath(location.pathname)}/incomes/${row.original.orderId}`
             })
           }}
           extraFilters={

@@ -15,14 +15,21 @@ import { Route as TestErrorImport } from './routes/test-error'
 import { Route as PrivacyPolicyImport } from './routes/privacy-policy'
 import { Route as IndexImport } from './routes/index'
 import { Route as UserIndexImport } from './routes/user/index'
+import { Route as TiktokshopIndexImport } from './routes/tiktokshop/index'
+import { Route as ShopeeIndexImport } from './routes/shopee/index'
 import { Route as SalesIndexImport } from './routes/sales/index'
 import { Route as PrivacyPolicyIndexImport } from './routes/privacy-policy/index'
 import { Route as PostauthIndexImport } from './routes/postauth/index'
+import { Route as MktStorageIndexImport } from './routes/mkt-storage/index'
 import { Route as MarketingStorageIndexImport } from './routes/marketing-storage/index'
 import { Route as LivestreamIndexImport } from './routes/livestream/index'
 import { Route as LandingIndexImport } from './routes/landing/index'
 import { Route as AdminIndexImport } from './routes/admin/index'
 import { Route as AccessDeniedIndexImport } from './routes/access-denied/index'
+import { Route as TiktokshopSkuIndexImport } from './routes/tiktokshop/sku/index'
+import { Route as TiktokshopIncomesIndexImport } from './routes/tiktokshop/incomes/index'
+import { Route as ShopeeSkuIndexImport } from './routes/shopee/sku/index'
+import { Route as ShopeeIncomesIndexImport } from './routes/shopee/incomes/index'
 import { Route as SalesTasksIndexImport } from './routes/sales/tasks/index'
 import { Route as SalesPriceIndexImport } from './routes/sales/price/index'
 import { Route as SalesOrdersIndexImport } from './routes/sales/orders/index'
@@ -33,6 +40,11 @@ import { Route as SalesDashboardIndexImport } from './routes/sales/dashboard/ind
 import { Route as SalesDailyReportsIndexImport } from './routes/sales/daily-reports/index'
 import { Route as SalesCustomerRanksIndexImport } from './routes/sales/customer-ranks/index'
 import { Route as SalesChannelsIndexImport } from './routes/sales/channels/index'
+import { Route as MktStorageOldLogsIndexImport } from './routes/mkt-storage/old-logs/index'
+import { Route as MktStorageLogsIndexImport } from './routes/mkt-storage/logs/index'
+import { Route as MktStorageIncomesIndexImport } from './routes/mkt-storage/incomes/index'
+import { Route as MktStorageDeliveredRequestsIndexImport } from './routes/mkt-storage/delivered-requests/index'
+import { Route as MktStorageAccountingStorageIndexImport } from './routes/mkt-storage/accounting-storage/index'
 import { Route as MarketingStorageStorageIndexImport } from './routes/marketing-storage/storage/index'
 import { Route as MarketingStorageOrdersLogsIndexImport } from './routes/marketing-storage/orders-logs/index'
 import { Route as MarketingStorageOldLogsIndexImport } from './routes/marketing-storage/old-logs/index'
@@ -56,12 +68,14 @@ import { Route as LivestreamAltRequestsIndexImport } from './routes/livestream/a
 import { Route as LandingLandingPageIndexImport } from './routes/landing/landing-page/index'
 import { Route as AdminTasksIndexImport } from './routes/admin/tasks/index'
 import { Route as AdminSystemLogsIndexImport } from './routes/admin/system-logs/index'
+import { Route as TiktokshopIncomesIncomeIdImport } from './routes/tiktokshop/incomes/$incomeId'
 import { Route as SalesOrdersOrderIdImport } from './routes/sales/orders/$orderId'
 import { Route as SalesMessagesConversationIdImport } from './routes/sales/messages/$conversationId'
 import { Route as SalesItemsItemIdImport } from './routes/sales/items/$itemId'
 import { Route as SalesFunnelFunnelIdImport } from './routes/sales/funnel/$funnelId'
 import { Route as SalesDashboardKpiIdImport } from './routes/sales/dashboard/$kpiId'
 import { Route as SalesDashboardDailyReportIdImport } from './routes/sales/dashboard/$dailyReportId'
+import { Route as MktStorageIncomesIncomeIdImport } from './routes/mkt-storage/incomes/$incomeId'
 import { Route as MarketingStorageIncomesIncomeIdImport } from './routes/marketing-storage/incomes/$incomeId'
 
 // Create/Update Routes
@@ -90,6 +104,18 @@ const UserIndexRoute = UserIndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const TiktokshopIndexRoute = TiktokshopIndexImport.update({
+  id: '/tiktokshop/',
+  path: '/tiktokshop/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const ShopeeIndexRoute = ShopeeIndexImport.update({
+  id: '/shopee/',
+  path: '/shopee/',
+  getParentRoute: () => rootRoute,
+} as any)
+
 const SalesIndexRoute = SalesIndexImport.update({
   id: '/sales/',
   path: '/sales/',
@@ -105,6 +131,12 @@ const PrivacyPolicyIndexRoute = PrivacyPolicyIndexImport.update({
 const PostauthIndexRoute = PostauthIndexImport.update({
   id: '/postauth/',
   path: '/postauth/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const MktStorageIndexRoute = MktStorageIndexImport.update({
+  id: '/mkt-storage/',
+  path: '/mkt-storage/',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -135,6 +167,30 @@ const AdminIndexRoute = AdminIndexImport.update({
 const AccessDeniedIndexRoute = AccessDeniedIndexImport.update({
   id: '/access-denied/',
   path: '/access-denied/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const TiktokshopSkuIndexRoute = TiktokshopSkuIndexImport.update({
+  id: '/tiktokshop/sku/',
+  path: '/tiktokshop/sku/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const TiktokshopIncomesIndexRoute = TiktokshopIncomesIndexImport.update({
+  id: '/tiktokshop/incomes/',
+  path: '/tiktokshop/incomes/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const ShopeeSkuIndexRoute = ShopeeSkuIndexImport.update({
+  id: '/shopee/sku/',
+  path: '/shopee/sku/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const ShopeeIncomesIndexRoute = ShopeeIncomesIndexImport.update({
+  id: '/shopee/incomes/',
+  path: '/shopee/incomes/',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -197,6 +253,38 @@ const SalesChannelsIndexRoute = SalesChannelsIndexImport.update({
   path: '/sales/channels/',
   getParentRoute: () => rootRoute,
 } as any)
+
+const MktStorageOldLogsIndexRoute = MktStorageOldLogsIndexImport.update({
+  id: '/mkt-storage/old-logs/',
+  path: '/mkt-storage/old-logs/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const MktStorageLogsIndexRoute = MktStorageLogsIndexImport.update({
+  id: '/mkt-storage/logs/',
+  path: '/mkt-storage/logs/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const MktStorageIncomesIndexRoute = MktStorageIncomesIndexImport.update({
+  id: '/mkt-storage/incomes/',
+  path: '/mkt-storage/incomes/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const MktStorageDeliveredRequestsIndexRoute =
+  MktStorageDeliveredRequestsIndexImport.update({
+    id: '/mkt-storage/delivered-requests/',
+    path: '/mkt-storage/delivered-requests/',
+    getParentRoute: () => rootRoute,
+  } as any)
+
+const MktStorageAccountingStorageIndexRoute =
+  MktStorageAccountingStorageIndexImport.update({
+    id: '/mkt-storage/accounting-storage/',
+    path: '/mkt-storage/accounting-storage/',
+    getParentRoute: () => rootRoute,
+  } as any)
 
 const MarketingStorageStorageIndexRoute =
   MarketingStorageStorageIndexImport.update({
@@ -347,6 +435,12 @@ const AdminSystemLogsIndexRoute = AdminSystemLogsIndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const TiktokshopIncomesIncomeIdRoute = TiktokshopIncomesIncomeIdImport.update({
+  id: '/tiktokshop/incomes/$incomeId',
+  path: '/tiktokshop/incomes/$incomeId',
+  getParentRoute: () => rootRoute,
+} as any)
+
 const SalesOrdersOrderIdRoute = SalesOrdersOrderIdImport.update({
   id: '/sales/orders/$orderId',
   path: '/sales/orders/$orderId',
@@ -384,6 +478,12 @@ const SalesDashboardDailyReportIdRoute =
     path: '/sales/dashboard/$dailyReportId',
     getParentRoute: () => rootRoute,
   } as any)
+
+const MktStorageIncomesIncomeIdRoute = MktStorageIncomesIncomeIdImport.update({
+  id: '/mkt-storage/incomes/$incomeId',
+  path: '/mkt-storage/incomes/$incomeId',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const MarketingStorageIncomesIncomeIdRoute =
   MarketingStorageIncomesIncomeIdImport.update({
@@ -452,6 +552,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MarketingStorageIndexImport
       parentRoute: typeof rootRoute
     }
+    '/mkt-storage/': {
+      id: '/mkt-storage/'
+      path: '/mkt-storage'
+      fullPath: '/mkt-storage'
+      preLoaderRoute: typeof MktStorageIndexImport
+      parentRoute: typeof rootRoute
+    }
     '/postauth/': {
       id: '/postauth/'
       path: '/postauth'
@@ -473,6 +580,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SalesIndexImport
       parentRoute: typeof rootRoute
     }
+    '/shopee/': {
+      id: '/shopee/'
+      path: '/shopee'
+      fullPath: '/shopee'
+      preLoaderRoute: typeof ShopeeIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/tiktokshop/': {
+      id: '/tiktokshop/'
+      path: '/tiktokshop'
+      fullPath: '/tiktokshop'
+      preLoaderRoute: typeof TiktokshopIndexImport
+      parentRoute: typeof rootRoute
+    }
     '/user/': {
       id: '/user/'
       path: '/user'
@@ -485,6 +606,13 @@ declare module '@tanstack/react-router' {
       path: '/marketing-storage/incomes/$incomeId'
       fullPath: '/marketing-storage/incomes/$incomeId'
       preLoaderRoute: typeof MarketingStorageIncomesIncomeIdImport
+      parentRoute: typeof rootRoute
+    }
+    '/mkt-storage/incomes/$incomeId': {
+      id: '/mkt-storage/incomes/$incomeId'
+      path: '/mkt-storage/incomes/$incomeId'
+      fullPath: '/mkt-storage/incomes/$incomeId'
+      preLoaderRoute: typeof MktStorageIncomesIncomeIdImport
       parentRoute: typeof rootRoute
     }
     '/sales/dashboard/$dailyReportId': {
@@ -527,6 +655,13 @@ declare module '@tanstack/react-router' {
       path: '/sales/orders/$orderId'
       fullPath: '/sales/orders/$orderId'
       preLoaderRoute: typeof SalesOrdersOrderIdImport
+      parentRoute: typeof rootRoute
+    }
+    '/tiktokshop/incomes/$incomeId': {
+      id: '/tiktokshop/incomes/$incomeId'
+      path: '/tiktokshop/incomes/$incomeId'
+      fullPath: '/tiktokshop/incomes/$incomeId'
+      preLoaderRoute: typeof TiktokshopIncomesIncomeIdImport
       parentRoute: typeof rootRoute
     }
     '/admin/system-logs/': {
@@ -690,6 +825,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MarketingStorageStorageIndexImport
       parentRoute: typeof rootRoute
     }
+    '/mkt-storage/accounting-storage/': {
+      id: '/mkt-storage/accounting-storage/'
+      path: '/mkt-storage/accounting-storage'
+      fullPath: '/mkt-storage/accounting-storage'
+      preLoaderRoute: typeof MktStorageAccountingStorageIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/mkt-storage/delivered-requests/': {
+      id: '/mkt-storage/delivered-requests/'
+      path: '/mkt-storage/delivered-requests'
+      fullPath: '/mkt-storage/delivered-requests'
+      preLoaderRoute: typeof MktStorageDeliveredRequestsIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/mkt-storage/incomes/': {
+      id: '/mkt-storage/incomes/'
+      path: '/mkt-storage/incomes'
+      fullPath: '/mkt-storage/incomes'
+      preLoaderRoute: typeof MktStorageIncomesIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/mkt-storage/logs/': {
+      id: '/mkt-storage/logs/'
+      path: '/mkt-storage/logs'
+      fullPath: '/mkt-storage/logs'
+      preLoaderRoute: typeof MktStorageLogsIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/mkt-storage/old-logs/': {
+      id: '/mkt-storage/old-logs/'
+      path: '/mkt-storage/old-logs'
+      fullPath: '/mkt-storage/old-logs'
+      preLoaderRoute: typeof MktStorageOldLogsIndexImport
+      parentRoute: typeof rootRoute
+    }
     '/sales/channels/': {
       id: '/sales/channels/'
       path: '/sales/channels'
@@ -760,6 +930,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SalesTasksIndexImport
       parentRoute: typeof rootRoute
     }
+    '/shopee/incomes/': {
+      id: '/shopee/incomes/'
+      path: '/shopee/incomes'
+      fullPath: '/shopee/incomes'
+      preLoaderRoute: typeof ShopeeIncomesIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/shopee/sku/': {
+      id: '/shopee/sku/'
+      path: '/shopee/sku'
+      fullPath: '/shopee/sku'
+      preLoaderRoute: typeof ShopeeSkuIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/tiktokshop/incomes/': {
+      id: '/tiktokshop/incomes/'
+      path: '/tiktokshop/incomes'
+      fullPath: '/tiktokshop/incomes'
+      preLoaderRoute: typeof TiktokshopIncomesIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/tiktokshop/sku/': {
+      id: '/tiktokshop/sku/'
+      path: '/tiktokshop/sku'
+      fullPath: '/tiktokshop/sku'
+      preLoaderRoute: typeof TiktokshopSkuIndexImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -786,17 +984,22 @@ export interface FileRoutesByFullPath {
   '/landing': typeof LandingIndexRoute
   '/livestream': typeof LivestreamIndexRoute
   '/marketing-storage': typeof MarketingStorageIndexRoute
+  '/mkt-storage': typeof MktStorageIndexRoute
   '/postauth': typeof PostauthIndexRoute
   '/privacy-policy/': typeof PrivacyPolicyIndexRoute
   '/sales': typeof SalesIndexRoute
+  '/shopee': typeof ShopeeIndexRoute
+  '/tiktokshop': typeof TiktokshopIndexRoute
   '/user': typeof UserIndexRoute
   '/marketing-storage/incomes/$incomeId': typeof MarketingStorageIncomesIncomeIdRoute
+  '/mkt-storage/incomes/$incomeId': typeof MktStorageIncomesIncomeIdRoute
   '/sales/dashboard/$dailyReportId': typeof SalesDashboardDailyReportIdRoute
   '/sales/dashboard/$kpiId': typeof SalesDashboardKpiIdRoute
   '/sales/funnel/$funnelId': typeof SalesFunnelFunnelIdRoute
   '/sales/items/$itemId': typeof SalesItemsItemIdRoute
   '/sales/messages/$conversationId': typeof SalesMessagesConversationIdRoute
   '/sales/orders/$orderId': typeof SalesOrdersOrderIdRoute
+  '/tiktokshop/incomes/$incomeId': typeof TiktokshopIncomesIncomeIdRoute
   '/admin/system-logs': typeof AdminSystemLogsIndexRoute
   '/admin/tasks': typeof AdminTasksIndexRoute
   '/landing/landing-page': typeof LandingLandingPageIndexRoute
@@ -820,6 +1023,11 @@ export interface FileRoutesByFullPath {
   '/marketing-storage/old-logs': typeof MarketingStorageOldLogsIndexRoute
   '/marketing-storage/orders-logs': typeof MarketingStorageOrdersLogsIndexRoute
   '/marketing-storage/storage': typeof MarketingStorageStorageIndexRoute
+  '/mkt-storage/accounting-storage': typeof MktStorageAccountingStorageIndexRoute
+  '/mkt-storage/delivered-requests': typeof MktStorageDeliveredRequestsIndexRoute
+  '/mkt-storage/incomes': typeof MktStorageIncomesIndexRoute
+  '/mkt-storage/logs': typeof MktStorageLogsIndexRoute
+  '/mkt-storage/old-logs': typeof MktStorageOldLogsIndexRoute
   '/sales/channels': typeof SalesChannelsIndexRoute
   '/sales/customer-ranks': typeof SalesCustomerRanksIndexRoute
   '/sales/daily-reports': typeof SalesDailyReportsIndexRoute
@@ -830,6 +1038,10 @@ export interface FileRoutesByFullPath {
   '/sales/orders': typeof SalesOrdersIndexRoute
   '/sales/price': typeof SalesPriceIndexRoute
   '/sales/tasks': typeof SalesTasksIndexRoute
+  '/shopee/incomes': typeof ShopeeIncomesIndexRoute
+  '/shopee/sku': typeof ShopeeSkuIndexRoute
+  '/tiktokshop/incomes': typeof TiktokshopIncomesIndexRoute
+  '/tiktokshop/sku': typeof TiktokshopSkuIndexRoute
 }
 
 export interface FileRoutesByTo {
@@ -840,17 +1052,22 @@ export interface FileRoutesByTo {
   '/landing': typeof LandingIndexRoute
   '/livestream': typeof LivestreamIndexRoute
   '/marketing-storage': typeof MarketingStorageIndexRoute
+  '/mkt-storage': typeof MktStorageIndexRoute
   '/postauth': typeof PostauthIndexRoute
   '/privacy-policy': typeof PrivacyPolicyIndexRoute
   '/sales': typeof SalesIndexRoute
+  '/shopee': typeof ShopeeIndexRoute
+  '/tiktokshop': typeof TiktokshopIndexRoute
   '/user': typeof UserIndexRoute
   '/marketing-storage/incomes/$incomeId': typeof MarketingStorageIncomesIncomeIdRoute
+  '/mkt-storage/incomes/$incomeId': typeof MktStorageIncomesIncomeIdRoute
   '/sales/dashboard/$dailyReportId': typeof SalesDashboardDailyReportIdRoute
   '/sales/dashboard/$kpiId': typeof SalesDashboardKpiIdRoute
   '/sales/funnel/$funnelId': typeof SalesFunnelFunnelIdRoute
   '/sales/items/$itemId': typeof SalesItemsItemIdRoute
   '/sales/messages/$conversationId': typeof SalesMessagesConversationIdRoute
   '/sales/orders/$orderId': typeof SalesOrdersOrderIdRoute
+  '/tiktokshop/incomes/$incomeId': typeof TiktokshopIncomesIncomeIdRoute
   '/admin/system-logs': typeof AdminSystemLogsIndexRoute
   '/admin/tasks': typeof AdminTasksIndexRoute
   '/landing/landing-page': typeof LandingLandingPageIndexRoute
@@ -874,6 +1091,11 @@ export interface FileRoutesByTo {
   '/marketing-storage/old-logs': typeof MarketingStorageOldLogsIndexRoute
   '/marketing-storage/orders-logs': typeof MarketingStorageOrdersLogsIndexRoute
   '/marketing-storage/storage': typeof MarketingStorageStorageIndexRoute
+  '/mkt-storage/accounting-storage': typeof MktStorageAccountingStorageIndexRoute
+  '/mkt-storage/delivered-requests': typeof MktStorageDeliveredRequestsIndexRoute
+  '/mkt-storage/incomes': typeof MktStorageIncomesIndexRoute
+  '/mkt-storage/logs': typeof MktStorageLogsIndexRoute
+  '/mkt-storage/old-logs': typeof MktStorageOldLogsIndexRoute
   '/sales/channels': typeof SalesChannelsIndexRoute
   '/sales/customer-ranks': typeof SalesCustomerRanksIndexRoute
   '/sales/daily-reports': typeof SalesDailyReportsIndexRoute
@@ -884,6 +1106,10 @@ export interface FileRoutesByTo {
   '/sales/orders': typeof SalesOrdersIndexRoute
   '/sales/price': typeof SalesPriceIndexRoute
   '/sales/tasks': typeof SalesTasksIndexRoute
+  '/shopee/incomes': typeof ShopeeIncomesIndexRoute
+  '/shopee/sku': typeof ShopeeSkuIndexRoute
+  '/tiktokshop/incomes': typeof TiktokshopIncomesIndexRoute
+  '/tiktokshop/sku': typeof TiktokshopSkuIndexRoute
 }
 
 export interface FileRoutesById {
@@ -896,17 +1122,22 @@ export interface FileRoutesById {
   '/landing/': typeof LandingIndexRoute
   '/livestream/': typeof LivestreamIndexRoute
   '/marketing-storage/': typeof MarketingStorageIndexRoute
+  '/mkt-storage/': typeof MktStorageIndexRoute
   '/postauth/': typeof PostauthIndexRoute
   '/privacy-policy/': typeof PrivacyPolicyIndexRoute
   '/sales/': typeof SalesIndexRoute
+  '/shopee/': typeof ShopeeIndexRoute
+  '/tiktokshop/': typeof TiktokshopIndexRoute
   '/user/': typeof UserIndexRoute
   '/marketing-storage/incomes/$incomeId': typeof MarketingStorageIncomesIncomeIdRoute
+  '/mkt-storage/incomes/$incomeId': typeof MktStorageIncomesIncomeIdRoute
   '/sales/dashboard/$dailyReportId': typeof SalesDashboardDailyReportIdRoute
   '/sales/dashboard/$kpiId': typeof SalesDashboardKpiIdRoute
   '/sales/funnel/$funnelId': typeof SalesFunnelFunnelIdRoute
   '/sales/items/$itemId': typeof SalesItemsItemIdRoute
   '/sales/messages/$conversationId': typeof SalesMessagesConversationIdRoute
   '/sales/orders/$orderId': typeof SalesOrdersOrderIdRoute
+  '/tiktokshop/incomes/$incomeId': typeof TiktokshopIncomesIncomeIdRoute
   '/admin/system-logs/': typeof AdminSystemLogsIndexRoute
   '/admin/tasks/': typeof AdminTasksIndexRoute
   '/landing/landing-page/': typeof LandingLandingPageIndexRoute
@@ -930,6 +1161,11 @@ export interface FileRoutesById {
   '/marketing-storage/old-logs/': typeof MarketingStorageOldLogsIndexRoute
   '/marketing-storage/orders-logs/': typeof MarketingStorageOrdersLogsIndexRoute
   '/marketing-storage/storage/': typeof MarketingStorageStorageIndexRoute
+  '/mkt-storage/accounting-storage/': typeof MktStorageAccountingStorageIndexRoute
+  '/mkt-storage/delivered-requests/': typeof MktStorageDeliveredRequestsIndexRoute
+  '/mkt-storage/incomes/': typeof MktStorageIncomesIndexRoute
+  '/mkt-storage/logs/': typeof MktStorageLogsIndexRoute
+  '/mkt-storage/old-logs/': typeof MktStorageOldLogsIndexRoute
   '/sales/channels/': typeof SalesChannelsIndexRoute
   '/sales/customer-ranks/': typeof SalesCustomerRanksIndexRoute
   '/sales/daily-reports/': typeof SalesDailyReportsIndexRoute
@@ -940,6 +1176,10 @@ export interface FileRoutesById {
   '/sales/orders/': typeof SalesOrdersIndexRoute
   '/sales/price/': typeof SalesPriceIndexRoute
   '/sales/tasks/': typeof SalesTasksIndexRoute
+  '/shopee/incomes/': typeof ShopeeIncomesIndexRoute
+  '/shopee/sku/': typeof ShopeeSkuIndexRoute
+  '/tiktokshop/incomes/': typeof TiktokshopIncomesIndexRoute
+  '/tiktokshop/sku/': typeof TiktokshopSkuIndexRoute
 }
 
 export interface FileRouteTypes {
@@ -953,17 +1193,22 @@ export interface FileRouteTypes {
     | '/landing'
     | '/livestream'
     | '/marketing-storage'
+    | '/mkt-storage'
     | '/postauth'
     | '/privacy-policy/'
     | '/sales'
+    | '/shopee'
+    | '/tiktokshop'
     | '/user'
     | '/marketing-storage/incomes/$incomeId'
+    | '/mkt-storage/incomes/$incomeId'
     | '/sales/dashboard/$dailyReportId'
     | '/sales/dashboard/$kpiId'
     | '/sales/funnel/$funnelId'
     | '/sales/items/$itemId'
     | '/sales/messages/$conversationId'
     | '/sales/orders/$orderId'
+    | '/tiktokshop/incomes/$incomeId'
     | '/admin/system-logs'
     | '/admin/tasks'
     | '/landing/landing-page'
@@ -987,6 +1232,11 @@ export interface FileRouteTypes {
     | '/marketing-storage/old-logs'
     | '/marketing-storage/orders-logs'
     | '/marketing-storage/storage'
+    | '/mkt-storage/accounting-storage'
+    | '/mkt-storage/delivered-requests'
+    | '/mkt-storage/incomes'
+    | '/mkt-storage/logs'
+    | '/mkt-storage/old-logs'
     | '/sales/channels'
     | '/sales/customer-ranks'
     | '/sales/daily-reports'
@@ -997,6 +1247,10 @@ export interface FileRouteTypes {
     | '/sales/orders'
     | '/sales/price'
     | '/sales/tasks'
+    | '/shopee/incomes'
+    | '/shopee/sku'
+    | '/tiktokshop/incomes'
+    | '/tiktokshop/sku'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -1006,17 +1260,22 @@ export interface FileRouteTypes {
     | '/landing'
     | '/livestream'
     | '/marketing-storage'
+    | '/mkt-storage'
     | '/postauth'
     | '/privacy-policy'
     | '/sales'
+    | '/shopee'
+    | '/tiktokshop'
     | '/user'
     | '/marketing-storage/incomes/$incomeId'
+    | '/mkt-storage/incomes/$incomeId'
     | '/sales/dashboard/$dailyReportId'
     | '/sales/dashboard/$kpiId'
     | '/sales/funnel/$funnelId'
     | '/sales/items/$itemId'
     | '/sales/messages/$conversationId'
     | '/sales/orders/$orderId'
+    | '/tiktokshop/incomes/$incomeId'
     | '/admin/system-logs'
     | '/admin/tasks'
     | '/landing/landing-page'
@@ -1040,6 +1299,11 @@ export interface FileRouteTypes {
     | '/marketing-storage/old-logs'
     | '/marketing-storage/orders-logs'
     | '/marketing-storage/storage'
+    | '/mkt-storage/accounting-storage'
+    | '/mkt-storage/delivered-requests'
+    | '/mkt-storage/incomes'
+    | '/mkt-storage/logs'
+    | '/mkt-storage/old-logs'
     | '/sales/channels'
     | '/sales/customer-ranks'
     | '/sales/daily-reports'
@@ -1050,6 +1314,10 @@ export interface FileRouteTypes {
     | '/sales/orders'
     | '/sales/price'
     | '/sales/tasks'
+    | '/shopee/incomes'
+    | '/shopee/sku'
+    | '/tiktokshop/incomes'
+    | '/tiktokshop/sku'
   id:
     | '__root__'
     | '/'
@@ -1060,17 +1328,22 @@ export interface FileRouteTypes {
     | '/landing/'
     | '/livestream/'
     | '/marketing-storage/'
+    | '/mkt-storage/'
     | '/postauth/'
     | '/privacy-policy/'
     | '/sales/'
+    | '/shopee/'
+    | '/tiktokshop/'
     | '/user/'
     | '/marketing-storage/incomes/$incomeId'
+    | '/mkt-storage/incomes/$incomeId'
     | '/sales/dashboard/$dailyReportId'
     | '/sales/dashboard/$kpiId'
     | '/sales/funnel/$funnelId'
     | '/sales/items/$itemId'
     | '/sales/messages/$conversationId'
     | '/sales/orders/$orderId'
+    | '/tiktokshop/incomes/$incomeId'
     | '/admin/system-logs/'
     | '/admin/tasks/'
     | '/landing/landing-page/'
@@ -1094,6 +1367,11 @@ export interface FileRouteTypes {
     | '/marketing-storage/old-logs/'
     | '/marketing-storage/orders-logs/'
     | '/marketing-storage/storage/'
+    | '/mkt-storage/accounting-storage/'
+    | '/mkt-storage/delivered-requests/'
+    | '/mkt-storage/incomes/'
+    | '/mkt-storage/logs/'
+    | '/mkt-storage/old-logs/'
     | '/sales/channels/'
     | '/sales/customer-ranks/'
     | '/sales/daily-reports/'
@@ -1104,6 +1382,10 @@ export interface FileRouteTypes {
     | '/sales/orders/'
     | '/sales/price/'
     | '/sales/tasks/'
+    | '/shopee/incomes/'
+    | '/shopee/sku/'
+    | '/tiktokshop/incomes/'
+    | '/tiktokshop/sku/'
   fileRoutesById: FileRoutesById
 }
 
@@ -1116,16 +1398,21 @@ export interface RootRouteChildren {
   LandingIndexRoute: typeof LandingIndexRoute
   LivestreamIndexRoute: typeof LivestreamIndexRoute
   MarketingStorageIndexRoute: typeof MarketingStorageIndexRoute
+  MktStorageIndexRoute: typeof MktStorageIndexRoute
   PostauthIndexRoute: typeof PostauthIndexRoute
   SalesIndexRoute: typeof SalesIndexRoute
+  ShopeeIndexRoute: typeof ShopeeIndexRoute
+  TiktokshopIndexRoute: typeof TiktokshopIndexRoute
   UserIndexRoute: typeof UserIndexRoute
   MarketingStorageIncomesIncomeIdRoute: typeof MarketingStorageIncomesIncomeIdRoute
+  MktStorageIncomesIncomeIdRoute: typeof MktStorageIncomesIncomeIdRoute
   SalesDashboardDailyReportIdRoute: typeof SalesDashboardDailyReportIdRoute
   SalesDashboardKpiIdRoute: typeof SalesDashboardKpiIdRoute
   SalesFunnelFunnelIdRoute: typeof SalesFunnelFunnelIdRoute
   SalesItemsItemIdRoute: typeof SalesItemsItemIdRoute
   SalesMessagesConversationIdRoute: typeof SalesMessagesConversationIdRoute
   SalesOrdersOrderIdRoute: typeof SalesOrdersOrderIdRoute
+  TiktokshopIncomesIncomeIdRoute: typeof TiktokshopIncomesIncomeIdRoute
   AdminSystemLogsIndexRoute: typeof AdminSystemLogsIndexRoute
   AdminTasksIndexRoute: typeof AdminTasksIndexRoute
   LandingLandingPageIndexRoute: typeof LandingLandingPageIndexRoute
@@ -1149,6 +1436,11 @@ export interface RootRouteChildren {
   MarketingStorageOldLogsIndexRoute: typeof MarketingStorageOldLogsIndexRoute
   MarketingStorageOrdersLogsIndexRoute: typeof MarketingStorageOrdersLogsIndexRoute
   MarketingStorageStorageIndexRoute: typeof MarketingStorageStorageIndexRoute
+  MktStorageAccountingStorageIndexRoute: typeof MktStorageAccountingStorageIndexRoute
+  MktStorageDeliveredRequestsIndexRoute: typeof MktStorageDeliveredRequestsIndexRoute
+  MktStorageIncomesIndexRoute: typeof MktStorageIncomesIndexRoute
+  MktStorageLogsIndexRoute: typeof MktStorageLogsIndexRoute
+  MktStorageOldLogsIndexRoute: typeof MktStorageOldLogsIndexRoute
   SalesChannelsIndexRoute: typeof SalesChannelsIndexRoute
   SalesCustomerRanksIndexRoute: typeof SalesCustomerRanksIndexRoute
   SalesDailyReportsIndexRoute: typeof SalesDailyReportsIndexRoute
@@ -1159,6 +1451,10 @@ export interface RootRouteChildren {
   SalesOrdersIndexRoute: typeof SalesOrdersIndexRoute
   SalesPriceIndexRoute: typeof SalesPriceIndexRoute
   SalesTasksIndexRoute: typeof SalesTasksIndexRoute
+  ShopeeIncomesIndexRoute: typeof ShopeeIncomesIndexRoute
+  ShopeeSkuIndexRoute: typeof ShopeeSkuIndexRoute
+  TiktokshopIncomesIndexRoute: typeof TiktokshopIncomesIndexRoute
+  TiktokshopSkuIndexRoute: typeof TiktokshopSkuIndexRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -1170,16 +1466,21 @@ const rootRouteChildren: RootRouteChildren = {
   LandingIndexRoute: LandingIndexRoute,
   LivestreamIndexRoute: LivestreamIndexRoute,
   MarketingStorageIndexRoute: MarketingStorageIndexRoute,
+  MktStorageIndexRoute: MktStorageIndexRoute,
   PostauthIndexRoute: PostauthIndexRoute,
   SalesIndexRoute: SalesIndexRoute,
+  ShopeeIndexRoute: ShopeeIndexRoute,
+  TiktokshopIndexRoute: TiktokshopIndexRoute,
   UserIndexRoute: UserIndexRoute,
   MarketingStorageIncomesIncomeIdRoute: MarketingStorageIncomesIncomeIdRoute,
+  MktStorageIncomesIncomeIdRoute: MktStorageIncomesIncomeIdRoute,
   SalesDashboardDailyReportIdRoute: SalesDashboardDailyReportIdRoute,
   SalesDashboardKpiIdRoute: SalesDashboardKpiIdRoute,
   SalesFunnelFunnelIdRoute: SalesFunnelFunnelIdRoute,
   SalesItemsItemIdRoute: SalesItemsItemIdRoute,
   SalesMessagesConversationIdRoute: SalesMessagesConversationIdRoute,
   SalesOrdersOrderIdRoute: SalesOrdersOrderIdRoute,
+  TiktokshopIncomesIncomeIdRoute: TiktokshopIncomesIncomeIdRoute,
   AdminSystemLogsIndexRoute: AdminSystemLogsIndexRoute,
   AdminTasksIndexRoute: AdminTasksIndexRoute,
   LandingLandingPageIndexRoute: LandingLandingPageIndexRoute,
@@ -1205,6 +1506,11 @@ const rootRouteChildren: RootRouteChildren = {
   MarketingStorageOldLogsIndexRoute: MarketingStorageOldLogsIndexRoute,
   MarketingStorageOrdersLogsIndexRoute: MarketingStorageOrdersLogsIndexRoute,
   MarketingStorageStorageIndexRoute: MarketingStorageStorageIndexRoute,
+  MktStorageAccountingStorageIndexRoute: MktStorageAccountingStorageIndexRoute,
+  MktStorageDeliveredRequestsIndexRoute: MktStorageDeliveredRequestsIndexRoute,
+  MktStorageIncomesIndexRoute: MktStorageIncomesIndexRoute,
+  MktStorageLogsIndexRoute: MktStorageLogsIndexRoute,
+  MktStorageOldLogsIndexRoute: MktStorageOldLogsIndexRoute,
   SalesChannelsIndexRoute: SalesChannelsIndexRoute,
   SalesCustomerRanksIndexRoute: SalesCustomerRanksIndexRoute,
   SalesDailyReportsIndexRoute: SalesDailyReportsIndexRoute,
@@ -1215,6 +1521,10 @@ const rootRouteChildren: RootRouteChildren = {
   SalesOrdersIndexRoute: SalesOrdersIndexRoute,
   SalesPriceIndexRoute: SalesPriceIndexRoute,
   SalesTasksIndexRoute: SalesTasksIndexRoute,
+  ShopeeIncomesIndexRoute: ShopeeIncomesIndexRoute,
+  ShopeeSkuIndexRoute: ShopeeSkuIndexRoute,
+  TiktokshopIncomesIndexRoute: TiktokshopIncomesIndexRoute,
+  TiktokshopSkuIndexRoute: TiktokshopSkuIndexRoute,
 }
 
 export const routeTree = rootRoute
@@ -1235,16 +1545,21 @@ export const routeTree = rootRoute
         "/landing/",
         "/livestream/",
         "/marketing-storage/",
+        "/mkt-storage/",
         "/postauth/",
         "/sales/",
+        "/shopee/",
+        "/tiktokshop/",
         "/user/",
         "/marketing-storage/incomes/$incomeId",
+        "/mkt-storage/incomes/$incomeId",
         "/sales/dashboard/$dailyReportId",
         "/sales/dashboard/$kpiId",
         "/sales/funnel/$funnelId",
         "/sales/items/$itemId",
         "/sales/messages/$conversationId",
         "/sales/orders/$orderId",
+        "/tiktokshop/incomes/$incomeId",
         "/admin/system-logs/",
         "/admin/tasks/",
         "/landing/landing-page/",
@@ -1268,6 +1583,11 @@ export const routeTree = rootRoute
         "/marketing-storage/old-logs/",
         "/marketing-storage/orders-logs/",
         "/marketing-storage/storage/",
+        "/mkt-storage/accounting-storage/",
+        "/mkt-storage/delivered-requests/",
+        "/mkt-storage/incomes/",
+        "/mkt-storage/logs/",
+        "/mkt-storage/old-logs/",
         "/sales/channels/",
         "/sales/customer-ranks/",
         "/sales/daily-reports/",
@@ -1277,7 +1597,11 @@ export const routeTree = rootRoute
         "/sales/messages/",
         "/sales/orders/",
         "/sales/price/",
-        "/sales/tasks/"
+        "/sales/tasks/",
+        "/shopee/incomes/",
+        "/shopee/sku/",
+        "/tiktokshop/incomes/",
+        "/tiktokshop/sku/"
       ]
     },
     "/": {
@@ -1307,6 +1631,9 @@ export const routeTree = rootRoute
     "/marketing-storage/": {
       "filePath": "marketing-storage/index.tsx"
     },
+    "/mkt-storage/": {
+      "filePath": "mkt-storage/index.tsx"
+    },
     "/postauth/": {
       "filePath": "postauth/index.tsx"
     },
@@ -1317,11 +1644,20 @@ export const routeTree = rootRoute
     "/sales/": {
       "filePath": "sales/index.tsx"
     },
+    "/shopee/": {
+      "filePath": "shopee/index.tsx"
+    },
+    "/tiktokshop/": {
+      "filePath": "tiktokshop/index.tsx"
+    },
     "/user/": {
       "filePath": "user/index.tsx"
     },
     "/marketing-storage/incomes/$incomeId": {
       "filePath": "marketing-storage/incomes/$incomeId.tsx"
+    },
+    "/mkt-storage/incomes/$incomeId": {
+      "filePath": "mkt-storage/incomes/$incomeId.tsx"
     },
     "/sales/dashboard/$dailyReportId": {
       "filePath": "sales/dashboard/$dailyReportId.tsx"
@@ -1340,6 +1676,9 @@ export const routeTree = rootRoute
     },
     "/sales/orders/$orderId": {
       "filePath": "sales/orders/$orderId.tsx"
+    },
+    "/tiktokshop/incomes/$incomeId": {
+      "filePath": "tiktokshop/incomes/$incomeId.tsx"
     },
     "/admin/system-logs/": {
       "filePath": "admin/system-logs/index.tsx"
@@ -1410,6 +1749,21 @@ export const routeTree = rootRoute
     "/marketing-storage/storage/": {
       "filePath": "marketing-storage/storage/index.tsx"
     },
+    "/mkt-storage/accounting-storage/": {
+      "filePath": "mkt-storage/accounting-storage/index.tsx"
+    },
+    "/mkt-storage/delivered-requests/": {
+      "filePath": "mkt-storage/delivered-requests/index.tsx"
+    },
+    "/mkt-storage/incomes/": {
+      "filePath": "mkt-storage/incomes/index.tsx"
+    },
+    "/mkt-storage/logs/": {
+      "filePath": "mkt-storage/logs/index.tsx"
+    },
+    "/mkt-storage/old-logs/": {
+      "filePath": "mkt-storage/old-logs/index.tsx"
+    },
     "/sales/channels/": {
       "filePath": "sales/channels/index.tsx"
     },
@@ -1439,6 +1793,18 @@ export const routeTree = rootRoute
     },
     "/sales/tasks/": {
       "filePath": "sales/tasks/index.tsx"
+    },
+    "/shopee/incomes/": {
+      "filePath": "shopee/incomes/index.tsx"
+    },
+    "/shopee/sku/": {
+      "filePath": "shopee/sku/index.tsx"
+    },
+    "/tiktokshop/incomes/": {
+      "filePath": "tiktokshop/incomes/index.tsx"
+    },
+    "/tiktokshop/sku/": {
+      "filePath": "tiktokshop/sku/index.tsx"
     }
   }
 }

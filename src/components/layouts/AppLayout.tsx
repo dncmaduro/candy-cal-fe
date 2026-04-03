@@ -1,6 +1,6 @@
 import { Badge, Box, Container, Group, rem } from "@mantine/core"
 import pkg from "../../../package.json"
-import { useNavigate } from "@tanstack/react-router"
+import { useLocation, useNavigate } from "@tanstack/react-router"
 import { ReactNode, useEffect } from "react"
 import { useUserStore } from "../../store/userStore"
 import { UserMenu } from "./UserMenu"
@@ -13,13 +13,23 @@ import { Sidebar } from "./Sidebar"
 import { useUIStore } from "../../store/uiStore"
 import { MeContext } from "../../context/MeContext"
 import { MyTasksPopover } from "../tasks/MyTasksPopover.tsx"
-import { NAVS } from "../../constants/navs.ts"
+import {
+  NAVS,
+  getStorageNavsByPath
+} from "../../constants/navs.ts"
 import { AiChatSidebar } from "../ai/AiChatSidebar"
 
-export const AppLayout = ({ children }: { children: ReactNode }) => {
+export const AppLayout = ({
+  children,
+  navs
+}: {
+  children: ReactNode
+  navs?: typeof NAVS
+}) => {
   const { accessToken, setUser, clearUser } = useUserStore()
   const { checkToken, getNewToken, getMe } = useUsers()
   const navigate = useNavigate()
+  const location = useLocation()
   const collapsed = useUIStore((s) => s.sidebarCollapsed)
   const setCollapsed = useUIStore((s) => s.setSidebarCollapsed)
 
@@ -66,13 +76,16 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
     }
   }, [accessToken])
 
+  const resolvedNavs =
+    navs ?? getStorageNavsByPath(location.pathname, meData?.roles)
+
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "#f8fafc" }}>
       <Sidebar
         meData={meData}
         collapsed={collapsed}
         setCollapsed={setCollapsed}
-        navs={NAVS}
+        navs={resolvedNavs}
       />
       <div
         style={{

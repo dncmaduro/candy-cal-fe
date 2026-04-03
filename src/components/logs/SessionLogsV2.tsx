@@ -6,8 +6,8 @@ import { IconHistory, IconListDetails } from "@tabler/icons-react"
 import { format } from "date-fns"
 import { modals } from "@mantine/modals"
 import { CalFileResultModalV2 } from "../cal/CalFileResultModalV2"
-import { Link } from "@tanstack/react-router"
-import { NAVS_URL } from "../../constants/navs"
+import { Link, useLocation } from "@tanstack/react-router"
+import { getStorageAppBasePath } from "../../constants/navs"
 import type { ColumnDef } from "@tanstack/react-table"
 import { CDataTable } from "../common/CDataTable"
 
@@ -19,6 +19,7 @@ type SessionLogRow = {
 }
 
 export const SessionLogsV2 = () => {
+  const location = useLocation()
   const [limit, setLimit] = useState(10)
 
   const { getSessionLogs } = useSessionLogs()
@@ -105,7 +106,7 @@ export const SessionLogsV2 = () => {
   const extraActions = (
     <Button
       component={Link}
-      to={`${NAVS_URL}/old-logs`}
+      to={`${getStorageAppBasePath(location.pathname)}/old-logs`}
       variant="outline"
       leftSection={<IconHistory size={16} />}
       size="sm"
