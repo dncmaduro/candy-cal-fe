@@ -1,6 +1,5 @@
 import { Avatar, Box, Group, Menu, Stack, Text } from "@mantine/core"
 import {
-  IconAppWindow,
   IconBrandShopee,
   IconBrandTiktok,
   IconPackages,
@@ -25,7 +24,6 @@ import {
   SHOPEE_NAVS_URL,
   SHOPEE_ROLES,
   KHO_VAN_ROLES,
-  LANDING_NAVS,
   LIVESTREAM_NAVS,
   SALES_NAVS,
   ADMIN_NAVS
@@ -79,8 +77,6 @@ export const UserMenu = () => {
         return TIKTOKSHOP_NAVS
       case SHOPEE_NAVS_URL:
         return SHOPEE_NAVS
-      case "/landing":
-        return LANDING_NAVS
       case "/livestream":
         return LIVESTREAM_NAVS
       case "/sales":
@@ -110,12 +106,6 @@ export const UserMenu = () => {
       label: "Shopee",
       icon: <IconBrandShopee size={isMobile ? 14 : 18} />,
       roles: SHOPEE_ROLES
-    },
-    {
-      to: "/landing",
-      label: "Landing Page",
-      icon: <IconAppWindow size={isMobile ? 14 : 18} />,
-      roles: ["admin"]
     },
     {
       to: "/livestream",

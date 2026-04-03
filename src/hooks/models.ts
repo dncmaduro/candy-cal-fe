@@ -2434,7 +2434,8 @@ export interface GetMonthlyTotalsLivestreamResponse {
 
 /** @interface */
 export interface CalculateLivestreamRealIncomeRequest {
-  date: Date
+  date: string
+  channelId: string
 }
 
 /** @interface */

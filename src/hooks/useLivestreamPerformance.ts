@@ -108,7 +108,7 @@ export const useLivestreamPerformance = () => {
 
     Object.entries(req).forEach(([key, value]) => {
       if (typeof value !== "undefined" && value !== null)
-        formData.append(key, value as string)
+        formData.append(key, value)
     })
 
     return callApi<FormData, CalculateLivestreamRealIncomeResponse>({

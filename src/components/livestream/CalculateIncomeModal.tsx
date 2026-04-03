@@ -32,10 +32,17 @@ const LABELS = {
 
 interface Props {
   date: Date
+  channelId: string | null
+  channelName?: string | null
   refetch: () => void
 }
 
-export const CalculateIncomeModal = ({ date, refetch }: Props) => {
+export const CalculateIncomeModal = ({
+  date,
+  channelId,
+  channelName,
+  refetch
+}: Props) => {
   const { calculateLivestreamRealIncome } = useLivestreamPerformance()
   const [files, setFiles] = useState<Record<keyof typeof LABELS, FileState>>({
     totalIncome: { file: null, status: "pending" },
@@ -49,7 +56,7 @@ export const CalculateIncomeModal = ({ date, refetch }: Props) => {
         req
       }: {
         files: File[]
-        req: { date: Date }
+        req: { date: string; channelId: string }
       }) => calculateLivestreamRealIncome(fileList, req),
       onSuccess: () => {
         setFiles((prev) => ({
@@ -60,18 +67,57 @@ export const CalculateIncomeModal = ({ date, refetch }: Props) => {
         CToast.success({ title: "Đã gửi files thành công" })
         modals.closeAll()
       },
-      onError: () => {
+      onError: (error: any) => {
         setFiles((prev) => ({
           ...prev,
           totalIncome: { ...prev.totalIncome, status: "error" },
           sourceSplit: { ...prev.sourceSplit, status: "error" }
         }))
-        CToast.error({ title: "Gửi files thất bại" })
+
+        const status = error?.response?.status
+        const backendMessage =
+          error?.response?.data?.message || error?.message || ""
+
+        if (
+          status === 409 &&
+          /multiple livestreams found.*please pass channelid/i.test(
+            backendMessage
+          )
+        ) {
+          CToast.error({
+            title: "Không thể tính doanh thu thực",
+            subtitle:
+              "Ngày này có nhiều livestream. Vui lòng chọn đúng kênh livestream rồi thử lại."
+          })
+          return
+        }
+
+        if (status === 404) {
+          CToast.error({
+            title: "Không tìm thấy livestream",
+            subtitle:
+              "Không tìm thấy livestream phù hợp với ngày và kênh đã chọn. Hãy kiểm tra lại rồi thử lại."
+          })
+          return
+        }
+
+        CToast.error({
+          title: "Gửi files thất bại",
+          subtitle: backendMessage || "Có lỗi xảy ra khi tính doanh thu thực"
+        })
       },
       onSettled: () => refetch()
     })
 
   const handleCalculate = async () => {
+    if (!channelId) {
+      CToast.error({
+        title: "Chưa chọn kênh livestream",
+        subtitle: "Vui lòng chọn kênh livestream trước khi tính doanh thu thực."
+      })
+      return
+    }
+
     if (!files.totalIncome.file || !files.sourceSplit.file) {
       CToast.error({ title: "Vui lòng chọn đủ 2 file" })
       return
@@ -85,12 +131,15 @@ export const CalculateIncomeModal = ({ date, refetch }: Props) => {
 
     await calculateRealIncome({
       files: [files.totalIncome.file, files.sourceSplit.file],
-      req: { date }
+      req: { date: format(date, "yyyy-MM-dd"), channelId }
     })
   }
 
   const disabled =
-    !files.totalIncome.file || !files.sourceSplit.file || calculating
+    !files.totalIncome.file ||
+    !files.sourceSplit.file ||
+    !channelId ||
+    calculating
 
   const disableDropzone = calculating
 
@@ -180,8 +229,24 @@ export const CalculateIncomeModal = ({ date, refetch }: Props) => {
               {format(date, "dd/MM/yyyy")}
             </Text>
           </Group>
+          <Group justify="space-between">
+            <Text size="sm" fw={600} c="dimmed">
+              Kênh livestream:
+            </Text>
+            <Text size="sm" fw={600}>
+              {channelName || "Chưa chọn kênh"}
+            </Text>
+          </Group>
         </Stack>
       </Paper>
+
+      {!channelId && (
+        <Alert color="red" variant="light">
+          <Text size="sm">
+            Vui lòng chọn kênh livestream trước khi tải file tính doanh thu thực.
+          </Text>
+        </Alert>
+      )}
 
       <Stack align="start" justify="center" gap="sm">
         {renderDropzone("totalIncome")}
