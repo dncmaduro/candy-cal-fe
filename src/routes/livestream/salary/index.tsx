@@ -6,7 +6,6 @@ import { useUsers } from "../../../hooks/useUsers"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { ColumnDef } from "@tanstack/react-table"
 import {
-  PublicSearchUsersResponse,
   SearchLivestreamPerformanceResponse,
   SearchLivestreamSalaryResponse
 } from "../../../hooks/models"
@@ -203,17 +202,15 @@ function PerformanceModal({
 
 function SalaryModal({
   salary,
-  refetch,
-  users,
-  performances
+  refetch
 }: {
   salary?: SalaryRule
   refetch: () => void
-  users: PublicSearchUsersResponse["data"]
-  performances: PerformanceRule[]
 }) {
   const { createLivestreamSalary, updateLivestreamSalary } =
     useLivestreamSalary()
+  const { searchLivestreamPerformance } = useLivestreamPerformance()
+  const { publicSearchUser } = useUsers()
 
   const {
     control,
@@ -268,19 +265,80 @@ function SalaryModal({
     }
   }
 
-  const userOptions = (users || []).map((user) => ({
-    value: user._id,
-    label: user.name ?? ""
-  }))
+  const { data: usersData } = useQuery({
+    queryKey: ["salaryModalUsers"],
+    queryFn: () =>
+      publicSearchUser({ page: 1, limit: 1000, role: "livestream-emp" }),
+    select: (data) => data.data.data
+  })
 
-  const performanceOptions = performances.map((perf) => ({
-    value: perf._id,
-    label: `${new Intl.NumberFormat("vi-VN").format(
-      perf.minIncome
-    )} - ${new Intl.NumberFormat("vi-VN").format(perf.maxIncome)} VNĐ (${
-      perf.salaryPerHour
-    }đ/h, ${perf.bonusPercentage}%)`
-  }))
+  const { data: performancesData } = useQuery({
+    queryKey: ["salaryModalPerformances"],
+    queryFn: () =>
+      searchLivestreamPerformance({
+        page: 1,
+        limit: 1000,
+        sortOrder: "asc"
+      }),
+    select: (data) => data.data.data
+  })
+
+  const userOptions = useMemo(() => {
+    const options = new Map<string, { value: string; label: string }>()
+
+    for (const user of usersData || []) {
+      options.set(user._id, {
+        value: user._id,
+        label: user.name ?? user._id
+      })
+    }
+
+    for (const user of salary?.livestreamEmployees || []) {
+      if (typeof user !== "string") {
+        options.set(user._id, {
+          value: user._id,
+          label: user.name ?? user._id
+        })
+      }
+    }
+
+    return Array.from(options.values())
+  }, [salary?.livestreamEmployees, usersData])
+
+  const performanceOptions = useMemo(() => {
+    const options = new Map<string, { value: string; label: string }>()
+
+    const buildPerformanceLabel = (perf: {
+      _id: string
+      minIncome: number
+      maxIncome: number
+      salaryPerHour: number
+      bonusPercentage: number
+    }) =>
+      `${new Intl.NumberFormat("vi-VN").format(
+        perf.minIncome
+      )} - ${new Intl.NumberFormat("vi-VN").format(perf.maxIncome)} VNĐ (${new Intl.NumberFormat(
+        "vi-VN"
+      ).format(perf.salaryPerHour)}đ/h, ${perf.bonusPercentage}%)`
+
+    for (const perf of performancesData || []) {
+      options.set(perf._id, {
+        value: perf._id,
+        label: buildPerformanceLabel(perf)
+      })
+    }
+
+    for (const perf of salary?.livestreamPerformances || []) {
+      if (typeof perf !== "string") {
+        options.set(perf._id, {
+          value: perf._id,
+          label: buildPerformanceLabel(perf)
+        })
+      }
+    }
+
+    return Array.from(options.values())
+  }, [performancesData, salary?.livestreamPerformances])
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -310,6 +368,7 @@ function SalaryModal({
               label="Nhân viên"
               placeholder="Chọn nhân viên áp dụng"
               data={userOptions}
+              nothingFoundMessage="Không có nhân viên"
               error={errors.livestreamEmployees?.message}
               searchable
               required
@@ -327,6 +386,7 @@ function SalaryModal({
               label="Bậc lương áp dụng"
               placeholder="Chọn các bậc lương"
               data={performanceOptions}
+              nothingFoundMessage="Không có bậc lương"
               error={errors.livestreamPerformances?.message}
               searchable
               required
@@ -356,7 +416,6 @@ function RouteComponent() {
     useLivestreamSalary()
   const { searchLivestreamPerformance, deleteLivestreamPerformance } =
     useLivestreamPerformance()
-  const { publicSearchUser } = useUsers()
 
   // Performance table state
   const [perfPage, setPerfPage] = useState(1)
@@ -381,26 +440,6 @@ function RouteComponent() {
         sortOrder
       }),
     select: (data) => data.data
-  })
-
-  // Fetch users
-  const { data: usersData } = useQuery({
-    queryKey: ["publicSearchUser"],
-    queryFn: () =>
-      publicSearchUser({ page: 1, limit: 1000, role: "livestream-emp" }),
-    select: (data) => data.data.data
-  })
-
-  // Fetch all performances for dropdown
-  const { data: performancesData } = useQuery({
-    queryKey: ["searchLivestreamPerformance"],
-    queryFn: () =>
-      searchLivestreamPerformance({
-        page: 1,
-        limit: 1000,
-        sortOrder: "asc"
-      }),
-    select: (data) => data.data.data
   })
 
   // Fetch salary configurations
@@ -488,14 +527,7 @@ function RouteComponent() {
       title: (
         <b>{salary ? "Chỉnh sửa cấu trúc lương" : "Thêm cấu trúc lương mới"}</b>
       ),
-      children: (
-        <SalaryModal
-          salary={salary}
-          refetch={refetch}
-          users={usersData || []}
-          performances={performancesData || []}
-        />
-      ),
+      children: <SalaryModal salary={salary} refetch={refetch} />,
       size: "lg"
     })
   }
