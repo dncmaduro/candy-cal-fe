@@ -40,6 +40,7 @@ import { Route as SalesDashboardIndexImport } from './routes/sales/dashboard/ind
 import { Route as SalesDailyReportsIndexImport } from './routes/sales/daily-reports/index'
 import { Route as SalesCustomerRanksIndexImport } from './routes/sales/customer-ranks/index'
 import { Route as SalesChannelsIndexImport } from './routes/sales/channels/index'
+import { Route as MktStorageXlsxCalculatorsIndexImport } from './routes/mkt-storage/xlsx-calculators/index'
 import { Route as MktStorageOldLogsIndexImport } from './routes/mkt-storage/old-logs/index'
 import { Route as MktStorageLogsIndexImport } from './routes/mkt-storage/logs/index'
 import { Route as MktStorageIncomesIndexImport } from './routes/mkt-storage/incomes/index'
@@ -253,6 +254,13 @@ const SalesChannelsIndexRoute = SalesChannelsIndexImport.update({
   path: '/sales/channels/',
   getParentRoute: () => rootRoute,
 } as any)
+
+const MktStorageXlsxCalculatorsIndexRoute =
+  MktStorageXlsxCalculatorsIndexImport.update({
+    id: '/mkt-storage/xlsx-calculators/',
+    path: '/mkt-storage/xlsx-calculators/',
+    getParentRoute: () => rootRoute,
+  } as any)
 
 const MktStorageOldLogsIndexRoute = MktStorageOldLogsIndexImport.update({
   id: '/mkt-storage/old-logs/',
@@ -860,6 +868,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MktStorageOldLogsIndexImport
       parentRoute: typeof rootRoute
     }
+    '/mkt-storage/xlsx-calculators/': {
+      id: '/mkt-storage/xlsx-calculators/'
+      path: '/mkt-storage/xlsx-calculators'
+      fullPath: '/mkt-storage/xlsx-calculators'
+      preLoaderRoute: typeof MktStorageXlsxCalculatorsIndexImport
+      parentRoute: typeof rootRoute
+    }
     '/sales/channels/': {
       id: '/sales/channels/'
       path: '/sales/channels'
@@ -1028,6 +1043,7 @@ export interface FileRoutesByFullPath {
   '/mkt-storage/incomes': typeof MktStorageIncomesIndexRoute
   '/mkt-storage/logs': typeof MktStorageLogsIndexRoute
   '/mkt-storage/old-logs': typeof MktStorageOldLogsIndexRoute
+  '/mkt-storage/xlsx-calculators': typeof MktStorageXlsxCalculatorsIndexRoute
   '/sales/channels': typeof SalesChannelsIndexRoute
   '/sales/customer-ranks': typeof SalesCustomerRanksIndexRoute
   '/sales/daily-reports': typeof SalesDailyReportsIndexRoute
@@ -1096,6 +1112,7 @@ export interface FileRoutesByTo {
   '/mkt-storage/incomes': typeof MktStorageIncomesIndexRoute
   '/mkt-storage/logs': typeof MktStorageLogsIndexRoute
   '/mkt-storage/old-logs': typeof MktStorageOldLogsIndexRoute
+  '/mkt-storage/xlsx-calculators': typeof MktStorageXlsxCalculatorsIndexRoute
   '/sales/channels': typeof SalesChannelsIndexRoute
   '/sales/customer-ranks': typeof SalesCustomerRanksIndexRoute
   '/sales/daily-reports': typeof SalesDailyReportsIndexRoute
@@ -1166,6 +1183,7 @@ export interface FileRoutesById {
   '/mkt-storage/incomes/': typeof MktStorageIncomesIndexRoute
   '/mkt-storage/logs/': typeof MktStorageLogsIndexRoute
   '/mkt-storage/old-logs/': typeof MktStorageOldLogsIndexRoute
+  '/mkt-storage/xlsx-calculators/': typeof MktStorageXlsxCalculatorsIndexRoute
   '/sales/channels/': typeof SalesChannelsIndexRoute
   '/sales/customer-ranks/': typeof SalesCustomerRanksIndexRoute
   '/sales/daily-reports/': typeof SalesDailyReportsIndexRoute
@@ -1237,6 +1255,7 @@ export interface FileRouteTypes {
     | '/mkt-storage/incomes'
     | '/mkt-storage/logs'
     | '/mkt-storage/old-logs'
+    | '/mkt-storage/xlsx-calculators'
     | '/sales/channels'
     | '/sales/customer-ranks'
     | '/sales/daily-reports'
@@ -1304,6 +1323,7 @@ export interface FileRouteTypes {
     | '/mkt-storage/incomes'
     | '/mkt-storage/logs'
     | '/mkt-storage/old-logs'
+    | '/mkt-storage/xlsx-calculators'
     | '/sales/channels'
     | '/sales/customer-ranks'
     | '/sales/daily-reports'
@@ -1372,6 +1392,7 @@ export interface FileRouteTypes {
     | '/mkt-storage/incomes/'
     | '/mkt-storage/logs/'
     | '/mkt-storage/old-logs/'
+    | '/mkt-storage/xlsx-calculators/'
     | '/sales/channels/'
     | '/sales/customer-ranks/'
     | '/sales/daily-reports/'
@@ -1441,6 +1462,7 @@ export interface RootRouteChildren {
   MktStorageIncomesIndexRoute: typeof MktStorageIncomesIndexRoute
   MktStorageLogsIndexRoute: typeof MktStorageLogsIndexRoute
   MktStorageOldLogsIndexRoute: typeof MktStorageOldLogsIndexRoute
+  MktStorageXlsxCalculatorsIndexRoute: typeof MktStorageXlsxCalculatorsIndexRoute
   SalesChannelsIndexRoute: typeof SalesChannelsIndexRoute
   SalesCustomerRanksIndexRoute: typeof SalesCustomerRanksIndexRoute
   SalesDailyReportsIndexRoute: typeof SalesDailyReportsIndexRoute
@@ -1511,6 +1533,7 @@ const rootRouteChildren: RootRouteChildren = {
   MktStorageIncomesIndexRoute: MktStorageIncomesIndexRoute,
   MktStorageLogsIndexRoute: MktStorageLogsIndexRoute,
   MktStorageOldLogsIndexRoute: MktStorageOldLogsIndexRoute,
+  MktStorageXlsxCalculatorsIndexRoute: MktStorageXlsxCalculatorsIndexRoute,
   SalesChannelsIndexRoute: SalesChannelsIndexRoute,
   SalesCustomerRanksIndexRoute: SalesCustomerRanksIndexRoute,
   SalesDailyReportsIndexRoute: SalesDailyReportsIndexRoute,
@@ -1588,6 +1611,7 @@ export const routeTree = rootRoute
         "/mkt-storage/incomes/",
         "/mkt-storage/logs/",
         "/mkt-storage/old-logs/",
+        "/mkt-storage/xlsx-calculators/",
         "/sales/channels/",
         "/sales/customer-ranks/",
         "/sales/daily-reports/",
@@ -1763,6 +1787,9 @@ export const routeTree = rootRoute
     },
     "/mkt-storage/old-logs/": {
       "filePath": "mkt-storage/old-logs/index.tsx"
+    },
+    "/mkt-storage/xlsx-calculators/": {
+      "filePath": "mkt-storage/xlsx-calculators/index.tsx"
     },
     "/sales/channels/": {
       "filePath": "sales/channels/index.tsx"
