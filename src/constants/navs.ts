@@ -55,6 +55,12 @@ export const NAVS = [
     label: "Doanh thu",
     icon: "IconCoin",
     roles: KHO_VAN_ROLES
+  },
+  {
+    to: `${NAVS_URL}/xlsx-calculators`,
+    label: "Tính file XLSX",
+    icon: "IconFileSpreadsheet",
+    roles: KHO_VAN_ROLES
   }
   // {
   //   to: `${NAVS_URL}/ai`,

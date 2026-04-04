@@ -7,20 +7,15 @@ import {
   Divider,
   Flex,
   Group,
-  Paper,
   Text,
   TextInput,
   rem,
   Tooltip,
-  FileInput,
   Switch
 } from "@mantine/core"
 import {
   IconPlus,
   IconSearch,
-  IconUpload,
-  IconDownload,
-  IconEye,
   IconRestore,
   IconEdit,
   IconTrash
@@ -31,14 +26,12 @@ import type { ColumnDef } from "@tanstack/react-table"
 import { useProducts } from "../../hooks/useProducts"
 import { ProductItemsV2 } from "./ProductItemsV2"
 import { ProductModalV2 } from "./ProductModalV2"
-import { CalFileResultModal } from "../cal/CalFileResultModal"
 import { Can } from "../common/Can"
 import { CToast } from "../common/CToast"
-import { useCalResultStore } from "../../store/calResultStore"
-import type { ProductsCalResult } from "../../store/calResultStore"
 
 import { CDataTable } from "../common/CDataTable"
 import { TIKTOKSHOP_EDITOR_ROLES } from "../../constants/navs"
+import { TiktokXlsxCalculator } from "./TiktokXlsxCalculator"
 
 type ProductRow = {
   _id: string
@@ -47,14 +40,11 @@ type ProductRow = {
 }
 
 export const ProductsV2 = () => {
-  const { searchProducts, calFile, deleteProduct, restoreProduct } =
-    useProducts()
-  const { lastProductsResult, setLastProductsResult } = useCalResultStore()
+  const { searchProducts, deleteProduct, restoreProduct } = useProducts()
 
   const [searchText, setSearchText] = useState<string>("")
   const [debouncedSearchText] = useDebouncedValue(searchText, 300)
 
-  const [xlsxFile, setXlsxFile] = useState<File | null>(null)
   const [showDeleted, setShowDeleted] = useState<boolean>(false)
 
   const {
@@ -69,38 +59,6 @@ export const ProductsV2 = () => {
   })
 
   const rows: ProductRow[] = useMemo(() => productsData ?? [], [productsData])
-
-  const { mutate: calXlsxMutation, isPending: isCalculating } = useMutation({
-    mutationFn: calFile,
-    onSuccess: (response) => {
-      CToast.success({ title: "Tính toán từ file Excel thành công" })
-
-      const calResult: ProductsCalResult = {
-        items: response.data.items || [],
-        orders: response.data.orders || [],
-        timestamp: new Date().toISOString()
-      }
-      setLastProductsResult(calResult)
-
-      modals.open({
-        title: (
-          <Text fw={700} fz="lg">
-            Kết quả tính toán từ file Excel
-          </Text>
-        ),
-        children: (
-          <CalFileResultModal
-            items={calResult.items}
-            orders={calResult.orders}
-          />
-        ),
-        size: "80vw"
-      })
-    },
-    onError: () => {
-      CToast.error({ title: "Có lỗi xảy ra khi tính toán file Excel" })
-    }
-  })
 
   const { mutate: deleteMutation } = useMutation({
     mutationFn: deleteProduct,
@@ -123,30 +81,6 @@ export const ProductsV2 = () => {
       CToast.error({ title: "Có lỗi xảy ra khi khôi phục sản phẩm" })
     }
   })
-
-  const handleCalXlsx = () => {
-    if (!xlsxFile) return
-    calXlsxMutation(xlsxFile)
-    setXlsxFile(null)
-  }
-
-  const handleViewLastResult = () => {
-    if (!lastProductsResult) return
-    modals.open({
-      title: (
-        <Text fw={700} fz="lg">
-          Kết quả tính toán gần nhất
-        </Text>
-      ),
-      children: (
-        <CalFileResultModal
-          items={lastProductsResult.items}
-          orders={lastProductsResult.orders}
-        />
-      ),
-      size: "80vw"
-    })
-  }
 
   useEffect(() => {
     refetch()
@@ -336,51 +270,7 @@ export const ProductsV2 = () => {
       )}
 
       {/* Excel actions in toolbar */}
-      <Paper withBorder p="sm" radius="md">
-        <Group align="end" gap={10} wrap="wrap">
-          <FileInput
-            label="Excel"
-            placeholder="Chọn file .xlsx/.xls"
-            accept=".xlsx,.xls"
-            value={xlsxFile}
-            onChange={setXlsxFile}
-            leftSection={<IconUpload size={16} />}
-            w={{ base: 220, sm: 260 }}
-          />
-
-          <Button
-            color="green"
-            leftSection={<IconDownload size={16} />}
-            onClick={handleCalXlsx}
-            disabled={!xlsxFile}
-            loading={isCalculating}
-            style={{ alignSelf: "end" }}
-            size="sm"
-          >
-            Tính toán
-          </Button>
-
-          {lastProductsResult && (
-            <Tooltip
-              label={`Kết quả từ: ${new Date(
-                lastProductsResult.timestamp
-              ).toLocaleString("vi-VN")}`}
-              withArrow
-            >
-              <Button
-                variant="light"
-                color="blue"
-                leftSection={<IconEye size={16} />}
-                onClick={handleViewLastResult}
-                style={{ alignSelf: "end" }}
-                size="sm"
-              >
-                Xem gần nhất
-              </Button>
-            </Tooltip>
-          )}
-        </Group>
-      </Paper>
+      <TiktokXlsxCalculator compact />
     </Group>
   )
 

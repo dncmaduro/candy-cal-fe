@@ -12,32 +12,23 @@ import {
   TextInput,
   rem,
   Tooltip,
-  FileInput,
-  Paper,
   Switch
 } from "@mantine/core"
 import {
   IconPlus,
   IconSearch,
-  IconDownload,
-  IconUpload,
   IconTrash,
-  IconEye,
   IconEdit
 } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
 import type { ColumnDef } from "@tanstack/react-table"
 import { ShopeeProductItems } from "./ShopeeProductItems"
 import { ShopeeProductModal } from "./ShopeeProductModal"
-import { ShopeeCalResultModal } from "./ShopeeCalResultModal"
 import { Can } from "../common/Can"
 import { CToast } from "../common/CToast"
-import { useCalResultStore } from "../../store/calResultStore"
-import type { CalResult } from "../../store/calResultStore"
-import type { AxiosResponse } from "axios"
-import type { CalXlsxShopeeResponse } from "../../hooks/models"
 import { CDataTable } from "../common/CDataTable"
 import { SHOPEE_EDITOR_ROLES } from "../../constants/navs"
+import { ShopeeXlsxCalculator } from "./ShopeeXlsxCalculator"
 
 type ShopeeProductRow = {
   _id: string
@@ -46,14 +37,11 @@ type ShopeeProductRow = {
 }
 
 export const ShopeeProducts = () => {
-  const { searchShopeeProducts, deleteShopeeProduct, calShopeeByXlsx } =
-    useShopeeProducts()
-  const { lastShopeeResult, setLastShopeeResult } = useCalResultStore()
+  const { searchShopeeProducts, deleteShopeeProduct } = useShopeeProducts()
   const [searchText, setSearchText] = useState<string>("")
   const [debouncedSearchText] = useDebouncedValue(searchText, 300)
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(10)
-  const [xlsxFile, setXlsxFile] = useState<File | null>(null)
   const [showDeleted, setShowDeleted] = useState<boolean>(false)
 
   const {
@@ -90,46 +78,6 @@ export const ShopeeProducts = () => {
     },
     onError: () => {
       CToast.error({ title: "Có lỗi xảy ra khi xóa sản phẩm" })
-    }
-  })
-
-  const { mutate: calXlsxMutation, isPending: isCalculating } = useMutation({
-    mutationFn: calShopeeByXlsx,
-    onSuccess: (response: AxiosResponse<CalXlsxShopeeResponse>) => {
-      CToast.success({ title: "Tính toán từ file Excel thành công" })
-      // Hiển thị kết quả trong modal
-      const items: CalResult["items"] = Array.isArray(response.data?.items)
-        ? response.data.items
-        : response.data?.items
-          ? [response.data.items]
-          : []
-
-      // Với models mới, orders.products đã là array rồi, không cần convert
-      const orders: CalResult["orders"] = Array.isArray(response.data?.orders)
-        ? response.data.orders
-        : response.data?.orders
-          ? [response.data.orders]
-          : []
-
-      const calResult: CalResult = {
-        items,
-        orders,
-        timestamp: new Date().toISOString()
-      }
-      setLastShopeeResult(calResult)
-
-      modals.open({
-        title: (
-          <Text fw={700} fz="lg">
-            Kết quả tính toán từ file Excel Shopee
-          </Text>
-        ),
-        children: <ShopeeCalResultModal items={items} orders={orders} />,
-        size: "70vw"
-      })
-    },
-    onError: () => {
-      CToast.error({ title: "Có lỗi xảy ra khi tính toán file Excel" })
     }
   })
 
@@ -233,33 +181,6 @@ export const ShopeeProducts = () => {
     [handleDeleteProduct, refetch, showDeleted]
   )
 
-  const handleCalXlsx = () => {
-    if (xlsxFile) {
-      calXlsxMutation({ file: xlsxFile })
-      setXlsxFile(null)
-    }
-  }
-
-  const handleViewLastResult = () => {
-    if (lastShopeeResult) {
-      modals.open({
-        title: (
-          <Text fw={700} fz="lg">
-            Kết quả tính toán gần nhất
-          </Text>
-        ),
-        children: (
-          <ShopeeCalResultModal
-            items={lastShopeeResult.items}
-            orders={lastShopeeResult.orders}
-            readOnly={true}
-          />
-        ),
-        size: "70vw"
-      })
-    }
-  }
-
   const extraFilters = (
     <Group gap={12} align="end" wrap="wrap">
       <TextInput
@@ -329,53 +250,7 @@ export const ShopeeProducts = () => {
         </Tooltip>
       )}
 
-      {!showDeleted && (
-        <Paper withBorder p="sm" radius="md">
-          <Group align="end" gap={10} wrap="wrap">
-            <FileInput
-              label="Excel"
-              placeholder="Chọn file .xlsx/.xls"
-              accept=".xlsx,.xls"
-              value={xlsxFile}
-              onChange={setXlsxFile}
-              leftSection={<IconUpload size={16} />}
-              w={{ base: 220, sm: 260 }}
-            />
-
-            <Button
-              color="green"
-              leftSection={<IconDownload size={16} />}
-              onClick={handleCalXlsx}
-              disabled={!xlsxFile}
-              loading={isCalculating}
-              style={{ alignSelf: "end" }}
-              size="sm"
-            >
-              Tính toán
-            </Button>
-
-            {lastShopeeResult && (
-              <Tooltip
-                label={`Kết quả từ: ${new Date(
-                  lastShopeeResult.timestamp
-                ).toLocaleString("vi-VN")}`}
-                withArrow
-              >
-                <Button
-                  variant="light"
-                  color="blue"
-                  leftSection={<IconEye size={16} />}
-                  onClick={handleViewLastResult}
-                  style={{ alignSelf: "end" }}
-                  size="sm"
-                >
-                  Xem gần nhất
-                </Button>
-              </Tooltip>
-            )}
-          </Group>
-        </Paper>
-      )}
+      {!showDeleted && <ShopeeXlsxCalculator compact />}
     </Group>
   )
 
