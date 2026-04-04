@@ -110,8 +110,34 @@ function RouteComponent() {
       queryClient.invalidateQueries({ queryKey: ["getLivestreamsByDateRange"] })
       modals.closeAll()
     },
-    onError: () => {
-      CToast.error({ title: "Có lỗi xảy ra khi tính lương" })
+    onError: (error: any) => {
+      const status = error?.response?.status
+      const backendMessage =
+        error?.response?.data?.message || error?.message || ""
+
+      if (status === 404) {
+        CToast.error({
+          title: "Không tìm thấy livestream",
+          subtitle:
+            "Không tìm thấy livestream phù hợp với ngày và kênh đã chọn để tính lương."
+        })
+        return
+      }
+
+      if (status === 409) {
+        CToast.error({
+          title: "Không thể tính lương",
+          subtitle:
+            backendMessage ||
+            "Ngày này có nhiều livestream hoặc dữ liệu không hợp lệ cho kênh đã chọn."
+        })
+        return
+      }
+
+      CToast.error({
+        title: "Có lỗi xảy ra khi tính lương",
+        subtitle: backendMessage || undefined
+      })
     }
   })
 
@@ -184,7 +210,19 @@ function RouteComponent() {
     date: Date,
     baseOnRealIncome: boolean
   ) => {
-    calculateDailyFromCalendar({ date, baseOnRealIncome })
+    if (!selectedChannelId) {
+      CToast.error({
+        title: "Chưa chọn kênh livestream",
+        subtitle: "Vui lòng chọn kênh livestream trước khi tính lương."
+      })
+      return
+    }
+
+    calculateDailyFromCalendar({
+      date,
+      baseOnRealIncome,
+      channelId: selectedChannelId
+    })
   }
 
   // Handle opening report modal
