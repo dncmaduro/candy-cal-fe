@@ -11,6 +11,10 @@ import { useForm, Controller } from "react-hook-form"
 import { useMutation } from "@tanstack/react-query"
 import { CToast } from "../common/CToast"
 import { useSalesOrders } from "../../hooks/useSalesOrders"
+import {
+  calculateSalesShippingCost,
+  getSalesShippingDescription
+} from "../../utils/salesShipping"
 
 type ConvertToOfficialFormData = {
   shippingCode: string
@@ -94,9 +98,7 @@ export const ConvertToOfficialModal = ({
   }
 
   const applyShipping = () => {
-    // Nếu khối lượng < 10kg thì 50k, >= 10kg thì 5k/kg (không làm tròn khối lượng)
-    const shippingCost = weight < 10 ? 50000 : weight * 5000
-    setValue("shippingCost", Math.round(shippingCost))
+    setValue("shippingCost", calculateSalesShippingCost(weight))
   }
 
   return (
@@ -183,11 +185,7 @@ export const ConvertToOfficialModal = ({
             {...field}
             label="Phí vận chuyển"
             placeholder="Nhập phí vận chuyển"
-            description={
-              weight < 10
-                ? `Khối lượng ${weight.toFixed(2)}kg < 10kg → Phí cố định 50.000đ`
-                : `Khối lượng ${weight.toFixed(2)}kg ≥ 10kg → ${weight.toFixed(2)}kg × 5.000đ = ${(weight * 5000).toLocaleString("vi-VN")}đ`
-            }
+            description={getSalesShippingDescription(weight)}
             error={errors.shippingCost?.message}
             mb="md"
             min={0}
