@@ -18,6 +18,11 @@ import html2canvas from "html2canvas"
 import { IconCamera } from "@tabler/icons-react"
 import { CToast } from "../common/CToast"
 import { useSalesChannels } from "../../hooks/useSalesChannels"
+import {
+  getSalesShippingRateLabel,
+  getSalesShippingSummary,
+  getSalesShippingUnitPriceLabel
+} from "../../utils/salesShipping"
 
 interface ItemWithExtendedData {
   code: string
@@ -242,15 +247,13 @@ const QuotationCaptureContent = ({
               <Table.Td />
               <Table.Td colSpan={5}>
                 <Text size="xs">
-                  Phí ship ({calculations.totalWeight < 10 ? "50k" : `5k/kg`})
+                  Phí ship ({getSalesShippingRateLabel(calculations.totalWeight)})
                 </Text>
               </Table.Td>
               <Table.Td ta="right">
                 <Text size="xs">
                   {calculations.shippingCost > 0
-                    ? calculations.totalWeight < 10
-                      ? "50.000"
-                      : "5.000"
+                    ? getSalesShippingUnitPriceLabel(calculations.totalWeight)
                     : ""}
                 </Text>
               </Table.Td>
@@ -916,9 +919,7 @@ export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
               <Group justify="space-between">
                 <Text size="sm">
                   Phí ship ({calculations.totalWeight.toFixed(2)} kg
-                  {calculations.totalWeight < 10
-                    ? " < 10kg → 50k"
-                    : ` ≥ 10kg → ${calculations.totalWeight.toFixed(2)}kg × 5k`}
+                  {getSalesShippingSummary(calculations.totalWeight)}
                   ):
                 </Text>
                 <Text size="sm" fw={500}>

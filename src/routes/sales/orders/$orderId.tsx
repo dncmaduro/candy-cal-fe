@@ -39,6 +39,7 @@ import { CToast } from "../../../components/common/CToast"
 import { Can } from "../../../components/common/Can"
 import { QuotationModal } from "../../../components/sales/QuotationModal"
 import { UpdateOrderDateModal } from "../../../components/sales/UpdateOrderDateModal"
+import { getSalesShippingRateLabel } from "../../../utils/salesShipping"
 
 export const Route = createFileRoute("/sales/orders/$orderId")({
   component: RouteComponent
@@ -945,9 +946,9 @@ function RouteComponent() {
                     <Group justify="space-between">
                       <Text size="sm">
                         Phí vận chuyển (
-                        {enhancedCalculations.totalWeight < 10
-                          ? "50k"
-                          : `5k/kg`}
+                        {getSalesShippingRateLabel(
+                          enhancedCalculations.totalWeight
+                        )}
                         ):
                       </Text>
                       <Text size="sm">
