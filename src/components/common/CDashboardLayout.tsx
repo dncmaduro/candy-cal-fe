@@ -28,48 +28,40 @@ export const CDashboardLayout = ({
       px={{ base: 8, md: 0 }}
       w="100%"
       style={{
-        background: "rgba(255,255,255,0.97)",
-        borderRadius: 20,
-        boxShadow: "0 4px 32px 0 rgba(60,80,180,0.07)",
-        border: "1px solid #ececec"
+        background: "rgba(255,255,255,0.98)",
+        borderRadius: 28,
+        boxShadow: "0 18px 48px rgba(15, 23, 42, 0.06)",
+        border: "1px solid #dbe4f0"
       }}
     >
-      {/* Header Section */}
       <Box
         style={{
           background:
-            "linear-gradient(135deg, rgba(79, 172, 254, 0.1) 0%, rgba(0, 242, 254, 0.05) 100%)",
-          borderRadius: "16px 16px 0 0",
-          borderBottom: "1px solid rgba(79, 172, 254, 0.15)"
+            "linear-gradient(180deg, rgba(248,250,252,0.98) 0%, rgba(241,245,249,0.88) 100%)",
+          borderRadius: "28px 28px 0 0",
+          borderBottom: "1px solid #dbe4f0"
         }}
       >
         <Flex
-          align="center"
+          align="flex-start"
           justify="space-between"
-          pt={32}
+          pt={28}
           pb={20}
           px={{ base: 16, md: 32 }}
           direction={{ base: "column", sm: "row" }}
-          gap={16}
+          gap={20}
         >
           <Box>
-            {/* Header */}
             <Flex align="center" gap="sm" mb={8}>
               {icon}
-              <Text
-                fw={700}
-                fz="xxl"
-                variant="gradient"
-                gradient={{ from: "blue.6", to: "cyan.5", deg: 45 }}
-              >
+              <Text fw={800} fz="2rem" c="#0f172a" style={{ letterSpacing: "-0.04em" }}>
                 {title}
               </Text>
             </Flex>
 
-            {/* Subheader */}
             {subheader &&
               (typeof subheader === "string" ? (
-                <Text c="blue.6" fz="md" fw={500}>
+                <Text c="dimmed" fz="sm" fw={500}>
                   {subheader}
                 </Text>
               ) : (
@@ -77,16 +69,19 @@ export const CDashboardLayout = ({
               ))}
           </Box>
 
-          {/* Right Header Actions */}
           {rightHeader && (
-            <Group gap="md" align="flex-end" w={{ base: "100%", sm: "auto" }}>
+            <Group
+              gap="md"
+              align="flex-end"
+              justify="flex-end"
+              w={{ base: "100%", sm: "auto" }}
+            >
               {rightHeader}
             </Group>
           )}
         </Flex>
       </Box>
 
-      {/* Content Section */}
       <Box pt={20} pb={40} px={{ base: 16, md: 32 }} w="100%">
         {content}
       </Box>

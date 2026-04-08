@@ -4,7 +4,6 @@ import { useEffect, useState } from "react"
 import { AppLayout } from "../../../components/layouts/AppLayout"
 import {
   Tabs,
-  ScrollArea,
   SegmentedControl,
   Stack,
   Loader,
@@ -181,7 +180,10 @@ export function StorageIncomesPage({
           value={{
             selectedChannelId,
             channels,
-            isLoading: isLoadingChannels
+            isLoading: isLoadingChannels,
+            setSelectedChannelId: (value) => {
+              if (value) handleChannelChange(value)
+            }
           }}
         >
           {isLoadingChannels ? (
@@ -213,65 +215,65 @@ export function StorageIncomesPage({
             </Box>
           ) : (
             <Stack gap="md" mt={16}>
-              {/* Channel Selector */}
-              <Paper
-                shadow="sm"
-                p="lg"
-                radius="md"
-                withBorder
-                style={{
-                  background:
-                    "linear-gradient(135deg, #8592cbff 0%, #cba3f2ff 100%)",
-                  borderColor: "#96a1d1ff"
-                }}
-              >
-                <Group gap="sm" mb="md">
-                  <ThemeIcon
-                    size="lg"
-                    radius="md"
-                    variant="white"
-                    color="grape"
-                  >
-                    <IconBrandYoutube size={20} />
-                  </ThemeIcon>
-                  <Box>
-                    <Text size="sm" fw={700} c="white" opacity={0.9}>
-                      {channelHeaderTitle}
-                    </Text>
-                    <Text size="xs" c="white" opacity={0.7}>
-                      Chọn kênh để xem thống kê
-                    </Text>
-                  </Box>
-                </Group>
-                <SegmentedControl
-                  value={selectedChannelId ?? ""}
-                  onChange={handleChannelChange}
-                  data={channels.map((ch) => ({
-                    label: ch.name,
-                    value: ch._id
-                  }))}
-                  fullWidth
-                  size="md"
-                  color="violet.4"
-                  styles={{
-                    root: {
-                      background: "rgba(255, 255, 255, 0.95)",
-                      padding: "4px"
-                    },
-                    label: {
-                      padding: "10px 20px",
-                      fontWeight: 600
-                    }
+              {tab !== "dashboard" && tab !== "daily-stats" && (
+                <Paper
+                  shadow="sm"
+                  p="lg"
+                  radius="md"
+                  withBorder
+                  style={{
+                    background:
+                      "linear-gradient(135deg, #8592cbff 0%, #cba3f2ff 100%)",
+                    borderColor: "#96a1d1ff"
                   }}
-                />
-              </Paper>
+                >
+                  <Group gap="sm" mb="md">
+                    <ThemeIcon
+                      size="lg"
+                      radius="md"
+                      variant="white"
+                      color="grape"
+                    >
+                      <IconBrandYoutube size={20} />
+                    </ThemeIcon>
+                    <Box>
+                      <Text size="sm" fw={700} c="white" opacity={0.9}>
+                        {channelHeaderTitle}
+                      </Text>
+                      <Text size="xs" c="white" opacity={0.7}>
+                        Chọn kênh để xem thống kê
+                      </Text>
+                    </Box>
+                  </Group>
+                  <SegmentedControl
+                    value={selectedChannelId ?? ""}
+                    onChange={handleChannelChange}
+                    data={channels.map((ch) => ({
+                      label: ch.name,
+                      value: ch._id
+                    }))}
+                    fullWidth
+                    size="md"
+                    color="violet.4"
+                    styles={{
+                      root: {
+                        background: "rgba(255, 255, 255, 0.95)",
+                        padding: "4px"
+                      },
+                      label: {
+                        padding: "10px 20px",
+                        fontWeight: 600
+                      }
+                    }}
+                  />
+                </Paper>
+              )}
 
               {/* Tabs */}
               <Tabs
                 orientation="horizontal"
                 value={tab}
                 onChange={handleTabChange}
-                h={"80vh"}
               >
                 <Tabs.List>
                   {tabOptions.map((tabOption) => (
@@ -281,7 +283,7 @@ export function StorageIncomesPage({
                   ))}
                 </Tabs.List>
 
-                <ScrollArea.Autosize mah={"95%"} className="panels-scroll-area">
+                <Box mt="md">
                   <Tabs.Panel value="dashboard">
                     {currentChannel?.platform === "shopee" ? (
                       <ShopeeDashboard />
@@ -309,7 +311,7 @@ export function StorageIncomesPage({
                   <Tabs.Panel value="packing-rules">
                     <PackingRules />
                   </Tabs.Panel>
-                </ScrollArea.Autosize>
+                </Box>
               </Tabs>
             </Stack>
           )}

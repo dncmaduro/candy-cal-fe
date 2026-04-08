@@ -9,6 +9,7 @@ interface LivestreamChannelContextType {
     link: string
   }>
   isLoading: boolean
+  setSelectedChannelId?: (channelId: string | null) => void
 }
 
 const LivestreamChannelContext = createContext<
