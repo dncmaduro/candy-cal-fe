@@ -26,10 +26,19 @@ import {
 } from "@mantine/core"
 import { IconChevronDown, IconSearch } from "@tabler/icons-react"
 
+type CDataTableVariant = "default" | "analytics" | "compact"
+type CDataTableColumnMeta = {
+  align?: "left" | "center" | "right"
+  isNumeric?: boolean
+  headerClassName?: string
+  cellClassName?: string
+}
+
 export type DataTableProps<TData, TValue> = {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
   className?: string
+  variant?: CDataTableVariant
 
   initialPageSize?: number
   pageSizeOptions?: number[]
@@ -76,6 +85,7 @@ export function CDataTable<TData, TValue>({
   columns,
   data,
   className,
+  variant = "default",
   initialPageSize = 10,
   pageSizeOptions = [10, 20, 50, 100],
   enableRowSelection = false,
@@ -89,8 +99,8 @@ export function CDataTable<TData, TValue>({
   extraActions,
   globalFilterValue,
   onGlobalFilterChange,
-  hideSearch = false,
-  hideColumnToggle = false,
+  hideSearch: hideSearchProp,
+  hideColumnToggle: hideColumnToggleProp,
   // expanding rows
   enableExpanding = false,
   renderRowSubComponent,
@@ -99,8 +109,8 @@ export function CDataTable<TData, TValue>({
   totalPages,
   onPageChange,
   onPageSizeChange,
-  hidePagination = false,
-  hidePaginationInformation = false,
+  hidePagination: hidePaginationProp,
+  hidePaginationInformation: hidePaginationInformationProp,
   // external sorting
   sortBy,
   sortOrder,
@@ -124,6 +134,11 @@ export function CDataTable<TData, TValue>({
 
   const gf = globalFilterValue ?? internalGlobalFilter
   const setGf = onGlobalFilterChange ?? setInternalGlobalFilter
+  const hideSearch = hideSearchProp ?? variant !== "default"
+  const hideColumnToggle = hideColumnToggleProp ?? variant !== "default"
+  const hidePaginationInformation =
+    hidePaginationInformationProp ?? variant !== "default"
+  const hidePagination = hidePaginationProp ?? false
 
   // Determine if using server-side pagination
   const isServerPagination = !!(page && totalPages && onPageChange)
@@ -244,6 +259,85 @@ export function CDataTable<TData, TValue>({
 
   const currentPage = page ?? table.getState().pagination.pageIndex + 1
   const total = Math.max(1, totalPages ?? table.getPageCount())
+  const hasToolbar =
+    (enableGlobalFilter && !hideSearch) ||
+    !!extraFilters ||
+    !!extraActions ||
+    (!hideColumnToggle && table.getAllLeafColumns().some((c) => c.getCanHide())) ||
+    enableRowSelection
+
+  const variantClasses = React.useMemo(
+    () => ({
+      default: {
+        root: "space-y-3",
+        toolbar: "flex flex-wrap items-end gap-2",
+        search: "min-w-[220px]",
+        columnButton: "light",
+        tableShell: "rounded-xl border border-gray-200",
+        header: "sticky top-0 z-10 bg-gray-50",
+        headerRow: "border-b border-gray-200",
+        headerCell:
+          "px-3 py-2 text-left text-sm font-semibold text-gray-700",
+        cell: "px-3 py-2 text-sm text-gray-700",
+        row: "border-b border-gray-100 hover:bg-gray-50",
+        empty: "px-3 py-8 text-center text-sm text-gray-500",
+        footer: "flex items-center justify-between gap-2",
+        info: "text-sm text-gray-600"
+      },
+      analytics: {
+        root: "space-y-3",
+        toolbar: "flex flex-wrap items-center gap-2",
+        search: "min-w-[220px]",
+        columnButton: "subtle",
+        tableShell:
+          "rounded-2xl border border-slate-200 bg-white shadow-sm ring-1 ring-slate-950/[0.02]",
+        header: "sticky top-0 z-10 bg-slate-50/90 backdrop-blur",
+        headerRow: "border-b border-slate-200",
+        headerCell:
+          "px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.14em] text-slate-500",
+        cell: "px-4 py-3 text-sm text-slate-700",
+        row: "border-b border-slate-100 hover:bg-slate-50/70",
+        empty: "px-4 py-10 text-center text-sm text-slate-500",
+        footer: "flex items-center justify-between gap-2",
+        info: "text-xs uppercase tracking-[0.12em] text-slate-400"
+      },
+      compact: {
+        root: "space-y-2",
+        toolbar: "flex flex-wrap items-center gap-2",
+        search: "min-w-[180px]",
+        columnButton: "subtle",
+        tableShell: "rounded-xl border border-slate-200 bg-white",
+        header: "sticky top-0 z-10 bg-slate-50/90",
+        headerRow: "border-b border-slate-200",
+        headerCell:
+          "px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500",
+        cell: "px-3 py-2 text-sm text-slate-700",
+        row: "border-b border-slate-100 hover:bg-slate-50/60",
+        empty: "px-3 py-6 text-center text-sm text-slate-500",
+        footer: "flex items-center justify-between gap-2",
+        info: "text-xs text-slate-500"
+      }
+    }),
+    []
+  )
+
+  const currentVariant = variantClasses[variant]
+
+  const getAlignmentClass = React.useCallback(
+    (
+      meta?: unknown,
+      fallback: "left" | "center" | "right" = "left"
+    ) => {
+      const columnMeta = meta as CDataTableColumnMeta | undefined
+      const align =
+        columnMeta?.align ?? (columnMeta?.isNumeric ? "right" : fallback)
+
+      if (align === "right") return "text-right"
+      if (align === "center") return "text-center"
+      return "text-left"
+    },
+    []
+  )
 
   // Helpers for skeleton UI
   const visibleLeafCols = table.getAllLeafColumns()
@@ -260,64 +354,71 @@ export function CDataTable<TData, TValue>({
     ))
 
   return (
-    <div className={clsx("w-full space-y-3", className)}>
+    <div className={clsx("w-full", currentVariant.root, className)}>
       {/* Toolbar */}
-      <div className="flex flex-wrap items-end gap-2">
-        {enableGlobalFilter && !hideSearch && (
-          <TextInput
-            className="min-w-[220px]"
-            placeholder="Tìm kiếm..."
-            leftSection={<IconSearch size={16} />}
-            value={gf}
-            onChange={(e) => setGf(e.currentTarget.value)}
-          />
-        )}
-
-        {extraFilters}
-
-        {!hideColumnToggle && (
-          <Menu withinPortal>
-            <Menu.Target>
-              <Button
-                variant="light"
-                rightSection={<IconChevronDown size={16} />}
-                disabled={isLoading}
-              >
-                Cột hiển thị
-              </Button>
-            </Menu.Target>
-            <Menu.Dropdown>
-              {table
-                .getAllLeafColumns()
-                .filter((c) => c.getCanHide())
-                .map((column) => (
-                  <Menu.Item key={column.id}>
-                    <label className="flex cursor-pointer items-center gap-2">
-                      <Checkbox
-                        checked={column.getIsVisible()}
-                        onChange={(e) =>
-                          column.toggleVisibility(e.currentTarget.checked)
-                        }
-                      />
-                      <span className="text-sm">
-                        {String(column.columnDef.header ?? column.id)}
-                      </span>
-                    </label>
-                  </Menu.Item>
-                ))}
-            </Menu.Dropdown>
-          </Menu>
-        )}
-
-        <div className="ml-auto flex items-center gap-2">
-          {extraActions}
-          {enableRowSelection && (
-            <div className="text-sm text-gray-600">
-              Đã chọn: {table.getSelectedRowModel().rows.length}
-            </div>
+      {hasToolbar && (
+        <div className={currentVariant.toolbar}>
+          {enableGlobalFilter && !hideSearch && (
+            <TextInput
+              className={currentVariant.search}
+              placeholder="Tìm kiếm..."
+              leftSection={<IconSearch size={16} />}
+              size={variant === "default" ? "sm" : "xs"}
+              radius={variant === "default" ? "md" : "xl"}
+              value={gf}
+              onChange={(e) => setGf(e.currentTarget.value)}
+            />
           )}
+
+          {extraFilters}
+
+          {!hideColumnToggle &&
+            table.getAllLeafColumns().some((c) => c.getCanHide()) && (
+              <Menu withinPortal>
+                <Menu.Target>
+                  <Button
+                    variant={currentVariant.columnButton as any}
+                    radius={variant === "default" ? "md" : "xl"}
+                    size={variant === "compact" ? "xs" : "sm"}
+                    rightSection={<IconChevronDown size={16} />}
+                    disabled={isLoading}
+                  >
+                    Cột hiển thị
+                  </Button>
+                </Menu.Target>
+                <Menu.Dropdown>
+                  {table
+                    .getAllLeafColumns()
+                    .filter((c) => c.getCanHide())
+                    .map((column) => (
+                      <Menu.Item key={column.id}>
+                        <label className="flex cursor-pointer items-center gap-2">
+                          <Checkbox
+                            checked={column.getIsVisible()}
+                            onChange={(e) =>
+                              column.toggleVisibility(e.currentTarget.checked)
+                            }
+                          />
+                          <span className="text-sm">
+                            {String(column.columnDef.header ?? column.id)}
+                          </span>
+                        </label>
+                      </Menu.Item>
+                    ))}
+                </Menu.Dropdown>
+              </Menu>
+            )}
+
+          <div className="ml-auto flex items-center gap-2">
+            {extraActions}
+            {enableRowSelection && (
+              <div className={currentVariant.info}>
+                Đã chọn: {table.getSelectedRowModel().rows.length}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Table + Loading Overlay */}
       <div className="relative">
@@ -334,23 +435,30 @@ export function CDataTable<TData, TValue>({
 
         <div
           className={clsx(
-            "overflow-x-auto rounded-xl border border-gray-200",
+            "overflow-x-auto",
+            currentVariant.tableShell,
             isLoading && "opacity-90"
           )}
         >
           <table className="w-full border-collapse">
-            <thead className="sticky top-0 z-10 bg-gray-50">
+            <thead className={currentVariant.header}>
               {table.getHeaderGroups().map((hg) => (
-                <tr key={hg.id} className="border-b border-gray-200">
+                <tr key={hg.id} className={currentVariant.headerRow}>
                   {hg.headers.map((header) => {
                     const canSort = header.column.getCanSort()
                     const sortDir = header.column.getIsSorted()
+                    const meta =
+                      header.column.columnDef.meta as
+                        | CDataTableColumnMeta
+                        | undefined
                     return (
                       <th
                         key={header.id}
                         colSpan={header.colSpan}
                         className={clsx(
-                          "px-3 py-2 text-left text-sm font-semibold text-gray-700",
+                          currentVariant.headerCell,
+                          getAlignmentClass(meta),
+                          meta?.headerClassName,
                           canSort && "cursor-pointer select-none",
                           isLoading && "pointer-events-none"
                         )}
@@ -359,8 +467,16 @@ export function CDataTable<TData, TValue>({
                             ? header.column.getToggleSortingHandler()
                             : undefined
                         }
-                      >
-                        <div className="flex items-center gap-1">
+                        >
+                        <div
+                          className={clsx(
+                            "flex items-center gap-1",
+                            getAlignmentClass(meta) === "text-right" &&
+                              "justify-end",
+                            getAlignmentClass(meta) === "text-center" &&
+                              "justify-center"
+                          )}
+                        >
                           {flexRender(
                             header.column.columnDef.header,
                             header.getContext()
@@ -387,7 +503,7 @@ export function CDataTable<TData, TValue>({
               ) : table.getRowModel().rows.length === 0 ? (
                 <tr>
                   <td
-                    className="px-3 py-8 text-center text-sm text-gray-500"
+                    className={currentVariant.empty}
                     colSpan={colCount}
                   >
                     Không có dữ liệu.
@@ -399,7 +515,7 @@ export function CDataTable<TData, TValue>({
                     <tr
                       key={row.id}
                       className={clsx(
-                        "border-b border-gray-100 hover:bg-gray-50",
+                        currentVariant.row,
                         enableRowSelection &&
                           row.getIsSelected() &&
                           "bg-blue-50/60",
@@ -412,26 +528,37 @@ export function CDataTable<TData, TValue>({
                           : undefined
                       }
                     >
-                      {row.getVisibleCells().map((cell) => (
-                        <td
-                          key={cell.id}
-                          className="px-3 py-2 text-sm text-gray-700"
-                          onClick={(e) => {
-                            // Prevent row click when clicking on actions column
-                            if (
-                              cell.column.id === "actions" ||
-                              cell.column.id === "__select__"
-                            ) {
-                              e.stopPropagation()
-                            }
-                          }}
-                        >
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext()
-                          )}
-                        </td>
-                      ))}
+                      {row.getVisibleCells().map((cell) => {
+                        const meta =
+                          cell.column.columnDef.meta as
+                            | CDataTableColumnMeta
+                            | undefined
+
+                        return (
+                          <td
+                            key={cell.id}
+                            className={clsx(
+                              currentVariant.cell,
+                              getAlignmentClass(meta),
+                              meta?.cellClassName
+                            )}
+                            onClick={(e) => {
+                              // Prevent row click when clicking on actions column
+                              if (
+                                cell.column.id === "actions" ||
+                                cell.column.id === "__select__"
+                              ) {
+                                e.stopPropagation()
+                              }
+                            }}
+                          >
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext()
+                            )}
+                          </td>
+                        )
+                      })}
                     </tr>
 
                     {enableExpanding &&
@@ -452,9 +579,9 @@ export function CDataTable<TData, TValue>({
       </div>
 
       {/* Pagination */}
-      <div className="flex items-center justify-between gap-2">
+      <div className={currentVariant.footer}>
         {!hidePaginationInformation && (
-          <div className="text-sm text-gray-600">
+          <div className={currentVariant.info}>
             Trang {currentPage} / {total} · Tổng{" "}
             {table.getPrePaginationRowModel().rows.length} dòng
           </div>
@@ -465,6 +592,7 @@ export function CDataTable<TData, TValue>({
               <Pagination
                 total={total}
                 value={currentPage}
+                size={variant === "compact" ? "xs" : "sm"}
                 onChange={(p) =>
                   onPageChange ? onPageChange(p) : table.setPageIndex(p - 1)
                 }
@@ -474,9 +602,10 @@ export function CDataTable<TData, TValue>({
             </div>
             <div className="flex items-center gap-2">
               <Select
-                className="w-32"
+                className={clsx("w-32", variant === "compact" && "w-24")}
                 aria-label="Số dòng mỗi trang"
                 value={pageSizeValue}
+                size={variant === "compact" ? "xs" : "sm"}
                 onChange={(value) => {
                   if (!value) return
                   const n = Number(value)

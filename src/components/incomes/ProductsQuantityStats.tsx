@@ -1,131 +1,183 @@
-import { useState, useMemo } from "react"
-import { Text, Badge, Box, SegmentedControl, Flex } from "@mantine/core"
+import { useMemo, useState } from "react"
+import { Accordion, SegmentedControl, Text } from "@mantine/core"
 import { ColumnDef } from "@tanstack/react-table"
 import { CDataTable } from "../common/CDataTable"
-import { CPiechart } from "../common/CPiechart"
 import { IconPackage } from "@tabler/icons-react"
 import { DashboardSectionCard } from "./DashboardSectionCard"
+import { RankedBarList } from "./analytics/RankedBarList"
+import { formatCompactCurrency } from "./analytics/formatters"
 
-interface ProductQuantityRow {
+interface ProductRankingRow {
   code: string
-  quantity: number
+  value: number
   percentage: number
 }
 
 export const ProductsQuantityStats = ({
-  productsQuantity
+  productsQuantity,
+  productsRevenue
 }: {
   productsQuantity: Record<string, number>
+  productsRevenue?: Record<string, number>
 }) => {
-  const [mode, setMode] = useState<"table" | "chart">("table")
+  const [rankingMode, setRankingMode] = useState<"quantity" | "revenue">(
+    "quantity"
+  )
 
   const entries = Object.entries(productsQuantity || {})
   if (!entries.length) return null
 
   const totalQuantity = entries.reduce((s, [, v]) => s + v, 0) || 1
+  const revenueEntries = Object.entries(productsRevenue || {}).filter(
+    ([, value]) => value > 0
+  )
+  const totalRevenue =
+    revenueEntries.reduce((sum, [, value]) => sum + value, 0) || 1
 
-  const data: ProductQuantityRow[] = useMemo(
+  const quantityData: ProductRankingRow[] = useMemo(
     () =>
       entries
-        .map(([code, quantity]) => ({
+        .map(([code, value]) => ({
           code,
-          quantity,
+          value,
           percentage:
             Math.round(
-              ((quantity / totalQuantity) * 100 + Number.EPSILON) * 100
+              ((value / totalQuantity) * 100 + Number.EPSILON) * 100
             ) / 100
         }))
-        .sort((a, b) => b.quantity - a.quantity),
+        .sort((a, b) => b.value - a.value),
     [entries, totalQuantity]
   )
 
-  const columns: ColumnDef<ProductQuantityRow>[] = useMemo(
+  const revenueData: ProductRankingRow[] = useMemo(
+    () =>
+      revenueEntries
+        .map(([code, value]) => ({
+          code,
+          value,
+          percentage:
+            Math.round(
+              ((value / totalRevenue) * 100 + Number.EPSILON) * 100
+            ) / 100
+        }))
+        .sort((a, b) => b.value - a.value),
+    [revenueEntries, totalRevenue]
+  )
+
+  const activeData =
+    rankingMode === "revenue" && revenueData.length > 0 ? revenueData : quantityData
+  const activeTotal =
+    rankingMode === "revenue" && revenueData.length > 0 ? totalRevenue : totalQuantity
+  const isRevenueMode = rankingMode === "revenue" && revenueData.length > 0
+  const topItem = activeData[0]
+
+  const columns: ColumnDef<ProductRankingRow>[] = useMemo(
     () => [
       {
         accessorKey: "code",
         header: "Mã sản phẩm",
         size: 200,
+        meta: {
+          align: "left"
+        },
         cell: ({ getValue }) => (
           <Text fw={500}>{getValue<string>() || "-"}</Text>
         )
       },
       {
-        accessorKey: "quantity",
-        header: "Số lượng",
+        accessorKey: "value",
+        header: isRevenueMode ? "Doanh thu" : "Số lượng",
         size: 140,
+        meta: {
+          align: "right",
+          isNumeric: true
+        },
         cell: ({ getValue }) => (
-          <Text>{getValue<number>().toLocaleString()}</Text>
+          <Text>
+            {isRevenueMode
+              ? formatCompactCurrency(getValue<number>())
+              : getValue<number>().toLocaleString("vi-VN")}
+          </Text>
         )
       },
       {
         accessorKey: "percentage",
         header: "Tỉ lệ",
         size: 120,
+        meta: {
+          align: "right",
+          isNumeric: true
+        },
         cell: ({ getValue }) => (
-          <Badge variant="light" color="blue" size="sm">
-            {getValue<number>()}%
-          </Badge>
+          <Text fw={600}>{getValue<number>()}%</Text>
         )
       }
     ],
-    []
+    [isRevenueMode]
   )
-
-  const slices = data.map((item) => ({
-    label: item.code,
-    value: item.quantity
-  }))
 
   return (
     <DashboardSectionCard
-      title="Sản phẩm theo số lượng"
-      subtitle={`Tổng: ${totalQuantity.toLocaleString()} sản phẩm`}
+      title="Sản phẩm"
+      subtitle={
+        topItem
+          ? isRevenueMode
+            ? `${topItem.code} dẫn đầu với ${formatCompactCurrency(topItem.value)} doanh thu`
+            : `${topItem.code} dẫn đầu với ${topItem.value.toLocaleString("vi-VN")} sản phẩm`
+          : `Tổng: ${totalQuantity.toLocaleString()} sản phẩm`
+      }
       icon={<IconPackage size={18} />}
       accentColor="blue"
       rightSection={
         <SegmentedControl
-          value={mode}
-          onChange={(v) => setMode(v as "table" | "chart")}
-          data={[
-            { label: "Bảng", value: "table" },
-            { label: "Biểu đồ", value: "chart" }
-          ]}
           size="xs"
+          radius="xl"
+          value={rankingMode}
+          onChange={(value) => setRankingMode(value as "quantity" | "revenue")}
+          data={[
+            { label: "Theo số lượng", value: "quantity" },
+            { label: "Theo doanh thu", value: "revenue" }
+          ]}
         />
       }
     >
-      {mode === "table" ? (
-        <CDataTable
-          columns={columns}
-          data={data}
-          enableGlobalFilter={true}
-          enableRowSelection={false}
-          initialPageSize={10}
-          pageSizeOptions={[10, 20, 50]}
-          hideSearch={false}
-        />
-      ) : (
-        <Flex gap={24} align="flex-start" justify="center">
-          <Box style={{ minWidth: 320 }}>
-            <CPiechart
-              data={slices}
-              width={320}
-              radius={120}
-              donut={false}
-              showLegend
-              legendItemWidth={120}
-              enableOthers={slices.length > 10}
-              title={
-                <Text fw={500} fz="sm" c="dimmed">
-                  Tổng: {totalQuantity.toLocaleString()} sản phẩm
-                </Text>
-              }
-              valueFormatter={(v) => v.toLocaleString()}
-              percentFormatter={(p) => `${p.toFixed(1)}%`}
-            />
-          </Box>
-        </Flex>
-      )}
+      <RankedBarList
+        items={activeData.map((item) => ({
+          key: item.code,
+          label: item.code,
+          value: item.value,
+          caption: isRevenueMode
+            ? `${item.percentage}% tổng doanh thu`
+            : `${item.percentage}% tổng số lượng`
+        }))}
+        totalValue={activeTotal}
+        color="blue"
+        valueFormatter={(value) =>
+          isRevenueMode
+            ? formatCompactCurrency(value)
+            : `${value.toLocaleString("vi-VN")} sản phẩm`
+        }
+        footer={
+          activeData.length > 8 ? (
+            <Accordion variant="contained" radius="lg">
+              <Accordion.Item value="full-table">
+                <Accordion.Control>Xem chi tiết toàn bộ danh sách</Accordion.Control>
+                <Accordion.Panel px={0}>
+                  <CDataTable
+                    variant="analytics"
+                    columns={columns}
+                    data={activeData}
+                    enableGlobalFilter
+                    enableRowSelection={false}
+                    initialPageSize={8}
+                    pageSizeOptions={[8, 16, 32]}
+                  />
+                </Accordion.Panel>
+              </Accordion.Item>
+            </Accordion>
+          ) : null
+        }
+      />
     </DashboardSectionCard>
   )
 }
