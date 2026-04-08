@@ -6,18 +6,19 @@ interface SummaryCardsProps {
 }
 
 export function SummaryCards({ metrics }: SummaryCardsProps) {
-  return (
-    <section className="space-y-4">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-          Tóm tắt nhanh
-        </p>
-        <h2 className="mt-1 text-lg font-semibold text-slate-950">
-          4 chỉ số cần nhìn ngay
-        </h2>
-      </div>
+  const gridClassName =
+    metrics.length >= 4
+      ? "grid gap-4 md:grid-cols-2 xl:grid-cols-4"
+      : metrics.length === 3
+        ? "grid gap-4 md:grid-cols-2 xl:grid-cols-3"
+        : "grid gap-4 md:grid-cols-2"
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+  return (
+    <section className="space-y-3">
+      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+        Tóm tắt nhanh
+      </p>
+      <div className={gridClassName}>
         {metrics.map((metric) => {
           const tone = toneClasses[metric.tone ?? "slate"]
 

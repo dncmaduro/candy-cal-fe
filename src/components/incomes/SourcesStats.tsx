@@ -3,7 +3,7 @@ import { DashboardSectionCard } from "./DashboardSectionCard"
 import { IconHierarchy2 } from "@tabler/icons-react"
 import { RankedBarList } from "./analytics/RankedBarList"
 import { TrendBadge } from "./analytics/TrendBadge"
-import { formatCompactCurrency, formatPercent } from "./analytics/formatters"
+import { formatCurrency, formatPercent } from "./analytics/formatters"
 
 interface SourceRow {
   key: string
@@ -38,7 +38,7 @@ export const SourcesStats = ({
           key: k,
           label: labels[k] || k,
           value: v,
-          pct: Math.round(((v / sum) * 100 + Number.EPSILON) * 100) / 100,
+          pct: (v / sum) * 100,
           change:
             k === "ads"
               ? changes?.adsPct
@@ -59,7 +59,11 @@ export const SourcesStats = ({
       title="Theo nguồn"
       subtitle={
         topSource
-          ? `${topSource.label} dẫn với ${formatPercent(topSource.pct)} doanh thu`
+          ? `${topSource.label} dẫn với ${formatPercent(
+              topSource.pct,
+              2,
+              "truncate"
+            )} doanh thu`
           : `Tổng: ${sum.toLocaleString()} VNĐ`
       }
       icon={<IconHierarchy2 size={18} />}
@@ -70,13 +74,14 @@ export const SourcesStats = ({
           key: item.key,
           label: item.label,
           value: item.value,
-          caption: `${formatPercent(item.pct)} tổng doanh thu`,
+          caption: `${formatPercent(item.pct, 2, "truncate")} tổng doanh thu`,
           delta: <TrendBadge value={item.change} />,
           color: item.key === topSource?.key ? "indigo" : undefined
         }))}
         totalValue={sum}
         color="indigo"
-        valueFormatter={(value) => formatCompactCurrency(value)}
+        valueFormatter={(value) => formatCurrency(value)}
+        shareFormatter={(share) => formatPercent(share, 2, "truncate")}
       />
     </DashboardSectionCard>
   )

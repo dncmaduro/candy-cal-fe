@@ -23,7 +23,10 @@ import {
   IconReceipt2
 } from "@tabler/icons-react"
 import { format } from "date-fns"
-import type { GetRangeStatsResponse } from "../../hooks/models"
+import type {
+  GetIncomesByDateRangeResponse,
+  GetRangeStatsResponse
+} from "../../hooks/models"
 import { useIncomes } from "../../hooks/useIncomes"
 import { useMonthGoals } from "../../hooks/useMonthGoals"
 import { useLivestreamChannel } from "../../context/LivestreamChannelContext"
@@ -37,35 +40,15 @@ import { DailyKpiSummary } from "./analytics/DailyKpiSummary"
 import { RevenueOverviewCard } from "./analytics/RevenueOverviewCard"
 import { MetricStatCard } from "./analytics/MetricStatCard"
 import { TrendBadge } from "./analytics/TrendBadge"
-import { formatCompactCurrency, formatPercent } from "./analytics/formatters"
+import { formatCurrency, formatPercent } from "./analytics/formatters"
+import {
+  filterDropdownStyles,
+  filterInputStyles,
+  filterLabelStyles,
+  filterSegmentedStyles
+} from "./filterStyles"
 
 type DiscountMode = "beforeDiscount" | "afterDiscount"
-
-const filterLabelStyles = {
-  fontSize: "11px",
-  fontWeight: 600,
-  textTransform: "uppercase" as const,
-  letterSpacing: "0.16em",
-  color: "#94a3b8",
-  marginBottom: 6
-}
-
-const filterInputStyles = {
-  height: 44,
-  borderRadius: 18,
-  borderColor: "#dbe4f0",
-  background: "#ffffff",
-  color: "#334155",
-  fontSize: 14,
-  fontWeight: 500,
-  boxShadow: "0 1px 2px rgba(15, 23, 42, 0.02)"
-}
-
-const filterDropdownStyles = {
-  borderRadius: 18,
-  border: "1px solid #dbe4f0",
-  boxShadow: "0 18px 40px rgba(15, 23, 42, 0.08)"
-}
 
 type RangeSelectorProps = {
   startDate: Date | null
@@ -192,31 +175,7 @@ const ModeSelector = ({ mode, onChange }: ModeSelectorProps) => {
           { label: "Trước CK", value: "beforeDiscount" }
         ]}
         radius={18}
-        styles={{
-          root: {
-            padding: 4,
-            borderRadius: 18,
-            background: "#f8fafc",
-            border: "1px solid #dbe4f0"
-          },
-          indicator: {
-            borderRadius: 14,
-            background: "#ffffff",
-            border: "1px solid #dbe4f0",
-            boxShadow: "0 1px 2px rgba(15, 23, 42, 0.06)"
-          },
-          label: {
-            minHeight: 36,
-            padding: "8px 18px",
-            fontSize: 14,
-            fontWeight: 500,
-            color: "#64748b",
-            "&[dataActive='true']": {
-              color: "#0f172a",
-              fontWeight: 600
-            }
-          }
-        }}
+        styles={filterSegmentedStyles}
       />
     </Stack>
   )
@@ -331,7 +290,7 @@ export const RangeStats = () => {
       selectedChannelId
     ],
     queryFn: async () => {
-      if (!range || !selectedChannelId) return []
+      if (!range || !selectedChannelId) return null
       const res = await getIncomesByDateRange({
         startDate: range.start,
         endDate: range.end,
@@ -339,7 +298,7 @@ export const RangeStats = () => {
         limit: 10000,
         channelId: selectedChannelId
       })
-      return res.data.incomes
+      return res.data as GetIncomesByDateRangeResponse
     },
     enabled: !!range && !!selectedChannelId,
     staleTime: 60 * 1000
@@ -398,6 +357,7 @@ export const RangeStats = () => {
   const liveIncome = current?.[mode].liveIncome ?? 0
   const shopIncome = (current?.[mode].videoIncome || 0) + (current?.[mode].otherIncome || 0)
   const totalRevenue = current?.[mode].totalIncome ?? 0
+  const totalOrders = rangeIncomes?.total
   const currentPeriodDays = data?.period.days ?? 0
   const filterMonthGoalTotal =
     (filterMonthGoalData?.liveStreamGoal ?? 0) + (filterMonthGoalData?.shopGoal ?? 0)
@@ -452,7 +412,7 @@ export const RangeStats = () => {
         ? [
             {
               label: "Tổng chiết khấu",
-              value: formatCompactCurrency(current.discounts.totalDiscount),
+              value: formatCurrency(current.discounts.totalDiscount),
               tone: "red",
               hint: "Toàn bộ chiết khấu phát sinh trong range.",
               change: (changes as any)?.discounts?.totalDiscountPct,
@@ -460,7 +420,7 @@ export const RangeStats = () => {
             },
             {
               label: "Chiết khấu nền tảng",
-              value: formatCompactCurrency(current.discounts.totalPlatformDiscount),
+              value: formatCurrency(current.discounts.totalPlatformDiscount),
               tone: "orange",
               hint: "Chiết khấu do nền tảng tài trợ.",
               change: (changes as any)?.discounts?.totalPlatformDiscountPct,
@@ -468,7 +428,7 @@ export const RangeStats = () => {
             },
             {
               label: "Chiết khấu shop",
-              value: formatCompactCurrency(current.discounts.totalSellerDiscount),
+              value: formatCurrency(current.discounts.totalSellerDiscount),
               tone: "blue",
               hint: "Chiết khấu do shop chủ động áp dụng.",
               change: (changes as any)?.discounts?.totalSellerDiscountPct,
@@ -476,7 +436,7 @@ export const RangeStats = () => {
             },
             {
               label: "TB / đơn",
-              value: formatCompactCurrency(current.discounts.avgDiscountPerOrder),
+              value: formatCurrency(current.discounts.avgDiscountPerOrder),
               tone: "grape",
               hint: "Mức chiết khấu trung bình trên mỗi đơn.",
               change: (changes as any)?.discounts?.avgDiscountPerOrderPct,
@@ -484,7 +444,11 @@ export const RangeStats = () => {
             },
             {
               label: "Tỷ lệ chiết khấu",
-              value: formatPercent(current.discounts.discountPercentage, 2),
+              value: formatPercent(
+                current.discounts.discountPercentage,
+                2,
+                "truncate"
+              ),
               tone: "indigo",
               hint: "Tỷ lệ chiết khấu trên doanh thu.",
               change: (changes as any)?.discounts?.discountPercentageDiff,
@@ -498,7 +462,7 @@ export const RangeStats = () => {
   const productsRevenue = useMemo(() => {
     const totals: Record<string, number> = {}
 
-    rangeIncomes?.forEach((income) => {
+    rangeIncomes?.incomes?.forEach((income) => {
       income.products.forEach((product) => {
         const unitPrice =
           mode === "afterDiscount" ? product.priceAfterDiscount : product.price
@@ -638,23 +602,23 @@ export const RangeStats = () => {
                     rangeLabel={range?.label || "Khoảng đang chọn"}
                     totalRevenue={totalRevenue}
                     changePct={changes?.[mode]?.totalIncomePct}
-                    rangeGoal={rangeGoalTotal}
-                    rangeGoalPct={rangeGoalPct}
-                    rangeDays={currentPeriodDays}
                     modeLabel={modeLabel}
-                  />
-
-                  <DailyKpiSummary
-                    revenue={totalRevenue}
-                    goal={rangeGoalTotal}
-                    achievedPct={rangeGoalPct}
-                    expectedPct={rangeProgressPercentage}
-                    deltaPct={deltaVsRangeExpectation}
-                    forecastMonthRevenue={forecastMonthRevenue}
-                    monthGoal={filterMonthGoalTotal > 0 ? filterMonthGoalTotal : undefined}
-                    rangeLabel={range?.label}
-                    rangeDays={currentPeriodDays}
-                    isLoading={isLoadingRangeMonthProgress}
+                    detailSections={
+                      <DailyKpiSummary
+                        revenue={totalRevenue}
+                        goal={rangeGoalTotal}
+                        totalOrders={totalOrders}
+                        achievedPct={rangeGoalPct}
+                        expectedPct={rangeProgressPercentage}
+                        deltaPct={deltaVsRangeExpectation}
+                        forecastMonthRevenue={forecastMonthRevenue}
+                        monthGoal={
+                          filterMonthGoalTotal > 0 ? filterMonthGoalTotal : undefined
+                        }
+                        rangeDays={currentPeriodDays}
+                        isLoading={isLoadingRangeMonthProgress}
+                      />
+                    }
                   />
 
                   <Grid gutter="md">
@@ -747,9 +711,6 @@ export const RangeStats = () => {
                         <Text fw={700} fz="xl">
                           Tác động từ chiết khấu
                         </Text>
-                        <Text fz="sm" c="dimmed">
-                          Gom về một cụm KPI để không cạnh tranh thị giác với doanh thu.
-                        </Text>
                       </Stack>
 
                       <SimpleGrid cols={{ base: 1, md: 2, xl: 5 }} spacing="md">
@@ -758,7 +719,6 @@ export const RangeStats = () => {
                             key={metric.label}
                             label={metric.label}
                             value={metric.value}
-                            hint={metric.hint}
                             icon={
                               metric.label === "TB / đơn" ? (
                                 <IconReceipt2 size={20} />

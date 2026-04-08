@@ -4,8 +4,8 @@ import { useMemo, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { modals } from "@mantine/modals"
 import {
-  IconActivityHeartbeat,
   IconCash,
+  IconChartBar,
   IconReceipt2,
   IconTargetArrow,
   IconTrophy
@@ -29,7 +29,6 @@ import {
   pickModeValue
 } from "./helpers"
 import { RevenueTrendChart } from "./RevenueTrendChart"
-import { SummaryCards } from "./SummaryCards"
 import type { ChannelPerformanceCardData, DetailMetric, DiscountMode } from "./types"
 
 type IncomeSplit = { live: number; shop: number }
@@ -45,7 +44,6 @@ export function MonthlyRevenueDashboard() {
   const {
     getAdsCostSplitByMonth,
     getIncomesByDateRange,
-    getTotalCountIncomeByMonth,
     getTotalIncomesByMonth,
     getTotalQuantityByMonth
   } = useIncomes()
@@ -117,18 +115,6 @@ export function MonthlyRevenueDashboard() {
     enabled: queryEnabled
   })
 
-  const { data: totalOrdersData } = useQuery({
-    queryKey: ["dashboard-total-orders", month, year, selectedChannelId],
-    queryFn: () =>
-      getTotalCountIncomeByMonth({
-        month,
-        year,
-        channelId: selectedChannelId || undefined
-      }),
-    select: (response) => response.data,
-    enabled: queryEnabled
-  })
-
   const { data: monthlyIncomes } = useQuery({
     queryKey: ["dashboard-monthly-trend", selectedMonth, selectedChannelId],
     queryFn: () =>
@@ -159,6 +145,12 @@ export function MonthlyRevenueDashboard() {
 
   const quantitySplit =
     (totalQuantityData?.totalQuantity as QuantitySplit | undefined) ?? undefined
+  const ordersSplit =
+    (totalQuantityData?.totalOrders as QuantitySplit | undefined) ?? undefined
+  const totalProducts =
+    quantitySplit ? (quantitySplit.live || 0) + (quantitySplit.shop || 0) : undefined
+  const totalOrders =
+    ordersSplit ? (ordersSplit.live || 0) + (ordersSplit.shop || 0) : undefined
 
   const liveRevenue = totalIncomeSelected?.live ?? 0
   const shopRevenue = totalIncomeSelected?.shop ?? 0
@@ -167,6 +159,7 @@ export function MonthlyRevenueDashboard() {
   const liveAdsCost = adsModeData?.liveAdsCost ?? 0
   const shopAdsCost = adsModeData?.shopAdsCost ?? 0
   const totalAdsCost = liveAdsCost + shopAdsCost
+  const totalAdsRatio = totalRevenue > 0 ? (totalAdsCost / totalRevenue) * 100 : 0
 
   const liveNetRevenue = liveRevenue - liveAdsCost
   const shopNetRevenue = shopRevenue - shopAdsCost
@@ -207,32 +200,34 @@ export function MonthlyRevenueDashboard() {
 
     const data: ChannelPerformanceCardData[] = [
       {
-        key: "live",
-        name: "Livestream",
-        subtitle: "Kênh trực tiếp",
-        revenue: liveRevenue,
-        adsSpend: liveAdsCost,
-        netRevenue: liveNetRevenue,
-        share: totalRevenue > 0 ? (liveRevenue / totalRevenue) * 100 : 0,
-        adsRatio: liveAdsRatio,
-        achievedPct: liveAchievedPercentage,
-        expectedPct: expectedPercentage,
-        deltaPct: liveAchievedPercentage - expectedPercentage,
-        status: liveStatus
-      },
-      {
         key: "shop",
-        name: "Marketplace",
+        name: "Sàn",
         subtitle: "Sàn thương mại",
         revenue: shopRevenue,
         adsSpend: shopAdsCost,
         netRevenue: shopNetRevenue,
+        goalRevenue: shopGoal,
         share: totalRevenue > 0 ? (shopRevenue / totalRevenue) * 100 : 0,
         adsRatio: shopAdsRatio,
         achievedPct: shopAchievedPercentage,
         expectedPct: expectedPercentage,
         deltaPct: shopAchievedPercentage - expectedPercentage,
         status: shopStatus
+      },
+      {
+        key: "live",
+        name: "Livestream",
+        subtitle: "Kênh trực tiếp",
+        revenue: liveRevenue,
+        adsSpend: liveAdsCost,
+        netRevenue: liveNetRevenue,
+        goalRevenue: liveGoal,
+        share: totalRevenue > 0 ? (liveRevenue / totalRevenue) * 100 : 0,
+        adsRatio: liveAdsRatio,
+        achievedPct: liveAchievedPercentage,
+        expectedPct: expectedPercentage,
+        deltaPct: liveAchievedPercentage - expectedPercentage,
+        status: liveStatus
       }
     ]
 
@@ -286,17 +281,17 @@ export function MonthlyRevenueDashboard() {
       tone: totalAdsCost > totalRevenue * 0.25 ? ("amber" as const) : ("slate" as const)
     },
     {
-      label: "Sau ads",
-      value: formatCurrency(totalNetRevenue),
-      hint: "Doanh thu còn lại sau khi trừ ads",
-      icon: <IconActivityHeartbeat size={22} />,
-      tone: totalNetRevenue >= 0 ? ("emerald" as const) : ("rose" as const)
+      label: "% ads/doanh thu",
+      value: formatPercent(totalAdsRatio),
+      hint: "Tỷ lệ chi ads trên tổng doanh thu",
+      icon: <IconChartBar size={22} />,
+      tone: totalAdsRatio > 25 ? ("amber" as const) : ("emerald" as const)
     },
     {
       label: "Đơn hàng",
       value:
-        typeof totalOrdersData?.totalCount === "number"
-          ? `${totalOrdersData.totalCount.toLocaleString("vi-VN")} đơn`
+        typeof totalOrders === "number"
+          ? `${totalOrders.toLocaleString("vi-VN")} đơn`
           : "...",
       hint: "Tổng số đơn hàng trong tháng",
       icon: <IconReceipt2 size={22} />,
@@ -308,14 +303,24 @@ export function MonthlyRevenueDashboard() {
     {
       label: "Mục tiêu tháng",
       value: formatCurrency(totalGoal),
-      hint: "Tổng KPI của Livestream và Marketplace",
+      hint: "Tổng KPI của Livestream và Sàn",
+      tone: "slate"
+    },
+    {
+      label: "Tổng đơn hàng",
+      value:
+        typeof totalOrders === "number"
+          ? `${totalOrders.toLocaleString("vi-VN")} đơn`
+          : "...",
+      hint: "Tổng số đơn phát sinh trong tháng",
       tone: "slate"
     },
     {
       label: "Tổng sản phẩm",
-      value: `${(
-        (quantitySplit?.live || 0) + (quantitySplit?.shop || 0)
-      ).toLocaleString("vi-VN")} sp`,
+      value:
+        typeof totalProducts === "number"
+          ? `${totalProducts.toLocaleString("vi-VN")} sp`
+          : "...",
       hint: "Khối lượng hàng đã bán trong tháng",
       tone: "slate"
     },
@@ -331,11 +336,11 @@ export function MonthlyRevenueDashboard() {
           : "amber"
     },
     {
-      label: "Ads Market / mục tiêu",
+      label: "Ads Sàn / mục tiêu",
       value: `${formatPercent(shopAdsRatio)} / ${formatPercent(
         monthGoalData?.shopAdsPercentageGoal || 0
       )}`,
-      hint: "Tỷ lệ thực tế và tỷ lệ mục tiêu của Marketplace",
+      hint: "Tỷ lệ thực tế và tỷ lệ mục tiêu của Sàn",
       tone:
         shopAdsRatio <= (monthGoalData?.shopAdsPercentageGoal || 0)
           ? "emerald"
@@ -352,8 +357,7 @@ export function MonthlyRevenueDashboard() {
     !monthGoalData &&
     !totalIncomeData &&
     !totalQuantityData &&
-    !adsData &&
-    !totalOrdersData
+    !adsData
 
   const channelOptions = channels.map((channel) => ({
     value: channel._id,
@@ -390,19 +394,17 @@ export function MonthlyRevenueDashboard() {
               targetRevenue={totalGoal}
               netRevenue={totalNetRevenue}
               monthLabel={monthLabel}
-            />
-
-            <SummaryCards metrics={summaryMetrics} />
-
-            <RevenueTrendChart
-              data={trendData}
-              monthLabel={monthLabel}
-              totalRevenue={totalRevenue}
+              summaryMetrics={summaryMetrics}
             />
 
             <ChannelBreakdown
               channels={channelsData}
               showComparison={showComparison}
+            />
+
+            <RevenueTrendChart
+              data={trendData}
+              monthLabel={monthLabel}
             />
 
             <DetailMetricsSection
@@ -439,16 +441,7 @@ export function MonthlyRevenueDashboard() {
 function LoadingShell() {
   return (
     <div className="space-y-6">
-      <div className="h-[320px] animate-pulse rounded-[32px] bg-slate-200" />
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, index) => (
-          <div
-            key={index}
-            className="h-[144px] animate-pulse rounded-[24px] bg-slate-200"
-          />
-        ))}
-      </div>
-      <div className="h-[420px] animate-pulse rounded-[28px] bg-slate-200" />
+      <div className="h-[520px] animate-pulse rounded-[32px] bg-slate-200" />
       <div className="grid gap-4 xl:grid-cols-2">
         {Array.from({ length: 2 }).map((_, index) => (
           <div
@@ -457,6 +450,7 @@ function LoadingShell() {
           />
         ))}
       </div>
+      <div className="h-[420px] animate-pulse rounded-[28px] bg-slate-200" />
     </div>
   )
 }

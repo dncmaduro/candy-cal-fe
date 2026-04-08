@@ -11,6 +11,11 @@ export function DetailMetricsSection({
   metrics,
   action
 }: DetailMetricsSectionProps) {
+  const gridClassName =
+    metrics.length >= 5
+      ? "grid gap-3 md:grid-cols-2 xl:grid-cols-5"
+      : "grid gap-3 md:grid-cols-2 xl:grid-cols-4"
+
   return (
     <section className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm lg:p-6">
       <div className="flex flex-col gap-5">
@@ -26,7 +31,7 @@ export function DetailMetricsSection({
           {action}
         </div>
 
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <div className={gridClassName}>
           {metrics.map((metric) => {
             const tone = toneClasses[metric.tone ?? "slate"]
 
@@ -41,7 +46,6 @@ export function DetailMetricsSection({
                 <p className="mt-2 text-lg font-semibold text-slate-950">
                   {metric.value}
                 </p>
-                <p className="mt-2 text-sm text-slate-500">{metric.hint}</p>
               </div>
             )
           })}

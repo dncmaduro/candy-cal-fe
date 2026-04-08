@@ -1,4 +1,13 @@
+import { Checkbox, Select, SegmentedControl } from "@mantine/core"
 import type { DiscountMode, SelectOption } from "./types"
+import {
+  filterCheckboxContainerStyles,
+  filterCheckboxStyles,
+  filterDropdownStyles,
+  filterInputStyles,
+  filterLabelStyles,
+  filterSegmentedStyles
+} from "../filterStyles"
 
 interface DashboardHeaderProps {
   title: string
@@ -13,12 +22,6 @@ interface DashboardHeaderProps {
   showComparison: boolean
   onShowComparisonChange: (value: boolean) => void
 }
-
-const controlClassName =
-  "h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 outline-none transition focus:border-slate-300 focus:ring-2 focus:ring-slate-200"
-
-const modeButtonClassName =
-  "rounded-xl px-3 py-2 text-sm font-semibold transition"
 
 export function DashboardHeader({
   title,
@@ -44,89 +47,70 @@ export function DashboardHeader({
             {title}
           </h1>
           <p className="text-sm text-slate-500">
-            Nhìn nhanh KPI, xu hướng và chênh lệch giữa Livestream và
-            Marketplace.
+            Nhìn nhanh KPI, xu hướng và chênh lệch giữa Livestream và Sàn.
           </p>
         </div>
 
         <div className="grid gap-3 md:grid-cols-2 xl:flex xl:flex-wrap xl:items-end xl:justify-end">
-          <label className="flex min-w-[190px] flex-col gap-1.5">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-              Kênh
-            </span>
-            <select
-              className={controlClassName}
-              value={selectedChannelId ?? ""}
-              onChange={(event) =>
-                onChannelChange?.(event.target.value || null)
-              }
-            >
-              {channels.map((channel) => (
-                <option key={channel.value} value={channel.value}>
-                  {channel.label}
-                </option>
-              ))}
-            </select>
-          </label>
+          <Select
+            label="Kênh"
+            data={channels}
+            value={selectedChannelId}
+            onChange={(value) => onChannelChange?.(value)}
+            placeholder="Chọn kênh"
+            size="sm"
+            w={250}
+            styles={{
+              label: filterLabelStyles,
+              input: filterInputStyles,
+              dropdown: filterDropdownStyles
+            }}
+          />
 
-          <label className="flex min-w-[140px] flex-col gap-1.5">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-              Tháng
-            </span>
-            <select
-              className={controlClassName}
-              value={selectedMonth}
-              onChange={(event) => onMonthChange(event.target.value)}
-            >
-              {monthOptions.map((month) => (
-                <option key={month.value} value={month.value}>
-                  {month.label}
-                </option>
-              ))}
-            </select>
-          </label>
+          <Select
+            label="Tháng"
+            data={monthOptions}
+            value={selectedMonth}
+            onChange={(value) => value && onMonthChange(value)}
+            placeholder="Chọn tháng"
+            size="sm"
+            w={132}
+            styles={{
+              label: filterLabelStyles,
+              input: filterInputStyles,
+              dropdown: filterDropdownStyles
+            }}
+          />
 
           <div className="flex flex-col gap-1.5">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+            <span
+              className="text-[11px] font-semibold uppercase tracking-[0.16em]"
+              style={{ color: filterLabelStyles.color }}
+            >
               Chế độ dữ liệu
             </span>
-            <div className="inline-flex rounded-2xl border border-slate-200 bg-slate-50 p-1">
-              <button
-                type="button"
-                className={`${modeButtonClassName} ${
-                  mode === "afterDiscount"
-                    ? "bg-white text-slate-950 shadow-sm"
-                    : "text-slate-500"
-                }`}
-                onClick={() => onModeChange("afterDiscount")}
-              >
-                Sau CK
-              </button>
-              <button
-                type="button"
-                className={`${modeButtonClassName} ${
-                  mode === "beforeDiscount"
-                    ? "bg-white text-slate-950 shadow-sm"
-                    : "text-slate-500"
-                }`}
-                onClick={() => onModeChange("beforeDiscount")}
-              >
-                Trước CK
-              </button>
-            </div>
+            <SegmentedControl
+              value={mode}
+              onChange={(value) => onModeChange(value as DiscountMode)}
+              data={[
+                { label: "Sau CK", value: "afterDiscount" },
+                { label: "Trước CK", value: "beforeDiscount" }
+              ]}
+              radius={18}
+              styles={filterSegmentedStyles}
+            />
           </div>
 
-          <label className="flex min-h-11 items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">
-            <input
-              type="checkbox"
-              className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-300"
+          <div style={filterCheckboxContainerStyles}>
+            <Checkbox
               checked={showComparison}
               onChange={(event) =>
                 onShowComparisonChange(event.currentTarget.checked)
               }
+              label="So sánh với tiến độ"
+              styles={filterCheckboxStyles}
             />
-            <span>So sánh với tiến độ</span>
-          </label>
+          </div>
         </div>
       </div>
     </div>

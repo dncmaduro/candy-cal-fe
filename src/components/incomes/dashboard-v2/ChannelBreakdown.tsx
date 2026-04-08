@@ -1,6 +1,6 @@
 import {
   clampPercentage,
-  formatCompactCurrency,
+  formatCurrency,
   formatPercent,
   formatSignedPercent,
   toneClasses
@@ -16,44 +16,16 @@ export function ChannelBreakdown({
   channels,
   showComparison
 }: ChannelBreakdownProps) {
-  const topRevenueChannel =
-    channels.reduce(
-      (best, channel) => (channel.revenue > best.revenue ? channel : best),
-      channels[0]
-    ) ?? null
-
-  const weakestChannel =
-    channels.reduce(
-      (worst, channel) =>
-        channel.deltaPct < worst.deltaPct ? channel : worst,
-      channels[0]
-    ) ?? null
-
   return (
     <section className="space-y-4">
-      <div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
+      <div>
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
             So sánh theo kênh
           </p>
           <h2 className="mt-1 text-lg font-semibold text-slate-950">
-            Livestream vs Marketplace
+            Livestream vs Sàn
           </h2>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          {topRevenueChannel && (
-            <InfoChip
-              label="Đóng góp lớn nhất"
-              value={`${topRevenueChannel.name} ${formatPercent(topRevenueChannel.share)}`}
-            />
-          )}
-          {weakestChannel && (
-            <InfoChip
-              label="Kênh yếu nhất"
-              value={`${weakestChannel.name} ${formatSignedPercent(weakestChannel.deltaPct)}`}
-            />
-          )}
         </div>
       </div>
 
@@ -78,6 +50,7 @@ function ChannelCard({
   showComparison: boolean
 }) {
   const tone = toneClasses[data.status.tone]
+  const progressPace = showComparison ? getProgressPace(data.deltaPct) : null
 
   return (
     <article
@@ -107,19 +80,89 @@ function ChannelCard({
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
-          <MetricLine label="Doanh thu" value={formatCompactCurrency(data.revenue)} />
-          <MetricLine label="Chi ads" value={formatCompactCurrency(data.adsSpend)} />
           <MetricLine
-            label="Sau ads"
-            value={formatCompactCurrency(data.netRevenue)}
-            tone={data.netRevenue >= 0 ? "good" : "bad"}
+            label="Doanh thu"
+            value={formatCurrency(data.revenue)}
+          />
+          <MetricLine
+            label="Chi ads"
+            value={formatCurrency(data.adsSpend)}
+          />
+          <MetricLine
+            label="Ads/doanh thu"
+            value={formatPercent(data.adsRatio)}
           />
           <MetricLine
             label="KPI đạt"
-            value={formatPercent(data.achievedPct)}
-            tone={data.status.tone}
+            value={
+              data.goalRevenue > 0
+                ? formatCurrency(data.goalRevenue)
+                : "Chưa có"
+            }
+            secondaryLabel="% đạt"
+            secondaryValue={
+              data.goalRevenue > 0
+                ? formatPercent(data.achievedPct)
+                : undefined
+            }
+            secondaryTone={data.goalRevenue > 0 ? data.status.tone : undefined}
+            tone={data.goalRevenue > 0 ? undefined : "warning"}
           />
         </div>
+
+        {showComparison && (
+          <div
+            className={`rounded-2xl border px-4 py-4 ${tone.border} ${tone.soft}`}
+          >
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-sm font-medium text-slate-700">
+                    Tiến độ thực tế / tiến độ mục tiêu
+                  </p>
+                  {progressPace && (
+                    <span
+                      className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ring-1 ${toneClasses[progressPace.tone].badge}`}
+                    >
+                      {progressPace.label}
+                    </span>
+                  )}
+                </div>
+                {progressPace && (
+                  <>
+                    <p
+                      className={`mt-2 text-base font-semibold ${toneClasses[progressPace.tone].text}`}
+                    >
+                      {progressPace.headline}
+                    </p>
+                  </>
+                )}
+              </div>
+
+              <div className="text-right">
+                <p className="text-sm font-semibold text-slate-950">
+                  {formatPercent(data.achievedPct)} / {formatPercent(data.expectedPct)}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-slate-100">
+              <div
+                className={`h-full rounded-full ${tone.progress}`}
+                style={{ width: `${clampPercentage(data.achievedPct)}%` }}
+              />
+            </div>
+
+            {progressPace && (
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm">
+                <span className="text-slate-500">So với mục tiêu</span>
+                <span className={`font-semibold ${toneClasses[progressPace.tone].text}`}>
+                  {formatSignedPercent(data.deltaPct)}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -138,35 +181,8 @@ function ChannelCard({
             />
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-500">
-            <span>Ads / doanh thu: {formatPercent(data.adsRatio)}</span>
-            {showComparison && (
-              <span>
-                So với tiến độ: {formatSignedPercent(data.deltaPct)}
-              </span>
-            )}
-          </div>
+          <p className="text-sm text-slate-500">Đóng góp trong tổng doanh thu tháng</p>
         </div>
-
-        {showComparison && (
-          <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-sm font-medium text-slate-600">
-                Tiến độ thực tế / tiến độ mục tiêu
-              </p>
-              <p className="text-sm font-semibold text-slate-950">
-                {formatPercent(data.achievedPct)} / {formatPercent(data.expectedPct)}
-              </p>
-            </div>
-
-            <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-slate-100">
-              <div
-                className={`h-full rounded-full ${tone.progress}`}
-                style={{ width: `${clampPercentage(data.achievedPct)}%` }}
-              />
-            </div>
-          </div>
-        )}
       </div>
     </article>
   )
@@ -175,29 +191,73 @@ function ChannelCard({
 function MetricLine({
   label,
   value,
-  tone
+  tone,
+  secondaryLabel,
+  secondaryValue,
+  secondaryTone
 }: {
   label: string
   value: string
   tone?: "good" | "warning" | "bad"
+  secondaryLabel?: string
+  secondaryValue?: string
+  secondaryTone?: "good" | "warning" | "bad"
 }) {
   const valueClassName = tone ? toneClasses[tone].text : "text-slate-950"
+  const secondaryClassName = secondaryTone
+    ? toneClasses[secondaryTone].text
+    : "text-slate-700"
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
-        {label}
-      </p>
-      <p className={`mt-2 text-lg font-semibold ${valueClassName}`}>{value}</p>
+    <div className="flex min-h-[108px] flex-col justify-between rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm">
+      <p className="text-sm font-medium text-slate-500">{label}</p>
+      <div className="mt-3 flex items-end justify-between gap-4">
+        <p className={`text-lg font-semibold ${valueClassName}`}>{value}</p>
+        {secondaryValue && (
+          <div className="text-right">
+            {secondaryLabel && (
+              <p className="text-xs font-medium uppercase tracking-[0.12em] text-slate-400">
+                {secondaryLabel}
+              </p>
+            )}
+            <p className={`mt-1 text-lg font-semibold ${secondaryClassName}`}>
+              {secondaryValue}
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
 
-function InfoChip({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm">
-      <span className="font-medium text-slate-500">{label}: </span>
-      <span className="font-semibold text-slate-900">{value}</span>
-    </div>
-  )
+function getProgressPace(deltaPct: number): {
+  label: string
+  headline: string
+  description: string
+  tone: "good" | "warning" | "bad"
+} {
+  if (deltaPct >= 5) {
+    return {
+      label: "Nhanh hơn",
+      headline: "Tiến độ đang nhanh hơn mục tiêu",
+      description: "Tiến độ đang vượt khá rõ so với nhịp mục tiêu.",
+      tone: "good"
+    }
+  }
+
+  if (deltaPct >= -5) {
+    return {
+      label: "Bám sát",
+      headline: "Tiến độ đang bám sát mục tiêu",
+      description: "Tiến độ đang bám sát mục tiêu, cần giữ đều nhịp.",
+      tone: "warning"
+    }
+  }
+
+  return {
+    label: "Chậm hơn",
+    headline: "Tiến độ đang chậm hơn mục tiêu",
+    description: "Tiến độ đang chậm hơn mục tiêu và cần đẩy thêm.",
+    tone: "bad"
+  }
 }
