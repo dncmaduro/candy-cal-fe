@@ -4,6 +4,7 @@ export type DiscountMode = "beforeDiscount" | "afterDiscount"
 export type ProgressPhase = "past" | "current" | "future"
 export type PerformanceTone = "good" | "warning" | "bad"
 export type ChannelKey = "live" | "shop"
+export type RevenueTrendMode = "total" | "live" | "shop"
 
 export interface SelectOption {
   value: string
@@ -27,7 +28,9 @@ export interface SummaryMetric {
 export interface RevenueTrendPoint {
   day: number
   label: string
-  revenue: number
+  totalRevenue: number
+  liveRevenue: number
+  shopRevenue: number
 }
 
 export interface ChannelPerformanceCardData {
@@ -37,6 +40,7 @@ export interface ChannelPerformanceCardData {
   revenue: number
   adsSpend: number
   netRevenue: number
+  goalRevenue: number
   share: number
   adsRatio: number
   achievedPct: number

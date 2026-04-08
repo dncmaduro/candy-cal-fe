@@ -1057,6 +1057,10 @@ export interface GetTotalQuantityByMonthRequest {
 
 /** @interface */
 export interface GetTotalQuantityByMonthResponse {
+  totalOrders: {
+    live: number
+    shop: number
+  }
   totalQuantity: {
     live: number
     shop: number

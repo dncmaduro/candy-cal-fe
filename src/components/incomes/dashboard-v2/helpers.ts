@@ -6,11 +6,13 @@ import type {
   DiscountMode,
   PerformanceTone,
   ProgressPhase,
+  RevenueTrendMode,
   RevenueTrendPoint,
   SelectOption
 } from "./types"
 
 type IncomeItem = GetIncomesByDateRangeResponse["incomes"][number]
+type IncomeProduct = IncomeItem["products"][number]
 
 export const toneClasses: Record<
   PerformanceTone | NonNullable<DetailMetric["tone"]>,
@@ -245,13 +247,27 @@ export const getPerformanceStatus = ({
   }
 }
 
-export const sumIncomeItem = (income: IncomeItem, mode: DiscountMode) => {
-  return income.products.reduce((total, product) => {
-    const unitPrice =
-      mode === "afterDiscount" ? product.priceAfterDiscount : product.price
+export const getTrendRevenueValue = (
+  point: RevenueTrendPoint,
+  trendMode: RevenueTrendMode
+) => {
+  if (trendMode === "live") return point.liveRevenue
+  if (trendMode === "shop") return point.shopRevenue
+  return point.totalRevenue
+}
 
-    return total + unitPrice * product.quantity
-  }, 0)
+const getProductRevenue = (product: IncomeProduct, mode: DiscountMode) => {
+  const unitPrice =
+    mode === "afterDiscount" ? product.priceAfterDiscount : product.price
+
+  return (unitPrice || 0) * (product.quantity || 0)
+}
+
+const isLiveProduct = (product: IncomeProduct) => {
+  return (
+    typeof product.content === "string" &&
+    /Phát trực tiếp|livestream/i.test(product.content)
+  )
 }
 
 export const buildRevenueTrend = (
@@ -268,7 +284,9 @@ export const buildRevenueTrend = (
   const baseData = Array.from({ length: totalDays }, (_, index) => ({
     day: index + 1,
     label: `${index + 1}`,
-    revenue: 0
+    totalRevenue: 0,
+    liveRevenue: 0,
+    shopRevenue: 0
   }))
 
   if (!incomes?.length) return baseData
@@ -287,16 +305,40 @@ export const buildRevenueTrend = (
 
     if (dayIndex < 0 || dayIndex >= baseData.length) return
 
-    baseData[dayIndex].revenue += sumIncomeItem(income, mode)
+    income.products.forEach((product) => {
+      const revenue = getProductRevenue(product, mode)
+
+      baseData[dayIndex].totalRevenue += revenue
+
+      if (isLiveProduct(product)) {
+        baseData[dayIndex].liveRevenue += revenue
+        return
+      }
+
+      baseData[dayIndex].shopRevenue += revenue
+    })
   })
 
   return baseData
 }
 
-export const getBestDay = (trendData: RevenueTrendPoint[]) => {
+export const getBestDay = (
+  trendData: RevenueTrendPoint[],
+  trendMode: RevenueTrendMode
+) => {
   return trendData.reduce(
-    (best, item) => (item.revenue > best.revenue ? item : best),
-    trendData[0] ?? { day: 0, label: "0", revenue: 0 }
+    (best, item) =>
+      getTrendRevenueValue(item, trendMode) >
+      getTrendRevenueValue(best, trendMode)
+        ? item
+        : best,
+    trendData[0] ?? {
+      day: 0,
+      label: "0",
+      totalRevenue: 0,
+      liveRevenue: 0,
+      shopRevenue: 0
+    }
   )
 }
 

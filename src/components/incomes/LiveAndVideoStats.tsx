@@ -79,7 +79,7 @@ export const LiveAndVideoStats = ({
           </Text>
           {incomeGoalValue > 0 && (
             <Text fz="sm" c="dimmed">
-              {goalLabel} {formatCompactCurrency(Math.round(incomeGoalValue))}
+              {goalLabel} {formatCurrency(incomeGoalValue)}
             </Text>
           )}
         </Stack>
@@ -144,7 +144,7 @@ export const LiveAndVideoStats = ({
           totalValue={parts.reduce((sum, item) => sum + item.value, 0)}
           color={accentColor}
           maxItems={4}
-          valueFormatter={(value) => formatCompactCurrency(value)}
+          valueFormatter={(value) => formatCurrency(value)}
         />
       )}
     </Stack>

@@ -1,16 +1,13 @@
 import type { ReactNode } from "react"
 import { Badge, Divider, Group, Paper, Stack, Text } from "@mantine/core"
 import { TrendBadge } from "./TrendBadge"
-import { formatCompactCurrency, formatCurrency, formatPercent } from "./formatters"
+import { formatCurrency } from "./formatters"
 
 interface RevenueOverviewCardProps {
   title: string
   rangeLabel: string
   totalRevenue: number
   changePct?: number
-  rangeGoal?: number
-  rangeGoalPct?: number
-  rangeDays?: number
   modeLabel: string
   detailSections?: ReactNode
 }
@@ -20,9 +17,6 @@ export const RevenueOverviewCard = ({
   rangeLabel,
   totalRevenue,
   changePct,
-  rangeGoal,
-  rangeGoalPct,
-  rangeDays,
   modeLabel,
   detailSections
 }: RevenueOverviewCardProps) => {
@@ -66,29 +60,9 @@ export const RevenueOverviewCard = ({
         <Group gap="sm">
           <TrendBadge value={changePct} />
           <Text fz="sm" c="dimmed">
-            So với kỳ trước cùng độ dài
+            So với kì trước
           </Text>
         </Group>
-
-        {typeof rangeGoal === "number" && rangeGoal > 0 && (
-          <Group gap="sm" align="center" wrap="wrap">
-            <Badge radius="xl" variant="light" color="cyan">
-              KPI {rangeDays || 1} ngày
-            </Badge>
-            <Text fz="sm" fw={700}>
-              {formatCompactCurrency(rangeGoal)}
-            </Text>
-            {typeof rangeGoalPct === "number" && (
-              <Badge
-                radius="xl"
-                variant="light"
-                color={rangeGoalPct >= 100 ? "teal" : "orange"}
-              >
-                {formatPercent(rangeGoalPct)}
-              </Badge>
-            )}
-          </Group>
-        )}
       </Stack>
 
       {detailSections ? (
