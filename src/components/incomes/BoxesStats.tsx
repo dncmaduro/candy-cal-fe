@@ -1,9 +1,7 @@
 import { useMemo } from "react"
-import { Text } from "@mantine/core"
-import { ColumnDef } from "@tanstack/react-table"
-import { CDataTable } from "../common/CDataTable"
 import { IconBoxSeam } from "@tabler/icons-react"
 import { DashboardSectionCard } from "./DashboardSectionCard"
+import { RankedBarList } from "./analytics/RankedBarList"
 
 interface BoxRow {
   box: string
@@ -27,42 +25,29 @@ export const BoxesStats = ({
   if (!data.length) return null
 
   const total = data.reduce((s, it) => s + it.quantity, 0)
-
-  const columns: ColumnDef<BoxRow>[] = useMemo(
-    () => [
-      {
-        accessorKey: "box",
-        header: "Quy cách đóng hộp",
-        size: 200,
-        cell: ({ getValue }) => <Text fw={500}>{getValue<string>()}</Text>
-      },
-      {
-        accessorKey: "quantity",
-        header: "Số lượng",
-        size: 100,
-        cell: ({ getValue }) => (
-          <Text>{getValue<number>().toLocaleString()}</Text>
-        )
-      }
-    ],
-    []
-  )
+  const sortedData = [...data].sort((a, b) => b.quantity - a.quantity)
 
   return (
     <DashboardSectionCard
       title="Quy cách đóng hộp"
-      subtitle={`Tổng: ${total.toLocaleString()} đơn vị`}
+      subtitle={
+        sortedData[0]
+          ? `${sortedData[0].box} được dùng nhiều nhất`
+          : `Tổng: ${total.toLocaleString()} đơn vị`
+      }
       icon={<IconBoxSeam size={18} />}
       accentColor="gray"
     >
-      <CDataTable
-        columns={columns}
-        data={data}
-        enableGlobalFilter={false}
-        enableRowSelection={false}
-        initialPageSize={10}
-        pageSizeOptions={[10, 20, 50]}
-        hideSearch={true}
+      <RankedBarList
+        items={sortedData.map((item) => ({
+          key: item.box,
+          label: item.box,
+          value: item.quantity,
+          caption: `${item.quantity.toLocaleString("vi-VN")} đơn vị`
+        }))}
+        totalValue={total}
+        color="gray"
+        valueFormatter={(value) => `${value.toLocaleString("vi-VN")} đơn vị`}
       />
     </DashboardSectionCard>
   )

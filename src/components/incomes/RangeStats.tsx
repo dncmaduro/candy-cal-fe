@@ -1,39 +1,114 @@
 import { useMemo, useState } from "react"
-import { useIncomes } from "../../hooks/useIncomes"
-import { useLivestreamChannels } from "../../hooks/useLivestreamChannels"
+import { useQuery } from "@tanstack/react-query"
 import { DatePickerInput } from "@mantine/dates"
 import {
   Alert,
-  Flex,
-  Loader,
-  Stack,
-  Text,
-  Paper,
-  Divider,
-  Group,
   Badge,
-  SegmentedControl
+  Flex,
+  Grid,
+  Group,
+  Loader,
+  Paper,
+  SegmentedControl,
+  Select,
+  SimpleGrid,
+  Stack,
+  Text
 } from "@mantine/core"
+import {
+  IconAlertCircle,
+  IconCalendarStats,
+  IconDiscount2,
+  IconFilter,
+  IconReceipt2
+} from "@tabler/icons-react"
 import { format } from "date-fns"
-import { useQuery } from "@tanstack/react-query"
-import { fmtPercent } from "../../utils/fmt"
 import type { GetRangeStatsResponse } from "../../hooks/models"
+import { useIncomes } from "../../hooks/useIncomes"
+import { useMonthGoals } from "../../hooks/useMonthGoals"
+import { useLivestreamChannel } from "../../context/LivestreamChannelContext"
 import { LiveAndVideoStats } from "./LiveAndVideoStats"
 import { SourcesStats } from "./SourcesStats"
 import { ProductsQuantityStats } from "./ProductsQuantityStats"
 import { ShippingProvidersStats } from "./ShippingProvidersStats"
 import { BoxesStats } from "./BoxesStats"
 import { CDashboardLayout } from "../common/CDashboardLayout"
-import { IconAlertCircle, IconCalendarStats, IconFilter } from "@tabler/icons-react"
-import { useLivestreamChannel } from "../../context/LivestreamChannelContext"
+import { DailyKpiSummary } from "./analytics/DailyKpiSummary"
+import { RevenueOverviewCard } from "./analytics/RevenueOverviewCard"
+import { MetricStatCard } from "./analytics/MetricStatCard"
+import { TrendBadge } from "./analytics/TrendBadge"
+import { formatCompactCurrency, formatPercent } from "./analytics/formatters"
 
 type DiscountMode = "beforeDiscount" | "afterDiscount"
+
+const filterLabelStyles = {
+  fontSize: "11px",
+  fontWeight: 600,
+  textTransform: "uppercase" as const,
+  letterSpacing: "0.16em",
+  color: "#94a3b8",
+  marginBottom: 6
+}
+
+const filterInputStyles = {
+  height: 44,
+  borderRadius: 18,
+  borderColor: "#dbe4f0",
+  background: "#ffffff",
+  color: "#334155",
+  fontSize: 14,
+  fontWeight: 500,
+  boxShadow: "0 1px 2px rgba(15, 23, 42, 0.02)"
+}
+
+const filterDropdownStyles = {
+  borderRadius: 18,
+  border: "1px solid #dbe4f0",
+  boxShadow: "0 18px 40px rgba(15, 23, 42, 0.08)"
+}
 
 type RangeSelectorProps = {
   startDate: Date | null
   endDate: Date | null
   onChangeStartDate: (d: Date | null) => void
   onChangeEndDate: (d: Date | null) => void
+}
+
+type ChannelSelectorProps = {
+  selectedChannelId: string | null
+  channels: Array<{
+    _id: string
+    name: string
+  }>
+  onChange?: (channelId: string | null) => void
+}
+
+const ChannelSelector = ({
+  selectedChannelId,
+  channels,
+  onChange
+}: ChannelSelectorProps) => {
+  return (
+    <Select
+      label="Kênh"
+      value={selectedChannelId}
+      onChange={(value) => onChange?.(value)}
+      data={channels.map((channel) => ({
+        value: channel._id,
+        label: channel.name
+      }))}
+      placeholder="Chọn kênh"
+      searchable
+      nothingFoundMessage="Không có kênh"
+      size="sm"
+      w={260}
+      styles={{
+        label: filterLabelStyles,
+        input: filterInputStyles,
+        dropdown: filterDropdownStyles
+      }}
+    />
+  )
 }
 
 const RangeSelector = ({
@@ -62,7 +137,7 @@ const RangeSelector = ({
   }
 
   return (
-    <Group align="flex-end" gap={12} wrap="nowrap">
+    <Group align="flex-end" gap={12} wrap="wrap">
       <DatePickerInput
         label="Từ ngày"
         type="default"
@@ -70,11 +145,14 @@ const RangeSelector = ({
         onChange={handleChangeStartDate}
         valueFormat="DD/MM/YYYY"
         size="sm"
-        radius="md"
         maxDate={new Date()}
-        w={160}
+        w={164}
         placeholder="Chọn ngày bắt đầu"
         clearable
+        styles={{
+          label: filterLabelStyles,
+          input: filterInputStyles
+        }}
       />
 
       <DatePickerInput
@@ -84,24 +162,88 @@ const RangeSelector = ({
         onChange={handleChangeEndDate}
         valueFormat="DD/MM/YYYY"
         size="sm"
-        radius="md"
         maxDate={new Date()}
-        w={160}
+        w={164}
         placeholder="Chọn ngày kết thúc"
         clearable
+        styles={{
+          label: filterLabelStyles,
+          input: filterInputStyles
+        }}
       />
     </Group>
   )
 }
 
+type ModeSelectorProps = {
+  mode: DiscountMode
+  onChange: (value: DiscountMode) => void
+}
+
+const ModeSelector = ({ mode, onChange }: ModeSelectorProps) => {
+  return (
+    <Stack gap={6}>
+      <Text style={filterLabelStyles}>Chế độ dữ liệu</Text>
+      <SegmentedControl
+        value={mode}
+        onChange={(value) => onChange(value as DiscountMode)}
+        data={[
+          { label: "Sau CK", value: "afterDiscount" },
+          { label: "Trước CK", value: "beforeDiscount" }
+        ]}
+        radius={18}
+        styles={{
+          root: {
+            padding: 4,
+            borderRadius: 18,
+            background: "#f8fafc",
+            border: "1px solid #dbe4f0"
+          },
+          indicator: {
+            borderRadius: 14,
+            background: "#ffffff",
+            border: "1px solid #dbe4f0",
+            boxShadow: "0 1px 2px rgba(15, 23, 42, 0.06)"
+          },
+          label: {
+            minHeight: 36,
+            padding: "8px 18px",
+            fontSize: 14,
+            fontWeight: 500,
+            color: "#64748b",
+            "&[dataActive='true']": {
+              color: "#0f172a",
+              fontWeight: 600
+            }
+          }
+        }}
+      />
+    </Stack>
+  )
+}
+
+const getRangeProgressPercentage = (start: Date | null, end: Date | null) => {
+  if (!start || !end) return 0
+
+  const startTime = new Date(start).getTime()
+  const endTime = new Date(end).getTime()
+
+  if (endTime <= startTime) return 0
+
+  const now = Date.now()
+  const clampedNow = Math.min(Math.max(now, startTime), endTime)
+
+  return ((clampedNow - startTime) / (endTime - startTime)) * 100
+}
+
 export const RangeStats = () => {
-  const { getRangeStats } = useIncomes()
-  const { searchLivestreamChannels } = useLivestreamChannels()
-  const { selectedChannelId } = useLivestreamChannel()
+  const { getRangeStats, getIncomesByDateRange } = useIncomes()
+  const { getGoal } = useMonthGoals()
+  const { selectedChannelId, channels, setSelectedChannelId } =
+    useLivestreamChannel()
 
   const [mode, setMode] = useState<DiscountMode>("afterDiscount")
 
-  // mặc định: hôm qua
   const [startDate, setStartDate] = useState<Date | null>(() => {
     const d = new Date()
     d.setDate(d.getDate() - 1)
@@ -115,17 +257,19 @@ export const RangeStats = () => {
     return d
   })
 
-  // Fetch livestream channels cho filter
-  const { data: channelsData = [] } = useQuery({
-    queryKey: ["searchLivestreamChannels", "all"],
-    queryFn: () =>
-      searchLivestreamChannels({
-        page: 1,
-        limit: 100
-      }),
-    select: (data) => data.data.data || [],
-    staleTime: 5 * 60 * 1000
-  })
+  const now = useMemo(() => new Date(), [])
+  const rangeReferenceDate = useMemo(
+    () => endDate ?? startDate ?? now,
+    [endDate, startDate, now]
+  )
+  const rangeGoalMonth = rangeReferenceDate.getMonth()
+  const rangeGoalYear = rangeReferenceDate.getFullYear()
+  const daysInRangeGoalMonth = new Date(
+    rangeGoalYear,
+    rangeGoalMonth + 1,
+    0
+  ).getDate()
+  const rangeProgressPercentage = getRangeProgressPercentage(startDate, endDate)
 
   const range = useMemo(() => {
     if (!startDate || !endDate) return null
@@ -135,7 +279,6 @@ export const RangeStats = () => {
 
     if (e.getTime() < s.getTime()) return null
 
-    // chuẩn hóa: start 00:00, end 23:59
     s.setHours(0, 0, 0, 0)
     e.setHours(23, 59, 59, 999)
 
@@ -147,6 +290,18 @@ export const RangeStats = () => {
       label
     }
   }, [startDate, endDate])
+  const rangeMonthProgress = useMemo(() => {
+    if (!range) return null
+
+    const monthStart = new Date(rangeGoalYear, rangeGoalMonth, 1)
+    monthStart.setHours(0, 0, 0, 0)
+
+    return {
+      start: monthStart.toISOString(),
+      end: range.end,
+      elapsedDays: rangeReferenceDate.getDate()
+    }
+  }, [range, rangeGoalMonth, rangeGoalYear, rangeReferenceDate])
 
   const { data, isLoading, error } = useQuery({
     queryKey: [
@@ -164,8 +319,69 @@ export const RangeStats = () => {
       })
       return res.data as GetRangeStatsResponse
     },
-    enabled: !!range,
+    enabled: !!range && !!selectedChannelId,
     staleTime: 60 * 1000
+  })
+
+  const { data: rangeIncomes } = useQuery({
+    queryKey: [
+      "getIncomesByDateRange",
+      range?.start ?? null,
+      range?.end ?? null,
+      selectedChannelId
+    ],
+    queryFn: async () => {
+      if (!range || !selectedChannelId) return []
+      const res = await getIncomesByDateRange({
+        startDate: range.start,
+        endDate: range.end,
+        page: 1,
+        limit: 10000,
+        channelId: selectedChannelId
+      })
+      return res.data.incomes
+    },
+    enabled: !!range && !!selectedChannelId,
+    staleTime: 60 * 1000
+  })
+
+  const { data: rangeMonthProgressStats, isLoading: isLoadingRangeMonthProgress } = useQuery({
+    queryKey: [
+      "getRangeStats",
+      "range-month-progress",
+      selectedChannelId,
+      rangeMonthProgress?.start ?? null,
+      rangeMonthProgress?.end ?? null
+    ],
+    queryFn: async () => {
+      if (!selectedChannelId || !rangeMonthProgress) return null
+      const res = await getRangeStats({
+        startDate: rangeMonthProgress.start,
+        endDate: rangeMonthProgress.end,
+        channelId: selectedChannelId
+      })
+      return res.data as GetRangeStatsResponse
+    },
+    enabled: !!selectedChannelId && !!rangeMonthProgress,
+    staleTime: 60 * 1000
+  })
+
+  const { data: filterMonthGoalData } = useQuery({
+    queryKey: [
+      "range-stats-filter-month-goal",
+      selectedChannelId,
+      rangeGoalMonth,
+      rangeGoalYear
+    ],
+    queryFn: () =>
+      getGoal({
+        month: rangeGoalMonth,
+        year: rangeGoalYear,
+        channelId: selectedChannelId || undefined
+      }),
+    select: (response) => response.data,
+    enabled: !!selectedChannelId,
+    staleTime: 5 * 60 * 1000
   })
 
   const current = data?.current
@@ -175,30 +391,148 @@ export const RangeStats = () => {
     endDate &&
     endDate.getTime() < startDate.getTime()
   )
+  const currentChannelName =
+    channels.find((c) => c._id === selectedChannelId)?.name || "Kênh đã chọn"
+  const modeLabel = mode === "afterDiscount" ? "Sau chiết khấu" : "Trước chiết khấu"
+
+  const liveIncome = current?.[mode].liveIncome ?? 0
+  const shopIncome = (current?.[mode].videoIncome || 0) + (current?.[mode].otherIncome || 0)
+  const totalRevenue = current?.[mode].totalIncome ?? 0
+  const currentPeriodDays = data?.period.days ?? 0
+  const filterMonthGoalTotal =
+    (filterMonthGoalData?.liveStreamGoal ?? 0) + (filterMonthGoalData?.shopGoal ?? 0)
+  const filterDailyGoalTotal =
+    filterMonthGoalTotal > 0 ? filterMonthGoalTotal / daysInRangeGoalMonth : undefined
+  const rangeGoalTotal =
+    typeof filterDailyGoalTotal === "number" && currentPeriodDays > 0
+      ? filterDailyGoalTotal * currentPeriodDays
+      : undefined
+  const rangeGoalPct =
+    typeof rangeGoalTotal === "number" && rangeGoalTotal > 0
+      ? (totalRevenue / rangeGoalTotal) * 100
+      : undefined
+  const rangeLiveGoal =
+    typeof filterMonthGoalData?.liveStreamGoal === "number" &&
+    filterMonthGoalData.liveStreamGoal > 0 &&
+    currentPeriodDays > 0
+      ? (filterMonthGoalData.liveStreamGoal / daysInRangeGoalMonth) *
+        currentPeriodDays
+      : undefined
+  const rangeShopGoal =
+    typeof filterMonthGoalData?.shopGoal === "number" &&
+    filterMonthGoalData.shopGoal > 0 &&
+    currentPeriodDays > 0
+      ? (filterMonthGoalData.shopGoal / daysInRangeGoalMonth) * currentPeriodDays
+      : undefined
+  const rangeLivePct =
+    typeof rangeLiveGoal === "number" && rangeLiveGoal > 0
+      ? (liveIncome / rangeLiveGoal) * 100
+      : undefined
+  const rangeShopPct =
+    typeof rangeShopGoal === "number" && rangeShopGoal > 0
+      ? (shopIncome / rangeShopGoal) * 100
+      : undefined
+  const rangeGoalLabel =
+    currentPeriodDays > 1 ? `KPI ${currentPeriodDays} ngày` : "KPI ngày"
+  const deltaVsRangeExpectation =
+    typeof rangeGoalPct === "number"
+      ? rangeGoalPct - rangeProgressPercentage
+      : undefined
+  const rangeMonthProgressRevenue =
+    rangeMonthProgressStats?.current?.[mode].totalIncome ?? 0
+  const forecastMonthRevenue =
+    rangeMonthProgress?.elapsedDays && rangeMonthProgress.elapsedDays > 0
+      ? (rangeMonthProgressRevenue / rangeMonthProgress.elapsedDays) *
+        daysInRangeGoalMonth
+      : undefined
+
+  const discountMetrics = useMemo(
+    () =>
+      current?.discounts
+        ? [
+            {
+              label: "Tổng chiết khấu",
+              value: formatCompactCurrency(current.discounts.totalDiscount),
+              tone: "red",
+              hint: "Toàn bộ chiết khấu phát sinh trong range.",
+              change: (changes as any)?.discounts?.totalDiscountPct,
+              positiveMeaning: "bad" as const
+            },
+            {
+              label: "Chiết khấu nền tảng",
+              value: formatCompactCurrency(current.discounts.totalPlatformDiscount),
+              tone: "orange",
+              hint: "Chiết khấu do nền tảng tài trợ.",
+              change: (changes as any)?.discounts?.totalPlatformDiscountPct,
+              positiveMeaning: "bad" as const
+            },
+            {
+              label: "Chiết khấu shop",
+              value: formatCompactCurrency(current.discounts.totalSellerDiscount),
+              tone: "blue",
+              hint: "Chiết khấu do shop chủ động áp dụng.",
+              change: (changes as any)?.discounts?.totalSellerDiscountPct,
+              positiveMeaning: "bad" as const
+            },
+            {
+              label: "TB / đơn",
+              value: formatCompactCurrency(current.discounts.avgDiscountPerOrder),
+              tone: "grape",
+              hint: "Mức chiết khấu trung bình trên mỗi đơn.",
+              change: (changes as any)?.discounts?.avgDiscountPerOrderPct,
+              positiveMeaning: "bad" as const
+            },
+            {
+              label: "Tỷ lệ chiết khấu",
+              value: formatPercent(current.discounts.discountPercentage, 2),
+              tone: "indigo",
+              hint: "Tỷ lệ chiết khấu trên doanh thu.",
+              change: (changes as any)?.discounts?.discountPercentageDiff,
+              positiveMeaning: "bad" as const
+            }
+          ]
+        : [],
+    [changes, current]
+  )
+
+  const productsRevenue = useMemo(() => {
+    const totals: Record<string, number> = {}
+
+    rangeIncomes?.forEach((income) => {
+      income.products.forEach((product) => {
+        const unitPrice =
+          mode === "afterDiscount" ? product.priceAfterDiscount : product.price
+        const revenue = (unitPrice || 0) * (product.quantity || 0)
+
+        if (!product.code) return
+
+        totals[product.code] = (totals[product.code] || 0) + revenue
+      })
+    })
+
+    return totals
+  }, [mode, rangeIncomes])
 
   return (
     <CDashboardLayout
-      icon={<IconCalendarStats size={28} color="#1971c2" />}
-      title="Thống kê theo khoảng"
-      subheader="Xem thống kê doanh thu theo khoảng thời gian (từ ngày - đến ngày)"
+      icon={<IconCalendarStats size={24} color="#1d4ed8" />}
+      title="Dashboard khoảng thời gian"
+      subheader="Tập trung vào KPI ngày, doanh thu range hiện tại và những nguồn đóng góp chính."
       rightHeader={
-        <>
+        <Group align="flex-end" gap="md" wrap="wrap">
+          <ChannelSelector
+            selectedChannelId={selectedChannelId}
+            channels={channels}
+            onChange={setSelectedChannelId}
+          />
           <RangeSelector
             startDate={startDate}
             endDate={endDate}
             onChangeStartDate={setStartDate}
             onChangeEndDate={setEndDate}
           />
-          <SegmentedControl
-            value={mode}
-            onChange={(v) => setMode(v as DiscountMode)}
-            data={[
-              { label: "Sau CK", value: "afterDiscount" },
-              { label: "Trước CK", value: "beforeDiscount" }
-            ]}
-            size="sm"
-          />
-        </>
+          <ModeSelector mode={mode} onChange={setMode} />
+        </Group>
       }
       content={
         <>
@@ -208,456 +542,272 @@ export const RangeStats = () => {
               variant="light"
               mb="lg"
               icon={<IconAlertCircle size={16} />}
+              radius="xl"
             >
               Ngày kết thúc không được nhỏ hơn ngày bắt đầu.
             </Alert>
           )}
 
-          {/* Filter Summary */}
           {(selectedChannelId || range) && (
-            <Paper withBorder p="md" radius="md" mb="lg" bg="blue.0">
-              <Group gap="md" align="center">
-                <IconFilter size={16} color="var(--mantine-color-blue-6)" />
-                <Text size="sm" fw={500} c="blue.7">
-                  Bộ lọc đang áp dụng:
-                </Text>
-                {range && (
-                  <Badge variant="light" color="blue" size="sm">
-                    {range.label}
+            <Paper
+              withBorder
+              p="md"
+              radius="xl"
+              mb="lg"
+              style={{
+                borderColor: "#dbe4f0",
+                background:
+                  "linear-gradient(180deg, rgba(248,250,252,0.95) 0%, rgba(255,255,255,1) 100%)"
+              }}
+            >
+              <Group justify="space-between" gap="md">
+                <Group gap="sm">
+                  <IconFilter size={16} color="#2563eb" />
+                  <Stack gap={2}>
+                    <Text fz="xs" fw={700} c="dimmed" tt="uppercase">
+                      Phạm vi phân tích
+                    </Text>
+                    <Text fw={700}>{range?.label || "Chưa chọn khoảng"}</Text>
+                  </Stack>
+                </Group>
+
+                <Group gap={8}>
+                  <Badge radius="xl" variant="light" color="blue">
+                    {currentChannelName}
                   </Badge>
-                )}
-                {selectedChannelId && (
-                  <Badge variant="light" color="green" size="sm">
-                    {channelsData.find((c) => c._id === selectedChannelId)
-                      ?.name || "Kênh đã chọn"}
+                  <Badge radius="xl" variant="light" color="grape">
+                    {modeLabel}
                   </Badge>
-                )}
+                  {currentPeriodDays > 0 && (
+                    <Badge radius="xl" variant="light" color="gray">
+                      {currentPeriodDays} ngày
+                    </Badge>
+                  )}
+                </Group>
               </Group>
             </Paper>
           )}
 
-          {isLoading ? (
-            <Paper withBorder p="xl" radius="lg">
-              <Flex
-                justify="center"
-                align="center"
-                h={160}
-                direction="column"
-                gap="md"
-              >
-                <Loader size="lg" />
-                <Text c="dimmed" size="sm">
-                  Đang tải dữ liệu thống kê...
+          {!selectedChannelId ? (
+            <Paper withBorder p="xl" radius="xl" bg="gray.0">
+              <Flex justify="center" align="center" h={160} direction="column" gap="md">
+                <IconCalendarStats size={48} color="var(--mantine-color-gray-5)" />
+                <Text c="dimmed" fw={500} size="lg">
+                  Chọn kênh để xem dashboard
                 </Text>
               </Flex>
             </Paper>
-          ) : error ? (
-            <Paper withBorder p="xl" radius="lg" bg="red.0">
-              <Flex
-                justify="center"
-                align="center"
-                h={160}
-                direction="column"
-                gap="md"
-              >
-                <Text c="red" fw={500}>
-                  Không lấy được dữ liệu
-                </Text>
-                <Text c="red.7" size="sm">
-                  Vui lòng thử lại sau hoặc liên hệ quản trị viên
-                </Text>
-              </Flex>
-            </Paper>
-          ) : current ? (
-            <Stack gap={12}>
-              <Paper withBorder p="lg" radius="lg">
-                <Group justify="space-between" align="center">
-                  <Text fw={700}>Tổng doanh thu</Text>
-                  <Group align="center" gap={8}>
-                    <Text fz="xl" fw={900} c="indigo">
-                      {current[mode].totalIncome.toLocaleString()} VNĐ
+          ) : (
+            <Stack gap="xl">
+              {isLoading ? (
+                <Paper withBorder p="xl" radius="xl">
+                  <Flex
+                    justify="center"
+                    align="center"
+                    h={220}
+                    direction="column"
+                    gap="md"
+                  >
+                    <Loader size="lg" />
+                    <Text c="dimmed" size="sm">
+                      Đang tải dashboard khoảng thời gian...
                     </Text>
-                    {typeof changes?.[mode]?.totalIncomePct === "number" && (
-                      <Badge
-                        color={
-                          changes[mode].totalIncomePct >= 0 ? "green" : "red"
-                        }
-                        variant="light"
-                      >
-                        {changes[mode].totalIncomePct >= 0 ? "+" : "-"}
-                        {fmtPercent(Math.abs(changes[mode].totalIncomePct))}
-                      </Badge>
-                    )}
-                  </Group>
-                </Group>
-
-                {/* KPI Section */}
-                {current.dailyGoal && (
-                  <>
-                    <Divider my={12} />
-                    <Group justify="space-between" align="center">
-                      {current.dailyGoal ? (
-                        <Group gap={8}>
-                          <Text fw={600} fz="sm" c="dimmed">
-                            KPI hàng ngày:
-                          </Text>
-                          <Text fw={700} fz="md" c="blue">
-                            {current.dailyGoal.goals.dailyTotalIncomeGoal.toLocaleString()}{" "}
-                            VNĐ
-                          </Text>
-                        </Group>
-                      ) : (
-                        <></>
-                      )}
-                      <Group gap={8} align="center">
-                        <Text fw={500} fz="sm" c="dimmed">
-                          Đạt được:
-                        </Text>
-                        <Badge
-                          color={
-                            current.dailyGoal[mode].incomePercentage >= 100
-                              ? "green"
-                              : current.dailyGoal[mode].incomePercentage >= 80
-                                ? "yellow"
-                                : "red"
-                          }
-                          variant="filled"
-                          size="lg"
-                        >
-                          {current.dailyGoal[mode].incomePercentage.toFixed(1)}%
-                        </Badge>
-                      </Group>
-                    </Group>
-                  </>
-                )}
-
-                <Divider my={12} />
-
-                <Stack gap={10}>
-                  <Group gap={12} align="stretch">
-                    <LiveAndVideoStats
-                      title="Livestream"
-                      income={current[mode].liveIncome}
-                      incomePct={current.dailyGoal?.[mode].liveIncomePercentage}
-                      incomeGoal={current.dailyGoal?.goals.dailyLiveIncomeGoal}
-                      adsCost={current.ads.liveAdsCost}
-                      adsCostChangePct={changes?.ads?.liveAdsCostPct}
-                      adsSharePctDiff={changes?.ads?.liveAdsToLiveIncomePctDiff}
-                      flex={1}
-                    />
-                    <LiveAndVideoStats
-                      title="Doanh thu Sàn"
-                      income={
-                        (current[mode].videoIncome || 0) +
-                        (current[mode].otherIncome || 0)
-                      }
-                      incomePct={current.dailyGoal?.[mode].shopIncomePercentage}
-                      incomeGoal={current.dailyGoal?.goals.dailyShopIncomeGoal}
-                      adsCost={current.ads.shopAdsCost}
-                      adsCostChangePct={changes?.ads?.shopAdsCostPct}
-                      adsSharePctDiff={changes?.ads?.shopAdsToShopIncomePctDiff}
-                      ownVideoIncome={current[mode].ownVideoIncome}
-                      otherVideoIncome={current[mode].otherVideoIncome}
-                      otherIncome={current[mode].otherIncome}
-                      flex={2}
-                    />
-                  </Group>
-                </Stack>
-              </Paper>
-
-              {current[mode].sources && current.productsQuantity && (
-                <Group gap={12} align="stretch" grow>
-                  <SourcesStats
-                    sources={current[mode].sources}
-                    changes={changes?.[mode]?.sources}
+                  </Flex>
+                </Paper>
+              ) : error ? (
+                <Paper withBorder p="xl" radius="xl" bg="red.0">
+                  <Flex
+                    justify="center"
+                    align="center"
+                    h={200}
+                    direction="column"
+                    gap="md"
+                  >
+                    <Text c="red" fw={600}>
+                      Không lấy được dữ liệu thống kê
+                    </Text>
+                    <Text c="red.7" size="sm">
+                      Vui lòng thử lại sau hoặc kiểm tra lại bộ lọc.
+                    </Text>
+                  </Flex>
+                </Paper>
+              ) : current ? (
+                <>
+                  <RevenueOverviewCard
+                    title="Tổng doanh thu trong khoảng"
+                    rangeLabel={range?.label || "Khoảng đang chọn"}
+                    totalRevenue={totalRevenue}
+                    changePct={changes?.[mode]?.totalIncomePct}
+                    rangeGoal={rangeGoalTotal}
+                    rangeGoalPct={rangeGoalPct}
+                    rangeDays={currentPeriodDays}
+                    modeLabel={modeLabel}
                   />
-                  {current.productsQuantity &&
-                    Object.keys(current.productsQuantity).length > 0 && (
-                      <ProductsQuantityStats
-                        productsQuantity={current.productsQuantity}
-                      />
-                    )}
-                </Group>
-              )}
 
-              {(((current as any).boxes && (current as any).boxes.length > 0) ||
-                current.shippingProviders) && (
-                <Group gap={12} align="stretch" grow>
-                  {current.shippingProviders &&
-                    current.shippingProviders.length > 0 && (
-                      <ShippingProvidersStats
-                        shippingProviders={current.shippingProviders}
-                      />
-                    )}
-                  <BoxesStats boxes={(current as any).boxes} />
-                </Group>
-              )}
+                  <DailyKpiSummary
+                    revenue={totalRevenue}
+                    goal={rangeGoalTotal}
+                    achievedPct={rangeGoalPct}
+                    expectedPct={rangeProgressPercentage}
+                    deltaPct={deltaVsRangeExpectation}
+                    forecastMonthRevenue={forecastMonthRevenue}
+                    monthGoal={filterMonthGoalTotal > 0 ? filterMonthGoalTotal : undefined}
+                    rangeLabel={range?.label}
+                    rangeDays={currentPeriodDays}
+                    isLoading={isLoadingRangeMonthProgress}
+                  />
 
-              {/* Discount Statistics */}
-              {current.discounts && (
-                <Paper withBorder p="lg" radius="lg">
-                  <Text fw={600} mb={16}>
-                    Thống kê giảm giá
+                  <Grid gutter="md">
+                    <Grid.Col span={{ base: 12, xl: 5 }}>
+                      <LiveAndVideoStats
+                        title="Livestream"
+                        income={current[mode].liveIncome}
+                        incomePct={rangeLivePct}
+                        incomeGoal={rangeLiveGoal}
+                        goalLabel={rangeGoalLabel}
+                        adsCost={current.ads.liveAdsCost}
+                        adsCostChangePct={changes?.ads?.liveAdsCostPct}
+                        adsSharePctDiff={changes?.ads?.liveAdsToLiveIncomePctDiff}
+                        flex={1}
+                      />
+                    </Grid.Col>
+                    <Grid.Col span={{ base: 12, xl: 7 }}>
+                      <LiveAndVideoStats
+                        title="Doanh thu Sàn"
+                        income={shopIncome}
+                        incomePct={rangeShopPct}
+                        incomeGoal={rangeShopGoal}
+                        goalLabel={rangeGoalLabel}
+                        adsCost={current.ads.shopAdsCost}
+                        adsCostChangePct={changes?.ads?.shopAdsCostPct}
+                        adsSharePctDiff={changes?.ads?.shopAdsToShopIncomePctDiff}
+                        ownVideoIncome={current[mode].ownVideoIncome}
+                        otherVideoIncome={current[mode].otherVideoIncome}
+                        otherIncome={current[mode].otherIncome}
+                        flex={1}
+                      />
+                    </Grid.Col>
+                  </Grid>
+
+                  <Grid gutter="md">
+                    {current[mode].sources && (
+                      <Grid.Col span={{ base: 12, xl: 5 }}>
+                        <SourcesStats
+                          sources={current[mode].sources}
+                          changes={changes?.[mode]?.sources}
+                        />
+                      </Grid.Col>
+                    )}
+
+                    {current.productsQuantity &&
+                      Object.keys(current.productsQuantity).length > 0 && (
+                        <Grid.Col span={{ base: 12, xl: 7 }}>
+                          <ProductsQuantityStats
+                            productsQuantity={current.productsQuantity}
+                            productsRevenue={productsRevenue}
+                          />
+                        </Grid.Col>
+                      )}
+                  </Grid>
+
+                  {(((current as any).boxes && (current as any).boxes.length > 0) ||
+                    (current.shippingProviders &&
+                      current.shippingProviders.length > 0)) && (
+                    <Grid gutter="md">
+                      {current.shippingProviders &&
+                        current.shippingProviders.length > 0 && (
+                          <Grid.Col span={{ base: 12, xl: 6 }}>
+                            <ShippingProvidersStats
+                              shippingProviders={current.shippingProviders}
+                            />
+                          </Grid.Col>
+                        )}
+
+                      {(current as any).boxes &&
+                        (current as any).boxes.length > 0 && (
+                          <Grid.Col span={{ base: 12, xl: 6 }}>
+                            <BoxesStats boxes={(current as any).boxes} />
+                          </Grid.Col>
+                        )}
+                    </Grid>
+                  )}
+
+                  {discountMetrics.length > 0 && (
+                    <Stack gap="md">
+                      <Stack gap={2}>
+                        <Text
+                          fz="xs"
+                          fw={700}
+                          c="dimmed"
+                          tt="uppercase"
+                          style={{ letterSpacing: "0.16em" }}
+                        >
+                          Chiết khấu
+                        </Text>
+                        <Text fw={700} fz="xl">
+                          Tác động từ chiết khấu
+                        </Text>
+                        <Text fz="sm" c="dimmed">
+                          Gom về một cụm KPI để không cạnh tranh thị giác với doanh thu.
+                        </Text>
+                      </Stack>
+
+                      <SimpleGrid cols={{ base: 1, md: 2, xl: 5 }} spacing="md">
+                        {discountMetrics.map((metric) => (
+                          <MetricStatCard
+                            key={metric.label}
+                            label={metric.label}
+                            value={metric.value}
+                            hint={metric.hint}
+                            icon={
+                              metric.label === "TB / đơn" ? (
+                                <IconReceipt2 size={20} />
+                              ) : (
+                                <IconDiscount2 size={20} />
+                              )
+                            }
+                            tone={metric.tone}
+                            trailing={
+                              <TrendBadge
+                                value={metric.change}
+                                positiveMeaning={metric.positiveMeaning}
+                                variant="light"
+                              />
+                            }
+                          />
+                        ))}
+                      </SimpleGrid>
+                    </Stack>
+                  )}
+
+                  <Text c="dimmed" fz="xs">
+                    Cập nhật: {format(new Date(), "dd/MM/yyyy HH:mm:ss")}
                   </Text>
-                  {/* All 5 boxes in one row */}
-                  <Group gap={12} align="stretch" grow>
-                    <Paper
-                      withBorder
-                      p="md"
-                      radius="md"
-                      h={90}
-                      w={200}
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "space-between"
-                      }}
-                    >
-                      <Text fw={500} fz="sm" c="dimmed" mb={4}>
-                        Tổng chiết khấu
-                      </Text>
-                      <Group align="center" gap={8} wrap="nowrap">
-                        <Text fz="lg" fw={700} c="dark">
-                          {current.discounts.totalDiscount.toLocaleString()} VNĐ
-                        </Text>
-                        {typeof (changes as any)?.discounts
-                          ?.totalDiscountPct === "number" && (
-                          <Badge
-                            color={
-                              (changes as any).discounts.totalDiscountPct >= 0
-                                ? "red"
-                                : "green"
-                            }
-                            variant="light"
-                            size="sm"
-                          >
-                            {(changes as any).discounts.totalDiscountPct >= 0
-                              ? "+"
-                              : "-"}
-                            {fmtPercent(
-                              Math.abs(
-                                (changes as any).discounts.totalDiscountPct
-                              )
-                            )}
-                          </Badge>
-                        )}
-                      </Group>
-                    </Paper>
-
-                    <Paper
-                      withBorder
-                      p="md"
-                      radius="md"
-                      h={90}
-                      w={200}
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "space-between"
-                      }}
-                    >
-                      <Text fw={500} fz="sm" c="dimmed" mb={4}>
-                        Chiết khấu platform
-                      </Text>
-                      <Group align="center" gap={8} wrap="nowrap">
-                        <Text fz="lg" fw={700} c="orange">
-                          {current.discounts.totalPlatformDiscount.toLocaleString()}{" "}
-                          VNĐ
-                        </Text>
-                        {typeof (changes as any)?.discounts
-                          ?.totalPlatformDiscountPct === "number" && (
-                          <Badge
-                            color={
-                              (changes as any).discounts
-                                .totalPlatformDiscountPct >= 0
-                                ? "red"
-                                : "green"
-                            }
-                            variant="light"
-                            size="sm"
-                          >
-                            {(changes as any).discounts
-                              .totalPlatformDiscountPct >= 0
-                              ? "+"
-                              : "-"}
-                            {fmtPercent(
-                              Math.abs(
-                                (changes as any).discounts
-                                  .totalPlatformDiscountPct
-                              )
-                            )}
-                          </Badge>
-                        )}
-                      </Group>
-                    </Paper>
-
-                    <Paper
-                      withBorder
-                      p="md"
-                      radius="md"
-                      h={90}
-                      w={200}
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "space-between"
-                      }}
-                    >
-                      <Text fw={500} fz="sm" c="dimmed" mb={4}>
-                        Chiết khấu seller
-                      </Text>
-                      <Group align="center" gap={8} wrap="nowrap">
-                        <Text fz="lg" fw={700} c="blue">
-                          {current.discounts.totalSellerDiscount.toLocaleString()}{" "}
-                          VNĐ
-                        </Text>
-                        {typeof (changes as any)?.discounts
-                          ?.totalSellerDiscountPct === "number" && (
-                          <Badge
-                            color={
-                              (changes as any).discounts
-                                .totalSellerDiscountPct >= 0
-                                ? "red"
-                                : "green"
-                            }
-                            variant="light"
-                            size="sm"
-                          >
-                            {(changes as any).discounts
-                              .totalSellerDiscountPct >= 0
-                              ? "+"
-                              : "-"}
-                            {fmtPercent(
-                              Math.abs(
-                                (changes as any).discounts
-                                  .totalSellerDiscountPct
-                              )
-                            )}
-                          </Badge>
-                        )}
-                      </Group>
-                    </Paper>
-
-                    <Paper
-                      withBorder
-                      p="md"
-                      radius="md"
-                      h={90}
-                      w={200}
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "space-between"
-                      }}
-                    >
-                      <Text fw={500} fz="sm" c="dimmed" mb={4}>
-                        Trung bình mỗi đơn
-                      </Text>
-                      <Group align="center" gap={8} wrap="nowrap">
-                        <Text fz="lg" fw={700} c="dark">
-                          {current.discounts.avgDiscountPerOrder.toLocaleString()}{" "}
-                          VNĐ
-                        </Text>
-                        {typeof (changes as any)?.discounts
-                          ?.avgDiscountPerOrderPct === "number" && (
-                          <Badge
-                            color={
-                              (changes as any).discounts
-                                .avgDiscountPerOrderPct >= 0
-                                ? "red"
-                                : "green"
-                            }
-                            variant="light"
-                            size="sm"
-                          >
-                            {(changes as any).discounts
-                              .avgDiscountPerOrderPct >= 0
-                              ? "+"
-                              : "-"}
-                            {fmtPercent(
-                              Math.abs(
-                                (changes as any).discounts
-                                  .avgDiscountPerOrderPct
-                              )
-                            )}
-                          </Badge>
-                        )}
-                      </Group>
-                    </Paper>
-
-                    <Paper
-                      withBorder
-                      p="md"
-                      radius="md"
-                      h={90}
-                      w={200}
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "space-between"
-                      }}
-                    >
-                      <Text fw={500} fz="sm" c="dimmed" mb={4}>
-                        Tỷ lệ chiết khấu
-                      </Text>
-                      <Group align="center" gap={8} wrap="nowrap">
-                        <Text fz="lg" fw={700} c="grape">
-                          {current.discounts.discountPercentage.toFixed(2)}%
-                        </Text>
-                        {typeof (changes as any)?.discounts
-                          ?.discountPercentageDiff === "number" && (
-                          <Badge
-                            color={
-                              (changes as any).discounts
-                                .discountPercentageDiff >= 0
-                                ? "red"
-                                : "green"
-                            }
-                            variant="light"
-                            size="sm"
-                          >
-                            {(changes as any).discounts
-                              .discountPercentageDiff >= 0
-                              ? "+"
-                              : "-"}
-                            {Math.abs(
-                              (changes as any).discounts.discountPercentageDiff
-                            ).toFixed(2)}
-                            %
-                          </Badge>
-                        )}
-                      </Group>
-                    </Paper>
-                  </Group>
+                </>
+              ) : (
+                <Paper withBorder p="xl" radius="xl" bg="gray.0">
+                  <Flex
+                    justify="center"
+                    align="center"
+                    h={180}
+                    direction="column"
+                    gap="md"
+                  >
+                    <IconCalendarStats
+                      size={48}
+                      color="var(--mantine-color-gray-5)"
+                    />
+                    <Text c="dimmed" fw={500} size="lg">
+                      Chọn khoảng thời gian để xem dashboard
+                    </Text>
+                    <Text c="dimmed" size="sm" ta="center">
+                      Màn này ưu tiên trả lời nhanh KPI ngày, nguồn doanh thu và
+                      kênh dẫn kết quả.
+                    </Text>
+                  </Flex>
                 </Paper>
               )}
-
-              <Text c="dimmed" fz="xs">
-                Cập nhật: {format(new Date(), "dd/MM/yyyy HH:mm:ss")}
-              </Text>
             </Stack>
-          ) : (
-            <Paper withBorder p="xl" radius="lg" bg="gray.0">
-              <Flex
-                justify="center"
-                align="center"
-                h={160}
-                direction="column"
-                gap="md"
-              >
-                <IconCalendarStats
-                  size={48}
-                  color="var(--mantine-color-gray-5)"
-                />
-                <Text c="dimmed" fw={500} size="lg">
-                  Chọn khoảng thời gian để xem thống kê
-                </Text>
-                <Text c="dimmed" size="sm" ta="center">
-                  Sử dụng các bộ lọc ở trên để chọn khoảng thời gian và kênh bán
-                  hàng
-                </Text>
-              </Flex>
-            </Paper>
           )}
         </>
       }

@@ -22,29 +22,45 @@ export const DashboardSectionCard = ({
   return (
     <Paper
       withBorder
-      shadow="md"
-      radius="md"
-      p="md"
+      radius="xl"
+      p="lg"
       className="bg-white transition-all"
       style={{
-        borderColor: "var(--mantine-color-gray-3)",
-        borderLeftWidth: 3,
-        borderLeftColor: `var(--mantine-color-${accentColor}-5)`
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.boxShadow = "0 4px 18px rgba(15, 23, 42, 0.04)"
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.boxShadow = "none"
+        height: "100%",
+        borderColor: "#dbe4f0",
+        boxShadow: "0 12px 34px rgba(15, 23, 42, 0.05)",
+        background:
+          "linear-gradient(180deg, rgba(248,250,252,0.86) 0%, rgba(255,255,255,1) 100%)"
       }}
     >
-      <Group justify="space-between" align="flex-start" mb="sm" gap="sm">
+      <Group justify="space-between" align="flex-start" mb="md" gap="sm">
         <Group gap="xs" align="flex-start">
-          {icon && <Box mt={2}>{icon}</Box>}
+          {icon && (
+            <Box
+              mt={2}
+              style={{
+                color: `var(--mantine-color-${accentColor}-6)`,
+                background: `var(--mantine-color-${accentColor}-0)`,
+                borderRadius: 14,
+                padding: 8,
+                lineHeight: 0
+              }}
+            >
+              {icon}
+            </Box>
+          )}
           <Box>
-            <Text fw={600}>{title}</Text>
+            <Text
+              fz="xs"
+              fw={700}
+              tt="uppercase"
+              c="dimmed"
+              style={{ letterSpacing: "0.14em" }}
+            >
+              {title}
+            </Text>
             {subtitle && (
-              <Text fz="xs" c="dimmed">
+              <Text fz="sm" fw={600} mt={4}>
                 {subtitle}
               </Text>
             )}

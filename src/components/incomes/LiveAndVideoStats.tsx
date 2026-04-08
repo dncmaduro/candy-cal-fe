@@ -1,23 +1,20 @@
-import { useState } from "react"
+import { Group, Paper, SimpleGrid, Stack, Text } from "@mantine/core"
+import { IconBroadcast, IconShoppingBag } from "@tabler/icons-react"
+import { DashboardSectionCard } from "./DashboardSectionCard"
+import { RankedBarList } from "./analytics/RankedBarList"
+import { TrendBadge } from "./analytics/TrendBadge"
 import {
-  Paper,
-  Group,
-  Text,
-  Stack,
-  RingProgress,
-  Badge,
-  SegmentedControl,
-  Box,
-  Divider
-} from "@mantine/core"
-import { fmtCurrency, fmtPercent } from "../../utils/fmt"
-import { CPiechart } from "../common/CPiechart"
+  formatCompactCurrency,
+  formatCurrency,
+  formatPercent
+} from "./analytics/formatters"
 
 type Props = {
   title: string
   income: number
   incomePct?: number
   incomeGoal?: number
+  goalLabel?: string
   adsCost: number
   adsCostChangePct?: number
   adsSharePctDiff?: number
@@ -25,6 +22,7 @@ type Props = {
   otherVideoIncome?: number
   otherIncome?: number
   flex?: number
+  embedded?: boolean
 }
 
 export const LiveAndVideoStats = ({
@@ -32,23 +30,30 @@ export const LiveAndVideoStats = ({
   income,
   incomePct,
   incomeGoal,
+  goalLabel = "KPI ngày",
   adsCost,
   adsCostChangePct,
   adsSharePctDiff,
   ownVideoIncome,
   otherVideoIncome,
   otherIncome,
-  flex = 1
+  flex = 1,
+  embedded = false
 }: Props) => {
-  const [mode, setMode] = useState<"table" | "chart">("table")
   const adsShare = income ? (adsCost / income) * 100 : 0
+  const incomeGoalValue = incomeGoal ?? 0
+  const normalizedIncomePct =
+    typeof incomePct === "number"
+      ? incomePct
+      : incomeGoalValue > 0
+        ? (income / incomeGoalValue) * 100
+        : undefined
 
   // helper for video breakdown
   const videoOwn = ownVideoIncome ?? 0
   const videoOther = otherVideoIncome ?? 0
   const otherIncomeValue = otherIncome ?? 0
 
-  // small pie parts for video breakdown (used both for drawing and legend)
   const parts: { key: string; value: number; label: string }[] = [
     { key: "own", value: videoOwn, label: "NST bên bán" },
     { key: "other", value: videoOther, label: "NST liên kết" },
@@ -62,176 +67,158 @@ export const LiveAndVideoStats = ({
         ]
       : [])
   ]
-  return (
-    <Paper withBorder p="lg" radius="lg" style={{ flex }}>
-      <Group justify="space-between" align="center" style={{ marginBottom: 8 }}>
-        <Text fw={600}>{title}</Text>
-        <Group gap={8}>
-          <SegmentedControl
-            value={mode}
-            onChange={(val) => setMode(val as any)}
-            data={[
-              { label: "Bảng", value: "table" },
-              { label: "Biểu đồ", value: "chart" }
-            ]}
-            size="sm"
-          />
-        </Group>
+
+  const accentColor = title === "Livestream" ? "blue" : "violet"
+
+  const content = (
+    <Stack gap="md">
+      <Group justify="space-between" align="flex-start" wrap="nowrap">
+        <Stack gap={4}>
+          <Text fw={800} fz="2rem" lh={1} style={{ letterSpacing: "-0.05em" }}>
+            {formatCurrency(income)}
+          </Text>
+          {incomeGoalValue > 0 && (
+            <Text fz="sm" c="dimmed">
+              {goalLabel} {formatCompactCurrency(Math.round(incomeGoalValue))}
+            </Text>
+          )}
+        </Stack>
+
+        {typeof normalizedIncomePct === "number" && (
+          <Stack gap={4} align="flex-end">
+            <Text fz="xs" fw={700} c="dimmed" tt="uppercase">
+              Đạt KPI
+            </Text>
+            <Text fw={800} fz="xl">
+              {formatPercent(normalizedIncomePct)}
+            </Text>
+          </Stack>
+        )}
       </Group>
 
-      {mode === "table" ? (
-        <Stack gap={8}>
-          <Group justify="space-between">
-            <Text>Doanh thu</Text>
-            <Text fw={700}>{fmtCurrency(income)}</Text>
-          </Group>
-          {incomeGoal ? (
-            <Group justify="space-between">
-              <Text>KPI doanh thu</Text>
-              <Text fw={700}>{fmtCurrency(Math.round(incomeGoal))}</Text>
-            </Group>
-          ) : (
-            <></>
-          )}
-          {incomePct ? (
-            <Group justify="space-between">
-              <Text>% đạt KPI</Text>
-              <Text fw={700}>{incomePct} %</Text>
-            </Group>
-          ) : (
-            <></>
-          )}
-
-          {/* If this is Video or Doanh thu Sàn, show breakdown rows */}
-          {(title === "Video" || title === "Doanh thu Sàn") && (
-            <>
-              <Group justify="space-between">
-                <Text c={"dimmed"}>Doanh số từ nhà sáng tạo (own)</Text>
-                <Text c={"dimmed"} fw={700}>
-                  {fmtCurrency(videoOwn)}
-                </Text>
-              </Group>
-              <Group justify="space-between">
-                <Text c={"dimmed"}>
-                  Doanh số từ nhà sáng tạo liên kết (other)
-                </Text>
-                <Text c={"dimmed"} fw={700}>
-                  {fmtCurrency(videoOther)}
-                </Text>
-              </Group>
-              {title === "Doanh thu Sàn" && otherIncomeValue > 0 && (
-                <Group justify="space-between">
-                  <Text c={"dimmed"}>Doanh thu Khác</Text>
-                  <Text c={"dimmed"} fw={700}>
-                    {fmtCurrency(otherIncomeValue)}
-                  </Text>
-                </Group>
-              )}
-            </>
-          )}
-
-          <Divider />
-
-          <Group justify="space-between">
-            <Text>Chi phí Ads</Text>
-            <Group gap={8} align="center">
-              <Text fw={700}>{fmtCurrency(adsCost)}</Text>
-              {typeof adsCostChangePct === "number" && (
-                <Badge
-                  color={adsCostChangePct >= 0 ? "green" : "red"}
-                  variant="light"
-                >
-                  {adsCostChangePct >= 0 ? "+" : "-"}
-                  {fmtPercent(Math.abs(adsCostChangePct))}
-                </Badge>
-              )}
-            </Group>
-          </Group>
-          <Group justify="space-between">
-            <Text>Tỉ lệ Ads / Doanh thu</Text>
-            <Group gap={8} align="center">
-              <Text fw={700}>{fmtPercent(adsShare)}</Text>
-              {typeof adsSharePctDiff === "number" && (
-                <Badge
-                  color={adsSharePctDiff >= 0 ? "green" : "red"}
-                  variant="light"
-                >
-                  {adsSharePctDiff >= 0 ? "+" : "-"}
-                  {fmtPercent(Math.abs(adsSharePctDiff))}
-                </Badge>
-              )}
-            </Group>
-          </Group>
-        </Stack>
-      ) : (
-        <Group justify="space-between" align="center">
-          <Group gap={16} align="center">
-            <RingProgress
-              sections={[
-                { value: Math.min(100, Math.round(adsShare)), color: "red" }
-              ]}
-              size={140}
-              thickness={20}
-            />
-            <Stack>
-              <Box>
-                <Text size="sm">Tỉ lệ Ads trên doanh thu</Text>
-                <Group align="center" gap={8}>
-                  <Text fw={700}>{fmtPercent(adsShare)}</Text>
-                  {typeof adsSharePctDiff === "number" && (
-                    <Badge
-                      color={adsSharePctDiff >= 0 ? "green" : "red"}
-                      variant="light"
-                    >
-                      {adsSharePctDiff >= 0 ? "+" : "-"}
-                      {fmtPercent(Math.abs(adsSharePctDiff))}
-                    </Badge>
-                  )}
-                </Group>
-              </Box>
-              <Box>
-                <Text size="sm">Chi phí ads</Text>
-                <Group align="center" gap={8}>
-                  <Text fw={700}>{fmtCurrency(adsCost)}</Text>
-                  {typeof adsCostChangePct === "number" && (
-                    <Badge
-                      color={adsCostChangePct >= 0 ? "green" : "red"}
-                      variant="light"
-                    >
-                      {adsCostChangePct >= 0 ? "+" : "-"}
-                      {fmtPercent(Math.abs(adsCostChangePct))}
-                    </Badge>
-                  )}
-                </Group>
-              </Box>
+      <SimpleGrid cols={{ base: 1, md: 2 }} spacing="sm">
+        <Paper
+          radius="lg"
+          p="md"
+          style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}
+        >
+          <Group justify="space-between" align="flex-start">
+            <Stack gap={4}>
+              <Text fz="xs" fw={700} c="dimmed" tt="uppercase">
+                Chi phí ads
+              </Text>
+              <Text fw={700}>{formatCompactCurrency(adsCost)}</Text>
             </Stack>
+            <TrendBadge value={adsCostChangePct} positiveMeaning="bad" />
           </Group>
+        </Paper>
 
-          {/* If Video or Doanh thu Sàn in chart mode, show small pie breakdown using CPiechart */}
-          {(title === "Video" || title === "Doanh thu Sàn") && income > 0 && (
-            <Box w={500}>
-              <CPiechart
-                data={parts.map((p) => ({ label: p.label, value: p.value }))}
-                width={160}
-                radius={80}
-                donut={false}
-                enableOthers={false}
-                showTooltip
-                valueFormatter={(v) => fmtCurrency(v)}
-                percentFormatter={(p) => fmtPercent(p)}
-                pieFontSize={16}
-                title={
-                  <Text size="sm" c="black" fw={600}>
-                    {title === "Doanh thu Sàn"
-                      ? "Phân bổ doanh thu Sàn"
-                      : "Phân bổ doanh số qua Video"}
-                  </Text>
-                }
-              />
-            </Box>
-          )}
-        </Group>
+        <Paper
+          radius="lg"
+          p="md"
+          style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}
+        >
+          <Group justify="space-between" align="flex-start">
+            <Stack gap={4}>
+              <Text fz="xs" fw={700} c="dimmed" tt="uppercase">
+                Ads / doanh thu
+              </Text>
+              <Text fw={700}>{formatPercent(adsShare)}</Text>
+            </Stack>
+            <TrendBadge value={adsSharePctDiff} positiveMeaning="bad" />
+          </Group>
+        </Paper>
+      </SimpleGrid>
+
+      {parts.some((item) => item.value > 0) && (
+        <RankedBarList
+          items={parts
+            .filter((item) => item.value > 0)
+            .sort((a, b) => b.value - a.value)
+            .map((item) => ({
+              key: item.key,
+              label: item.label,
+              value: item.value,
+              caption: "Tỷ trọng trong cụm doanh thu này"
+            }))}
+          totalValue={parts.reduce((sum, item) => sum + item.value, 0)}
+          color={accentColor}
+          maxItems={4}
+          valueFormatter={(value) => formatCompactCurrency(value)}
+        />
       )}
-    </Paper>
+    </Stack>
+  )
+
+  if (embedded) {
+    return (
+      <Paper
+        withBorder
+        radius="xl"
+        p="lg"
+        style={{
+          height: "100%",
+          borderColor: "#dbe4f0",
+          background: "rgba(255,255,255,0.92)"
+        }}
+      >
+        <Group justify="space-between" align="flex-start" mb="md">
+          <Group gap="xs" align="flex-start">
+            <div
+              style={{
+                color: `var(--mantine-color-${accentColor}-6)`,
+                background: `var(--mantine-color-${accentColor}-0)`,
+                borderRadius: 14,
+                padding: 8,
+                lineHeight: 0
+              }}
+            >
+              {title === "Livestream" ? (
+                <IconBroadcast size={18} />
+              ) : (
+                <IconShoppingBag size={18} />
+              )}
+            </div>
+            <div>
+              <Text
+                fz="xs"
+                fw={700}
+                tt="uppercase"
+                c="dimmed"
+                style={{ letterSpacing: "0.14em" }}
+              >
+                {title}
+              </Text>
+              <Text fz="sm" fw={600} mt={4}>
+                {title === "Livestream"
+                  ? "Hiệu suất doanh thu từ live"
+                  : "Hiệu suất nhóm doanh thu sàn"}
+              </Text>
+            </div>
+          </Group>
+        </Group>
+
+        {content}
+      </Paper>
+    )
+  }
+
+  return (
+    <div style={{ flex }}>
+      <DashboardSectionCard
+        title={title}
+        subtitle={title === "Livestream" ? "Hiệu suất doanh thu từ live" : "Hiệu suất nhóm doanh thu sàn"}
+        icon={
+          title === "Livestream" ? (
+            <IconBroadcast size={18} />
+          ) : (
+            <IconShoppingBag size={18} />
+          )
+        }
+        accentColor={accentColor}
+      >
+        {content}
+      </DashboardSectionCard>
+    </div>
   )
 }
