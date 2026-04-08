@@ -2,23 +2,22 @@ import { Alert, Group, Progress, SimpleGrid, Skeleton, Stack, Text } from "@mant
 import {
   IconCurrentLocation,
   IconFlag3,
-  IconGauge,
-  IconTargetArrow,
+  IconReceipt2,
   IconTrendingUp3
 } from "@tabler/icons-react"
 import { MetricStatCard } from "./MetricStatCard"
 import { TrendBadge } from "./TrendBadge"
-import { formatCompactCurrency, formatCurrency, formatPercent } from "./formatters"
+import { formatCurrency, formatPercent } from "./formatters"
 
 interface DailyKpiSummaryProps {
   revenue: number
   goal?: number
+  totalOrders?: number
   achievedPct?: number
   expectedPct: number
   deltaPct?: number
   forecastMonthRevenue?: number
   monthGoal?: number
-  rangeLabel?: string
   rangeDays?: number
   isLoading?: boolean
 }
@@ -26,12 +25,12 @@ interface DailyKpiSummaryProps {
 export const DailyKpiSummary = ({
   revenue,
   goal,
+  totalOrders,
   achievedPct,
   expectedPct,
   deltaPct,
   forecastMonthRevenue,
   monthGoal,
-  rangeLabel,
   rangeDays = 1,
   isLoading = false
 }: DailyKpiSummaryProps) => {
@@ -53,8 +52,8 @@ export const DailyKpiSummary = ({
           </Text>
         </Stack>
 
-        <SimpleGrid cols={{ base: 1, md: 2, xl: 5 }} spacing="md">
-          {Array.from({ length: 5 }).map((_, index) => (
+        <SimpleGrid cols={{ base: 1, md: 2, xl: 4 }} spacing="md">
+          {Array.from({ length: 4 }).map((_, index) => (
             <Skeleton key={index} radius="xl" height={154} />
           ))}
         </SimpleGrid>
@@ -65,6 +64,11 @@ export const DailyKpiSummary = ({
   const hasGoal = typeof goal === "number" && goal > 0
   const progressValue = Math.max(0, Math.min(100, achievedPct ?? 0))
   const rangeDaysText = rangeDays > 1 ? `${rangeDays} ngày` : "1 ngày"
+  const summaryCols = {
+    base: 1,
+    md: 2,
+    xl: typeof forecastMonthRevenue === "number" ? 4 : 3
+  } as const
 
   return (
     <Stack gap="md">
@@ -81,11 +85,6 @@ export const DailyKpiSummary = ({
           </Text>
           <Text fw={700} fz="xl">
             Tốc độ đạt KPI
-          </Text>
-          <Text fz="sm" c="dimmed">
-            {rangeLabel
-              ? `Bám theo khoảng ${rangeLabel} để nhìn nhanh doanh thu, KPI, kỳ vọng và độ lệch.`
-              : "Bám theo đúng khoảng đang lọc để nhìn nhanh doanh thu, KPI, kỳ vọng và độ lệch."}
           </Text>
         </Stack>
 
@@ -112,7 +111,7 @@ export const DailyKpiSummary = ({
         <Progress radius="xl" size="lg" value={progressValue} color={progressValue >= 100 ? "teal" : progressValue >= expectedPct ? "blue" : "orange"} />
       )}
 
-      <SimpleGrid cols={{ base: 1, md: 2, xl: 5 }} spacing="md" verticalSpacing="md">
+      <SimpleGrid cols={summaryCols} spacing="md" verticalSpacing="md">
         <MetricStatCard
           label="Doanh thu"
           value={formatCurrency(revenue)}
@@ -128,27 +127,23 @@ export const DailyKpiSummary = ({
           tone="cyan"
         />
         <MetricStatCard
-          label="% Đạt KPI"
-          value={hasGoal ? formatPercent(achievedPct) : "Chưa có"}
-          hint="Tỷ lệ hoàn thành KPI của khoảng lọc theo doanh thu thực tế."
-          icon={<IconTargetArrow size={20} />}
+          label="Tổng đơn hàng"
+          value={
+            typeof totalOrders === "number"
+              ? `${totalOrders.toLocaleString("vi-VN")} đơn`
+              : "Chưa có"
+          }
+          hint="Tổng số đơn hàng trong khoảng đang lọc."
+          icon={<IconReceipt2 size={20} />}
           tone="teal"
-        />
-        <MetricStatCard
-          label="Tiến độ kì vọng"
-          value={formatPercent(expectedPct)}
-          hint="Tỷ lệ kỳ vọng theo phần thời gian đã trôi qua của khoảng lọc."
-          icon={<IconGauge size={20} />}
-          tone="grape"
-          trailing={hasGoal ? <TrendBadge value={deltaPct} /> : undefined}
         />
         {typeof forecastMonthRevenue === "number" && (
           <MetricStatCard
             label="Dự báo cuối tháng"
-            value={formatCompactCurrency(forecastMonthRevenue)}
+            value={formatCurrency(forecastMonthRevenue)}
             hint={
               typeof monthGoal === "number" && monthGoal > 0
-                ? `So với mục tiêu tháng ${formatCompactCurrency(monthGoal)}`
+                ? `So với mục tiêu tháng ${formatCurrency(monthGoal)}`
                 : "Ước tính theo tốc độ doanh thu từ đầu tháng tới nay."
             }
             icon={<IconTrendingUp3 size={20} />}

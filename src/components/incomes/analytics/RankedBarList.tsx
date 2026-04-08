@@ -18,6 +18,7 @@ interface RankedBarListProps {
   maxItems?: number
   totalValue?: number
   valueFormatter?: (value: number) => string
+  shareFormatter?: (share: number) => string
   showShare?: boolean
   emptyText?: string
   footer?: ReactNode
@@ -29,6 +30,7 @@ export const RankedBarList = ({
   maxItems = 8,
   totalValue,
   valueFormatter = (value) => value.toLocaleString("vi-VN"),
+  shareFormatter = (share) => formatPercent(share),
   showShare = true,
   emptyText = "Chưa có dữ liệu",
   footer
@@ -75,7 +77,7 @@ export const RankedBarList = ({
                 <Group gap={8}>
                   {showShare && (
                     <Text fz="xs" c="dimmed">
-                      {formatPercent(share)}
+                      {shareFormatter(share)}
                     </Text>
                   )}
                   {item.meta}

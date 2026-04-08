@@ -1,3 +1,5 @@
+import type { ReactNode } from "react"
+import { IconCash, IconChartBar, IconTargetArrow } from "@tabler/icons-react"
 import {
   clampPercentage,
   formatCompactCurrency,
@@ -6,7 +8,7 @@ import {
   formatSignedPercent,
   toneClasses
 } from "./helpers"
-import type { DashboardStatus } from "./types"
+import type { DashboardStatus, SummaryMetric } from "./types"
 
 interface HeroKpiCardProps {
   achievedPercentage: number
@@ -17,6 +19,7 @@ interface HeroKpiCardProps {
   targetRevenue: number
   netRevenue: number
   monthLabel: string
+  summaryMetrics: SummaryMetric[]
 }
 
 export function HeroKpiCard({
@@ -27,9 +30,16 @@ export function HeroKpiCard({
   actualRevenue,
   targetRevenue,
   netRevenue,
-  monthLabel
+  monthLabel,
+  summaryMetrics
 }: HeroKpiCardProps) {
   const tone = toneClasses[status.tone]
+  const summaryGridClassName =
+    summaryMetrics.length >= 4
+      ? "grid gap-4 md:grid-cols-2 xl:grid-cols-4"
+      : summaryMetrics.length === 3
+        ? "grid gap-4 md:grid-cols-2 xl:grid-cols-3"
+        : "grid gap-4 md:grid-cols-2"
 
   return (
     <section
@@ -81,26 +91,59 @@ export function HeroKpiCard({
             </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-3 xl:w-[520px]">
+          <div className="grid gap-4 sm:grid-cols-2 xl:w-[560px] xl:grid-cols-3">
             <MetricPanel
               label="Tiến độ mục tiêu"
               value={formatPercent(expectedPercentage)}
-              caption="Mức cần đạt tới hôm nay"
+              icon={<IconTargetArrow size={20} />}
             />
             <MetricPanel
               label="Lệch so với mục tiêu"
               value={formatSignedPercent(deltaPercentage)}
-              caption="Chênh lệch thực tế"
               tone={status.tone}
+              icon={<IconChartBar size={20} />}
             />
             <MetricPanel
               label="Doanh thu / KPI"
               value={`${formatCompactCurrency(actualRevenue)} / ${formatCompactCurrency(targetRevenue)}`}
-              caption="Dễ đọc khi scan nhanh"
+              icon={<IconCash size={20} />}
             />
           </div>
         </div>
 
+        {summaryMetrics.length > 0 && (
+          <div className="border-t border-slate-200 pt-6">
+            <div className={summaryGridClassName}>
+              {summaryMetrics.map((metric) => {
+                const metricTone = toneClasses[metric.tone ?? "slate"]
+
+                return (
+                  <article
+                    key={metric.label}
+                    className="rounded-[24px] border border-slate-200 bg-slate-50 p-5"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-medium text-slate-500">
+                          {metric.label}
+                        </p>
+                        <p className="mt-3 text-2xl font-semibold tracking-tight text-slate-950">
+                          {metric.value}
+                        </p>
+                      </div>
+                      <div
+                        className={`flex h-11 w-11 items-center justify-center rounded-2xl ${metricTone.soft} ${metricTone.text}`}
+                      >
+                        {metric.icon}
+                      </div>
+                    </div>
+                    <p className="mt-4 text-sm text-slate-500">{metric.hint}</p>
+                  </article>
+                )
+              })}
+            </div>
+          </div>
+        )}
       </div>
     </section>
   )
@@ -109,25 +152,30 @@ export function HeroKpiCard({
 function MetricPanel({
   label,
   value,
-  caption,
-  tone
+  tone,
+  icon
 }: {
   label: string
   value: string
-  caption: string
   tone?: "good" | "warning" | "bad"
+  icon: ReactNode
 }) {
-  const toneClass = tone ? toneClasses[tone].text : "text-slate-900"
+  const visualTone = toneClasses[tone ?? "slate"]
+  const valueClass = tone ? visualTone.text : "text-slate-950"
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
-        {label}
-      </p>
-      <p className={`mt-2 text-2xl font-semibold tracking-tight ${toneClass}`}>
+    <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-sm font-medium text-slate-500">{label}</p>
+        <div
+          className={`flex h-11 w-11 items-center justify-center rounded-2xl ${visualTone.soft} ${visualTone.text}`}
+        >
+          {icon}
+        </div>
+      </div>
+      <p className={`mt-3 text-2xl font-semibold tracking-tight ${valueClass}`}>
         {value}
       </p>
-      <p className="mt-2 text-sm text-slate-500">{caption}</p>
     </div>
   )
 }

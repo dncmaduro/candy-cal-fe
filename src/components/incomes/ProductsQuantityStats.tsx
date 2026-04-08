@@ -5,7 +5,7 @@ import { CDataTable } from "../common/CDataTable"
 import { IconPackage } from "@tabler/icons-react"
 import { DashboardSectionCard } from "./DashboardSectionCard"
 import { RankedBarList } from "./analytics/RankedBarList"
-import { formatCompactCurrency } from "./analytics/formatters"
+import { formatCurrency, formatPercent } from "./analytics/formatters"
 
 interface ProductRankingRow {
   code: string
@@ -40,10 +40,7 @@ export const ProductsQuantityStats = ({
         .map(([code, value]) => ({
           code,
           value,
-          percentage:
-            Math.round(
-              ((value / totalQuantity) * 100 + Number.EPSILON) * 100
-            ) / 100
+          percentage: (value / totalQuantity) * 100
         }))
         .sort((a, b) => b.value - a.value),
     [entries, totalQuantity]
@@ -55,10 +52,7 @@ export const ProductsQuantityStats = ({
         .map(([code, value]) => ({
           code,
           value,
-          percentage:
-            Math.round(
-              ((value / totalRevenue) * 100 + Number.EPSILON) * 100
-            ) / 100
+          percentage: (value / totalRevenue) * 100
         }))
         .sort((a, b) => b.value - a.value),
     [revenueEntries, totalRevenue]
@@ -95,7 +89,7 @@ export const ProductsQuantityStats = ({
         cell: ({ getValue }) => (
           <Text>
             {isRevenueMode
-              ? formatCompactCurrency(getValue<number>())
+              ? formatCurrency(getValue<number>())
               : getValue<number>().toLocaleString("vi-VN")}
           </Text>
         )
@@ -109,7 +103,7 @@ export const ProductsQuantityStats = ({
           isNumeric: true
         },
         cell: ({ getValue }) => (
-          <Text fw={600}>{getValue<number>()}%</Text>
+          <Text fw={600}>{formatPercent(getValue<number>(), 2, "truncate")}</Text>
         )
       }
     ],
@@ -122,7 +116,7 @@ export const ProductsQuantityStats = ({
       subtitle={
         topItem
           ? isRevenueMode
-            ? `${topItem.code} dẫn đầu với ${formatCompactCurrency(topItem.value)} doanh thu`
+            ? `${topItem.code} dẫn đầu với ${formatCurrency(topItem.value)} doanh thu`
             : `${topItem.code} dẫn đầu với ${topItem.value.toLocaleString("vi-VN")} sản phẩm`
           : `Tổng: ${totalQuantity.toLocaleString()} sản phẩm`
       }
@@ -147,16 +141,17 @@ export const ProductsQuantityStats = ({
           label: item.code,
           value: item.value,
           caption: isRevenueMode
-            ? `${item.percentage}% tổng doanh thu`
-            : `${item.percentage}% tổng số lượng`
+            ? `${formatPercent(item.percentage, 2, "truncate")} tổng doanh thu`
+            : `${formatPercent(item.percentage, 2, "truncate")} tổng số lượng`
         }))}
         totalValue={activeTotal}
         color="blue"
         valueFormatter={(value) =>
           isRevenueMode
-            ? formatCompactCurrency(value)
+            ? formatCurrency(value)
             : `${value.toLocaleString("vi-VN")} sản phẩm`
         }
+        shareFormatter={(share) => formatPercent(share, 2, "truncate")}
         footer={
           activeData.length > 8 ? (
             <Accordion variant="contained" radius="lg">
