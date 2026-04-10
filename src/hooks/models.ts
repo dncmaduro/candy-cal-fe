@@ -2979,6 +2979,16 @@ export interface DeleteLivestreamMonthGoalRequest {
 // -------------------- LIVESTREAM CHANNELS --------------------
 
 /** @interface */
+export interface LivestreamChannel {
+  _id: string
+  name: string
+  username: string
+  usernames: string[]
+  platform: string
+  link: string
+}
+
+/** @interface */
 export interface CreateLivestreamChannelRequest {
   name: string
   username: string
@@ -2989,20 +2999,14 @@ export interface CreateLivestreamChannelRequest {
 /** @interface */
 export interface SearchLivestreamChannelsRequest {
   searchText?: string
+  platform?: string
   page: number
   limit: number
 }
 
 /** @interface */
 export interface SearchLivestreamChannelsResponse {
-  data: {
-    _id: string
-    name: string
-    username: string
-    usernames: string[]
-    platform: string
-    link: string
-  }[]
+  data: LivestreamChannel[]
   total: number
 }
 
@@ -5396,6 +5400,429 @@ export interface GetMonthKpiDetailResponse {
 }
 
 /** @interface */
+export interface ShopeeMonthKpiRecord {
+  _id: string
+  month: number
+  year: number
+  channel: string | LivestreamChannel
+  revenueKpi: number
+  adsCostKpi: number
+  roasKpi: number
+  createdAt?: string
+  updatedAt?: string
+}
+
+/** @interface */
+export interface CreateShopeeMonthKpiRequest {
+  month: number
+  year: number
+  channel: string
+  revenueKpi: number
+  adsCostKpi: number
+  roasKpi: number
+}
+
+/** @interface */
+export interface CreateShopeeMonthKpiResponse extends ShopeeMonthKpiRecord {}
+
+/** @interface */
+export interface GetShopeeMonthKpisRequest {
+  page: number
+  limit: number
+  month?: number
+  year?: number
+  channel?: string
+}
+
+/** @interface */
+export interface GetShopeeMonthKpisResponse {
+  data: ShopeeMonthKpiRecord[]
+  total: number
+}
+
+/** @interface */
+export interface GetShopeeMonthKpiDetailRequest {
+  id: string
+}
+
+/** @interface */
+export interface GetShopeeMonthKpiDetailResponse extends ShopeeMonthKpiRecord {}
+
+/** @interface */
+export interface UpdateShopeeMonthKpiRequest {
+  month?: number
+  year?: number
+  channel?: string
+  revenueKpi?: number
+  adsCostKpi?: number
+  roasKpi?: number
+}
+
+/** @interface */
+export interface UpdateShopeeMonthKpiResponse extends ShopeeMonthKpiRecord {}
+
+/** @interface */
+export interface DeleteShopeeMonthKpiRequest {
+  id: string
+}
+
+/** @interface */
+export type ShopeePerformanceTimeMode = "month" | "range"
+
+/** @interface */
+export type ShopeeRangePreset =
+  | "last-7-days"
+  | "last-14-days"
+  | "last-30-days"
+  | "this-month"
+  | "last-month"
+
+/** @interface */
+export interface MonthlySummaryResponse {
+  scope: {
+    type: "monthly"
+    channel: string
+    month: number
+    year: number
+  }
+  summary: {
+    currentRevenue: number
+    revenueTarget: number
+    liveRevenue: number
+    adsCost: number
+    adsCostTarget: number
+    roas: number
+    roasTarget: number
+    totalOrders: number
+    expectedProgressPercent: number
+    actualRevenueProgressPercent: number
+    actualAdsCostProgressPercent: number
+    actualRoasProgressPercent: number
+  }
+  meta: {
+    lastSyncedAt: string | null
+    timezone: string
+    currency: "VND"
+  }
+}
+
+/** @interface */
+export type MonthlyKpiItem = {
+  key: "revenue" | "adsCost" | "roas"
+  label: string
+  actual: number
+  target: number
+  expectedProgressPercent: number
+  actualProgressPercent: number
+  deltaPercent: number
+  speedMultiplier: number
+  status: "ahead" | "behind" | "on_track" | "no_target"
+}
+
+/** @interface */
+export type MonthlyKpisResponse = {
+  scope: {
+    type: "monthly"
+    channel: string
+    month: number
+    year: number
+  }
+  kpis: MonthlyKpiItem[]
+  meta: {
+    lastSyncedAt: string | null
+    timezone: string
+    currency: "VND"
+  }
+}
+
+/** @interface */
+export type RangeSummaryResponse = {
+  scope: {
+    type: "range"
+    channel: string
+    from: string
+    to: string
+    days: number
+  }
+  summary: {
+    grossRevenue: number
+    netRevenue: number
+    liveRevenue: number
+    adsCost: number
+    totalOrders: number
+    roas: number
+    aov: number
+    revenuePerDay: number
+    ordersPerDay: number
+    adsCostPerDay: number
+  }
+  meta: {
+    lastSyncedAt: string | null
+    timezone: string
+    currency: "VND"
+    isPartialToday: boolean
+  }
+}
+
+/** @interface */
+export type RangeTimeseriesPoint = {
+  date: string
+  revenue: number
+  liveRevenue: number
+  adsCost: number
+  orders: number
+  roas: number
+  aov: number
+}
+
+/** @interface */
+export type RangeTimeseriesResponse = {
+  scope: {
+    type: "range"
+    channel: string
+    from: string
+    to: string
+    days: number
+  }
+  series: RangeTimeseriesPoint[]
+  meta: {
+    lastSyncedAt: string | null
+    timezone: string
+    currency: "VND"
+    isPartialToday: boolean
+  }
+}
+
+/** @interface */
+export type OrdersListResponse = {
+  scope: {
+    type: "monthly" | "range"
+    channel: string
+    month?: number
+    year?: number
+    from?: string
+    to?: string
+  }
+  pagination: {
+    page: number
+    pageSize: number
+    totalItems: number
+    totalPages: number
+  }
+  items: Array<{
+    date: string
+    orderCode: string
+    customerName: string | null
+    shop: string | null
+    productName: string
+    revenue: number
+    productCount: number
+  }>
+  meta: {
+    lastSyncedAt: string | null
+    timezone: string
+    currency: "VND"
+  }
+}
+
+/** @interface */
+export interface MonthlySummaryQueryRequest {
+  channel?: string
+  month: number
+  year: number
+}
+
+/** @interface */
+export interface MonthlyKpisQueryRequest {
+  channel?: string
+  month: number
+  year: number
+}
+
+/** @interface */
+export interface RangeSummaryQueryRequest {
+  channel?: string
+  from: string
+  to: string
+}
+
+/** @interface */
+export interface RangeTimeseriesQueryRequest {
+  channel?: string
+  from: string
+  to: string
+}
+
+/** @interface */
+export interface OrdersQueryRequest {
+  channel?: string
+  month?: number
+  year?: number
+  from?: string
+  to?: string
+  page?: number
+  pageSize?: number
+  sortBy?: string
+  sortOrder?: "asc" | "desc"
+}
+
+/** @interface */
+export interface ShopeeDashboardOverviewRequest {
+  month: number
+  year: number
+  channelId?: string
+}
+
+/** @interface */
+export interface ShopeeDashboardOverviewScope {
+  type: "all" | "channel"
+  month: number
+  year: number
+  channelId: string | null
+  expectedProgressPercentage: number
+  elapsedDays: number
+  totalDays: number
+  currentDate: string
+}
+
+/** @interface */
+export interface ShopeeDashboardOverviewChannel {
+  _id: string
+  name: string
+  username: string
+  platform: string
+}
+
+/** @interface */
+export interface ShopeeDashboardOverviewTargets {
+  revenueKpi: number
+  adsCostKpi: number
+  roasKpi: number
+}
+
+/** @interface */
+export interface ShopeeDashboardOverviewActuals {
+  revenue: number
+  liveRevenue: number
+  adsCost: number
+  roas: number
+  totalOrders: number
+}
+
+/** @interface */
+export interface ShopeeDashboardOverviewMetricProgress {
+  target: number
+  actual: number
+  achievedPercentage: number
+  expectedPercentage: number
+  gapPercentage: number
+  paceRatio: number
+}
+
+/** @interface */
+export interface ShopeeDashboardOverviewProgress {
+  revenue: ShopeeDashboardOverviewMetricProgress
+  adsCost: ShopeeDashboardOverviewMetricProgress
+  roas: ShopeeDashboardOverviewMetricProgress
+}
+
+/** @interface */
+export interface ShopeeDashboardOverviewResponse {
+  scope: ShopeeDashboardOverviewScope
+  channel: ShopeeDashboardOverviewChannel | null
+  targets: ShopeeDashboardOverviewTargets
+  actuals: ShopeeDashboardOverviewActuals
+  progress: ShopeeDashboardOverviewProgress
+}
+
+/** @interface */
+export type ShopeeDashboardValueFormat = "currency" | "decimal" | "integer"
+
+/** @interface */
+export type ShopeeDashboardMetricKey = "revenue" | "adsCost" | "roas"
+
+/** @interface */
+export type ShopeeDashboardPaceStatus =
+  | "on-track"
+  | "ahead"
+  | "behind"
+  | "unknown"
+
+/** @interface */
+export type ShopeeDashboardRevenueAdjustmentMode = "additive" | "override"
+
+/** @interface */
+export interface ShopeeDashboardRevenueAdjustment {
+  mode: ShopeeDashboardRevenueAdjustmentMode
+  manualRevenue: number
+}
+
+/** @interface */
+export interface ShopeeChannelOption {
+  value: string
+  label: string
+}
+
+/** @interface */
+export interface ShopeeDashboardSummaryItem {
+  key: "revenue" | "liveRevenue" | "adsCost" | "roas" | "totalOrders"
+  label: string
+  value: number
+  description: string
+  format: ShopeeDashboardValueFormat
+  originalValue?: number
+  isAdjusted?: boolean
+}
+
+/** @interface */
+export interface ShopeeDashboardMetricViewModel {
+  key: ShopeeDashboardMetricKey
+  label: string
+  format: Extract<ShopeeDashboardValueFormat, "currency" | "decimal">
+  target: number
+  actual: number
+  originalActual?: number
+  achievedPercentage: number
+  expectedPercentage: number
+  gapPercentage: number
+  paceRatio: number
+  paceStatus: ShopeeDashboardPaceStatus
+  isAdjusted?: boolean
+}
+
+/** @interface */
+export interface ShopeeDashboardAdjustmentViewModel {
+  mode: ShopeeDashboardRevenueAdjustmentMode
+  manualRevenue: number
+  originalRevenue: number
+  adjustedRevenue: number
+  originalRoas: number
+  adjustedRoas: number
+  isAdjusted: boolean
+  note?: string
+}
+
+/** @interface */
+export interface ShopeeDashboardOverviewViewModel {
+  scope: ShopeeDashboardOverviewResponse["scope"]
+  channel: ShopeeDashboardOverviewResponse["channel"]
+  scopeLabel: string
+  scopeDescription: string
+  summaryItems: ShopeeDashboardSummaryItem[]
+  metrics: ShopeeDashboardMetricViewModel[]
+  expectedProgressPercentage: number
+  elapsedDays: number
+  totalDays: number
+  currentDateLabel: string
+  originalRevenue: number
+  adjustedRevenue: number
+  originalRoas: number
+  adjustedRoas: number
+  revenueAdjustment: ShopeeDashboardAdjustmentViewModel
+  isEmpty: boolean
+}
+
+/** @interface */
 export interface InsertIncomeShopeeRequest {
   channel: string
 }
@@ -5437,4 +5864,115 @@ export interface SearchShopeeIncomeResponse {
     affPercentage: number
   }[]
   total: number
+}
+
+/** @interface */
+export interface ShopeeDashboardOrderProductViewModel {
+  code: string
+  name: string
+  quantity: number
+  price: number
+}
+
+/** @interface */
+export interface ShopeeDashboardOrderViewModel {
+  _id: string
+  date: string
+  orderId: string
+  customer: string
+  creator: string
+  source: string
+  total: number
+  channelId: string
+  channelName: string
+  products: ShopeeDashboardOrderProductViewModel[]
+  totalProducts: number
+  totalQuantity: number
+  productSummary: string
+}
+
+/** @interface */
+export interface ShopeeDashboardOrdersViewModel {
+  data: ShopeeDashboardOrderViewModel[]
+  total: number
+}
+
+/** @interface */
+export interface ShopeeDailyAdsRecord {
+  _id: string
+  date: string
+  channel: string | { _id: string; name?: string }
+  adsCost: number
+  createdAt?: string
+  updatedAt?: string
+}
+
+/** @interface */
+export interface SearchShopeeDailyAdsRequest {
+  page?: number
+  limit?: number
+  channel?: string
+  date?: string
+  startDate?: string
+  endDate?: string
+}
+
+/** @interface */
+export interface SearchShopeeDailyAdsResponse {
+  data: ShopeeDailyAdsRecord[]
+  total: number
+}
+
+/** @interface */
+export interface CreateShopeeDailyAdsRequest {
+  date: Date
+  channel: string
+  adsCost: number
+}
+
+/** @interface */
+export interface UpdateShopeeDailyAdsRequest {
+  date?: Date
+  channel?: string
+  adsCost?: number
+}
+
+/** @interface */
+export interface ShopeeDailyLiveRevenueRecord {
+  _id: string
+  date: string
+  channel: string | { _id: string; name?: string }
+  liveRevenue: number
+  createdAt?: string
+  updatedAt?: string
+}
+
+/** @interface */
+export interface SearchShopeeDailyLiveRevenuesRequest {
+  page?: number
+  limit?: number
+  channel?: string
+  date?: string
+  startDate?: string
+  endDate?: string
+}
+
+/** @interface */
+export interface SearchShopeeDailyLiveRevenuesResponse {
+  data: ShopeeDailyLiveRevenueRecord[]
+  total: number
+}
+
+/** @interface */
+export interface CreateShopeeDailyLiveRevenueRequest {
+  date: Date
+  channel: string
+  liveRevenue: number
+}
+
+/** @interface */
+export interface UpdateShopeeDailyLiveRevenueRequest {
+  date?: Date
+  channel?: string
+  liveRevenue?: number
 }
