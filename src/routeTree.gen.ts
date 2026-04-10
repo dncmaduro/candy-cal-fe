@@ -29,6 +29,7 @@ import { Route as AccessDeniedIndexImport } from './routes/access-denied/index'
 import { Route as TiktokshopSkuIndexImport } from './routes/tiktokshop/sku/index'
 import { Route as TiktokshopIncomesIndexImport } from './routes/tiktokshop/incomes/index'
 import { Route as ShopeeSkuIndexImport } from './routes/shopee/sku/index'
+import { Route as ShopeeKpiIndexImport } from './routes/shopee/kpi/index'
 import { Route as ShopeeIncomesIndexImport } from './routes/shopee/incomes/index'
 import { Route as SalesTasksIndexImport } from './routes/sales/tasks/index'
 import { Route as SalesPriceIndexImport } from './routes/sales/price/index'
@@ -186,6 +187,12 @@ const TiktokshopIncomesIndexRoute = TiktokshopIncomesIndexImport.update({
 const ShopeeSkuIndexRoute = ShopeeSkuIndexImport.update({
   id: '/shopee/sku/',
   path: '/shopee/sku/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const ShopeeKpiIndexRoute = ShopeeKpiIndexImport.update({
+  id: '/shopee/kpi/',
+  path: '/shopee/kpi/',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -952,6 +959,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShopeeIncomesIndexImport
       parentRoute: typeof rootRoute
     }
+    '/shopee/kpi/': {
+      id: '/shopee/kpi/'
+      path: '/shopee/kpi'
+      fullPath: '/shopee/kpi'
+      preLoaderRoute: typeof ShopeeKpiIndexImport
+      parentRoute: typeof rootRoute
+    }
     '/shopee/sku/': {
       id: '/shopee/sku/'
       path: '/shopee/sku'
@@ -1055,6 +1069,7 @@ export interface FileRoutesByFullPath {
   '/sales/price': typeof SalesPriceIndexRoute
   '/sales/tasks': typeof SalesTasksIndexRoute
   '/shopee/incomes': typeof ShopeeIncomesIndexRoute
+  '/shopee/kpi': typeof ShopeeKpiIndexRoute
   '/shopee/sku': typeof ShopeeSkuIndexRoute
   '/tiktokshop/incomes': typeof TiktokshopIncomesIndexRoute
   '/tiktokshop/sku': typeof TiktokshopSkuIndexRoute
@@ -1124,6 +1139,7 @@ export interface FileRoutesByTo {
   '/sales/price': typeof SalesPriceIndexRoute
   '/sales/tasks': typeof SalesTasksIndexRoute
   '/shopee/incomes': typeof ShopeeIncomesIndexRoute
+  '/shopee/kpi': typeof ShopeeKpiIndexRoute
   '/shopee/sku': typeof ShopeeSkuIndexRoute
   '/tiktokshop/incomes': typeof TiktokshopIncomesIndexRoute
   '/tiktokshop/sku': typeof TiktokshopSkuIndexRoute
@@ -1195,6 +1211,7 @@ export interface FileRoutesById {
   '/sales/price/': typeof SalesPriceIndexRoute
   '/sales/tasks/': typeof SalesTasksIndexRoute
   '/shopee/incomes/': typeof ShopeeIncomesIndexRoute
+  '/shopee/kpi/': typeof ShopeeKpiIndexRoute
   '/shopee/sku/': typeof ShopeeSkuIndexRoute
   '/tiktokshop/incomes/': typeof TiktokshopIncomesIndexRoute
   '/tiktokshop/sku/': typeof TiktokshopSkuIndexRoute
@@ -1267,6 +1284,7 @@ export interface FileRouteTypes {
     | '/sales/price'
     | '/sales/tasks'
     | '/shopee/incomes'
+    | '/shopee/kpi'
     | '/shopee/sku'
     | '/tiktokshop/incomes'
     | '/tiktokshop/sku'
@@ -1335,6 +1353,7 @@ export interface FileRouteTypes {
     | '/sales/price'
     | '/sales/tasks'
     | '/shopee/incomes'
+    | '/shopee/kpi'
     | '/shopee/sku'
     | '/tiktokshop/incomes'
     | '/tiktokshop/sku'
@@ -1404,6 +1423,7 @@ export interface FileRouteTypes {
     | '/sales/price/'
     | '/sales/tasks/'
     | '/shopee/incomes/'
+    | '/shopee/kpi/'
     | '/shopee/sku/'
     | '/tiktokshop/incomes/'
     | '/tiktokshop/sku/'
@@ -1474,6 +1494,7 @@ export interface RootRouteChildren {
   SalesPriceIndexRoute: typeof SalesPriceIndexRoute
   SalesTasksIndexRoute: typeof SalesTasksIndexRoute
   ShopeeIncomesIndexRoute: typeof ShopeeIncomesIndexRoute
+  ShopeeKpiIndexRoute: typeof ShopeeKpiIndexRoute
   ShopeeSkuIndexRoute: typeof ShopeeSkuIndexRoute
   TiktokshopIncomesIndexRoute: typeof TiktokshopIncomesIndexRoute
   TiktokshopSkuIndexRoute: typeof TiktokshopSkuIndexRoute
@@ -1545,6 +1566,7 @@ const rootRouteChildren: RootRouteChildren = {
   SalesPriceIndexRoute: SalesPriceIndexRoute,
   SalesTasksIndexRoute: SalesTasksIndexRoute,
   ShopeeIncomesIndexRoute: ShopeeIncomesIndexRoute,
+  ShopeeKpiIndexRoute: ShopeeKpiIndexRoute,
   ShopeeSkuIndexRoute: ShopeeSkuIndexRoute,
   TiktokshopIncomesIndexRoute: TiktokshopIncomesIndexRoute,
   TiktokshopSkuIndexRoute: TiktokshopSkuIndexRoute,
@@ -1623,6 +1645,7 @@ export const routeTree = rootRoute
         "/sales/price/",
         "/sales/tasks/",
         "/shopee/incomes/",
+        "/shopee/kpi/",
         "/shopee/sku/",
         "/tiktokshop/incomes/",
         "/tiktokshop/sku/"
@@ -1823,6 +1846,9 @@ export const routeTree = rootRoute
     },
     "/shopee/incomes/": {
       "filePath": "shopee/incomes/index.tsx"
+    },
+    "/shopee/kpi/": {
+      "filePath": "shopee/kpi/index.tsx"
     },
     "/shopee/sku/": {
       "filePath": "shopee/sku/index.tsx"

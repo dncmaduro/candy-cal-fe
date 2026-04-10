@@ -104,11 +104,30 @@ export const MetricStatCard = ({
         )}
       </Group>
 
-      <Group justify="space-between" align="flex-end" wrap="nowrap" gap="sm">
-        <Text fw={700} fz="2.15rem" lh={1.05} c="#0f172a" style={{ letterSpacing: "-0.04em" }}>
+      <Group justify="space-between" align="flex-end" wrap="wrap" gap="sm">
+        <Text
+          fw={700}
+          fz="2.15rem"
+          lh={1.05}
+          c="#0f172a"
+          style={{
+            flex: "1 1 220px",
+            minWidth: 0,
+            letterSpacing: "-0.04em"
+          }}
+        >
           {value}
         </Text>
-        {trailing}
+        {trailing ? (
+          <Box
+            style={{
+              marginInlineStart: "auto",
+              maxWidth: "100%"
+            }}
+          >
+            {trailing}
+          </Box>
+        ) : null}
       </Group>
 
       {hint && (
