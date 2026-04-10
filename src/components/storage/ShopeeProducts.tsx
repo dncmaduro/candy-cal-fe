@@ -29,6 +29,7 @@ import { CToast } from "../common/CToast"
 import { CDataTable } from "../common/CDataTable"
 import { SHOPEE_EDITOR_ROLES } from "../../constants/navs"
 import { ShopeeXlsxCalculator } from "./ShopeeXlsxCalculator"
+import { useMe } from "../../context/MeContext"
 
 type ShopeeProductRow = {
   _id: string
@@ -37,6 +38,10 @@ type ShopeeProductRow = {
 }
 
 export const ShopeeProducts = () => {
+  const me = useMe()
+  const canMutateShopeeSku = Boolean(
+    me?.roles?.some((role) => SHOPEE_EDITOR_ROLES.includes(role))
+  )
   const { searchShopeeProducts, deleteShopeeProduct } = useShopeeProducts()
   const [searchText, setSearchText] = useState<string>("")
   const [debouncedSearchText] = useDebouncedValue(searchText, 300)
@@ -132,7 +137,13 @@ export const ShopeeProducts = () => {
           if (showDeleted) return null
           return (
             <Group gap={8} wrap="nowrap">
-              <Can roles={SHOPEE_EDITOR_ROLES}>
+              <Tooltip
+                label={
+                  canMutateShopeeSku
+                    ? "Chỉnh sửa SKU"
+                    : "Bạn chỉ có quyền xem dữ liệu Shopee"
+                }
+              >
                 <Button
                   variant="light"
                   color="indigo"
@@ -140,7 +151,8 @@ export const ShopeeProducts = () => {
                   radius="xl"
                   px={14}
                   leftSection={<IconEdit size={14} />}
-                  onClick={() =>
+                  onClick={() => {
+                    if (!canMutateShopeeSku) return
                     modals.open({
                       title: (
                         <Text fw={700} fz="md">
@@ -152,12 +164,13 @@ export const ShopeeProducts = () => {
                       ),
                       size: "lg"
                     })
-                  }
+                  }}
+                  disabled={!canMutateShopeeSku}
                   style={{ fontWeight: 500 }}
                 >
                   Chỉnh sửa
                 </Button>
-              </Can>
+              </Tooltip>
 
               <Can roles={["admin"]}>
                 <Button
@@ -224,29 +237,29 @@ export const ShopeeProducts = () => {
     <Group gap={10} align="end" wrap="wrap">
       {!showDeleted && (
         <Tooltip label="Thêm SKU Shopee mới" withArrow>
-          <Can roles={SHOPEE_EDITOR_ROLES}>
-            <Button
-              color="indigo"
-              leftSection={<IconPlus size={18} />}
-              radius="xl"
-              size="sm"
-              px={14}
-              onClick={() =>
-                modals.open({
-                  title: (
-                    <Text fw={700} fz="md">
-                      Thêm SKU Shopee mới
-                    </Text>
-                  ),
-                  children: <ShopeeProductModal refetch={refetch} />,
-                  size: "lg"
-                })
-              }
-              style={{ fontWeight: 600, letterSpacing: 0.1 }}
-            >
-              Thêm SKU
-            </Button>
-          </Can>
+          <Button
+            color="indigo"
+            leftSection={<IconPlus size={18} />}
+            radius="xl"
+            size="sm"
+            px={14}
+            onClick={() => {
+              if (!canMutateShopeeSku) return
+              modals.open({
+                title: (
+                  <Text fw={700} fz="md">
+                    Thêm SKU Shopee mới
+                  </Text>
+                ),
+                children: <ShopeeProductModal refetch={refetch} />,
+                size: "lg"
+              })
+            }}
+            disabled={!canMutateShopeeSku}
+            style={{ fontWeight: 600, letterSpacing: 0.1 }}
+          >
+            Thêm SKU
+          </Button>
         </Tooltip>
       )}
 

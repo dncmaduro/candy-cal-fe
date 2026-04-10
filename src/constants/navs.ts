@@ -111,6 +111,12 @@ export const SHOPEE_NAVS = [
     label: "Doanh thu",
     roles: SHOPEE_ROLES,
     icon: "IconCoin"
+  },
+  {
+    to: `${SHOPEE_NAVS_URL}/kpi`,
+    label: "KPI",
+    roles: SHOPEE_ROLES,
+    icon: "IconTarget"
   }
 ]
 

@@ -7,6 +7,13 @@ export const filterLabelStyles = {
   marginBottom: 6
 }
 
+export const filterPlainLabelStyles = {
+  fontSize: "14px",
+  fontWeight: 600,
+  color: "#0f172a",
+  marginBottom: 8
+}
+
 export const filterInputStyles = {
   height: 44,
   borderRadius: 18,
@@ -27,25 +34,25 @@ export const filterDropdownStyles = {
 export const filterSegmentedStyles = {
   root: {
     padding: 4,
-    borderRadius: 18,
+    borderRadius: 16,
     background: "#f8fafc",
     border: "1px solid #dbe4f0"
   },
   indicator: {
-    borderRadius: 14,
+    borderRadius: 12,
     background: "#ffffff",
     border: "1px solid #dbe4f0",
     boxShadow: "0 1px 2px rgba(15, 23, 42, 0.06)"
   },
   label: {
-    minHeight: 36,
-    padding: "8px 18px",
+    minHeight: 38,
+    padding: "8px 20px",
     fontSize: 14,
-    fontWeight: 500,
-    color: "#64748b",
+    fontWeight: 700,
+    color: "#475569",
     "&[dataActive='true']": {
       color: "#0f172a",
-      fontWeight: 600
+      fontWeight: 800
     }
   }
 }
