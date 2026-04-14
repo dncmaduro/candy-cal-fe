@@ -6,18 +6,26 @@ import {
 } from "../../hooks/models"
 import {
   Box,
+  Button,
   Checkbox,
   Divider,
   Flex,
+  Group,
   ScrollArea,
   Stack,
   Table,
   Text,
   Title,
+  Badge,
   rem
 } from "@mantine/core"
 import { useEffect, useMemo, useState } from "react"
 import { useItems } from "../../hooks/useItems"
+import { useUsers } from "../../hooks/useUsers"
+import { useDeliveredRequests } from "../../hooks/useDeliveredRequests"
+import { useMutation } from "@tanstack/react-query"
+import { CToast } from "../common/CToast"
+import { DatePickerInput } from "@mantine/dates"
 
 type ShopeeProduct = SearchShopeeProductsResponse["data"][0]
 
@@ -54,10 +62,23 @@ interface Props {
   date?: Date
 }
 
-export const ShopeeCalOrders = ({ orders, allCalItems }: Props) => {
+export const ShopeeCalOrders = ({ orders, allCalItems, date }: Props) => {
   const { searchShopeeProducts } = useShopeeProducts()
   const { searchStorageItems } = useItems()
+  const { getMe } = useUsers()
+  const { createDeliveredRequest } = useDeliveredRequests()
   const [calRest, setCalRest] = useState<boolean>(false)
+  const [requestDate, setRequestDate] = useState<Date | null>(date ?? null)
+
+  useEffect(() => {
+    setRequestDate(date ?? null)
+  }, [date])
+
+  const { data: meData } = useQuery({
+    queryKey: ["getMe"],
+    queryFn: getMe,
+    select: (data) => data.data
+  })
 
   const { data: allShopeeProducts } = useQuery({
     queryKey: ["searchShopeeProducts", ""],
@@ -119,6 +140,10 @@ export const ShopeeCalOrders = ({ orders, allCalItems }: Props) => {
     })
   }
 
+  useEffect(() => {
+    setChosenOrders(orders.map(() => false))
+  }, [orders])
+
   // Tính các item cần dùng cho chosenOrders
   const [chosenItems, setChosenItems] = useState<Record<string, number>>()
 
@@ -166,6 +191,20 @@ export const ShopeeCalOrders = ({ orders, allCalItems }: Props) => {
   const totalOrders = useMemo(() => {
     return orders.reduce((acc, order) => acc + order.quantity, 0)
   }, [orders])
+
+  const { mutate: sendRequest, isPending } = useMutation({
+    mutationFn: createDeliveredRequest,
+    onSuccess: () =>
+      CToast.success({ title: "Gửi yêu cầu xuất kho thành công" }),
+    onError: () => CToast.error({ title: "Gửi yêu cầu xuất kho thất bại" })
+  })
+
+  const selectedCount = useMemo(
+    () => chosenOrders.filter(Boolean).length,
+    [chosenOrders]
+  )
+
+  const canSend = !!requestDate && !!chosenItems && selectedCount > 0 && !isPending
 
   return (
     <Stack>
@@ -295,6 +334,67 @@ export const ShopeeCalOrders = ({ orders, allCalItems }: Props) => {
           </>
         )}
       </Flex>
+
+      <Divider my={14} />
+      <Text fw={600} fz="sm" c="dimmed" mb={8}>
+        Gửi yêu cầu xuất kho
+      </Text>
+      {meData?.roles &&
+      ["admin", "order-emp"].some((role) => meData.roles.includes(role)) ? (
+        <Stack gap={10}>
+          {!date && (
+            <DatePickerInput
+              label="Chọn ngày xuất kho"
+              placeholder="DD/MM/YYYY"
+              value={requestDate}
+              onChange={setRequestDate}
+              valueFormat="DD/MM/YYYY"
+              size="sm"
+              radius="md"
+              clearable
+            />
+          )}
+
+          <Group justify="space-between" wrap="wrap">
+            <Badge variant="light" color={selectedCount ? "orange" : "gray"}>
+              Đã chọn: {selectedCount}
+            </Badge>
+          </Group>
+
+          <Button
+            color="orange"
+            radius="xl"
+            fw={700}
+            variant="light"
+            loading={isPending}
+            disabled={!canSend}
+            onClick={() => {
+              if (!requestDate || !chosenItems) return
+              const body = Object.entries(chosenItems)
+                .filter(([itemId]) => !!allStorageItems?.[itemId])
+                .map(([itemId, quantity]) => ({
+                  _id: itemId,
+                  quantity
+                }))
+              if (body.length === 0) return
+              sendRequest({
+                items: body,
+                date: requestDate
+              })
+            }}
+          >
+            Gửi cho các đơn đã chọn
+          </Button>
+
+          <Text c="dimmed" fz="xs">
+            Hệ thống sẽ tự loại các item không còn trong kho.
+          </Text>
+        </Stack>
+      ) : (
+        <Text c="dimmed" fz="sm">
+          Bạn không có quyền gửi yêu cầu xuất kho.
+        </Text>
+      )}
     </Stack>
   )
 }
