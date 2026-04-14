@@ -33,6 +33,7 @@ import {
   rem,
   Button
 } from "@mantine/core"
+import { DatePickerInput } from "@mantine/dates"
 
 import { CToast } from "../common/CToast"
 import { CDataTable } from "../common/CDataTable"
@@ -76,6 +77,11 @@ export const CalOrdersV2 = ({
 
   const [calRest, setCalRest] = useState(false)
   const [viewMode, setViewMode] = useState<ViewMode>("all")
+  const [requestDate, setRequestDate] = useState<Date | null>(date ?? null)
+
+  useEffect(() => {
+    setRequestDate(date ?? null)
+  }, [date])
 
   const { data: meData } = useQuery({
     queryKey: ["getMe"],
@@ -320,9 +326,10 @@ export const CalOrdersV2 = ({
   )
 
   // ===== UI helpers =====
-  const canSend = !!date && !!chosenItems && selectedCount > 0 && !isPending
+  const canSend =
+    !!requestDate && !!chosenItems && selectedCount > 0 && !isPending
   const canSendNotReady =
-    !!date &&
+    !!requestDate &&
     !isPending &&
     notReadyItems &&
     Object.keys(notReadyItems).length > 0
@@ -505,81 +512,88 @@ export const CalOrdersV2 = ({
             </Stack>
           </ScrollArea.Autosize>
 
-          {date && (
-            <>
-              <Divider my={12} />
+          <Divider my={12} />
 
-              <Text fw={600} fz="sm" c="dimmed" mb={8}>
-                Gửi yêu cầu xuất kho
-              </Text>
+          <Text fw={600} fz="sm" c="dimmed" mb={8}>
+            Gửi yêu cầu xuất kho
+          </Text>
 
-              {meData?.roles &&
-              ["admin", "order-emp"].some((role) =>
-                meData.roles.includes(role)
-              ) ? (
-                <Stack gap={10}>
-                  <Button
-                    color="indigo"
-                    radius="xl"
-                    fw={700}
-                    variant="light"
-                    loading={isPending}
-                    disabled={!canSend}
-                    onClick={() => {
-                      if (!date || !chosenItems) return
-                      const body = Object.entries(chosenItems)
-                        .filter(([itemId]) => !!allStorageItemsMap[itemId])
-                        .map(([itemId, quantity]) => ({
-                          _id: itemId,
-                          quantity
-                        }))
-                      if (body.length === 0) return
-                      sendRequest({
-                        items: body,
-                        date,
-                        channelId: channelId || undefined
-                      })
-                    }}
-                  >
-                    Gửi cho các đơn đã chọn
-                  </Button>
-
-                  <Button
-                    color="indigo"
-                    radius="xl"
-                    fw={700}
-                    variant="outline"
-                    loading={isPending}
-                    disabled={!canSendNotReady}
-                    onClick={() => {
-                      if (!date || !notReadyItems) return
-                      const body = Object.entries(notReadyItems)
-                        .filter(([itemId]) => !!allStorageItemsMap[itemId])
-                        .map(([itemId, quantity]) => ({
-                          _id: itemId,
-                          quantity
-                        }))
-                      if (body.length === 0) return
-                      sendRequest({
-                        items: body,
-                        date,
-                        channelId: channelId || undefined
-                      })
-                    }}
-                  >
-                    Gửi cho đơn chưa sẵn
-                  </Button>
-
-                  <Text c="dimmed" fz="xs">
-                    Hệ thống sẽ tự loại các item không còn trong kho.
-                  </Text>
-                </Stack>
-              ) : (
-                <Text c="dimmed" fz="sm">
-                  Bạn không có quyền gửi yêu cầu xuất kho.
-                </Text>
+          {meData?.roles &&
+          ["admin", "order-emp"].some((role) => meData.roles.includes(role)) ? (
+            <Stack gap={10}>
+              {!date && (
+                <DatePickerInput
+                  label="Chọn ngày xuất kho"
+                  placeholder="DD/MM/YYYY"
+                  value={requestDate}
+                  onChange={setRequestDate}
+                  valueFormat="DD/MM/YYYY"
+                  size="sm"
+                  radius="md"
+                  clearable
+                />
               )}
-            </>
+
+              <Button
+                color="indigo"
+                radius="xl"
+                fw={700}
+                variant="light"
+                loading={isPending}
+                disabled={!canSend}
+                onClick={() => {
+                  if (!requestDate || !chosenItems) return
+                  const body = Object.entries(chosenItems)
+                    .filter(([itemId]) => !!allStorageItemsMap[itemId])
+                    .map(([itemId, quantity]) => ({
+                      _id: itemId,
+                      quantity
+                    }))
+                  if (body.length === 0) return
+                  sendRequest({
+                    items: body,
+                    date: requestDate,
+                    channelId: channelId || undefined
+                  })
+                }}
+              >
+                Gửi cho các đơn đã chọn
+              </Button>
+
+              <Button
+                color="indigo"
+                radius="xl"
+                fw={700}
+                variant="outline"
+                loading={isPending}
+                disabled={!canSendNotReady}
+                onClick={() => {
+                  if (!requestDate || !notReadyItems) return
+                  const body = Object.entries(notReadyItems)
+                    .filter(([itemId]) => !!allStorageItemsMap[itemId])
+                    .map(([itemId, quantity]) => ({
+                      _id: itemId,
+                      quantity
+                    }))
+                  if (body.length === 0) return
+                  sendRequest({
+                    items: body,
+                    date: requestDate,
+                    channelId: channelId || undefined
+                  })
+                }}
+              >
+                Gửi cho đơn chưa sẵn
+              </Button>
+
+              <Text c="dimmed" fz="xs">
+                Hệ thống sẽ tự loại các item không còn trong kho.
+              </Text>
+            </Stack>
+          ) : (
+            <Text c="dimmed" fz="sm">
+              Bạn không có quyền gửi yêu cầu xuất kho.
+            </Text>
           )}
         </Paper>
       </Flex>
