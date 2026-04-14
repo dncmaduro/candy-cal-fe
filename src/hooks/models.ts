@@ -166,7 +166,7 @@ export interface CalItemsRequest {
 
 /** @interface */
 export interface CalFileRequest {
-  file: Express.Multer.File
+  file: File
 }
 
 /** @interface */

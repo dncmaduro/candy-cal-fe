@@ -18,13 +18,18 @@ import {
   Center,
   Group,
   NumberFormatter,
-  SegmentedControl
+  SegmentedControl,
+  SimpleGrid,
+  Collapse,
+  Badge,
+  Button
 } from "@mantine/core"
 import { DatePickerInput, MonthPickerInput } from "@mantine/dates"
 import { useState, useMemo, useEffect } from "react"
 import { format, startOfMonth, endOfMonth } from "date-fns"
 import { CDataTable } from "../../../components/common/CDataTable"
 import { ColumnDef } from "@tanstack/react-table"
+import { LineChart } from "@mantine/charts"
 import { HostRevenueRankingsChart } from "../../../components/livestream/HostRevenueRankingsChart"
 import { AssistantRevenueRankingsChart } from "../../../components/livestream/AssistantRevenueRankingsChart"
 import { ProductsQuantityStats } from "../../../components/incomes/ProductsQuantityStats"
@@ -99,6 +104,9 @@ function RouteComponent() {
   const [viewMode, setViewMode] = useState<
     "reports" | "host-rankings" | "assistant-rankings" | "top-products"
   >(searchParams.viewMode || "reports")
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState<boolean>(
+    !!searchParams.assigneeId
+  )
 
   // Sync state to URL
   useEffect(() => {
@@ -198,7 +206,7 @@ function RouteComponent() {
   }, [livestreamEmpData, livestreamAstData, livestreamLeaderData])
 
   // Auto-select first channel
-  useMemo(() => {
+  useEffect(() => {
     if (channelsData && channelsData.length > 0 && !channelId) {
       setChannelId(channelsData[0]._id)
     }
@@ -447,6 +455,33 @@ function RouteComponent() {
     return finalRows
   }, [livestreamData, assigneeId, employeesData])
 
+  const trendData = useMemo(() => {
+    const grouped = new Map<
+      string,
+      { date: string; income: number; realIncome: number; adsCost: number }
+    >()
+
+    tableData.forEach((row) => {
+      if (row.isSummary) {
+        grouped.set(row.dateKey, {
+          date: row.date,
+          income: row.income,
+          realIncome: row.realIncome,
+          adsCost: row.adsCost
+        })
+      }
+    })
+
+    return Array.from(grouped.values()).sort((a, b) => {
+      const [da, ma, ya] = a.date.split("/")
+      const [db, mb, yb] = b.date.split("/")
+      return (
+        new Date(Number(ya), Number(ma) - 1, Number(da)).getTime() -
+        new Date(Number(yb), Number(mb) - 1, Number(db)).getTime()
+      )
+    })
+  }, [tableData])
+
   const renderMetricsCards = () => {
     if (isLoadingMetrics) {
       return (
@@ -464,80 +499,68 @@ function RouteComponent() {
       )
     }
 
+    const incomeRate =
+      metricsData.kpi > 0 ? (metricsData.totalIncome / metricsData.kpi) * 100 : 0
+    const adsRate =
+      metricsData.totalIncome > 0
+        ? (metricsData.totalAdsCost / metricsData.totalIncome) * 100
+        : 0
+
     return (
-      <Group grow>
-        <Paper p="md" radius="md" withBorder>
-          <Stack gap={4}>
-            <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
-              Tổng doanh thu / KPI
-            </Text>
-            <Text size="xl" fw={700} c="blue.6">
+      <SimpleGrid cols={{ base: 1, sm: 2, lg: 4, xl: 4 }} spacing={14}>
+        <Paper p={18} radius="md" withBorder>
+          <Stack gap={6}>
+            <Group justify="space-between" align="flex-start" wrap="nowrap">
+              <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
+                Tổng doanh thu / KPI
+              </Text>
+              <Badge variant="light" color={incomeRate >= 100 ? "green" : "blue"}>
+                <NumberFormatter value={incomeRate} suffix="%" decimalScale={2} />
+              </Badge>
+            </Group>
+            <Text fz={rem(34)} fw={900} c="blue.7" lh={1.08}>
               <NumberFormatter
                 value={Math.round(metricsData.totalIncome)}
                 thousandSeparator
                 suffix=" VNĐ"
               />
-              <span> / </span>
+            </Text>
+            <Text size="sm" fw={700} c="dimmed">
               <NumberFormatter
                 value={Math.round(metricsData.kpi)}
                 thousandSeparator
                 suffix=" VNĐ"
               />
-              <span> (</span>
-              <NumberFormatter
-                value={(metricsData.totalIncome / metricsData.kpi) * 100}
-                suffix="%"
-                decimalScale={2}
-              />
-              <span>)</span>
             </Text>
           </Stack>
         </Paper>
 
-        <Paper p="md" radius="md" withBorder>
-          <Stack gap={4}>
-            <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
-              Tổng chi phí quảng cáo
-            </Text>
-            <Text size="xl" fw={700} c="red.6">
+        <Paper p={18} radius="md" withBorder>
+          <Stack gap={6}>
+            <Group justify="space-between" align="flex-start" wrap="nowrap">
+              <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
+                Tổng chi phí quảng cáo
+              </Text>
+              <Badge variant="light" color="orange">
+                <NumberFormatter value={adsRate} suffix="%" decimalScale={2} />
+              </Badge>
+            </Group>
+            <Text fz={rem(34)} fw={900} c="red.7" lh={1.08}>
               <NumberFormatter
                 value={Math.round(metricsData.totalAdsCost)}
                 thousandSeparator
                 suffix=" VNĐ"
-              />{" "}
-              (
-              <NumberFormatter
-                value={
-                  (metricsData.totalAdsCost / metricsData.totalIncome) * 100
-                }
-                suffix="%"
-                decimalScale={2}
               />
-              )
             </Text>
           </Stack>
         </Paper>
 
-        {/* <Paper p="md" radius="md" withBorder>
-          <Stack gap={4}>
-            <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
-              Tổng bình luận
-            </Text>
-            <Text size="xl" fw={700} c="green.6">
-              <NumberFormatter
-                value={metricsData.totalComments}
-                thousandSeparator
-              />
-            </Text>
-          </Stack>
-        </Paper> */}
-
-        <Paper p="md" radius="md" withBorder>
-          <Stack gap={4}>
-            <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
+        <Paper p={18} radius="md" withBorder>
+          <Stack gap={6}>
+            <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
               Tổng đơn hàng
             </Text>
-            <Text size="xl" fw={700} c="green.6">
+            <Text fz={rem(34)} fw={900} c="green.7" lh={1.08}>
               <NumberFormatter
                 value={metricsData.totalOrders}
                 thousandSeparator
@@ -545,30 +568,42 @@ function RouteComponent() {
             </Text>
           </Stack>
         </Paper>
-      </Group>
+
+        <Paper p={18} radius="md" withBorder>
+          <Stack gap={6}>
+            <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
+              Tổng bình luận
+            </Text>
+            <Text fz={rem(34)} fw={900} c="teal.7" lh={1.08}>
+              <NumberFormatter
+                value={metricsData.totalComments}
+                thousandSeparator
+              />
+            </Text>
+          </Stack>
+        </Paper>
+      </SimpleGrid>
     )
   }
 
-  // Enhanced table data with background styling for date groups
+  // Enhanced table data for row styling and stable row id
   const enhancedTableData = useMemo(() => {
-    const uniqueDates = [...new Set(tableData.map((r) => r.dateKey))]
-    const dateColorMap = new Map<string, number>()
-    uniqueDates.forEach((date, idx) => {
-      dateColorMap.set(date, idx)
-    })
-
-    return tableData.map((row) => ({
+    return tableData.map((row, index) => ({
       ...row,
-      _dateGroupIndex: dateColorMap.get(row.dateKey) || 0
+      _rowIndex: index
     }))
   }, [tableData])
 
-  // Custom columns - simplified without individual cell backgrounds
   const styledColumns = useMemo<ColumnDef<(typeof enhancedTableData)[0]>[]>(
     () => [
       {
         accessorKey: "date",
         header: "Ngày",
+        size: 130,
+        meta: {
+          headerClassName: "lsr-sticky lsr-col-date",
+          cellClassName: "lsr-sticky lsr-col-date"
+        },
         cell: ({ row }) => {
           if (row.original.isSummary) {
             return null // Don't show date for summary row
@@ -588,6 +623,11 @@ function RouteComponent() {
       {
         accessorKey: "period",
         header: "Khung giờ",
+        size: 170,
+        meta: {
+          headerClassName: "lsr-sticky lsr-col-period",
+          cellClassName: "lsr-sticky lsr-col-period"
+        },
         cell: ({ getValue, row }) => (
           <Text
             size="sm"
@@ -601,6 +641,11 @@ function RouteComponent() {
       {
         accessorKey: "assignee",
         header: "Host",
+        size: 170,
+        meta: {
+          headerClassName: "lsr-sticky lsr-col-assignee",
+          cellClassName: "lsr-sticky lsr-col-assignee"
+        },
         cell: ({ getValue, row }) => {
           if (row.original.isSummary) {
             return null
@@ -611,6 +656,7 @@ function RouteComponent() {
       {
         accessorKey: "income",
         header: "DT",
+        meta: { isNumeric: true },
         cell: ({ getValue, row }) => {
           const value = getValue() as number
           return (
@@ -631,6 +677,7 @@ function RouteComponent() {
       {
         accessorKey: "realIncome",
         header: "DT thực",
+        meta: { isNumeric: true },
         cell: ({ getValue, row }) => {
           const value = getValue() as number
           return (
@@ -651,6 +698,7 @@ function RouteComponent() {
       {
         accessorKey: "adsCost",
         header: "Ads",
+        meta: { isNumeric: true },
         cell: ({ getValue, row }) => {
           const value = getValue() as number
           return (
@@ -671,6 +719,7 @@ function RouteComponent() {
       {
         accessorKey: "orders",
         header: "Số đơn",
+        meta: { isNumeric: true },
         cell: ({ getValue, row }) => {
           const value = getValue() as number
           return (
@@ -685,8 +734,11 @@ function RouteComponent() {
         }
       },
       {
-        accessorKey: "CAC",
+        id: "CAC",
         header: "Ads/DT",
+        accessorFn: (row) =>
+          row.income > 0 ? (row.adsCost / row.income) * 100 : 0,
+        meta: { isNumeric: true },
         cell: ({ row }) => {
           const income = row.original.income as number
           const adsCost = row.original.adsCost as number
@@ -703,13 +755,16 @@ function RouteComponent() {
         }
       },
       {
-        accessorKey: "AOV",
+        id: "AOV",
         header: "AOV",
+        accessorFn: (row) =>
+          row.orders > 0 ? (row.income - row.adsCost) / row.orders : 0,
+        meta: { isNumeric: true },
         cell: ({ row }) => {
           const income = row.original.income as number
           const adsCost = row.original.adsCost as number
           const orders = row.original.orders as number
-          const aov = (income - adsCost) / orders
+          const aov = orders > 0 ? (income - adsCost) / orders : 0
           return (
             <Text
               size="sm"
@@ -722,12 +777,14 @@ function RouteComponent() {
         }
       },
       {
-        accessorKey: "CPO",
+        id: "CPO",
         header: "CPO",
+        accessorFn: (row) => (row.orders > 0 ? row.adsCost / row.orders : 0),
+        meta: { isNumeric: true },
         cell: ({ row }) => {
           const adsCost = row.original.adsCost as number
           const orders = row.original.orders as number
-          const cpo = adsCost / orders
+          const cpo = orders > 0 ? adsCost / orders : 0
           return (
             <Text
               size="sm"
@@ -742,6 +799,7 @@ function RouteComponent() {
       {
         accessorKey: "snapshotKpi",
         header: "KPI",
+        meta: { isNumeric: true },
         cell: ({ row }) => {
           const kpi = row.original.snapshotKpi || 0
           const income = row.original.income || 0
@@ -777,6 +835,7 @@ function RouteComponent() {
       {
         accessorKey: "clickRate",
         header: "Tỷ lệ click (%)",
+        meta: { isNumeric: true },
         cell: ({ getValue, row }) => {
           if (row.original.isSummary) {
             return null
@@ -792,6 +851,7 @@ function RouteComponent() {
       {
         accessorKey: "avgViewingDuration",
         header: "TGXTB (giây)",
+        meta: { isNumeric: true },
         cell: ({ getValue, row }) => {
           if (row.original.isSummary) {
             return null
@@ -807,6 +867,7 @@ function RouteComponent() {
       {
         accessorKey: "comments",
         header: "Bình luận",
+        meta: { isNumeric: true },
         cell: ({ getValue, row }) => {
           const value = getValue() as number
           return (
@@ -857,7 +918,7 @@ function RouteComponent() {
   return (
     <LivestreamLayout>
       <Box
-        mt={40}
+        mt={20}
         mx="auto"
         px={{ base: 8, md: 0 }}
         w="100%"
@@ -889,25 +950,12 @@ function RouteComponent() {
 
         <Divider my={0} />
 
-        <Box px={{ base: 4, md: 28 }} py={20}>
-          {/* Mode Selector */}
-          <Box mb="lg">
-            <SegmentedControl
-              value={mode}
-              onChange={(value) => setMode(value as "range" | "month")}
-              size="sm"
-              data={[
-                { label: "Theo khoảng", value: "range" },
-                { label: "Theo tháng", value: "month" }
-              ]}
-              fullWidth
-            />
-          </Box>
+        <Box px={{ base: 6, md: 20 }} py={16}>
+          <Box mb={14}>{renderMetricsCards()}</Box>
 
-          {/* Filter Controls */}
           <Paper
-            p="md"
-            mb="lg"
+            p={16}
+            mb={12}
             radius="md"
             withBorder
             style={{
@@ -915,96 +963,114 @@ function RouteComponent() {
               borderColor: "var(--mantine-color-gray-3)"
             }}
           >
-            <Stack gap="md">
-              {/* Date Range or Month Picker */}
-              {mode === "range" ? (
-                <Group grow>
-                  <Stack gap={4}>
+            <Stack gap={10}>
+              <Group align="end" grow wrap="wrap" gap={12}>
+                <Stack gap={4} miw={180}>
+                  <SegmentedControl
+                    value={mode}
+                    onChange={(value) => setMode(value as "range" | "month")}
+                    size="sm"
+                    data={[
+                      { label: "Theo khoảng", value: "range" },
+                      { label: "Theo tháng", value: "month" }
+                    ]}
+                  />
+                </Stack>
+
+                {mode === "range" ? (
+                  <>
+                    <Stack gap={4} miw={170}>
+                      <Text size="xs" fw={600} c="dimmed" tt="uppercase">
+                        Từ ngày
+                      </Text>
+                      <DatePickerInput
+                        placeholder="Chọn ngày bắt đầu"
+                        value={startDate}
+                        onChange={setStartDate}
+                        size="sm"
+                        radius="md"
+                        clearable
+                        valueFormat="DD/MM/YYYY"
+                      />
+                    </Stack>
+                    <Stack gap={4} miw={170}>
+                      <Text size="xs" fw={600} c="dimmed" tt="uppercase">
+                        Đến ngày
+                      </Text>
+                      <DatePickerInput
+                        placeholder="Chọn ngày kết thúc"
+                        value={endDate}
+                        onChange={setEndDate}
+                        size="sm"
+                        radius="md"
+                        clearable
+                        valueFormat="DD/MM/YYYY"
+                      />
+                    </Stack>
+                  </>
+                ) : (
+                  <Stack gap={4} miw={170}>
                     <Text size="xs" fw={600} c="dimmed" tt="uppercase">
-                      Từ ngày
+                      Chọn tháng
                     </Text>
-                    <DatePickerInput
-                      placeholder="Chọn ngày bắt đầu"
-                      value={startDate}
-                      onChange={setStartDate}
+                    <MonthPickerInput
+                      placeholder="Chọn tháng"
+                      value={selectedMonth}
+                      onChange={setSelectedMonth}
                       size="sm"
                       radius="md"
                       clearable
-                      valueFormat="DD/MM/YYYY"
+                      valueFormat="MM/YYYY"
                     />
                   </Stack>
-                  <Stack gap={4}>
-                    <Text size="xs" fw={600} c="dimmed" tt="uppercase">
-                      Đến ngày
-                    </Text>
-                    <DatePickerInput
-                      placeholder="Chọn ngày kết thúc"
-                      value={endDate}
-                      onChange={setEndDate}
-                      size="sm"
-                      radius="md"
-                      clearable
-                      valueFormat="DD/MM/YYYY"
-                    />
-                  </Stack>
+                )}
+
+                <Stack gap={4} miw={220}>
+                  <Text size="xs" fw={600} c="dimmed" tt="uppercase">
+                    Kênh livestream
+                  </Text>
+                  <Select
+                    placeholder="Chọn kênh"
+                    value={channelId || ""}
+                    clearable
+                    onChange={(v) => setChannelId(v || null)}
+                    data={channelOptions}
+                    size="sm"
+                    radius="md"
+                  />
+                </Stack>
+                <Group align="center" justify="flex-end" miw={100}>
+                <Button
+                  variant="subtle"
+                  size="xs"
+                  onClick={() => setShowAdvancedFilters((v) => !v)}
+                >
+                  Host
+                </Button>
                 </Group>
-              ) : (
+              </Group>
+
+              <Collapse in={showAdvancedFilters}>
                 <Stack gap={4}>
                   <Text size="xs" fw={600} c="dimmed" tt="uppercase">
-                    Chọn tháng
+                    Host
                   </Text>
-                  <MonthPickerInput
-                    placeholder="Chọn tháng"
-                    value={selectedMonth}
-                    onChange={setSelectedMonth}
+                  <Select
+                    placeholder="Tất cả host"
+                    value={assigneeId || ""}
+                    onChange={(v) => setAssigneeId(v || null)}
+                    data={employeeOptions}
                     size="sm"
                     radius="md"
                     clearable
-                    valueFormat="MM/YYYY"
+                    searchable
                   />
                 </Stack>
-              )}
-
-              {/* Channel select */}
-              <Stack gap={4}>
-                <Text size="xs" fw={600} c="dimmed" tt="uppercase">
-                  Kênh livestream
-                </Text>
-                <Select
-                  placeholder="Chọn kênh"
-                  value={channelId || ""}
-                  clearable
-                  onChange={(v) => setChannelId(v || null)}
-                  data={channelOptions}
-                  size="sm"
-                  radius="md"
-                />
-              </Stack>
-
-              {/* Assignee select */}
-              <Stack gap={4}>
-                <Text size="xs" fw={600} c="dimmed" tt="uppercase">
-                  Host
-                </Text>
-                <Select
-                  placeholder="Tất cả host"
-                  value={assigneeId || ""}
-                  onChange={(v) => setAssigneeId(v || null)}
-                  data={employeeOptions}
-                  size="sm"
-                  radius="md"
-                  clearable
-                  searchable
-                />
-              </Stack>
+              </Collapse>
             </Stack>
           </Paper>
 
-          {/* Metrics Cards */}
-          <Box mb="lg">{renderMetricsCards()}</Box>
-
-          {/* View Mode Selector */}
-          <Box mb="lg">
+          <Paper mb={12} p={6} radius="md" withBorder>
             <SegmentedControl
               value={viewMode}
               onChange={(value) =>
@@ -1025,25 +1091,83 @@ function RouteComponent() {
               ]}
               fullWidth
             />
-          </Box>
+          </Paper>
 
           {/* Reports Table */}
           {viewMode === "reports" && (
-            <Box>
+            <Stack gap={12}>
+              <Paper p={16} radius="md" withBorder>
+                {trendData.length > 0 ? (
+                  <LineChart
+                    h={220}
+                    data={trendData}
+                    dataKey="date"
+                    curveType="linear"
+                    withLegend
+                    withTooltip
+                    series={[
+                      { name: "income", label: "DT", color: "indigo.6" },
+                      { name: "realIncome", label: "DT thực", color: "blue.6" },
+                      { name: "adsCost", label: "Ads", color: "orange.6" }
+                    ]}
+                    valueFormatter={(value) =>
+                      new Intl.NumberFormat("vi-VN").format(Number(value))
+                    }
+                  />
+                ) : (
+                  <Center h={220}>
+                    <Loader size="sm" />
+                  </Center>
+                )}
+              </Paper>
+              <Paper p={16} radius="md" withBorder className="lsr-table-wrap">
               <style>
                 {`
-                  .date-group-odd {
-                    background-color: var(--mantine-color-gray-0) !important;
+                  .lsr-table-wrap > .relative > .overflow-x-auto {
+                    max-height: ${rem(560)};
+                    overflow: auto;
                   }
-                  .date-group-odd:hover {
-                    background-color: var(--mantine-color-gray-1) !important;
+                  .lsr-table-wrap .lsr-sticky {
+                    position: sticky;
+                    z-index: 2;
+                    background: #ffffff;
                   }
-                  .summary-row {
-                    background-color: var(--mantine-color-indigo-0) !important;
+                  .lsr-table-wrap thead .lsr-sticky {
+                    z-index: 14;
+                    background: #f8fafc;
+                  }
+                  .lsr-table-wrap .lsr-col-date {
+                    left: 0;
+                    min-width: 130px;
+                    width: 130px;
+                    box-shadow: 1px 0 0 #e2e8f0;
+                  }
+                  .lsr-table-wrap .lsr-col-period {
+                    left: 130px;
+                    min-width: 170px;
+                    width: 170px;
+                    box-shadow: 1px 0 0 #e2e8f0;
+                  }
+                  .lsr-table-wrap .lsr-col-assignee {
+                    left: 300px;
+                    min-width: 170px;
+                    width: 170px;
+                    box-shadow: 1px 0 0 #e2e8f0;
+                  }
+                  .lsr-table-wrap .lsr-row-zebra td {
+                    background: #fbfdff !important;
+                  }
+                  .lsr-table-wrap .lsr-summary-row td {
+                    background: #f1f5f9 !important;
+                    border-top: 1px solid #cbd5e1;
+                    border-bottom: 1px solid #cbd5e1;
                     font-weight: 600;
                   }
-                  .summary-row:hover {
-                    background-color: var(--mantine-color-indigo-1) !important;
+                  .lsr-table-wrap .lsr-row-zebra td.lsr-sticky {
+                    background: #fbfdff !important;
+                  }
+                  .lsr-table-wrap .lsr-summary-row td.lsr-sticky {
+                    background: #f1f5f9 !important;
                   }
                 `}
               </style>
@@ -1051,25 +1175,27 @@ function RouteComponent() {
                 columns={styledColumns}
                 data={enhancedTableData}
                 isLoading={isLoadingLivestreams}
+                variant="default"
                 page={1}
                 totalPages={1}
                 onPageChange={() => {}}
                 onPageSizeChange={() => {}}
-                initialPageSize={100}
+                initialPageSize={50}
                 pageSizeOptions={[50, 100, 200]}
                 hideSearch
-                className="[&_th]:text-xs!"
+                hidePaginationInformation
+                hideColumnToggle={false}
+                className="[&_th]:text-[11px]! [&_td]:text-xs! [&_td]:py-1.5! [&_th]:py-1.5!"
                 getRowId={(row) =>
                   `${row.dateKey}-${row.period}-${row.isSummary ? "summary" : row.assigneeId}`
                 }
                 getRowClassName={(row) => {
-                  if (row.original.isSummary) return "summary-row"
-                  return row.original._dateGroupIndex % 2 === 1
-                    ? "date-group-odd"
-                    : ""
+                  if (row.original.isSummary) return "lsr-summary-row"
+                  return row.original._rowIndex % 2 === 0 ? "lsr-row-zebra" : ""
                 }}
               />
-            </Box>
+              </Paper>
+            </Stack>
           )}
 
           {/* Rankings Chart */}

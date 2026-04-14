@@ -31,8 +31,8 @@ export const StorageXlsxCalculatorsPage = () => {
 
       <Box px={{ base: 8, md: 28 }} py={20}>
         <SimpleGrid cols={{ base: 1, xl: 2 }} spacing="lg">
-          <TiktokXlsxCalculator />
-          <ShopeeXlsxCalculator />
+          <TiktokXlsxCalculator enableSaveLog />
+          <ShopeeXlsxCalculator enableSaveLog />
         </SimpleGrid>
       </Box>
     </Box>

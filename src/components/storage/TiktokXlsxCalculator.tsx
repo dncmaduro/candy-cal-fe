@@ -26,9 +26,13 @@ import { CToast } from "../common/CToast"
 
 type Props = {
   compact?: boolean
+  enableSaveLog?: boolean
 }
 
-export const TiktokXlsxCalculator = ({ compact = false }: Props) => {
+export const TiktokXlsxCalculator = ({
+  compact = false,
+  enableSaveLog = true
+}: Props) => {
   const { calFile } = useProducts()
   const { lastProductsResult, setLastProductsResult } = useCalResultStore()
   const [xlsxFile, setXlsxFile] = useState<File | null>(null)
@@ -56,6 +60,9 @@ export const TiktokXlsxCalculator = ({ compact = false }: Props) => {
           <CalFileResultModal
             items={calResult.items}
             orders={calResult.orders}
+            allowSaveLog={enableSaveLog}
+            modalTitle="Kết quả tính toán từ file Excel"
+            modalSubtitle="Kiểm tra mặt hàng tổng hợp và tiến hành đóng đơn theo danh sách đã chọn."
           />
         ),
         size: "80vw"
@@ -82,12 +89,15 @@ export const TiktokXlsxCalculator = ({ compact = false }: Props) => {
           Kết quả tính toán gần nhất
         </Text>
       ),
-      children: (
-        <CalFileResultModal
-          items={lastProductsResult.items}
-          orders={lastProductsResult.orders}
-        />
-      ),
+        children: (
+          <CalFileResultModal
+            items={lastProductsResult.items}
+            orders={lastProductsResult.orders}
+            allowSaveLog={enableSaveLog}
+            modalTitle="Kết quả tính toán gần nhất"
+            modalSubtitle="Kiểm tra mặt hàng tổng hợp và tiến hành đóng đơn theo danh sách đã chọn."
+          />
+        ),
       size: "80vw"
     })
   }

@@ -160,9 +160,10 @@ export const useIncomes = () => {
       method: "GET",
       token: accessToken,
       headers: {
-        "Content-Type":
+        Accept:
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-      }
+      },
+      responseType: "blob"
     })
   }
 

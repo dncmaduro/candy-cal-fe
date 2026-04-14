@@ -1,16 +1,30 @@
 import { useQuery } from "@tanstack/react-query"
 import { useItems } from "../../hooks/useItems"
-import { Box, Button, Collapse, Divider, Stack, Tabs, rem } from "@mantine/core"
+import {
+  Badge,
+  Box,
+  Button,
+  Collapse,
+  Divider,
+  Group,
+  Paper,
+  Stack,
+  Tabs,
+  Text,
+  ThemeIcon,
+  rem
+} from "@mantine/core"
 import { SearchStorageItemResponse } from "../../hooks/models"
 import {
   IconBox,
-  IconClipboardList,
+  IconChecklist,
   IconCalendarPlus
 } from "@tabler/icons-react"
 import { useDisclosure } from "@mantine/hooks"
 import { SaveLogDiv } from "./SaveLogDiv"
 import { CalItemsV2 } from "./CalItemsV2"
 import { CalOrdersV2 } from "./CalOrdersV2"
+import { useMemo, useState } from "react"
 
 interface Props {
   items: {
@@ -45,6 +59,9 @@ interface Props {
   date?: Date
   platform?: string
   channelId?: string
+  allowSaveLog?: boolean
+  modalTitle?: string
+  modalSubtitle?: string
 }
 
 export const CalFileResultModal = ({
@@ -53,10 +70,26 @@ export const CalFileResultModal = ({
   readOnly,
   date,
   platform,
-  channelId
+  channelId,
+  allowSaveLog = true,
+  modalTitle = "Kết quả tính toán gần nhất",
+  modalSubtitle = "Kiểm tra mặt hàng tổng hợp và tiến hành đóng đơn theo danh sách đã chọn."
 }: Props) => {
   const { searchStorageItems } = useItems()
   const [saveLogDiv, { toggle }] = useDisclosure(false)
+  const [activeTab, setActiveTab] = useState<string | null>("items")
+  const [selectionStats, setSelectionStats] = useState({
+    selectedOrders: 0,
+    requiredItemTypes: 0,
+    missingItemTypes: 0
+  })
+
+  const totalOrders = useMemo(
+    () => orders.reduce((sum, order) => sum + order.quantity, 0),
+    [orders]
+  )
+  const totalItemTypes = items.length
+
   const { data: allItems } = useQuery({
     queryKey: ["searchStorageItems"],
     queryFn: () => searchStorageItems({ searchText: "", deleted: false }),
@@ -69,54 +102,120 @@ export const CalFileResultModal = ({
 
   return (
     <Box
-      px={{ base: 0, md: 8 }}
-      pt={10}
+      px={{ base: 4, md: 8 }}
+      pt={6}
       pb={0}
       style={{
-        background: "rgba(255,255,255,0.97)",
-        borderRadius: rem(16),
+        background: "linear-gradient(180deg, #fcfcfd 0%, #ffffff 100%)",
+        borderRadius: rem(18),
         minWidth: 320,
         maxWidth: "100%",
-        margin: "0 auto"
+        margin: "0 auto",
+        border: "1px solid rgba(15, 23, 42, 0.08)"
       }}
     >
+      <Paper
+        withBorder
+        radius="lg"
+        p="md"
+        mb={12}
+        style={{ borderColor: "rgba(15, 23, 42, 0.08)" }}
+      >
+        <Group justify="space-between" align="start" wrap="nowrap">
+          <Box style={{ minWidth: 0 }}>
+            <Text fw={700} fz="lg" mb={2}>
+              {modalTitle}
+            </Text>
+            <Text c="dimmed" fz="sm">
+              {modalSubtitle}
+            </Text>
+          </Box>
+        </Group>
+      </Paper>
+
       <Tabs
-        defaultValue="items"
+        value={activeTab}
+        onChange={setActiveTab}
         variant="pills"
         color="indigo"
         radius="xl"
         keepMounted={false}
       >
-        <Tabs.List mb={8} justify="flex-start" style={{ gap: 12 }}>
+        <Tabs.List
+          mb={10}
+          grow
+          style={{
+            gap: 8,
+            background: "rgba(99, 102, 241, 0.08)",
+            padding: 6,
+            borderRadius: rem(12)
+          }}
+        >
           <Tabs.Tab
             value="items"
-            leftSection={<IconBox size={17} />}
-            fw={600}
+            leftSection={
+              <ThemeIcon size={22} radius="xl" variant="light" color="indigo">
+                <IconBox size={13} />
+              </ThemeIcon>
+            }
+            fw={700}
             fz="sm"
-            px={18}
-            style={{ letterSpacing: 0.1 }}
+            px={14}
           >
-            Mặt hàng
+            Bước 1: Mặt hàng
           </Tabs.Tab>
           <Tabs.Tab
             value="orders"
-            leftSection={<IconClipboardList size={17} />}
-            fw={600}
+            leftSection={
+              <ThemeIcon size={22} radius="xl" variant="light" color="indigo">
+                <IconChecklist size={13} />
+              </ThemeIcon>
+            }
+            fw={700}
             fz="sm"
-            px={18}
-            style={{ letterSpacing: 0.1 }}
+            px={14}
           >
-            Đóng đơn
+            Bước 2: Đóng đơn
           </Tabs.Tab>
         </Tabs.List>
 
-        <Tabs.Panel value="items" className="p-3">
+        <Paper
+          withBorder
+          radius="lg"
+          p={10}
+          mb={12}
+          style={{ borderColor: "rgba(15, 23, 42, 0.08)" }}
+        >
+          <Group gap={8} wrap="wrap">
+            <Badge variant="light" color="indigo">
+              Tổng đơn: {totalOrders}
+            </Badge>
+            <Badge variant="light" color={selectionStats.selectedOrders ? "blue" : "gray"}>
+              Đã chọn: {selectionStats.selectedOrders}
+            </Badge>
+            <Badge variant="light" color="grape">
+              Số loại mặt hàng: {totalItemTypes}
+            </Badge>
+            {selectionStats.missingItemTypes > 0 && (
+              <Badge variant="light" color="yellow">
+                Còn thiếu: {selectionStats.missingItemTypes}
+              </Badge>
+            )}
+            {activeTab === "orders" && selectionStats.requiredItemTypes > 0 && (
+              <Badge variant="outline" color="indigo">
+                Đang cần dùng: {selectionStats.requiredItemTypes}
+              </Badge>
+            )}
+          </Group>
+        </Paper>
+
+        <Tabs.Panel value="items">
           <CalItemsV2 allItems={allItems} items={items} />
         </Tabs.Panel>
 
         <Tabs.Panel
           value="orders"
-          className="mx-2 mb-4 rounded-xl border border-gray-100 p-4 shadow-sm"
+          className="mb-4"
         >
           <CalOrdersV2
             orders={orders}
@@ -124,11 +223,12 @@ export const CalFileResultModal = ({
             date={date}
             platform={platform}
             channelId={channelId}
+            onSelectionStatsChange={setSelectionStats}
           />
         </Tabs.Panel>
       </Tabs>
 
-      {!readOnly && (
+      {!readOnly && allowSaveLog && (
         <>
           <Divider mt={24} mb={20} label={"Lưu lịch sử vận đơn"} />
           <Stack gap={16} px={4}>

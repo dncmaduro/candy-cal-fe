@@ -270,7 +270,7 @@ export const ProductsV2 = () => {
       )}
 
       {/* Excel actions in toolbar */}
-      <TiktokXlsxCalculator compact />
+      <TiktokXlsxCalculator compact enableSaveLog={false} />
     </Group>
   )
 

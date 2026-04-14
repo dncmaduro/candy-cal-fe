@@ -263,7 +263,7 @@ export const ShopeeProducts = () => {
         </Tooltip>
       )}
 
-      {!showDeleted && <ShopeeXlsxCalculator compact />}
+      {!showDeleted && <ShopeeXlsxCalculator compact enableSaveLog={false} />}
     </Group>
   )
 

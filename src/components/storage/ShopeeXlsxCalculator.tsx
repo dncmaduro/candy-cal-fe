@@ -28,9 +28,13 @@ import { CToast } from "../common/CToast"
 
 type Props = {
   compact?: boolean
+  enableSaveLog?: boolean
 }
 
-export const ShopeeXlsxCalculator = ({ compact = false }: Props) => {
+export const ShopeeXlsxCalculator = ({
+  compact = false,
+  enableSaveLog = true
+}: Props) => {
   const { calShopeeByXlsx } = useShopeeProducts()
   const { lastShopeeResult, setLastShopeeResult } = useCalResultStore()
   const [xlsxFile, setXlsxFile] = useState<File | null>(null)
@@ -66,7 +70,16 @@ export const ShopeeXlsxCalculator = ({ compact = false }: Props) => {
             Kết quả tính toán từ file Excel Shopee
           </Text>
         ),
-        children: <ShopeeCalResultModal items={items} orders={orders} />,
+        children: (
+          <ShopeeCalResultModal
+            items={items}
+            orders={orders}
+            date={new Date()}
+            allowSaveLog={enableSaveLog}
+            modalTitle="Kết quả tính toán từ file Excel Shopee"
+            modalSubtitle="Kiểm tra mặt hàng tổng hợp và tiến hành đóng đơn theo danh sách đã chọn."
+          />
+        ),
         size: "70vw"
       })
     },
@@ -96,6 +109,10 @@ export const ShopeeXlsxCalculator = ({ compact = false }: Props) => {
           items={lastShopeeResult.items}
           orders={lastShopeeResult.orders}
           readOnly={true}
+          date={new Date(lastShopeeResult.timestamp)}
+          allowSaveLog={enableSaveLog}
+          modalTitle="Kết quả tính toán gần nhất"
+          modalSubtitle="Kiểm tra mặt hàng tổng hợp và tiến hành đóng đơn theo danh sách đã chọn."
         />
       ),
       size: "70vw"

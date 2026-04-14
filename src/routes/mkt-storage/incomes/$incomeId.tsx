@@ -1,12 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router"
-import { StorageIncomeDetailPage } from "../../marketing-storage/incomes/$incomeId"
+import { createFileRoute, redirect } from "@tanstack/react-router"
 
 export const Route = createFileRoute("/mkt-storage/incomes/$incomeId")({
-  component: RouteComponent
+  beforeLoad: () => {
+    throw redirect({
+      to: "/mkt-storage"
+    })
+  },
+  component: () => null
 })
-
-function RouteComponent() {
-  const { incomeId } = Route.useParams()
-
-  return <StorageIncomeDetailPage incomeId={incomeId} />
-}

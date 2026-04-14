@@ -1,19 +1,15 @@
 import { useEffect, useMemo, useState } from "react"
 import { useQuery, useMutation } from "@tanstack/react-query"
-import type { ColumnDef } from "@tanstack/react-table"
-import { isEqual } from "lodash"
 
 import { useProducts } from "../../hooks/useProducts"
 import { useShopeeProducts } from "../../hooks/useShopeeProducts"
 import { useItems } from "../../hooks/useItems"
-import { useReadyCombos } from "../../hooks/useReadyCombos"
 import { useUsers } from "../../hooks/useUsers"
 import { useDeliveredRequests } from "../../hooks/useDeliveredRequests"
 
 import type {
   SearchStorageItemResponse,
   ProductResponse,
-  ReadyComboResponse,
   GetAllShopeeProductsResponse
 } from "../../hooks/models"
 
@@ -26,16 +22,17 @@ import {
   Group,
   Paper,
   ScrollArea,
-  SegmentedControl,
   Stack,
+  Switch,
+  Table,
   Text,
-  Title,
+  ThemeIcon,
   rem,
   Button
 } from "@mantine/core"
+import { IconAlertTriangle, IconClipboardList } from "@tabler/icons-react"
 
 import { CToast } from "../common/CToast"
-import { CDataTable } from "../common/CDataTable"
 
 interface Props {
   orders: {
@@ -46,18 +43,12 @@ interface Props {
   date?: Date
   platform?: string
   channelId?: string
-}
-
-const normalizeProducts = (products: { _id: string; quantity: number }[]) =>
-  [...products].sort((a, b) => a._id.localeCompare(b._id))
-
-type ViewMode = "all" | "ready" | "not-ready"
-
-type OrderRow = {
-  _rowId: string
-  orderIndex: number
-  products: { name: string; quantity: number }[]
-  quantity: number
+  enableBulkTableSelection?: boolean
+  onSelectionStatsChange?: (stats: {
+    selectedOrders: number
+    requiredItemTypes: number
+    missingItemTypes: number
+  }) => void
 }
 
 export const CalOrdersV2 = ({
@@ -65,17 +56,17 @@ export const CalOrdersV2 = ({
   allCalItems,
   date,
   platform,
-  channelId
+  channelId,
+  enableBulkTableSelection = false,
+  onSelectionStatsChange
 }: Props) => {
   const { getAllProducts } = useProducts()
   const { getAllShopeeProducts } = useShopeeProducts()
   const { searchStorageItems } = useItems()
   const { getMe } = useUsers()
   const { createDeliveredRequest } = useDeliveredRequests()
-  const { searchCombos } = useReadyCombos()
 
   const [calRest, setCalRest] = useState(false)
-  const [viewMode, setViewMode] = useState<ViewMode>("all")
 
   const { data: meData } = useQuery({
     queryKey: ["getMe"],
@@ -83,13 +74,9 @@ export const CalOrdersV2 = ({
     select: (data) => data.data
   })
 
-  const { data: readyCombosData } = useQuery({
-    queryKey: ["searchCombos"],
-    queryFn: () => searchCombos({ isReady: true }),
-    select: (data) => data.data as ReadyComboResponse[]
-  })
+  const normalizedPlatform = (platform || "tiktokshop").toLowerCase()
+  const isShopee = normalizedPlatform === "shopee"
 
-  const isTiktokshop = platform === "tiktokshop" || !platform
   type ProductLike = {
     _id: string
     name: string
@@ -97,13 +84,14 @@ export const CalOrdersV2 = ({
   }
 
   const { data: allProducts } = useQuery({
-    queryKey: ["getAllProducts", platform],
-    queryFn: isTiktokshop ? getAllProducts : getAllShopeeProducts,
+    queryKey: ["getAllProducts", normalizedPlatform],
+    queryFn: isShopee ? getAllShopeeProducts : getAllProducts,
     select: (data) => {
-      const products = isTiktokshop
-        ? (data.data as ProductResponse[])
-        : ((data.data as unknown as GetAllShopeeProductsResponse).products ??
+      const products = isShopee
+        ? ((data.data as unknown as GetAllShopeeProductsResponse).products ??
           [])
+        : (data.data as ProductResponse[])
+
       return products.reduce(
         (acc, product) => ({ ...acc, [product._id]: product }),
         {} as Record<string, ProductLike>
@@ -120,69 +108,6 @@ export const CalOrdersV2 = ({
       : {}
   }, [allProducts])
 
-  const normalizedCombos = useMemo(
-    () =>
-      readyCombosData
-        ? readyCombosData.map((combo) => normalizeProducts(combo.products))
-        : [],
-    [readyCombosData]
-  )
-
-  const isOrderReady = (order: Props["orders"][0]) => {
-    if (!allProductsByName) return false
-
-    const normalizedOrderProducts = normalizeProducts(
-      order.products.map((p) => ({
-        _id: allProductsByName[p.name]?._id ?? "UNKNOWN",
-        quantity: p.quantity
-      }))
-    )
-
-    return normalizedCombos.some((comboProducts) =>
-      isEqual(comboProducts, normalizedOrderProducts)
-    )
-  }
-
-  const filteredOrders = useMemo(() => {
-    if (!allProductsByName) return []
-    if (viewMode === "ready") return orders.filter(isOrderReady)
-    if (viewMode === "not-ready") return orders.filter((o) => !isOrderReady(o))
-    return orders
-  }, [orders, allProductsByName, normalizedCombos, viewMode])
-
-  const notReadyOrders = useMemo(() => {
-    if (!allProductsByName) return []
-    return orders
-      .map((order) => ({
-        ...order,
-        products: order.products.filter(
-          (p) =>
-            !isOrderReady({
-              ...order,
-              products: [p]
-            })
-        )
-      }))
-      .filter((order) => order.products.length > 0)
-  }, [orders, allProductsByName, normalizedCombos])
-
-  const notReadyItems = useMemo(() => {
-    if (!notReadyOrders.length || !allProductsByName) return {}
-    return notReadyOrders.reduce(
-      (acc, order) => {
-        order.products.forEach((p) => {
-          const product = allProductsByName[p.name]
-          product?.items?.forEach((item) => {
-            acc[item._id] =
-              (acc[item._id] || 0) + item.quantity * p.quantity * order.quantity
-          })
-        })
-        return acc
-      },
-      {} as Record<string, number>
-    )
-  }, [notReadyOrders, allProductsByName])
-
   const { data: allStorageItems } = useQuery({
     queryKey: ["searchStorageItems"],
     queryFn: () => searchStorageItems({ searchText: "", deleted: false }),
@@ -198,39 +123,98 @@ export const CalOrdersV2 = ({
       : {}
   }, [allStorageItems])
 
-  // selection state (index theo filteredOrders)
   const [chosenOrders, setChosenOrders] = useState<boolean[]>(
     orders.map(() => false)
   )
+  const [selectedOrderIndexes, setSelectedOrderIndexes] = useState<Set<number>>(
+    new Set()
+  )
+
+  const ordersSelectionKey = useMemo(
+    () =>
+      orders
+        .map(
+          (order) =>
+            `${order.quantity}:${order.products
+              .map((p) => `${p.name}-${p.quantity}`)
+              .join("|")}`
+        )
+        .join("||"),
+    [orders]
+  )
 
   useEffect(() => {
-    setChosenOrders(filteredOrders.map(() => false))
-  }, [viewMode, orders, filteredOrders])
+    setChosenOrders(orders.map(() => false))
+    setSelectedOrderIndexes(new Set())
+  }, [ordersSelectionKey])
 
-  const toggleOrders = (index: number) => {
+  const isOrderSelected = (index: number) => {
+    if (enableBulkTableSelection) return selectedOrderIndexes.has(index)
+    return !!chosenOrders[index]
+  }
+
+  const setOrderSelected = (index: number, checked: boolean) => {
+    if (enableBulkTableSelection) {
+      setSelectedOrderIndexes((prev) => {
+        const next = new Set(prev)
+        if (checked) {
+          next.add(index)
+        } else {
+          next.delete(index)
+        }
+        return next
+      })
+      return
+    }
+
     setChosenOrders((prev) => {
       const updated = [...prev]
-      updated[index] = !updated[index]
+      updated[index] = checked
       return updated
     })
   }
 
-  const selectedCount = useMemo(
-    () => chosenOrders.filter(Boolean).length,
-    [chosenOrders]
-  )
+  const selectedCount = useMemo(() => {
+    if (enableBulkTableSelection) return selectedOrderIndexes.size
+    return chosenOrders.filter(Boolean).length
+  }, [enableBulkTableSelection, selectedOrderIndexes, chosenOrders])
 
-  const filteredTotalOrders = useMemo(() => {
-    return filteredOrders.reduce((acc, order) => acc + order.quantity, 0)
-  }, [filteredOrders])
+  const totalOrders = useMemo(() => {
+    return orders.reduce((acc, order) => acc + order.quantity, 0)
+  }, [orders])
+
+  const allSelected = useMemo(() => {
+    if (orders.length === 0) return false
+    return orders.every((_, index) => isOrderSelected(index))
+  }, [orders, chosenOrders, selectedOrderIndexes, enableBulkTableSelection])
+
+  const hasSomeSelected = useMemo(() => {
+    return orders.some((_, index) => isOrderSelected(index))
+  }, [orders, chosenOrders, selectedOrderIndexes, enableBulkTableSelection])
+
+  const toggleAllSelected = (checked: boolean) => {
+    if (enableBulkTableSelection) {
+      if (checked) {
+        setSelectedOrderIndexes(new Set(orders.map((_, index) => index)))
+      } else {
+        setSelectedOrderIndexes(new Set())
+      }
+      return
+    }
+
+    setChosenOrders(orders.map(() => checked))
+  }
 
   const [chosenItems, setChosenItems] = useState<Record<string, number>>()
 
   useEffect(() => {
     const items = chosenOrders.reduce(
       (acc, chosen, index) => {
-        if (!chosen) return acc
-        const order = filteredOrders[index]
+        const isSelected = enableBulkTableSelection
+          ? selectedOrderIndexes.has(index)
+          : chosen
+        if (!isSelected) return acc
+        const order = orders[index]
         if (!order) return acc
 
         order.products.forEach((p) => {
@@ -258,7 +242,15 @@ export const CalOrdersV2 = ({
     } else {
       setChosenItems(items)
     }
-  }, [chosenOrders, calRest, filteredOrders, allCalItems, allProductsByName])
+  }, [
+    chosenOrders,
+    selectedOrderIndexes,
+    enableBulkTableSelection,
+    calRest,
+    orders,
+    allCalItems,
+    allProductsByName
+  ])
 
   const { mutate: sendRequest, isPending } = useMutation({
     mutationFn: createDeliveredRequest,
@@ -267,157 +259,140 @@ export const CalOrdersV2 = ({
     onError: () => CToast.error({ title: "Gửi yêu cầu xuất kho thất bại" })
   })
 
-  // ===== DataTable rows/columns =====
-  const orderRows: OrderRow[] = useMemo(
-    () =>
-      filteredOrders.map((o, idx) => ({
-        _rowId: `${idx}-${o.quantity}-${o.products.map((p) => p.name).join("|")}`,
-        orderIndex: idx,
-        products: o.products,
-        quantity: o.quantity
-      })),
-    [filteredOrders]
-  )
-
-  const orderColumns: ColumnDef<OrderRow>[] = useMemo(
-    () => [
-      {
-        id: "products",
-        header: "Sản phẩm",
-        cell: ({ row }) => {
-          const r = row.original
-          const isChosen = chosenOrders[r.orderIndex]
-          return (
-            <Stack gap={2}>
-              {r.products.map((product, i) => (
-                <Text
-                  key={product.name + i}
-                  fz="sm"
-                  fw={500}
-                  c={isChosen ? "indigo.7" : undefined}
-                >
-                  {product.name}{" "}
-                  <Text span c="dimmed" fz="xs">
-                    ×{product.quantity}
-                  </Text>
-                </Text>
-              ))}
-            </Stack>
-          )
-        }
-      },
-      {
-        accessorKey: "quantity",
-        header: "Số đơn",
-        cell: ({ row }) => (
-          <Text fw={600} fz="sm">
-            {row.original.quantity}
-          </Text>
-        )
-      }
-    ],
-    [chosenOrders]
-  )
-
-  // ===== UI helpers =====
   const canSend = !!date && !!chosenItems && selectedCount > 0 && !isPending
-  const canSendNotReady =
-    !!date &&
-    !isPending &&
-    notReadyItems &&
-    Object.keys(notReadyItems).length > 0
+  const missingItemTypes = useMemo(() => {
+    if (!chosenItems) return 0
+    return Object.keys(chosenItems).filter(
+      (itemId) => !allStorageItemsMap[itemId]
+    ).length
+  }, [chosenItems, allStorageItemsMap])
 
-  const pageSizeHuge = 100000
+  useEffect(() => {
+    onSelectionStatsChange?.({
+      selectedOrders: selectedCount,
+      requiredItemTypes: chosenItems ? Object.keys(chosenItems).length : 0,
+      missingItemTypes
+    })
+  }, [selectedCount, chosenItems, missingItemTypes, onSelectionStatsChange])
+
+  const tableControls = (
+    <Switch
+      label="Tính số còn lại"
+      size="sm"
+      checked={calRest}
+      onChange={(e) => setCalRest(e.currentTarget.checked)}
+      color="indigo"
+    />
+  )
 
   return (
     <Box>
-      {/* Toolbar */}
-      <Paper>
-        <Group justify="space-between" align="center" wrap="wrap" gap={10}>
-          <Group gap={10} wrap="wrap">
-            <Title order={6} style={{ marginRight: 6 }}>
-              Danh sách đơn cần đóng
-            </Title>
-
-            <Badge variant="light" color="indigo">
-              {filteredTotalOrders} đơn
-            </Badge>
-
-            <Badge variant="light" color={selectedCount ? "blue" : "gray"}>
-              Đã chọn: {selectedCount}
-            </Badge>
-          </Group>
-
-          <Group gap={10} wrap="wrap">
-            <SegmentedControl
-              value={viewMode}
-              onChange={(val) => setViewMode(val as ViewMode)}
-              data={[
-                { value: "all", label: "Tất cả" },
-                { value: "ready", label: "Đã sẵn" },
-                { value: "not-ready", label: "Chưa sẵn" }
-              ]}
-              radius="xl"
-              size="sm"
-            />
-
-            <Checkbox
-              label="Chọn tất cả"
-              size="sm"
-              checked={chosenOrders.length > 0 && chosenOrders.every(Boolean)}
-              indeterminate={
-                chosenOrders.some(Boolean) && !chosenOrders.every(Boolean)
-              }
-              onChange={(e) => {
-                const checked = e.currentTarget.checked
-                setChosenOrders(filteredOrders.map(() => checked))
-              }}
-            />
-
-            <Checkbox
-              label="Tính số còn lại"
-              size="sm"
-              checked={calRest}
-              onChange={() => setCalRest((p) => !p)}
-              color="indigo"
-            />
-          </Group>
-        </Group>
-
-        <Text c="dimmed" fz="xs" mt={6}>
-          Tip: click vào một dòng để chọn/bỏ chọn. Panel bên phải sẽ tự cập nhật
-          danh sách mặt hàng cần dùng.
-        </Text>
-      </Paper>
-
-      {/* Main 2-column layout */}
       <Flex
-        gap={14}
+        gap={16}
         direction={{ base: "column", md: "row" }}
-        align={{ base: "stretch", md: "flex-start" }}
+        align={{ base: "stretch", md: "start" }}
       >
-        {/* Left: Orders table */}
         <Paper withBorder radius="lg" p="md" style={{ flex: 1 }}>
-          <CDataTable<OrderRow, any>
-            key={`${viewMode}-${orderRows.length}`} // remount để pageSize ăn khi viewMode đổi
-            columns={orderColumns}
-            data={orderRows}
-            enableGlobalFilter={false}
-            enableRowSelection={false}
-            initialPageSize={pageSizeHuge}
-            pageSizeOptions={[pageSizeHuge]}
-            getRowId={(r) => r._rowId}
-            onRowClick={(row) => toggleOrders(row.original.orderIndex)}
-            getRowClassName={(row) =>
-              chosenOrders[row.original.orderIndex]
-                ? "bg-indigo-50/70 hover:bg-indigo-50/70"
-                : ""
-            }
-            className="min-w-[320px] [&>div:last-child]:hidden"
-          />
+          <Group
+            justify="space-between"
+            align="start"
+            mb={10}
+            wrap="wrap"
+            gap={12}
+          >
+            <Box>
+              <Text fw={700} fz="sm">
+                Danh sách đơn cần đóng
+              </Text>
+              <Text c="dimmed" fz="xs" mt={2}>
+                Chọn các dòng cần xử lý. Danh sách mặt hàng sẽ tổng hợp tự động.
+              </Text>
+            </Box>
+            <Group gap={8} wrap="wrap">
+              <Badge variant="light" color="indigo">
+                Tổng đơn: {totalOrders}
+              </Badge>
+              <Badge variant="light" color={selectedCount ? "blue" : "gray"}>
+                Đã chọn: {selectedCount}
+              </Badge>
+            </Group>
+          </Group>
+          <Divider mb={12} />
+
+          {tableControls}
+
+          <ScrollArea mt={12}>
+            <Table
+              withTableBorder
+              withColumnBorders
+              highlightOnHover
+              verticalSpacing="sm"
+              horizontalSpacing="md"
+              miw={420}
+            >
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th w={52}>
+                    <Checkbox
+                      checked={allSelected}
+                      indeterminate={hasSomeSelected && !allSelected}
+                      onChange={(e) =>
+                        toggleAllSelected(e.currentTarget.checked)
+                      }
+                    />
+                  </Table.Th>
+                  <Table.Th>Sản phẩm</Table.Th>
+                  <Table.Th ta="right">Số đơn</Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {orders.map((order, index) => {
+                  const checked = isOrderSelected(index)
+
+                  return (
+                    <Table.Tr
+                      key={`${index}-${order.quantity}-${order.products.map((p) => p.name).join("|")}`}
+                      bg={checked ? "indigo.0" : undefined}
+                    >
+                      <Table.Td>
+                        <Checkbox
+                          checked={checked}
+                          onChange={(e) => {
+                            const nextChecked = e.currentTarget.checked
+                            setOrderSelected(index, nextChecked)
+                          }}
+                        />
+                      </Table.Td>
+                      <Table.Td>
+                        <Stack gap={2}>
+                          {order.products.map((product, i) => (
+                            <Text
+                              key={product.name + i}
+                              fz="sm"
+                              fw={500}
+                              c={checked ? "indigo.7" : undefined}
+                            >
+                              {product.name}{" "}
+                              <Text span c="dimmed" fz="xs">
+                                ×{product.quantity}
+                              </Text>
+                            </Text>
+                          ))}
+                        </Stack>
+                      </Table.Td>
+                      <Table.Td ta="right">
+                        <Text fw={600} fz="sm">
+                          {order.quantity}
+                        </Text>
+                      </Table.Td>
+                    </Table.Tr>
+                  )
+                })}
+              </Table.Tbody>
+            </Table>
+          </ScrollArea>
         </Paper>
 
-        {/* Right: Items panel */}
         <Paper
           withBorder
           radius="lg"
@@ -425,11 +400,13 @@ export const CalOrdersV2 = ({
           style={{
             width: 360,
             maxWidth: "100%",
-            background: "rgba(255,255,255,0.92)"
+            background: "rgba(255,255,255,0.95)",
+            position: "sticky",
+            top: 8
           }}
         >
-          <Group justify="space-between" align="center" mb={8}>
-            <Text fw={700} c="indigo.8">
+          <Group justify="space-between" align="center" mb={6}>
+            <Text fw={700} c="indigo.8" fz="sm">
               Mặt hàng cần dùng
             </Text>
 
@@ -437,6 +414,9 @@ export const CalOrdersV2 = ({
               {chosenItems ? Object.keys(chosenItems).length : 0} loại
             </Badge>
           </Group>
+          <Text c="dimmed" fz="xs" mb={10}>
+            Đây là danh sách tổng hợp từ các đơn đã chọn ở bên trái.
+          </Text>
 
           <Divider mb={10} />
 
@@ -489,17 +469,27 @@ export const CalOrdersV2 = ({
                 })
               ) : (
                 <Box
-                  p={14}
+                  p={16}
                   style={{
                     borderRadius: rem(12),
                     border: "1px dashed rgba(0,0,0,0.15)",
                     background: "rgba(250,250,250,0.8)"
                   }}
                 >
-                  <Text c="dimmed" fz="sm">
-                    Chưa có mặt hàng nào. Hãy chọn ít nhất 1 đơn ở bảng bên
-                    trái.
-                  </Text>
+                  <Group gap={10} align="start" wrap="nowrap">
+                    <ThemeIcon
+                      variant="light"
+                      color="gray"
+                      size={30}
+                      radius="xl"
+                    >
+                      <IconClipboardList size={16} />
+                    </ThemeIcon>
+                    <Text c="dimmed" fz="sm">
+                      Chưa có mặt hàng nào. Hãy chọn ít nhất 1 đơn để xem phần
+                      tổng hợp và gửi yêu cầu.
+                    </Text>
+                  </Group>
                 </Box>
               )}
             </Stack>
@@ -518,11 +508,27 @@ export const CalOrdersV2 = ({
                 meData.roles.includes(role)
               ) ? (
                 <Stack gap={10}>
+                  {missingItemTypes > 0 && (
+                    <Group gap={8} align="center" wrap="nowrap">
+                      <ThemeIcon
+                        variant="light"
+                        color="yellow"
+                        radius="xl"
+                        size={26}
+                      >
+                        <IconAlertTriangle size={14} />
+                      </ThemeIcon>
+                      <Text fz="xs" c="yellow.9">
+                        Có {missingItemTypes} mặt hàng không còn trong kho và sẽ
+                        bị bỏ qua khi gửi.
+                      </Text>
+                    </Group>
+                  )}
                   <Button
                     color="indigo"
                     radius="xl"
                     fw={700}
-                    variant="light"
+                    size="md"
                     loading={isPending}
                     disabled={!canSend}
                     onClick={() => {
@@ -541,33 +547,7 @@ export const CalOrdersV2 = ({
                       })
                     }}
                   >
-                    Gửi cho các đơn đã chọn
-                  </Button>
-
-                  <Button
-                    color="indigo"
-                    radius="xl"
-                    fw={700}
-                    variant="outline"
-                    loading={isPending}
-                    disabled={!canSendNotReady}
-                    onClick={() => {
-                      if (!date || !notReadyItems) return
-                      const body = Object.entries(notReadyItems)
-                        .filter(([itemId]) => !!allStorageItemsMap[itemId])
-                        .map(([itemId, quantity]) => ({
-                          _id: itemId,
-                          quantity
-                        }))
-                      if (body.length === 0) return
-                      sendRequest({
-                        items: body,
-                        date,
-                        channelId: channelId || undefined
-                      })
-                    }}
-                  >
-                    Gửi cho đơn chưa sẵn
+                    Gửi yêu cầu cho các đơn đã chọn
                   </Button>
 
                   <Text c="dimmed" fz="xs">

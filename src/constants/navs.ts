@@ -51,12 +51,6 @@ export const NAVS = [
     roles: KHO_VAN_ROLES
   },
   {
-    to: `${NAVS_URL}/incomes`,
-    label: "Doanh thu",
-    icon: "IconCoin",
-    roles: KHO_VAN_ROLES
-  },
-  {
     to: `${NAVS_URL}/xlsx-calculators`,
     label: "Tính file XLSX",
     icon: "IconFileSpreadsheet",

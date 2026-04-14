@@ -1,16 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router"
-import {
-  StorageIncomesPage,
-  validateIncomesSearch
-} from "../../marketing-storage/incomes"
+import { createFileRoute, redirect } from "@tanstack/react-router"
 
 export const Route = createFileRoute("/mkt-storage/incomes/")({
-  component: RouteComponent,
-  validateSearch: validateIncomesSearch
+  beforeLoad: () => {
+    throw redirect({
+      to: "/mkt-storage"
+    })
+  },
+  component: () => null
 })
-
-function RouteComponent() {
-  const search = Route.useSearch()
-
-  return <StorageIncomesPage search={search} />
-}

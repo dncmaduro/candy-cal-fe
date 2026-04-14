@@ -263,7 +263,8 @@ export function CDataTable<TData, TValue>({
     (enableGlobalFilter && !hideSearch) ||
     !!extraFilters ||
     !!extraActions ||
-    (!hideColumnToggle && table.getAllLeafColumns().some((c) => c.getCanHide())) ||
+    (!hideColumnToggle &&
+      table.getAllLeafColumns().some((c) => c.getCanHide())) ||
     enableRowSelection
 
   const variantClasses = React.useMemo(
@@ -276,8 +277,7 @@ export function CDataTable<TData, TValue>({
         tableShell: "rounded-xl border border-gray-200",
         header: "sticky top-0 z-10 bg-gray-50",
         headerRow: "border-b border-gray-200",
-        headerCell:
-          "px-3 py-2 text-left text-sm font-semibold text-gray-700",
+        headerCell: "px-3 py-2 text-left text-sm font-semibold text-gray-700",
         cell: "px-3 py-2 text-sm text-gray-700",
         row: "border-b border-gray-100 hover:bg-gray-50",
         empty: "px-3 py-8 text-center text-sm text-gray-500",
@@ -324,10 +324,7 @@ export function CDataTable<TData, TValue>({
   const currentVariant = variantClasses[variant]
 
   const getAlignmentClass = React.useCallback(
-    (
-      meta?: unknown,
-      fallback: "left" | "center" | "right" = "left"
-    ) => {
+    (meta?: unknown, fallback: "left" | "center" | "right" = "left") => {
       const columnMeta = meta as CDataTableColumnMeta | undefined
       const align =
         columnMeta?.align ?? (columnMeta?.isNumeric ? "right" : fallback)
@@ -447,10 +444,9 @@ export function CDataTable<TData, TValue>({
                   {hg.headers.map((header) => {
                     const canSort = header.column.getCanSort()
                     const sortDir = header.column.getIsSorted()
-                    const meta =
-                      header.column.columnDef.meta as
-                        | CDataTableColumnMeta
-                        | undefined
+                    const meta = header.column.columnDef.meta as
+                      | CDataTableColumnMeta
+                      | undefined
                     return (
                       <th
                         key={header.id}
@@ -467,7 +463,7 @@ export function CDataTable<TData, TValue>({
                             ? header.column.getToggleSortingHandler()
                             : undefined
                         }
-                        >
+                      >
                         <div
                           className={clsx(
                             "flex items-center gap-1",
@@ -502,10 +498,7 @@ export function CDataTable<TData, TValue>({
                 renderSkeletonRows()
               ) : table.getRowModel().rows.length === 0 ? (
                 <tr>
-                  <td
-                    className={currentVariant.empty}
-                    colSpan={colCount}
-                  >
+                  <td className={currentVariant.empty} colSpan={colCount}>
                     Không có dữ liệu.
                   </td>
                 </tr>
@@ -529,10 +522,9 @@ export function CDataTable<TData, TValue>({
                       }
                     >
                       {row.getVisibleCells().map((cell) => {
-                        const meta =
-                          cell.column.columnDef.meta as
-                            | CDataTableColumnMeta
-                            | undefined
+                        const meta = cell.column.columnDef.meta as
+                          | CDataTableColumnMeta
+                          | undefined
 
                         return (
                           <td
@@ -542,15 +534,6 @@ export function CDataTable<TData, TValue>({
                               getAlignmentClass(meta),
                               meta?.cellClassName
                             )}
-                            onClick={(e) => {
-                              // Prevent row click when clicking on actions column
-                              if (
-                                cell.column.id === "actions" ||
-                                cell.column.id === "__select__"
-                              ) {
-                                e.stopPropagation()
-                              }
-                            }}
                           >
                             {flexRender(
                               cell.column.columnDef.cell,
