@@ -519,7 +519,7 @@ export const CalOrdersV2 = ({
           </Text>
 
           {meData?.roles &&
-          ["admin", "order-emp"].some((role) => meData.roles.includes(role)) ? (
+          ["admin", "accounting-emp"].some((role) => meData.roles.includes(role)) ? (
             <Stack gap={10}>
               {!date && (
                 <DatePickerInput
