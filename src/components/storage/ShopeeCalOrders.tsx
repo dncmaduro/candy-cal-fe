@@ -340,7 +340,7 @@ export const ShopeeCalOrders = ({ orders, allCalItems, date }: Props) => {
         Gửi yêu cầu xuất kho
       </Text>
       {meData?.roles &&
-      ["admin", "order-emp"].some((role) => meData.roles.includes(role)) ? (
+      ["admin", "accounting-emp"].some((role) => meData.roles.includes(role)) ? (
         <Stack gap={10}>
           {!date && (
             <DatePickerInput
