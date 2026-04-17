@@ -5540,8 +5540,8 @@ export type RangeSummaryResponse = {
   scope: {
     type: "range"
     channel: string
-    from: string
-    to: string
+    orderFrom: string
+    orderTo: string
     days: number
   }
   summary: {
@@ -5566,7 +5566,7 @@ export type RangeSummaryResponse = {
 
 /** @interface */
 export type RangeTimeseriesPoint = {
-  date: string
+  orderDate: string
   revenue: number
   liveRevenue: number
   adsCost: number
@@ -5580,8 +5580,8 @@ export type RangeTimeseriesResponse = {
   scope: {
     type: "range"
     channel: string
-    from: string
-    to: string
+    orderFrom: string
+    orderTo: string
     days: number
   }
   series: RangeTimeseriesPoint[]
@@ -5600,8 +5600,8 @@ export type OrdersListResponse = {
     channel: string
     month?: number
     year?: number
-    from?: string
-    to?: string
+    orderFrom?: string
+    orderTo?: string
   }
   pagination: {
     page: number
@@ -5610,7 +5610,7 @@ export type OrdersListResponse = {
     totalPages: number
   }
   items: Array<{
-    date: string
+    orderDate: string
     orderCode: string
     customerName: string | null
     shop: string | null
@@ -5642,15 +5642,15 @@ export interface MonthlyKpisQueryRequest {
 /** @interface */
 export interface RangeSummaryQueryRequest {
   channel?: string
-  from: string
-  to: string
+  orderFrom: string
+  orderTo: string
 }
 
 /** @interface */
 export interface RangeTimeseriesQueryRequest {
   channel?: string
-  from: string
-  to: string
+  orderFrom: string
+  orderTo: string
 }
 
 /** @interface */
@@ -5658,8 +5658,8 @@ export interface OrdersQueryRequest {
   channel?: string
   month?: number
   year?: number
-  from?: string
-  to?: string
+  orderFrom?: string
+  orderTo?: string
   page?: number
   pageSize?: number
   sortBy?: string
@@ -5829,8 +5829,8 @@ export interface InsertIncomeShopeeRequest {
 
 /** @interface */
 export interface SearchShopeeIncomeRequest {
-  startDate?: Date
-  endDate?: Date
+  orderStartDate?: string
+  orderEndDate?: string
   channelId?: string
   productCode?: string
   page: number
@@ -5841,7 +5841,7 @@ export interface SearchShopeeIncomeRequest {
 export interface SearchShopeeIncomeResponse {
   data: {
     _id: string
-    date: Date
+    orderDate: string
     customer: string
     creator: string
     channel: {
@@ -5877,7 +5877,7 @@ export interface ShopeeDashboardOrderProductViewModel {
 /** @interface */
 export interface ShopeeDashboardOrderViewModel {
   _id: string
-  date: string
+  orderDate: string
   orderId: string
   customer: string
   creator: string

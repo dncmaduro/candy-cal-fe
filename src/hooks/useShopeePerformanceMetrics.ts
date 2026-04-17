@@ -81,8 +81,8 @@ export interface RangeMetricsViewModel {
   summaryItems: ShopeeDashboardSummaryItem[]
   normalizedItems: RangeNormalizedMetricItem[]
   series: RangeTimeseriesResponse["series"]
-  from: string
-  to: string
+  orderFrom: string
+  orderTo: string
   days: number
   lastSyncedAt: string | null
   timezone: string
@@ -256,8 +256,8 @@ const adaptRangeMetrics = (
     summaryItems,
     normalizedItems,
     series: timeseries.series,
-    from: summary.scope.from,
-    to: summary.scope.to,
+    orderFrom: summary.scope.orderFrom,
+    orderTo: summary.scope.orderTo,
     days: normalizeNumber(summary.scope.days),
     lastSyncedAt: summary.meta.lastSyncedAt,
     timezone: summary.meta.timezone,
@@ -324,13 +324,13 @@ export const useMonthlyMetrics = ({
 }
 
 export const useRangeMetrics = ({
-  from,
-  to,
+  orderFrom,
+  orderTo,
   channelId,
   enabled = true
 }: {
-  from?: string
-  to?: string
+  orderFrom?: string
+  orderTo?: string
   channelId?: string
   enabled?: boolean
 }) => {
@@ -342,14 +342,14 @@ export const useRangeMetrics = ({
       "shopee",
       "rangeMetrics",
       normalizedChannel || SHOPEE_ALL_CHANNEL_ID,
-      from || "",
-      to || ""
+      orderFrom || "",
+      orderTo || ""
     ],
     queryFn: async () => {
       const query = toQueryString({
         channel: normalizedChannel,
-        from,
-        to
+        orderFrom,
+        orderTo
       })
 
       const [summaryResponse, timeseriesResponse] = await Promise.all([
@@ -367,7 +367,8 @@ export const useRangeMetrics = ({
 
       return adaptRangeMetrics(summaryResponse.data, timeseriesResponse.data)
     },
-    enabled: enabled && Boolean(accessToken) && Boolean(from) && Boolean(to),
+    enabled:
+      enabled && Boolean(accessToken) && Boolean(orderFrom) && Boolean(orderTo),
     placeholderData: (previousData) => previousData
   })
 }
@@ -390,11 +391,11 @@ export const useShopeeOrdersList = ({
       typeof request.year === "number"
         ? normalizeYear(request.year)
         : undefined,
-    from: request.from,
-    to: request.to,
+    orderFrom: request.orderFrom,
+    orderTo: request.orderTo,
     page: normalizePage(request.page),
     pageSize: normalizePageSize(request.pageSize),
-    sortBy: request.sortBy,
+    sortBy: request.sortBy === "date" ? "orderDate" : request.sortBy,
     sortOrder: request.sortOrder
   }
 
@@ -405,8 +406,8 @@ export const useShopeeOrdersList = ({
       queryRequest.channel || SHOPEE_ALL_CHANNEL_ID,
       queryRequest.month || "",
       queryRequest.year || "",
-      queryRequest.from || "",
-      queryRequest.to || "",
+      queryRequest.orderFrom || "",
+      queryRequest.orderTo || "",
       queryRequest.page,
       queryRequest.pageSize,
       queryRequest.sortBy || "",
@@ -435,7 +436,7 @@ export const useRangeSeriesByMetric = (
 
     return data.map((point) => ({
       ...point,
-      label: point.date.slice(5).split("-").reverse().join("/")
+      label: point.orderDate.slice(5).split("-").reverse().join("/")
     }))
   }, [data])
 }

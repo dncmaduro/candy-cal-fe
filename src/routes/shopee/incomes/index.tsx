@@ -70,8 +70,8 @@ const validateShopeeDashboardSearch = (
     typeof search.channel === "string" && search.channel.trim()
       ? search.channel
       : SHOPEE_ALL_CHANNEL_ID
-  const fromDate = parseDateString(search.fromDate)
-  const toDate = parseDateString(search.toDate)
+  const orderFrom = parseDateString(search.orderFrom ?? search.fromDate)
+  const orderTo = parseDateString(search.orderTo ?? search.toDate)
   const preset = parsePreset(search.preset)
   const fallbackRange = createDefaultRange()
 
@@ -81,8 +81,9 @@ const validateShopeeDashboardSearch = (
     month: parseMonth(search.month),
     year: parseYear(search.year),
     tab: parseTab(search.tab),
-    fromDate: mode === "range" ? fromDate ?? fallbackRange.from : undefined,
-    toDate: mode === "range" ? toDate ?? fallbackRange.to : undefined,
+    orderFrom:
+      mode === "range" ? orderFrom ?? fallbackRange.orderFrom : undefined,
+    orderTo: mode === "range" ? orderTo ?? fallbackRange.orderTo : undefined,
     preset: mode === "range" ? preset ?? "last-7-days" : undefined
   }
 }

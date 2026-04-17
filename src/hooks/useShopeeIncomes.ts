@@ -1,3 +1,4 @@
+import { format } from "date-fns"
 import { useUserStore } from "../store/userStore"
 import { toQueryString } from "../utils/toQuery"
 import { callApi } from "./axios"
@@ -9,6 +10,12 @@ import {
 
 export const useShopeeIncomes = () => {
   const { accessToken } = useUserStore()
+
+  const normalizeOrderDateParam = (value?: string | Date) => {
+    if (!value) return undefined
+    if (typeof value === "string") return value
+    return format(value, "yyyy-MM-dd")
+  }
 
   const insertIncomeShopee = async (
     files: File[],
@@ -34,7 +41,11 @@ export const useShopeeIncomes = () => {
   }
 
   const searchShopeeIncome = async (req: SearchShopeeIncomeRequest) => {
-    const query = toQueryString(req)
+    const query = toQueryString({
+      ...req,
+      orderStartDate: normalizeOrderDateParam(req.orderStartDate),
+      orderEndDate: normalizeOrderDateParam(req.orderEndDate)
+    })
 
     return callApi<never, SearchShopeeIncomeResponse>({
       path: `/v1/shopeeincomes/search?${query}`,

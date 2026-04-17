@@ -3,10 +3,14 @@ import { Helmet } from "react-helmet-async"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import {
   Alert,
+  Badge,
   Box,
   Button,
   Group,
+  Paper,
   Select,
+  Skeleton,
+  Stack,
   Text,
   Tooltip,
   ActionIcon,
@@ -14,30 +18,35 @@ import {
 } from "@mantine/core"
 import {
   IconAlertCircle,
+  IconBuildingStore,
+  IconChartBar,
+  IconCash,
   IconEdit,
   IconPlus,
   IconRefresh,
+  IconTargetArrow,
   IconTrash
 } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
 import type { ColumnDef } from "@tanstack/react-table"
 import { SHOPEE_EDITOR_ROLES, SHOPEE_NAVS, SHOPEE_ROLES } from "../../../constants/navs"
 import { useAuthGuard } from "../../../hooks/useAuthGuard"
-import { useMe } from "../../../context/MeContext"
 import type { ShopeeMonthKpiRecord } from "../../../hooks/models"
 import { useShopeeChannels } from "../../../hooks/useShopeeChannels"
 import { useShopeeMonthKpis } from "../../../hooks/useShopeeMonthKpis"
+import { useUsers } from "../../../hooks/useUsers"
 import { AppLayout } from "../../layouts/AppLayout"
 import { CDataTable } from "../../common/CDataTable"
 import { CToast } from "../../common/CToast"
+import { MetricStatCard } from "../analytics/MetricStatCard"
 import { formatCurrency } from "../analytics/formatters"
 import { ShopeeMonthKpiModal } from "./ShopeeMonthKpiModal"
 
 export interface ShopeeMonthKpiSearchState {
   page: number
   limit: number
-  month?: string
-  year?: string
+  month: string
+  year: string
   channel?: string
 }
 
@@ -86,18 +95,39 @@ const getErrorMessage = (error: unknown) => {
   return "Vui lòng thử lại sau"
 }
 
+const createResponsiveGridStyle = (minColumnWidth: number) => ({
+  display: "grid",
+  gap: rem(16),
+  gridTemplateColumns: `repeat(auto-fit, minmax(min(${rem(minColumnWidth)}, 100%), 1fr))`
+})
+
+const SummaryCardsSkeleton = () => (
+  <Box style={createResponsiveGridStyle(220)}>
+    {Array.from({ length: 4 }).map((_, index) => (
+      <Skeleton key={index} height={154} radius="xl" />
+    ))}
+  </Box>
+)
+
 export const ShopeeMonthKpiPage = ({
   search,
   onSearchChange
 }: ShopeeMonthKpiPageProps) => {
   useAuthGuard(SHOPEE_ROLES)
-  const me = useMe()
+  const { getMe } = useUsers()
+  const { data: meData } = useQuery({
+    queryKey: ["getMe"],
+    queryFn: getMe,
+    select: (data) => data.data
+  })
   const canMutateShopeeKpi = Boolean(
-    me?.roles?.some((role) => SHOPEE_EDITOR_ROLES.includes(role))
+    meData?.roles?.some((role) => SHOPEE_EDITOR_ROLES.includes(role))
   )
 
   const { getShopeeMonthKpis, deleteShopeeMonthKpi } = useShopeeMonthKpis()
   const channelsQuery = useShopeeChannels({ page: 1, limit: 999 })
+  const selectedMonth = Number(search.month)
+  const selectedYear = Number(search.year)
 
   const {
     data: kpisData,
@@ -117,18 +147,35 @@ export const ShopeeMonthKpiPage = ({
       getShopeeMonthKpis({
         page: search.page,
         limit: search.limit,
-        month: search.month ? Number(search.month) : undefined,
-        year: search.year ? Number(search.year) : undefined,
+        month: selectedMonth,
+        year: selectedYear,
         channel: search.channel || undefined
       }),
     select: (response) => response.data
+  })
+
+  const {
+    data: allKpisData,
+    isLoading: isSummaryLoading,
+    refetch: refetchSummary
+  } = useQuery({
+    queryKey: ["shopeeMonthKpisSummary", search.month, search.year, search.channel],
+    queryFn: () =>
+      getShopeeMonthKpis({
+        page: 1,
+        limit: 999,
+        month: selectedMonth,
+        year: selectedYear,
+        channel: search.channel || undefined
+      }),
+    select: (response) => response.data.data
   })
 
   const deleteMutation = useMutation({
     mutationFn: deleteShopeeMonthKpi,
     onSuccess: () => {
       CToast.success({ title: "Xóa KPI Shopee thành công" })
-      refetch()
+      void Promise.all([refetch(), refetchSummary()])
     },
     onError: (error) => {
       CToast.error({
@@ -181,14 +228,19 @@ export const ShopeeMonthKpiPage = ({
             kpi={kpi}
             channels={channelsQuery.data?.channels ?? []}
             onSuccess={() => {
-              refetch()
+              void Promise.all([refetch(), refetchSummary()])
               modals.closeAll()
+            }}
+            defaultValues={{
+              month: selectedMonth,
+              year: selectedYear,
+              channel: search.channel
             }}
           />
         )
       })
     },
-    [channelsQuery.data?.channels, refetch]
+    [channelsQuery.data?.channels, refetch, refetchSummary, search.channel, selectedMonth, selectedYear]
   )
 
   const confirmDelete = useCallback(
@@ -208,6 +260,35 @@ export const ShopeeMonthKpiPage = ({
     },
     [deleteMutation]
   )
+
+  const kpiRows = kpisData?.data ?? []
+  const allKpis = allKpisData ?? []
+
+  const summary = useMemo(() => {
+    const totals = allKpis.reduce(
+      (acc, item) => {
+        acc.revenueKpi += item.revenueKpi
+        acc.adsCostKpi += item.adsCostKpi
+        return acc
+      },
+      {
+        revenueKpi: 0,
+        adsCostKpi: 0
+      }
+    )
+
+    return {
+      revenueKpi: totals.revenueKpi,
+      adsCostKpi: totals.adsCostKpi,
+      roasKpi:
+        totals.adsCostKpi > 0 ? totals.revenueKpi / totals.adsCostKpi : 0,
+      shopCount: allKpis.length
+    }
+  }, [allKpis])
+
+  const handleRefresh = useCallback(() => {
+    void Promise.all([refetch(), refetchSummary(), channelsQuery.refetch()])
+  }, [channelsQuery, refetch, refetchSummary])
 
   const columns = useMemo<ColumnDef<ShopeeMonthKpiRecord>[]>(
     () => [
@@ -310,115 +391,89 @@ export const ShopeeMonthKpiPage = ({
       </Helmet>
 
       <AppLayout navs={SHOPEE_NAVS}>
-        <Box
-          mt={40}
-          mx="auto"
-          px={{ base: 8, md: 0 }}
-          w="100%"
-          style={{
-            background: "rgba(255,255,255,0.97)",
-            borderRadius: rem(20),
-            boxShadow: "0 4px 32px 0 rgba(60,80,180,0.07)",
-            border: "1px solid #ececec"
-          }}
-        >
-          <Box pt={32} pb={16} px={{ base: 8, md: 28 }}>
-            <Text fw={700} fz="xl" mb={2}>
-              KPI Shopee theo tháng
-            </Text>
-            <Text c="dimmed" fz="sm">
-              Quản lý KPI doanh thu, KPI chi phí ads và KPI ROAS theo từng shop
-              Shopee.
-            </Text>
-          </Box>
+        <Stack mt={40} gap="xl">
+          {isError && !kpisData ? (
+            <Alert
+              color="red"
+              variant="light"
+              radius="lg"
+              icon={<IconAlertCircle size={18} />}
+            >
+              <Group justify="space-between" align="flex-start" gap="md">
+                <div>
+                  <Text fw={700}>Không tải được KPI Shopee</Text>
+                  <Text size="sm" mt={4}>
+                    Hệ thống chưa lấy được danh sách KPI. Thử tải lại để đồng
+                    bộ dữ liệu.
+                  </Text>
+                </div>
 
-          <Box px={{ base: 4, md: 28 }} pb={20}>
-            {isError && !kpisData ? (
-              <Alert
-                mb="md"
-                color="red"
-                variant="light"
-                radius="lg"
-                icon={<IconAlertCircle size={18} />}
-              >
-                <Group justify="space-between" align="flex-start" gap="md">
-                  <div>
-                    <Text fw={700}>Không tải được KPI Shopee</Text>
-                    <Text size="sm" mt={4}>
-                      Hệ thống chưa lấy được danh sách KPI. Thử tải lại để đồng
-                      bộ dữ liệu.
-                    </Text>
-                  </div>
+                <Button
+                  variant="white"
+                  color="red"
+                  leftSection={<IconRefresh size={16} />}
+                  onClick={handleRefresh}
+                >
+                  Thử lại
+                </Button>
+              </Group>
+            </Alert>
+          ) : null}
 
-                  <Button
-                    variant="white"
-                    color="red"
-                    leftSection={<IconRefresh size={16} />}
-                    onClick={() => {
-                      void Promise.all([refetch(), channelsQuery.refetch()])
-                    }}
-                  >
-                    Thử lại
-                  </Button>
-                </Group>
-              </Alert>
-            ) : null}
+          <Paper
+            withBorder
+            radius={24}
+            p="lg"
+            style={{
+              borderColor: "#dbe4f0",
+              background: "#ffffff",
+              boxShadow: "0 12px 34px rgba(15, 23, 42, 0.05)"
+            }}
+          >
+            <Stack gap="md">
+              <Group justify="space-between" align="flex-start" gap="md">
+                <div>
+                  <Text fz="sm" fw={600} c="#475569">
+                    Bộ lọc dữ liệu
+                  </Text>
+                  <Text fw={700} fz="xl" mt={4} c="#0f172a">
+                    Chọn tháng KPI cần theo dõi
+                  </Text>
+                </div>
 
-            <CDataTable
-              columns={columns}
-              data={kpisData?.data ?? []}
-              page={search.page}
-              totalPages={totalPages}
-              onPageChange={(page) => onSearchChange({ page }, true)}
-              onPageSizeChange={(limit) =>
-                onSearchChange({ limit, page: 1 }, true)
-              }
-              initialPageSize={search.limit}
-              pageSizeOptions={[10, 20, 50]}
-              hideSearch
-              isLoading={isLoading}
-              getRowId={(row) => row._id}
-              extraFilters={
-                <>
+                <Badge variant="light" color="orange" radius="xl" size="lg">
+                  Bộ lọc tháng là bắt buộc
+                </Badge>
+              </Group>
+
+              <Group justify="space-between" align="end" gap="md" wrap="wrap">
+                <Group gap="md" align="end" wrap="wrap">
                   <Select
                     label="Tháng"
-                    placeholder="Tất cả tháng"
                     data={monthOptions}
-                    value={search.month ?? null}
-                    onChange={(value) =>
-                      onSearchChange(
-                        {
-                          month: value || undefined,
-                          page: 1
-                        },
-                        true
-                      )
-                    }
-                    clearable
+                    value={search.month}
+                    onChange={(value) => {
+                      if (!value) return
+                      onSearchChange({ month: value, page: 1 }, true)
+                    }}
+                    withAsterisk
                     style={{ width: 140 }}
                   />
 
                   <Select
                     label="Năm"
-                    placeholder="Tất cả năm"
                     data={yearOptions}
-                    value={search.year ?? null}
-                    onChange={(value) =>
-                      onSearchChange(
-                        {
-                          year: value || undefined,
-                          page: 1
-                        },
-                        true
-                      )
-                    }
-                    clearable
+                    value={search.year}
+                    onChange={(value) => {
+                      if (!value) return
+                      onSearchChange({ year: value, page: 1 }, true)
+                    }}
                     style={{ width: 140 }}
                   />
 
                   <Select
                     label="Shop Shopee"
-                    placeholder="Tất cả kênh Shopee"
+                    placeholder="Tất cả shop Shopee"
                     data={channelOptions}
                     value={search.channel ?? null}
                     onChange={(value) =>
@@ -432,44 +487,127 @@ export const ShopeeMonthKpiPage = ({
                     }
                     clearable
                     searchable
-                    style={{ width: 280 }}
+                    style={{ width: 320 }}
                   />
-                </>
-              }
-              extraActions={
-                <Tooltip
-                  label={
-                    canMutateShopeeKpi
-                      ? "Tạo KPI Shopee"
-                      : "Bạn chỉ có quyền xem dữ liệu Shopee"
-                  }
-                >
+                </Group>
+
+                <Group gap="sm" align="center">
                   <Button
-                    leftSection={<IconPlus size={16} />}
-                    onClick={() => {
-                      if (!canMutateShopeeKpi) return
-                      openKpiModal()
-                    }}
-                    disabled={
-                      channelsQuery.isLoading ||
-                      !channelsQuery.data?.channels.length ||
-                      !canMutateShopeeKpi
+                    variant="light"
+                    color="gray"
+                    leftSection={<IconRefresh size={16} />}
+                    onClick={handleRefresh}
+                  >
+                    Làm mới
+                  </Button>
+
+                  <Tooltip
+                    label={
+                      canMutateShopeeKpi
+                        ? "Tạo KPI Shopee"
+                        : "Bạn chỉ có quyền xem dữ liệu Shopee"
                     }
                   >
-                    Tạo KPI
-                  </Button>
-                </Tooltip>
-              }
-              getRowClassName={(row) =>
-                row.original.channel &&
-                search.channel &&
-                getChannelId(row.original.channel) === search.channel
-                  ? "bg-blue-50/40"
-                  : ""
-              }
-            />
-          </Box>
-        </Box>
+                    <Button
+                      leftSection={<IconPlus size={16} />}
+                      onClick={() => {
+                        if (!canMutateShopeeKpi) return
+                        openKpiModal()
+                      }}
+                      disabled={
+                        channelsQuery.isLoading ||
+                        !channelsQuery.data?.channels.length ||
+                        !canMutateShopeeKpi
+                      }
+                    >
+                      Tạo KPI
+                    </Button>
+                  </Tooltip>
+                </Group>
+              </Group>
+            </Stack>
+          </Paper>
+
+          {isSummaryLoading && !allKpisData ? (
+            <SummaryCardsSkeleton />
+          ) : (
+            <Box style={createResponsiveGridStyle(220)}>
+              <MetricStatCard
+                label="Tổng KPI doanh thu"
+                value={formatCurrency(summary.revenueKpi)}
+                tone="blue"
+                icon={<IconCash size={20} />}
+                hint="Cộng gộp KPI doanh thu của toàn bộ shop theo bộ lọc hiện tại."
+              />
+              <MetricStatCard
+                label="Tổng KPI ads"
+                value={formatCurrency(summary.adsCostKpi)}
+                tone="orange"
+                icon={<IconChartBar size={20} />}
+                hint="Tổng ngân sách ads mục tiêu của các shop trong tháng đã chọn."
+              />
+              <MetricStatCard
+                label="ROAS mục tiêu tổng hợp"
+                value={formatRoas(summary.roasKpi)}
+                tone="grape"
+                icon={<IconTargetArrow size={20} />}
+                hint="Tính theo tổng KPI doanh thu chia cho tổng KPI ads, không cộng dồn ROAS từng shop."
+              />
+              <MetricStatCard
+                label="Số shop có KPI"
+                value={summary.shopCount.toLocaleString("vi-VN")}
+                tone="teal"
+                icon={<IconBuildingStore size={20} />}
+                hint="Số lượng shop Shopee đang có KPI trong kỳ lọc hiện tại."
+              />
+            </Box>
+          )}
+
+          <Paper
+            withBorder
+            radius={24}
+            p="lg"
+            style={{
+              borderColor: "#dbe4f0",
+              background: "#ffffff",
+              boxShadow: "0 12px 34px rgba(15, 23, 42, 0.05)"
+            }}
+          >
+            <Stack gap="md">
+              <div>
+                <Text fz="sm" fw={600} c="#475569">
+                  Bảng chi tiết
+                </Text>
+                <Text fw={700} fz="xl" mt={4} c="#0f172a">
+                  Danh sách KPI theo từng shop
+                </Text>
+              </div>
+
+              <CDataTable
+                columns={columns}
+                data={kpiRows}
+                page={search.page}
+                totalPages={totalPages}
+                onPageChange={(page) => onSearchChange({ page }, true)}
+                onPageSizeChange={(limit) =>
+                  onSearchChange({ limit, page: 1 }, true)
+                }
+                initialPageSize={search.limit}
+                pageSizeOptions={[10, 20, 50]}
+                hideSearch
+                isLoading={isLoading}
+                getRowId={(row) => row._id}
+                getRowClassName={(row) =>
+                  row.original.channel &&
+                  search.channel &&
+                  getChannelId(row.original.channel) === search.channel
+                    ? "bg-blue-50/40"
+                    : ""
+                }
+              />
+            </Stack>
+          </Paper>
+        </Stack>
       </AppLayout>
     </>
   )

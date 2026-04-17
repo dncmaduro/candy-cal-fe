@@ -163,7 +163,7 @@ export const DailyAnalyticsDashboard = ({
   }
 
   const chartData = data.series.map((item) => ({
-    label: formatDateLabel(item.date),
+    label: formatDateLabel(item.orderDate),
     revenue: item.revenue,
     orders: item.orders,
     adsCost: item.adsCost,

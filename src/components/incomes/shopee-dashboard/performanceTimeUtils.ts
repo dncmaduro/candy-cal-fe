@@ -20,8 +20,8 @@ export type TimeFilterState = {
   channel: string
   month: number
   year: number
-  fromDate?: string
-  toDate?: string
+  orderFrom?: string
+  orderTo?: string
   preset?: ShopeeRangePreset
 }
 
@@ -36,9 +36,9 @@ export const parseDateInputValue = (value?: string) => {
   return parsed
 }
 
-export const getDaysInRange = (from?: string, to?: string) => {
-  const fromDate = parseDateInputValue(from)
-  const toDate = parseDateInputValue(to)
+export const getDaysInRange = (orderFrom?: string, orderTo?: string) => {
+  const fromDate = parseDateInputValue(orderFrom)
+  const toDate = parseDateInputValue(orderTo)
 
   if (!fromDate || !toDate) return 0
 
@@ -48,8 +48,8 @@ export const getDaysInRange = (from?: string, to?: string) => {
   return Math.floor(diff / (24 * 60 * 60 * 1000)) + 1
 }
 
-export const isRangeValid = (from?: string, to?: string) => {
-  const days = getDaysInRange(from, to)
+export const isRangeValid = (orderFrom?: string, orderTo?: string) => {
+  const days = getDaysInRange(orderFrom, orderTo)
   if (!days) return false
 
   return days <= MAX_RANGE_DAYS
@@ -60,44 +60,44 @@ export const createDefaultRange = () => {
   const start = subDays(end, 6)
 
   return {
-    from: toDateInputValue(start),
-    to: toDateInputValue(end)
+    orderFrom: toDateInputValue(start),
+    orderTo: toDateInputValue(end)
   }
 }
 
 export const resolvePresetRange = (preset: ShopeeRangePreset, now = new Date()) => {
   if (preset === "last-7-days") {
     return {
-      from: toDateInputValue(subDays(now, 6)),
-      to: toDateInputValue(now)
+      orderFrom: toDateInputValue(subDays(now, 6)),
+      orderTo: toDateInputValue(now)
     }
   }
 
   if (preset === "last-14-days") {
     return {
-      from: toDateInputValue(subDays(now, 13)),
-      to: toDateInputValue(now)
+      orderFrom: toDateInputValue(subDays(now, 13)),
+      orderTo: toDateInputValue(now)
     }
   }
 
   if (preset === "last-30-days") {
     return {
-      from: toDateInputValue(subDays(now, 29)),
-      to: toDateInputValue(now)
+      orderFrom: toDateInputValue(subDays(now, 29)),
+      orderTo: toDateInputValue(now)
     }
   }
 
   if (preset === "this-month") {
     return {
-      from: toDateInputValue(startOfMonth(now)),
-      to: toDateInputValue(now)
+      orderFrom: toDateInputValue(startOfMonth(now)),
+      orderTo: toDateInputValue(now)
     }
   }
 
   const lastMonthDate = subMonths(now, 1)
   return {
-    from: toDateInputValue(startOfMonth(lastMonthDate)),
-    to: toDateInputValue(endOfMonth(lastMonthDate))
+    orderFrom: toDateInputValue(startOfMonth(lastMonthDate)),
+    orderTo: toDateInputValue(endOfMonth(lastMonthDate))
   }
 }
 
@@ -113,12 +113,12 @@ export const buildMonthlyQueryParams = ({
 
 export const buildRangeQueryParams = ({
   channel,
-  fromDate,
-  toDate
-}: Pick<TimeFilterState, "channel" | "fromDate" | "toDate">) => ({
+  orderFrom,
+  orderTo
+}: Pick<TimeFilterState, "channel" | "orderFrom" | "orderTo">) => ({
   channelId: channel,
-  from: fromDate,
-  to: toDate
+  orderFrom,
+  orderTo
 })
 
 export const buildOrdersQueryParams = ({
@@ -126,8 +126,8 @@ export const buildOrdersQueryParams = ({
   channel,
   month,
   year,
-  fromDate,
-  toDate,
+  orderFrom,
+  orderTo,
   page,
   pageSize
 }: TimeFilterState & {
@@ -137,8 +137,8 @@ export const buildOrdersQueryParams = ({
   if (mode === "range") {
     return {
       channel,
-      from: fromDate,
-      to: toDate,
+      orderFrom,
+      orderTo,
       page,
       pageSize
     }

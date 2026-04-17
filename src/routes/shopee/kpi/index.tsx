@@ -4,9 +4,32 @@ import {
   type ShopeeMonthKpiSearchState
 } from "../../../components/incomes/shopee-dashboard/ShopeeMonthKpiPage"
 
+const getCurrentPeriod = () => {
+  const currentDate = new Date()
+
+  return {
+    month: String(currentDate.getMonth() + 1),
+    year: String(currentDate.getFullYear())
+  }
+}
+
 const parsePositiveInt = (value: unknown, fallback: number) => {
   const parsed = Number(value)
   return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback
+}
+
+const parseMonth = (value: unknown, fallback: string) => {
+  const parsed = Number(value)
+  return Number.isInteger(parsed) && parsed >= 1 && parsed <= 12
+    ? String(parsed)
+    : fallback
+}
+
+const parseYear = (value: unknown, fallback: string) => {
+  const parsed = Number(value)
+  return Number.isInteger(parsed) && parsed >= 2000 && parsed <= 3000
+    ? String(parsed)
+    : fallback
 }
 
 const parseString = (value: unknown) => {
@@ -19,11 +42,13 @@ const parseString = (value: unknown) => {
 const validateShopeeMonthKpiSearch = (
   search: Record<string, unknown>
 ): ShopeeMonthKpiSearchState => {
+  const currentPeriod = getCurrentPeriod()
+
   return {
     page: parsePositiveInt(search.page, 1),
     limit: parsePositiveInt(search.limit, 10),
-    month: parseString(search.month),
-    year: parseString(search.year),
+    month: parseMonth(search.month, currentPeriod.month),
+    year: parseYear(search.year, currentPeriod.year),
     channel: parseString(search.channel)
   }
 }
