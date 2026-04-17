@@ -8,6 +8,11 @@ import { CToast } from "../../common/CToast"
 interface ShopeeMonthKpiModalProps {
   kpi?: ShopeeMonthKpiRecord
   channels: LivestreamChannel[]
+  defaultValues?: {
+    month?: number
+    year?: number
+    channel?: string
+  }
   onSuccess: () => void
 }
 
@@ -50,6 +55,7 @@ const getErrorMessage = (error: unknown) => {
 export const ShopeeMonthKpiModal = ({
   kpi,
   channels,
+  defaultValues,
   onSuccess
 }: ShopeeMonthKpiModalProps) => {
   const { createShopeeMonthKpi, updateShopeeMonthKpi } = useShopeeMonthKpis()
@@ -60,17 +66,23 @@ export const ShopeeMonthKpiModal = ({
   const {
     control,
     handleSubmit,
+    watch,
     formState: { errors }
   } = useForm<ShopeeMonthKpiFormData>({
     defaultValues: {
-      month: kpi?.month ?? currentMonth,
-      year: kpi?.year ?? currentYear,
-      channel: getChannelId(kpi?.channel),
+      month: kpi?.month ?? defaultValues?.month ?? currentMonth,
+      year: kpi?.year ?? defaultValues?.year ?? currentYear,
+      channel: getChannelId(kpi?.channel) || defaultValues?.channel || "",
       revenueKpi: kpi?.revenueKpi ?? 0,
       adsCostKpi: kpi?.adsCostKpi ?? 0,
       roasKpi: kpi?.roasKpi ?? 0
     }
   })
+
+  const revenueKpi = watch("revenueKpi")
+  const adsCostKpi = watch("adsCostKpi")
+  const calculatedRoas =
+    adsCostKpi > 0 ? Number((revenueKpi / adsCostKpi).toFixed(2)) : 0
 
   const createMutation = useMutation({
     mutationFn: createShopeeMonthKpi,
@@ -122,15 +134,20 @@ export const ShopeeMonthKpiModal = ({
   }))
 
   const onSubmit = (data: ShopeeMonthKpiFormData) => {
+    const payload = {
+      ...data,
+      roasKpi: calculatedRoas
+    }
+
     if (kpi) {
       updateMutation.mutate({
         id: kpi._id,
-        data
+        data: payload
       })
       return
     }
 
-    createMutation.mutate(data)
+    createMutation.mutate(payload)
   }
 
   return (
@@ -245,28 +262,15 @@ export const ShopeeMonthKpiModal = ({
           )}
         />
 
-        <Controller
-          name="roasKpi"
-          control={control}
-          rules={{
-            required: "Vui lòng nhập KPI ROAS",
-            min: { value: 0, message: "KPI ROAS phải là số không âm" }
-          }}
-          render={({ field }) => (
-            <NumberInput
-              label="KPI ROAS"
-              placeholder="Nhập KPI ROAS"
-              value={field.value}
-              onChange={(value) =>
-                field.onChange(typeof value === "number" ? value : 0)
-              }
-              error={errors.roasKpi?.message}
-              min={0}
-              step={0.1}
-              decimalScale={2}
-              required
-            />
-          )}
+        <NumberInput
+          label="KPI ROAS"
+          description="Tự động tính từ KPI doanh thu / KPI chi phí ads"
+          value={calculatedRoas}
+          min={0}
+          step={0.1}
+          decimalScale={2}
+          readOnly
+          hideControls
         />
 
         <Group justify="flex-end" mt="md">

@@ -1,5 +1,6 @@
+import { useQuery } from "@tanstack/react-query"
 import { ReactNode } from "react"
-import { useMe } from "../../context/MeContext"
+import { useUsers } from "../../hooks/useUsers"
 
 interface CanProps {
   roles?: string[]
@@ -22,8 +23,13 @@ export const Can = ({
   fallback = null,
   children
 }: CanProps) => {
-  const me = useMe()
-  const userRoles = me?.roles
+  const { getMe } = useUsers()
+  const { data: meData } = useQuery({
+    queryKey: ["getMe"],
+    queryFn: getMe,
+    select: (data) => data.data
+  })
+  const userRoles = meData?.roles
 
   if (!roles || roles.length === 0) return <>{children}</>
 

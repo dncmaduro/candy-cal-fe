@@ -29,7 +29,7 @@ import { CToast } from "../common/CToast"
 import { CDataTable } from "../common/CDataTable"
 import { SHOPEE_EDITOR_ROLES } from "../../constants/navs"
 import { ShopeeXlsxCalculator } from "./ShopeeXlsxCalculator"
-import { useMe } from "../../context/MeContext"
+import { useUsers } from "../../hooks/useUsers"
 
 type ShopeeProductRow = {
   _id: string
@@ -38,9 +38,14 @@ type ShopeeProductRow = {
 }
 
 export const ShopeeProducts = () => {
-  const me = useMe()
+  const { getMe } = useUsers()
+  const { data: meData } = useQuery({
+    queryKey: ["getMe"],
+    queryFn: getMe,
+    select: (data) => data.data
+  })
   const canMutateShopeeSku = Boolean(
-    me?.roles?.some((role) => SHOPEE_EDITOR_ROLES.includes(role))
+    meData?.roles?.some((role) => SHOPEE_EDITOR_ROLES.includes(role))
   )
   const { searchShopeeProducts, deleteShopeeProduct } = useShopeeProducts()
   const [searchText, setSearchText] = useState<string>("")

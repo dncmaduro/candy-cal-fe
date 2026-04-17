@@ -11,7 +11,6 @@ import { CToast } from "../common/CToast"
 import { Notifications } from "./Notifications"
 import { Sidebar } from "./Sidebar"
 import { useUIStore } from "../../store/uiStore"
-import { MeContext } from "../../context/MeContext"
 import { MyTasksPopover } from "../tasks/MyTasksPopover.tsx"
 import {
   NAVS,
@@ -156,9 +155,7 @@ export const AppLayout = ({
           }}
         >
           <Container size="1600">
-            <Box w="100%" maw={1600} mx="auto">
-              <MeContext.Provider value={meData}>{children}</MeContext.Provider>
-            </Box>
+            <Box w="100%" maw={1600} mx="auto">{children}</Box>
           </Container>
         </main>
         <AiChatSidebar module="storage" />

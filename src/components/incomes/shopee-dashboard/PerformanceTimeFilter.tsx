@@ -11,8 +11,8 @@ interface PerformanceTimeFilterProps {
   channelId: string
   month: number
   year: number
-  fromDate?: string
-  toDate?: string
+  orderFrom?: string
+  orderTo?: string
   preset?: ShopeeRangePreset
   channelOptions: ShopeeChannelOption[]
   monthOptions: ShopeeChannelOption[]
@@ -26,8 +26,8 @@ interface PerformanceTimeFilterProps {
   onYearChange: (value: number) => void
   onRangeApply: (payload: {
     channel: string
-    fromDate: string
-    toDate: string
+    orderFrom: string
+    orderTo: string
     preset?: ShopeeRangePreset
   }) => void
 }
@@ -37,8 +37,8 @@ export const PerformanceTimeFilter = ({
   channelId,
   month,
   year,
-  fromDate,
-  toDate,
+  orderFrom,
+  orderTo,
   preset,
   channelOptions,
   monthOptions,
@@ -92,8 +92,8 @@ export const PerformanceTimeFilter = ({
       ) : (
         <DateRangeFilterFields
           channelId={channelId}
-          fromDate={fromDate}
-          toDate={toDate}
+          orderFrom={orderFrom}
+          orderTo={orderTo}
           preset={preset}
           channelOptions={channelOptions}
           isChannelsLoading={isChannelsLoading}
