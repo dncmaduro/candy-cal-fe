@@ -26,8 +26,8 @@ interface ShopeeDashboardOrdersSectionProps {
   mode: ShopeePerformanceTimeMode
   month: number
   year: number
-  fromDate?: string
-  toDate?: string
+  orderFrom?: string
+  orderTo?: string
   channelId: string
 }
 
@@ -74,8 +74,8 @@ export const ShopeeDashboardOrdersSection = ({
   mode,
   month,
   year,
-  fromDate,
-  toDate,
+  orderFrom,
+  orderTo,
   channelId
 }: ShopeeDashboardOrdersSectionProps) => {
   const [page, setPage] = useState(1)
@@ -83,7 +83,7 @@ export const ShopeeDashboardOrdersSection = ({
 
   useEffect(() => {
     setPage(1)
-  }, [mode, month, year, fromDate, toDate, channelId])
+  }, [mode, month, year, orderFrom, orderTo, channelId])
 
   const ordersQuery = useShopeeOrdersList({
     request: buildOrdersQueryParams({
@@ -91,27 +91,27 @@ export const ShopeeDashboardOrdersSection = ({
       channel: channelId,
       month,
       year,
-      fromDate,
-      toDate,
+      orderFrom,
+      orderTo,
       page,
       pageSize: limit
     }),
     enabled:
       mode === "month"
         ? true
-        : Boolean(fromDate) && Boolean(toDate)
+        : Boolean(orderFrom) && Boolean(orderTo)
   })
 
   const columns = useMemo<ColumnDef<OrdersListResponse["items"][number]>[]>(
     () => {
       const baseColumns: ColumnDef<OrdersListResponse["items"][number]>[] = [
         {
-          accessorKey: "date",
-          header: "Ngày",
+          accessorKey: "orderDate",
+          header: "Ngày đặt",
           size: 110,
           cell: ({ row }) => (
             <Text size="sm">
-              {format(new Date(row.original.date), "dd/MM/yyyy")}
+              {format(new Date(row.original.orderDate), "dd/MM/yyyy")}
             </Text>
           )
         },

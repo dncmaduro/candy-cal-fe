@@ -30,23 +30,23 @@ const PRESET_OPTIONS: Array<{
 
 interface DateRangeFilterFieldsProps {
   channelId: string
-  fromDate?: string
-  toDate?: string
+  orderFrom?: string
+  orderTo?: string
   preset?: ShopeeRangePreset
   channelOptions: ShopeeChannelOption[]
   isChannelsLoading?: boolean
   onApply: (payload: {
     channel: string
-    fromDate: string
-    toDate: string
+    orderFrom: string
+    orderTo: string
     preset?: ShopeeRangePreset
   }) => void
 }
 
 export const DateRangeFilterFields = ({
   channelId,
-  fromDate,
-  toDate,
+  orderFrom,
+  orderTo,
   preset,
   channelOptions,
   isChannelsLoading = false,
@@ -54,9 +54,9 @@ export const DateRangeFilterFields = ({
 }: DateRangeFilterFieldsProps) => {
   const [draftChannel, setDraftChannel] = useState(channelId)
   const [draftFrom, setDraftFrom] = useState<Date | null>(
-    parseDateInputValue(fromDate)
+    parseDateInputValue(orderFrom)
   )
-  const [draftTo, setDraftTo] = useState<Date | null>(parseDateInputValue(toDate))
+  const [draftTo, setDraftTo] = useState<Date | null>(parseDateInputValue(orderTo))
   const [draftPreset, setDraftPreset] = useState<ShopeeRangePreset | undefined>(
     preset
   )
@@ -66,12 +66,12 @@ export const DateRangeFilterFields = ({
   }, [channelId])
 
   useEffect(() => {
-    setDraftFrom(parseDateInputValue(fromDate))
-  }, [fromDate])
+    setDraftFrom(parseDateInputValue(orderFrom))
+  }, [orderFrom])
 
   useEffect(() => {
-    setDraftTo(parseDateInputValue(toDate))
-  }, [toDate])
+    setDraftTo(parseDateInputValue(orderTo))
+  }, [orderTo])
 
   useEffect(() => {
     setDraftPreset(preset)
@@ -92,16 +92,16 @@ export const DateRangeFilterFields = ({
 
     const isChanged =
       draftChannel !== channelId ||
-      normalizedFrom !== fromDate ||
-      normalizedTo !== toDate ||
+      normalizedFrom !== orderFrom ||
+      normalizedTo !== orderTo ||
       draftPreset !== preset
 
     if (!isChanged) return
 
     onApply({
       channel: draftChannel,
-      fromDate: normalizedFrom,
-      toDate: normalizedTo,
+      orderFrom: normalizedFrom,
+      orderTo: normalizedTo,
       preset: draftPreset
     })
   }, [
@@ -109,12 +109,12 @@ export const DateRangeFilterFields = ({
     channelId,
     draftChannel,
     draftPreset,
-    fromDate,
+    orderFrom,
     normalizedFrom,
     normalizedTo,
     onApply,
     preset,
-    toDate
+    orderTo
   ])
 
   const rangeError = useMemo(() => {
@@ -201,8 +201,8 @@ export const DateRangeFilterFields = ({
               onClick={() => {
                 const next = resolvePresetRange(option.key)
                 setDraftPreset(option.key)
-                setDraftFrom(parseDateInputValue(next.from))
-                setDraftTo(parseDateInputValue(next.to))
+                setDraftFrom(parseDateInputValue(next.orderFrom))
+                setDraftTo(parseDateInputValue(next.orderTo))
               }}
               style={{
                 cursor: "pointer",

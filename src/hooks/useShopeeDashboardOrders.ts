@@ -1,4 +1,4 @@
-import { endOfMonth, startOfMonth } from "date-fns"
+import { endOfMonth, format, startOfMonth } from "date-fns"
 import { useQuery } from "@tanstack/react-query"
 import type {
   SearchShopeeIncomeResponse,
@@ -68,7 +68,7 @@ const adaptShopeeDashboardOrders = (
 
       return {
         _id: item._id,
-        date: normalizeOrderDate(item.date),
+        orderDate: normalizeOrderDate(item.orderDate),
         orderId: item.orderId,
         customer: item.customer,
         creator: item.creator,
@@ -99,9 +99,13 @@ export const useShopeeDashboardOrders = ({
   const normalizedRequest = normalizeShopeeDashboardOverviewRequest(request)
   const normalizedPage = normalizePage(page)
   const normalizedLimit = normalizeLimit(limit)
-  const date = new Date(normalizedRequest.year, normalizedRequest.month - 1, 1)
-  const startDate = startOfMonth(date)
-  const endDate = endOfMonth(date)
+  const monthDate = new Date(
+    normalizedRequest.year,
+    normalizedRequest.month - 1,
+    1
+  )
+  const orderStartDate = format(startOfMonth(monthDate), "yyyy-MM-dd")
+  const orderEndDate = format(endOfMonth(monthDate), "yyyy-MM-dd")
 
   return useQuery({
     queryKey: [
@@ -117,8 +121,8 @@ export const useShopeeDashboardOrders = ({
       searchShopeeIncome({
         page: normalizedPage,
         limit: normalizedLimit,
-        startDate,
-        endDate,
+        orderStartDate,
+        orderEndDate,
         channelId:
           normalizedRequest.channelId === SHOPEE_ALL_CHANNEL_ID
             ? undefined

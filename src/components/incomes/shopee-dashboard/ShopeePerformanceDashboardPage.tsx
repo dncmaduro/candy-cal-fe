@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from "react"
 import { Helmet } from "react-helmet-async"
+import { useQuery } from "@tanstack/react-query"
 import { Box, Button, Divider, Skeleton, Stack, Tabs, Text, rem } from "@mantine/core"
 import { IconPlus } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
@@ -8,13 +9,13 @@ import {
   SHOPEE_ROLES
 } from "../../../constants/navs"
 import { useAuthGuard } from "../../../hooks/useAuthGuard"
-import { useMe } from "../../../context/MeContext"
 import type {
   ShopeePerformanceTimeMode,
   ShopeeRangePreset
 } from "../../../hooks/models"
 import { SHOPEE_ALL_CHANNEL_ID, type ShopeeChannelOption } from "../../../hooks/shopeeDashboardApi"
 import { useShopeeChannels } from "../../../hooks/useShopeeChannels"
+import { useUsers } from "../../../hooks/useUsers"
 import {
   useMonthlyMetrics,
   useRangeMetrics
@@ -37,8 +38,8 @@ export interface ShopeeDashboardSearchState {
   channel: string
   month: number
   year: number
-  fromDate?: string
-  toDate?: string
+  orderFrom?: string
+  orderTo?: string
   preset?: ShopeeRangePreset
 }
 
@@ -73,9 +74,14 @@ export const ShopeePerformanceDashboardPage = ({
   onSearchChange
 }: ShopeePerformanceDashboardPageProps) => {
   useAuthGuard(SHOPEE_ROLES)
-  const me = useMe()
+  const { getMe } = useUsers()
+  const { data: meData } = useQuery({
+    queryKey: ["getMe"],
+    queryFn: getMe,
+    select: (data) => data.data
+  })
   const canMutateShopee = Boolean(
-    me?.roles?.includes("admin") || me?.roles?.includes("shopee-emp")
+    meData?.roles?.includes("admin") || meData?.roles?.includes("shopee-emp")
   )
 
   const monthOptions = useMemo(() => createMonthOptions(), [])
@@ -116,12 +122,13 @@ export const ShopeePerformanceDashboardPage = ({
     enabled: search.tab === "dashboard" && search.mode === "month"
   })
 
-  const rangeDays = getDaysInRange(search.fromDate, search.toDate)
-  const isRangeReady = Boolean(search.fromDate) && Boolean(search.toDate) && rangeDays > 0
+  const rangeDays = getDaysInRange(search.orderFrom, search.orderTo)
+  const isRangeReady =
+    Boolean(search.orderFrom) && Boolean(search.orderTo) && rangeDays > 0
 
   const rangeQuery = useRangeMetrics({
-    from: search.fromDate,
-    to: search.toDate,
+    orderFrom: search.orderFrom,
+    orderTo: search.orderTo,
     channelId: normalizedChannelId,
     enabled: search.tab === "dashboard" && search.mode === "range" && isRangeReady
   })
@@ -202,8 +209,8 @@ export const ShopeePerformanceDashboardPage = ({
               channelId={search.channel}
               month={search.month}
               year={search.year}
-              fromDate={search.fromDate}
-              toDate={search.toDate}
+              orderFrom={search.orderFrom}
+              orderTo={search.orderTo}
               preset={search.preset}
               channelOptions={channelOptions}
               monthOptions={monthOptions}
@@ -221,8 +228,8 @@ export const ShopeePerformanceDashboardPage = ({
                     {
                       mode: "month",
                       preset: undefined,
-                      fromDate: undefined,
-                      toDate: undefined
+                      orderFrom: undefined,
+                      orderTo: undefined
                     },
                     true
                   )
@@ -236,8 +243,8 @@ export const ShopeePerformanceDashboardPage = ({
                 onSearchChange(
                   {
                     mode: "range",
-                    fromDate: fallbackRange.from,
-                    toDate: fallbackRange.to,
+                    orderFrom: fallbackRange.orderFrom,
+                    orderTo: fallbackRange.orderTo,
                     preset: search.preset ?? "last-7-days"
                   },
                   true
@@ -248,12 +255,12 @@ export const ShopeePerformanceDashboardPage = ({
               }
               onMonthChange={(month) => onSearchChange({ month }, true)}
               onYearChange={(year) => onSearchChange({ year }, true)}
-              onRangeApply={({ channel, fromDate, toDate, preset }) =>
+              onRangeApply={({ channel, orderFrom, orderTo, preset }) =>
                 onSearchChange(
                   {
                     channel,
-                    fromDate,
-                    toDate,
+                    orderFrom,
+                    orderTo,
                     preset
                   },
                   true
@@ -329,8 +336,8 @@ export const ShopeePerformanceDashboardPage = ({
                       mode={search.mode}
                       month={search.month}
                       year={search.year}
-                      fromDate={search.fromDate}
-                      toDate={search.toDate}
+                      orderFrom={search.orderFrom}
+                      orderTo={search.orderTo}
                       channelId={normalizedChannelId}
                     />
                   )}

@@ -24,7 +24,7 @@ import { ColumnDef } from "@tanstack/react-table"
 
 interface ShopeeIncomeRow {
   _id: string
-  date: string | Date
+  orderDate: string
   customer: string
   creator: string
   channel: {
@@ -46,12 +46,12 @@ export const ShopeeIncomes = () => {
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(10)
   const [searchText, setSearchText] = useState("")
-  const [startDate, setStartDate] = useState<Date | null>(() => {
+  const [orderStartDate, setOrderStartDate] = useState<Date | null>(() => {
     const d = new Date()
     d.setDate(d.getDate() - 30)
     return d
   })
-  const [endDate, setEndDate] = useState<Date | null>(new Date())
+  const [orderEndDate, setOrderEndDate] = useState<Date | null>(new Date())
   const { searchShopeeIncome, insertIncomeShopee } = useShopeeIncomes()
   const { selectedChannelId } = useLivestreamChannel()
 
@@ -64,8 +64,8 @@ export const ShopeeIncomes = () => {
       "searchShopeeIncome",
       page,
       limit,
-      startDate,
-      endDate,
+      orderStartDate,
+      orderEndDate,
       searchText,
       selectedChannelId
     ],
@@ -73,8 +73,12 @@ export const ShopeeIncomes = () => {
       searchShopeeIncome({
         page,
         limit,
-        startDate: startDate || undefined,
-        endDate: endDate || undefined,
+        orderStartDate: orderStartDate
+          ? format(orderStartDate, "yyyy-MM-dd")
+          : undefined,
+        orderEndDate: orderEndDate
+          ? format(orderEndDate, "yyyy-MM-dd")
+          : undefined,
         productCode: searchText || undefined,
         channelId: selectedChannelId || undefined
       }),
@@ -105,7 +109,7 @@ export const ShopeeIncomes = () => {
     return (
       incomesData?.data.map((item) => ({
         _id: item._id,
-        date: item.date,
+        orderDate: item.orderDate,
         customer: item.customer,
         creator: item.creator,
         channel: {
@@ -124,8 +128,8 @@ export const ShopeeIncomes = () => {
   const columns: ColumnDef<ShopeeIncomeRow>[] = useMemo(
     () => [
       {
-        accessorKey: "date",
-        header: "Ngày",
+        accessorKey: "orderDate",
+        header: "Ngày đặt",
         size: 110,
         cell: ({ getValue }) => (
           <Text size="sm">
@@ -305,15 +309,15 @@ export const ShopeeIncomes = () => {
           extraFilters={
             <>
               <DatePickerInput
-                value={startDate}
+                value={orderStartDate}
                 onChange={(value) => {
                   const d = value
                     ? new Date(new Date(value).setHours(0, 0, 0, 0))
                     : null
-                  setStartDate(d)
+                  setOrderStartDate(d)
                 }}
-                label="Từ ngày"
-                placeholder="Chọn ngày bắt đầu"
+                label="Từ ngày đặt"
+                placeholder="Chọn ngày đặt bắt đầu"
                 valueFormat="DD/MM/YYYY"
                 size="sm"
                 radius="md"
@@ -321,15 +325,15 @@ export const ShopeeIncomes = () => {
                 style={{ width: 160 }}
               />
               <DatePickerInput
-                value={endDate}
+                value={orderEndDate}
                 onChange={(value) => {
                   const d = value
                     ? new Date(new Date(value).setHours(23, 59, 59, 999))
                     : null
-                  setEndDate(d)
+                  setOrderEndDate(d)
                 }}
-                label="Đến ngày"
-                placeholder="Chọn ngày kết thúc"
+                label="Đến ngày đặt"
+                placeholder="Chọn ngày đặt kết thúc"
                 valueFormat="DD/MM/YYYY"
                 size="sm"
                 radius="md"
