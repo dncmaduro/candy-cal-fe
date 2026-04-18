@@ -24,7 +24,6 @@ import { modals } from "@mantine/modals"
 import type { ColumnDef } from "@tanstack/react-table"
 import { ShopeeProductItems } from "./ShopeeProductItems"
 import { ShopeeProductModal } from "./ShopeeProductModal"
-import { Can } from "../common/Can"
 import { CToast } from "../common/CToast"
 import { CDataTable } from "../common/CDataTable"
 import { SHOPEE_EDITOR_ROLES } from "../../constants/navs"
@@ -177,20 +176,30 @@ export const ShopeeProducts = () => {
                 </Button>
               </Tooltip>
 
-              <Can roles={["admin"]}>
+              <Tooltip
+                label={
+                  canMutateShopeeSku
+                    ? "Xóa SKU"
+                    : "Bạn chỉ có quyền xem dữ liệu Shopee"
+                }
+              >
                 <Button
                   variant="light"
                   color="red"
                   size="xs"
                   radius="xl"
                   px={14}
-                  onClick={() => handleDeleteProduct(product._id, product.name)}
+                  onClick={() => {
+                    if (!canMutateShopeeSku) return
+                    handleDeleteProduct(product._id, product.name)
+                  }}
                   leftSection={<IconTrash size={14} />}
+                  disabled={!canMutateShopeeSku}
                   style={{ fontWeight: 500 }}
                 >
                   Xóa
                 </Button>
-              </Can>
+              </Tooltip>
             </Group>
           )
         }
