@@ -19,6 +19,13 @@ const normalizeNumber = (value: unknown) => {
   return typeof value === "number" && Number.isFinite(value) ? value : 0
 }
 
+const safeDivide = (numerator: number, denominator: number) => {
+  if (!Number.isFinite(numerator) || !Number.isFinite(denominator)) return 0
+  if (denominator <= 0) return 0
+
+  return numerator / denominator
+}
+
 const getPaceStatus = (
   value: MonthlyKpisResponse["kpis"][number]["status"]
 ): ShopeeDashboardMetricViewModel["paceStatus"] => {
@@ -70,10 +77,15 @@ export interface MonthlyMetricsViewModel {
 }
 
 export interface RangeNormalizedMetricItem {
-  key: "revenuePerDay" | "ordersPerDay" | "adsCostPerDay" | "aov"
+  key:
+    | "revenuePerDay"
+    | "ordersPerDay"
+    | "adsCostPerDay"
+    | "aov"
+    | "adsRevenueRatio"
   label: string
   value: number
-  format: "currency" | "decimal" | "integer"
+  format: "currency" | "decimal" | "integer" | "percentage"
   description: string
 }
 
@@ -95,11 +107,32 @@ const adaptMonthlyMetrics = (
   summary: MonthlySummaryResponse,
   kpis: MonthlyKpisResponse
 ): MonthlyMetricsViewModel => {
+  const totalDaysInMonth = new Date(
+    summary.scope.year,
+    summary.scope.month,
+    0
+  ).getDate()
+  const expectedProgressPercent = normalizeNumber(
+    summary.summary.expectedProgressPercent
+  )
+  const elapsedDays =
+    expectedProgressPercent >= 100
+      ? totalDaysInMonth
+      : totalDaysInMonth * safeDivide(expectedProgressPercent, 100)
+  const currentRevenue = normalizeNumber(summary.summary.currentRevenue)
+  const adsCost = normalizeNumber(summary.summary.adsCost)
+  const revenueTarget = normalizeNumber(summary.summary.revenueTarget)
+  const adsRevenueRatio = safeDivide(adsCost, currentRevenue) * 100
+  const revenueTargetPerDay = safeDivide(revenueTarget, totalDaysInMonth)
+  const actualRevenuePerElapsedDay = safeDivide(currentRevenue, elapsedDays)
+  const avgRevenuePerDayVsKpi =
+    safeDivide(actualRevenuePerElapsedDay, revenueTargetPerDay) * 100
+
   const summaryItems: ShopeeDashboardSummaryItem[] = [
     {
       key: "revenue",
       label: "Doanh thu hiện tại",
-      value: normalizeNumber(summary.summary.currentRevenue),
+      value: currentRevenue,
       format: "currency",
       description: "Doanh thu thực tế theo phạm vi tháng đã chọn."
     },
@@ -113,7 +146,7 @@ const adaptMonthlyMetrics = (
     {
       key: "adsCost",
       label: "Chi phí ads hiện tại",
-      value: normalizeNumber(summary.summary.adsCost),
+      value: adsCost,
       format: "currency",
       description: "Chi phí ads thực tế theo phạm vi tháng đã chọn."
     },
@@ -130,6 +163,21 @@ const adaptMonthlyMetrics = (
       value: normalizeNumber(summary.summary.totalOrders),
       format: "integer",
       description: "Tổng đơn hàng theo phạm vi tháng đã chọn."
+    },
+    {
+      key: "adsRevenueRatio",
+      label: "% Ads so với doanh thu",
+      value: adsRevenueRatio,
+      format: "percentage",
+      description: "Tỷ lệ chi phí ads trên doanh thu thực tế của tháng đang chọn."
+    },
+    {
+      key: "avgRevenuePerDayVsKpi",
+      label: "% DT TB/ngày so với KPI ngày",
+      value: avgRevenuePerDayVsKpi,
+      format: "percentage",
+      description:
+        "So sánh doanh thu trung bình/ngày thực tế với KPI doanh thu/ngày, trong đó KPI ngày = KPI tháng / số ngày của tháng."
     }
   ]
 
@@ -175,11 +223,15 @@ const adaptRangeMetrics = (
   summary: RangeSummaryResponse,
   timeseries: RangeTimeseriesResponse
 ): RangeMetricsViewModel => {
+  const netRevenue = normalizeNumber(summary.summary.netRevenue)
+  const adsRevenueRatio =
+    safeDivide(normalizeNumber(summary.summary.adsCost), netRevenue) * 100
+
   const summaryItems: ShopeeDashboardSummaryItem[] = [
     {
       key: "revenue",
       label: "Tổng doanh thu",
-      value: normalizeNumber(summary.summary.netRevenue),
+      value: netRevenue,
       format: "currency",
       description: "Doanh thu thuần trong khoảng thời gian đang chọn."
     },
@@ -241,6 +293,13 @@ const adaptRangeMetrics = (
       value: normalizeNumber(summary.summary.aov),
       format: "currency",
       description: "Giá trị đơn hàng trung bình."
+    },
+    {
+      key: "adsRevenueRatio",
+      label: "% Ads so với doanh thu",
+      value: adsRevenueRatio,
+      format: "percentage",
+      description: "Tỷ lệ chi phí ads trên doanh thu thuần trong khoảng ngày đang chọn."
     }
   ]
 
