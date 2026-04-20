@@ -5773,7 +5773,11 @@ export interface ShopeeDashboardOverviewResponse {
 }
 
 /** @interface */
-export type ShopeeDashboardValueFormat = "currency" | "decimal" | "integer"
+export type ShopeeDashboardValueFormat =
+  | "currency"
+  | "decimal"
+  | "integer"
+  | "percentage"
 
 /** @interface */
 export type ShopeeDashboardMetricKey = "revenue" | "adsCost" | "roas"
@@ -5802,7 +5806,14 @@ export interface ShopeeChannelOption {
 
 /** @interface */
 export interface ShopeeDashboardSummaryItem {
-  key: "revenue" | "liveRevenue" | "adsCost" | "roas" | "totalOrders"
+  key:
+    | "revenue"
+    | "liveRevenue"
+    | "adsCost"
+    | "roas"
+    | "totalOrders"
+    | "adsRevenueRatio"
+    | "avgRevenuePerDayVsKpi"
   label: string
   value: number
   description: string

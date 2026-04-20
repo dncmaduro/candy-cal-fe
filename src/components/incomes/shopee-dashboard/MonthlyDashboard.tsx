@@ -1,5 +1,14 @@
 import { Alert, Box, Button, Group, Paper, Skeleton, Stack, Text, rem } from "@mantine/core"
-import { IconAlertCircle, IconBroadcast, IconCash, IconChartBar, IconRefresh, IconReceipt2, IconTargetArrow } from "@tabler/icons-react"
+import {
+  IconAlertCircle,
+  IconBroadcast,
+  IconCash,
+  IconChartBar,
+  IconPercentage,
+  IconRefresh,
+  IconReceipt2,
+  IconTargetArrow
+} from "@tabler/icons-react"
 import type { ShopeeDashboardMetricViewModel, ShopeeDashboardSummaryItem } from "../../../hooks/models"
 import type { MonthlyMetricsViewModel } from "../../../hooks/useShopeePerformanceMetrics"
 import { MetricStatCard } from "../analytics/MetricStatCard"
@@ -21,6 +30,7 @@ const formatDecimal = (value: number) => {
 
 const formatSummaryValue = (item: ShopeeDashboardSummaryItem) => {
   if (item.format === "currency") return formatCurrency(item.value)
+  if (item.format === "percentage") return `${formatDecimal(item.value)}%`
   if (item.format === "decimal") return formatDecimal(item.value)
   return `${Math.round(item.value).toLocaleString("vi-VN")} đơn`
 }
@@ -35,7 +45,7 @@ const formatMetricTarget = (metric?: ShopeeDashboardMetricViewModel) => {
 
 const SummaryCardsSkeleton = () => (
   <Box style={createResponsiveGridStyle(280)}>
-    {Array.from({ length: 5 }).map((_, index) => (
+    {Array.from({ length: 7 }).map((_, index) => (
       <Skeleton key={index} height={154} radius="xl" />
     ))}
   </Box>
@@ -134,7 +144,9 @@ export const MonthlyDashboard = ({
     liveRevenue: "cyan",
     adsCost: "orange",
     roas: "grape",
-    totalOrders: "teal"
+    totalOrders: "teal",
+    adsRevenueRatio: "orange",
+    avgRevenuePerDayVsKpi: "lime"
   }
 
   const summaryIcons = {
@@ -142,7 +154,9 @@ export const MonthlyDashboard = ({
     liveRevenue: <IconBroadcast size={20} />,
     adsCost: <IconChartBar size={20} />,
     roas: <IconTargetArrow size={20} />,
-    totalOrders: <IconReceipt2 size={20} />
+    totalOrders: <IconReceipt2 size={20} />,
+    adsRevenueRatio: <IconPercentage size={20} />,
+    avgRevenuePerDayVsKpi: <IconPercentage size={20} />
   } satisfies Record<ShopeeDashboardSummaryItem["key"], JSX.Element>
 
   if (isError && !data) {
@@ -169,7 +183,10 @@ export const MonthlyDashboard = ({
       <Box style={createResponsiveGridStyle(280)}>
         {data.summaryItems.map((item) => {
           const relatedMetric =
-            item.key === "totalOrders" || item.key === "liveRevenue"
+            item.key === "totalOrders" ||
+            item.key === "liveRevenue" ||
+            item.key === "adsRevenueRatio" ||
+            item.key === "avgRevenuePerDayVsKpi"
               ? undefined
               : metricsByKey.get(item.key)
 
