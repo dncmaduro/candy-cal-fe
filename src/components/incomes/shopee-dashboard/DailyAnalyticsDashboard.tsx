@@ -1,5 +1,14 @@
 import { Alert, Box, Button, Paper, Skeleton, Stack, Text, rem } from "@mantine/core"
-import { IconAlertCircle, IconBroadcast, IconCash, IconChartBar, IconRefresh, IconReceipt2, IconTargetArrow } from "@tabler/icons-react"
+import {
+  IconAlertCircle,
+  IconBroadcast,
+  IconCash,
+  IconChartBar,
+  IconPercentage,
+  IconRefresh,
+  IconReceipt2,
+  IconTargetArrow
+} from "@tabler/icons-react"
 import { LineChart } from "@mantine/charts"
 import { format as formatDate } from "date-fns"
 import { parseDateInputValue } from "./performanceTimeUtils"
@@ -26,12 +35,14 @@ const formatDecimal = (value: number) => {
 
 const formatSummaryValue = (item: ShopeeDashboardSummaryItem) => {
   if (item.format === "currency") return formatCurrency(item.value)
+  if (item.format === "percentage") return `${formatDecimal(item.value)}%`
   if (item.format === "decimal") return formatDecimal(item.value)
   return `${Math.round(item.value).toLocaleString("vi-VN")} đơn`
 }
 
 const formatNormalizedValue = (item: RangeNormalizedMetricItem) => {
   if (item.format === "currency") return formatCurrency(item.value)
+  if (item.format === "percentage") return `${formatDecimal(item.value)}%`
   if (item.format === "integer") return Math.round(item.value).toLocaleString("vi-VN")
   return formatDecimal(item.value)
 }
@@ -52,7 +63,7 @@ const RangeDashboardSkeleton = () => (
     </Box>
 
     <Box style={createResponsiveGridStyle(280)}>
-      {Array.from({ length: 4 }).map((_, index) => (
+      {Array.from({ length: 5 }).map((_, index) => (
         <Skeleton key={index} height={154} radius="xl" />
       ))}
     </Box>
@@ -137,7 +148,9 @@ export const DailyAnalyticsDashboard = ({
     liveRevenue: "cyan",
     adsCost: "orange",
     roas: "grape",
-    totalOrders: "teal"
+    totalOrders: "teal",
+    adsRevenueRatio: "orange",
+    avgRevenuePerDayVsKpi: "lime"
   }
 
   const summaryIcons = {
@@ -145,7 +158,9 @@ export const DailyAnalyticsDashboard = ({
     liveRevenue: <IconBroadcast size={20} />,
     adsCost: <IconChartBar size={20} />,
     roas: <IconTargetArrow size={20} />,
-    totalOrders: <IconReceipt2 size={20} />
+    totalOrders: <IconReceipt2 size={20} />,
+    adsRevenueRatio: <IconPercentage size={20} />,
+    avgRevenuePerDayVsKpi: <IconPercentage size={20} />
   } satisfies Record<ShopeeDashboardSummaryItem["key"], JSX.Element>
 
   if (isError && !data) {
@@ -197,9 +212,6 @@ export const DailyAnalyticsDashboard = ({
       >
         <Stack gap="md">
           <div>
-            <Text fz="sm" fw={600} c="#0f172a">
-              Chỉ số normalized
-            </Text>
             <Text fw={700} fz="xl" mt={4}>
               Trung bình theo ngày và hiệu quả đơn hàng
             </Text>
