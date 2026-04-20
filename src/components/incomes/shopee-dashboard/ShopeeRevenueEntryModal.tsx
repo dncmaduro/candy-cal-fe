@@ -73,8 +73,8 @@ export const ShopeeRevenueEntryModal = ({
     currentChannelId === SHOPEE_ALL_CHANNEL_ID ? null : currentChannelId
   )
   const [orderFile, setOrderFile] = useState<File | null>(null)
-  const [adsCost, setAdsCost] = useState<number>(0)
-  const [liveRevenue, setLiveRevenue] = useState<number>(0)
+  const [adsCost, setAdsCost] = useState<number | string>("")
+  const [liveRevenue, setLiveRevenue] = useState<number | string>("")
 
   const minDate = useMemo(() => new Date(year, month - 1, 1), [month, year])
   const maxDate = useMemo(() => new Date(year, month, 0), [month, year])
@@ -99,22 +99,35 @@ export const ShopeeRevenueEntryModal = ({
         throw new Error("Vui lòng chọn shop Shopee")
       }
 
-      if (!orderFile) {
-        throw new Error("Vui lòng chọn file đơn hàng")
+      if (adsCost === "" || adsCost === null) {
+        throw new Error("Vui lòng nhập chi phí ads")
       }
 
-      if (adsCost < 0 || liveRevenue < 0) {
+      const adsCostValue = Number(adsCost)
+      const hasLiveRevenue =
+        liveRevenue !== "" && liveRevenue !== null && `${liveRevenue}`.trim() !== ""
+      const liveRevenueValue = hasLiveRevenue ? Number(liveRevenue) : undefined
+
+      if (
+        Number.isNaN(adsCostValue) ||
+        adsCostValue < 0 ||
+        (typeof liveRevenueValue === "number" &&
+          (Number.isNaN(liveRevenueValue) || liveRevenueValue < 0))
+      ) {
         throw new Error("Chi phí ads và doanh thu live không được âm")
       }
 
       const dateKey = format(date, "yyyy-MM-dd")
+      const uploadedOrderFile = Boolean(orderFile)
 
-      try {
-        await insertIncomeShopee([orderFile], { channel: channelId })
-      } catch (error) {
-        throw new Error(
-          `Không tải được file đơn hàng. ${getErrorMessage(error)}`
-        )
+      if (orderFile) {
+        try {
+          await insertIncomeShopee([orderFile], { channel: channelId })
+        } catch (error) {
+          throw new Error(
+            `Không tải được file đơn hàng. ${getErrorMessage(error)}`
+          )
+        }
       }
 
       try {
@@ -125,46 +138,59 @@ export const ShopeeRevenueEntryModal = ({
             channel: channelId,
             date: dateKey
           }),
-          getShopeeDailyLiveRevenues({
-            page: 1,
-            limit: 1,
-            channel: channelId,
-            date: dateKey
-          })
+          hasLiveRevenue
+            ? getShopeeDailyLiveRevenues({
+                page: 1,
+                limit: 1,
+                channel: channelId,
+                date: dateKey
+              })
+            : Promise.resolve(null)
         ])
 
         const existingAds = adsResponse.data.data[0]
-        const existingLiveRevenue = liveRevenueResponse.data.data[0]
+        const existingLiveRevenue = liveRevenueResponse?.data.data[0]
 
-        await Promise.all([
+        const saveRequests: Promise<unknown>[] = [
           existingAds
             ? updateShopeeDailyAds(existingAds._id, {
                 date,
                 channel: channelId,
-                adsCost
+                adsCost: adsCostValue
               })
             : createShopeeDailyAds({
                 date,
                 channel: channelId,
-                adsCost
-              }),
-          existingLiveRevenue
-            ? updateShopeeDailyLiveRevenue(existingLiveRevenue._id, {
-                date,
-                channel: channelId,
-                liveRevenue
+                adsCost: adsCostValue
               })
-            : createShopeeDailyLiveRevenue({
-                date,
-                channel: channelId,
-                liveRevenue
-              })
-        ])
+        ]
+
+        if (hasLiveRevenue && typeof liveRevenueValue === "number") {
+          saveRequests.push(
+            existingLiveRevenue
+              ? updateShopeeDailyLiveRevenue(existingLiveRevenue._id, {
+                  date,
+                  channel: channelId,
+                  liveRevenue: liveRevenueValue
+                })
+              : createShopeeDailyLiveRevenue({
+                  date,
+                  channel: channelId,
+                  liveRevenue: liveRevenueValue
+                })
+          )
+        }
+
+        await Promise.all(saveRequests)
       } catch (error) {
         throw new Error(
-          `File đơn hàng đã được tải lên nhưng chưa lưu được chi phí ads hoặc doanh thu live. ${getErrorMessage(
-            error
-          )}`
+          uploadedOrderFile
+            ? `File đơn hàng đã được tải lên nhưng chưa lưu được chi phí ads hoặc doanh thu live. ${getErrorMessage(
+                error
+              )}`
+            : `Chưa lưu được chi phí ads hoặc doanh thu live. ${getErrorMessage(
+                error
+              )}`
         )
       }
     },
@@ -178,7 +204,11 @@ export const ShopeeRevenueEntryModal = ({
         })
       ])
 
-      CToast.success({ title: "Thêm doanh số Shopee thành công" })
+      CToast.success({
+        title: orderFile
+          ? "Thêm doanh số Shopee thành công"
+          : "Lưu chi phí ads thành công"
+      })
       onSuccess?.()
       modals.closeAll()
     },
@@ -197,8 +227,8 @@ export const ShopeeRevenueEntryModal = ({
         variant="light"
         icon={<IconInfoCircle size={16} />}
       >
-        File đơn hàng sẽ được upload vào Shopee incomes. Chi phí ads và doanh
-        thu live sẽ được lưu theo đúng ngày và shop đang chọn.
+        Bạn có thể upload file đơn hàng để ghi nhận doanh số Shopee, hoặc bỏ qua
+        file và chỉ lưu chi phí ads. Doanh thu live là thông tin tùy chọn.
       </Alert>
 
       <DatePickerInput
@@ -252,7 +282,7 @@ export const ShopeeRevenueEntryModal = ({
 
       <Stack gap="xs">
         <Text fz="sm" fw={600} c="#0f172a">
-          File đơn hàng
+          File đơn hàng (không bắt buộc)
         </Text>
 
         {orderFile ? (
@@ -306,7 +336,7 @@ export const ShopeeRevenueEntryModal = ({
         label="Chi phí ads"
         placeholder="Nhập chi phí ads"
         value={adsCost}
-        onChange={(value) => setAdsCost(typeof value === "number" ? value : Number(value) || 0)}
+        onChange={setAdsCost}
         min={0}
         size="md"
         thousandSeparator=","
@@ -320,12 +350,10 @@ export const ShopeeRevenueEntryModal = ({
       />
 
       <NumberInput
-        label="Doanh thu live"
-        placeholder="Nhập doanh thu live"
+        label="Doanh thu live (tùy chọn)"
+        placeholder="Nhập doanh thu live nếu có"
         value={liveRevenue}
-        onChange={(value) =>
-          setLiveRevenue(typeof value === "number" ? value : Number(value) || 0)
-        }
+        onChange={setLiveRevenue}
         min={0}
         size="md"
         thousandSeparator=","
