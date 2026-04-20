@@ -178,6 +178,10 @@ export const MonthlyDashboard = ({
     return <DashboardEmptyState onRetry={onRetry} />
   }
 
+  const revenueTargetPerDay = Number.isFinite(data.revenueTargetPerDay)
+    ? data.revenueTargetPerDay
+    : 0
+
   return (
     <>
       <Box style={createResponsiveGridStyle(280)}>
@@ -197,9 +201,12 @@ export const MonthlyDashboard = ({
               value={formatSummaryValue(item)}
               tone={summaryTones[item.key]}
               icon={summaryIcons[item.key]}
-              hint={item.description}
               trailing={
-                relatedMetric ? (
+                item.key === "avgRevenuePerDayVsKpi" ? (
+                  <Text size="sm" fw={700} c="#475569">
+                    KPI ngày {formatCurrency(revenueTargetPerDay)}
+                  </Text>
+                ) : relatedMetric ? (
                   <Text size="sm" fw={700} c="#475569">
                     KPI {formatMetricTarget(relatedMetric)}
                   </Text>

@@ -195,7 +195,6 @@ export const DailyAnalyticsDashboard = ({
             value={formatSummaryValue(item)}
             tone={summaryTones[item.key]}
             icon={summaryIcons[item.key]}
-            hint={item.description}
           />
         ))}
       </Box>
@@ -224,7 +223,6 @@ export const DailyAnalyticsDashboard = ({
                 label={item.label}
                 value={formatNormalizedValue(item)}
                 tone="indigo"
-                hint={item.description}
               />
             ))}
           </Box>
