@@ -602,6 +602,42 @@ export interface UpdateUserResponse {
 }
 
 /** @interface */
+export interface AdminListUsersRequest {
+  searchText?: string
+  role?: string
+  status?: "all" | "active" | "inactive"
+  page: number
+  limit: number
+}
+
+/** @interface */
+export interface AdminListUsersResponse {
+  data: {
+    _id: string
+    username: string
+    name: string
+    roles: string[]
+    avatarUrl?: string
+    active: boolean
+  }[]
+  total: number
+}
+
+/** @interface */
+export interface UpdateUserActiveRequest {
+  active: boolean
+}
+
+/** @interface */
+export interface UpdateUserActiveResponse {
+  message: string
+  data: {
+    _id: string
+    active: boolean
+  }
+}
+
+/** @interface */
 export interface CreateDeliveredRequestRequest {
   items: {
     _id: string
@@ -4326,6 +4362,7 @@ export interface PublicSearchUsersRequest {
   page: number
   limit: number
   role?: string
+  status?: "all" | "active" | "inactive"
 }
 
 /** @interface */

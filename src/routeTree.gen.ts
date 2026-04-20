@@ -68,6 +68,7 @@ import { Route as LivestreamChannelsIndexImport } from './routes/livestream/chan
 import { Route as LivestreamCalendarIndexImport } from './routes/livestream/calendar/index'
 import { Route as LivestreamAltRequestsIndexImport } from './routes/livestream/alt-requests/index'
 import { Route as LandingLandingPageIndexImport } from './routes/landing/landing-page/index'
+import { Route as AdminUsersIndexImport } from './routes/admin/users/index'
 import { Route as AdminTasksIndexImport } from './routes/admin/tasks/index'
 import { Route as AdminSystemLogsIndexImport } from './routes/admin/system-logs/index'
 import { Route as TiktokshopIncomesIncomeIdImport } from './routes/tiktokshop/incomes/$incomeId'
@@ -438,6 +439,12 @@ const LandingLandingPageIndexRoute = LandingLandingPageIndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const AdminUsersIndexRoute = AdminUsersIndexImport.update({
+  id: '/admin/users/',
+  path: '/admin/users/',
+  getParentRoute: () => rootRoute,
+} as any)
+
 const AdminTasksIndexRoute = AdminTasksIndexImport.update({
   id: '/admin/tasks/',
   path: '/admin/tasks/',
@@ -691,6 +698,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/tasks'
       fullPath: '/admin/tasks'
       preLoaderRoute: typeof AdminTasksIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/admin/users/': {
+      id: '/admin/users/'
+      path: '/admin/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersIndexImport
       parentRoute: typeof rootRoute
     }
     '/landing/landing-page/': {
@@ -1031,6 +1045,7 @@ export interface FileRoutesByFullPath {
   '/tiktokshop/incomes/$incomeId': typeof TiktokshopIncomesIncomeIdRoute
   '/admin/system-logs': typeof AdminSystemLogsIndexRoute
   '/admin/tasks': typeof AdminTasksIndexRoute
+  '/admin/users': typeof AdminUsersIndexRoute
   '/landing/landing-page': typeof LandingLandingPageIndexRoute
   '/livestream/alt-requests': typeof LivestreamAltRequestsIndexRoute
   '/livestream/calendar': typeof LivestreamCalendarIndexRoute
@@ -1101,6 +1116,7 @@ export interface FileRoutesByTo {
   '/tiktokshop/incomes/$incomeId': typeof TiktokshopIncomesIncomeIdRoute
   '/admin/system-logs': typeof AdminSystemLogsIndexRoute
   '/admin/tasks': typeof AdminTasksIndexRoute
+  '/admin/users': typeof AdminUsersIndexRoute
   '/landing/landing-page': typeof LandingLandingPageIndexRoute
   '/livestream/alt-requests': typeof LivestreamAltRequestsIndexRoute
   '/livestream/calendar': typeof LivestreamCalendarIndexRoute
@@ -1173,6 +1189,7 @@ export interface FileRoutesById {
   '/tiktokshop/incomes/$incomeId': typeof TiktokshopIncomesIncomeIdRoute
   '/admin/system-logs/': typeof AdminSystemLogsIndexRoute
   '/admin/tasks/': typeof AdminTasksIndexRoute
+  '/admin/users/': typeof AdminUsersIndexRoute
   '/landing/landing-page/': typeof LandingLandingPageIndexRoute
   '/livestream/alt-requests/': typeof LivestreamAltRequestsIndexRoute
   '/livestream/calendar/': typeof LivestreamCalendarIndexRoute
@@ -1246,6 +1263,7 @@ export interface FileRouteTypes {
     | '/tiktokshop/incomes/$incomeId'
     | '/admin/system-logs'
     | '/admin/tasks'
+    | '/admin/users'
     | '/landing/landing-page'
     | '/livestream/alt-requests'
     | '/livestream/calendar'
@@ -1315,6 +1333,7 @@ export interface FileRouteTypes {
     | '/tiktokshop/incomes/$incomeId'
     | '/admin/system-logs'
     | '/admin/tasks'
+    | '/admin/users'
     | '/landing/landing-page'
     | '/livestream/alt-requests'
     | '/livestream/calendar'
@@ -1385,6 +1404,7 @@ export interface FileRouteTypes {
     | '/tiktokshop/incomes/$incomeId'
     | '/admin/system-logs/'
     | '/admin/tasks/'
+    | '/admin/users/'
     | '/landing/landing-page/'
     | '/livestream/alt-requests/'
     | '/livestream/calendar/'
@@ -1456,6 +1476,7 @@ export interface RootRouteChildren {
   TiktokshopIncomesIncomeIdRoute: typeof TiktokshopIncomesIncomeIdRoute
   AdminSystemLogsIndexRoute: typeof AdminSystemLogsIndexRoute
   AdminTasksIndexRoute: typeof AdminTasksIndexRoute
+  AdminUsersIndexRoute: typeof AdminUsersIndexRoute
   LandingLandingPageIndexRoute: typeof LandingLandingPageIndexRoute
   LivestreamAltRequestsIndexRoute: typeof LivestreamAltRequestsIndexRoute
   LivestreamCalendarIndexRoute: typeof LivestreamCalendarIndexRoute
@@ -1526,6 +1547,7 @@ const rootRouteChildren: RootRouteChildren = {
   TiktokshopIncomesIncomeIdRoute: TiktokshopIncomesIncomeIdRoute,
   AdminSystemLogsIndexRoute: AdminSystemLogsIndexRoute,
   AdminTasksIndexRoute: AdminTasksIndexRoute,
+  AdminUsersIndexRoute: AdminUsersIndexRoute,
   LandingLandingPageIndexRoute: LandingLandingPageIndexRoute,
   LivestreamAltRequestsIndexRoute: LivestreamAltRequestsIndexRoute,
   LivestreamCalendarIndexRoute: LivestreamCalendarIndexRoute,
@@ -1607,6 +1629,7 @@ export const routeTree = rootRoute
         "/tiktokshop/incomes/$incomeId",
         "/admin/system-logs/",
         "/admin/tasks/",
+        "/admin/users/",
         "/landing/landing-page/",
         "/livestream/alt-requests/",
         "/livestream/calendar/",
@@ -1732,6 +1755,9 @@ export const routeTree = rootRoute
     },
     "/admin/tasks/": {
       "filePath": "admin/tasks/index.tsx"
+    },
+    "/admin/users/": {
+      "filePath": "admin/users/index.tsx"
     },
     "/landing/landing-page/": {
       "filePath": "landing/landing-page/index.tsx"
