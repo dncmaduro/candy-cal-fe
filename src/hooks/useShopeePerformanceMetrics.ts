@@ -70,6 +70,7 @@ export interface MonthlyMetricsViewModel {
   summaryItems: ShopeeDashboardSummaryItem[]
   metrics: ShopeeDashboardMetricViewModel[]
   expectedProgressPercentage: number
+  revenueTargetPerDay: number
   lastSyncedAt: string | null
   timezone: string
   currency: "VND"
@@ -212,6 +213,7 @@ const adaptMonthlyMetrics = (
     expectedProgressPercentage: normalizeNumber(
       summary.summary.expectedProgressPercent
     ),
+    revenueTargetPerDay,
     lastSyncedAt: summary.meta.lastSyncedAt,
     timezone: summary.meta.timezone,
     currency: summary.meta.currency,
