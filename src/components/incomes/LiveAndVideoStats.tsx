@@ -4,7 +4,6 @@ import { DashboardSectionCard } from "./DashboardSectionCard"
 import { RankedBarList } from "./analytics/RankedBarList"
 import { TrendBadge } from "./analytics/TrendBadge"
 import {
-  formatCompactCurrency,
   formatCurrency,
   formatPercent
 } from "./analytics/formatters"
@@ -107,7 +106,7 @@ export const LiveAndVideoStats = ({
               <Text fz="xs" fw={700} c="dimmed" tt="uppercase">
                 Chi phí ads
               </Text>
-              <Text fw={700}>{formatCompactCurrency(adsCost)}</Text>
+              <Text fw={700}>{formatCurrency(adsCost)}</Text>
             </Stack>
             <TrendBadge value={adsCostChangePct} positiveMeaning="bad" />
           </Group>
