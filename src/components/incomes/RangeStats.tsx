@@ -17,9 +17,11 @@ import {
 } from "@mantine/core"
 import {
   IconAlertCircle,
+  IconChartBar,
   IconCalendarStats,
   IconDiscount2,
   IconFilter,
+  IconPercentage,
   IconReceipt2
 } from "@tabler/icons-react"
 import { format } from "date-fns"
@@ -357,6 +359,11 @@ export const RangeStats = () => {
   const liveIncome = current?.[mode].liveIncome ?? 0
   const shopIncome = (current?.[mode].videoIncome || 0) + (current?.[mode].otherIncome || 0)
   const totalRevenue = current?.[mode].totalIncome ?? 0
+  const totalAdsCost =
+    current?.ads?.totalAdsCost ??
+    (current?.ads?.liveAdsCost ?? 0) + (current?.ads?.shopAdsCost ?? 0)
+  const totalAdsToRevenuePct =
+    totalRevenue > 0 ? (totalAdsCost / totalRevenue) * 100 : 0
   const totalOrders = rangeIncomes?.total
   const currentPeriodDays = data?.period.days ?? 0
   const filterMonthGoalTotal =
@@ -604,20 +611,50 @@ export const RangeStats = () => {
                     changePct={changes?.[mode]?.totalIncomePct}
                     modeLabel={modeLabel}
                     detailSections={
-                      <DailyKpiSummary
-                        revenue={totalRevenue}
-                        goal={rangeGoalTotal}
-                        totalOrders={totalOrders}
-                        achievedPct={rangeGoalPct}
-                        expectedPct={rangeProgressPercentage}
-                        deltaPct={deltaVsRangeExpectation}
-                        forecastMonthRevenue={forecastMonthRevenue}
-                        monthGoal={
-                          filterMonthGoalTotal > 0 ? filterMonthGoalTotal : undefined
-                        }
-                        rangeDays={currentPeriodDays}
-                        isLoading={isLoadingRangeMonthProgress}
-                      />
+                      <Stack gap="md">
+                        <DailyKpiSummary
+                          revenue={totalRevenue}
+                          goal={rangeGoalTotal}
+                          totalOrders={totalOrders}
+                          achievedPct={rangeGoalPct}
+                          expectedPct={rangeProgressPercentage}
+                          deltaPct={deltaVsRangeExpectation}
+                          forecastMonthRevenue={forecastMonthRevenue}
+                          monthGoal={
+                            filterMonthGoalTotal > 0
+                              ? filterMonthGoalTotal
+                              : undefined
+                          }
+                          rangeDays={currentPeriodDays}
+                          isLoading={isLoadingRangeMonthProgress}
+                        />
+
+                        <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
+                          <MetricStatCard
+                            label="Tổng CP ads trong khoảng"
+                            value={formatCurrency(totalAdsCost)}
+                            icon={<IconChartBar size={20} />}
+                            tone="orange"
+                            trailing={
+                              <TrendBadge
+                                value={changes?.ads?.totalAdsCostPct}
+                                positiveMeaning="bad"
+                                variant="light"
+                              />
+                            }
+                          />
+                          <MetricStatCard
+                            label="% Ads / doanh thu"
+                            value={formatPercent(
+                              totalAdsToRevenuePct,
+                              2,
+                              "truncate"
+                            )}
+                            icon={<IconPercentage size={20} />}
+                            tone="amber"
+                          />
+                        </SimpleGrid>
+                      </Stack>
                     }
                   />
 
