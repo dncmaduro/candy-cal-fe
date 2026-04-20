@@ -1640,6 +1640,7 @@ export interface GetRangeStatsResponse {
     boxes: { box: string; quantity: number }[]
     shippingProviders: { provider: string; orders: number }[]
     ads: {
+      totalAdsCost: number
       liveAdsCost: number
       shopAdsCost: number
       percentages: {
@@ -1703,6 +1704,7 @@ export interface GetRangeStatsResponse {
       }
     }
     ads: {
+      totalAdsCostPct: number
       liveAdsCostPct: number
       shopAdsCostPct: number
       liveAdsToLiveIncomePctDiff: number
