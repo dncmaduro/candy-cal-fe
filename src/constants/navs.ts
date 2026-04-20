@@ -281,6 +281,12 @@ export const SALES_NAVS = [
 /** @constant */
 export const ADMIN_NAVS = [
   {
+    to: `${ADMIN_NAVS_URL}/users`,
+    label: "Người dùng",
+    icon: "IconUsers",
+    roles: ["admin"]
+  },
+  {
     to: `${ADMIN_NAVS_URL}/system-logs`,
     label: "Lịch sử hệ thống",
     icon: "IconAutomaticGearbox",
