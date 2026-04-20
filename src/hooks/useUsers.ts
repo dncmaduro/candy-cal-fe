@@ -3,6 +3,8 @@ import { useUserStore } from "../store/userStore"
 import { toQueryString } from "../utils/toQuery"
 import { callApi } from "./axios"
 import {
+  AdminListUsersRequest,
+  AdminListUsersResponse,
   ChangePasswordRequest,
   ChangePasswordResponse,
   CheckTokenRequest,
@@ -14,6 +16,8 @@ import {
   PublicSearchUsersResponse,
   RefreshTokenRequest,
   RefreshTokenResponse,
+  UpdateUserActiveRequest,
+  UpdateUserActiveResponse,
   UpdateAvatarRequest,
   UpdateAvatarResponse,
   UpdateUserRequest,
@@ -93,6 +97,28 @@ export const useUsers = () => {
     })
   }
 
+  const adminListUsers = async (req: AdminListUsersRequest) => {
+    const query = toQueryString(req)
+
+    return callApi<never, AdminListUsersResponse>({
+      method: "GET",
+      path: `/v1/users/admin/list?${query}`,
+      token: accessToken
+    })
+  }
+
+  const updateUserActive = async (
+    userId: string,
+    req: UpdateUserActiveRequest
+  ) => {
+    return callApi<UpdateUserActiveRequest, UpdateUserActiveResponse>({
+      method: "PATCH",
+      path: `/v1/users/${userId}/active`,
+      data: req,
+      token: accessToken
+    })
+  }
+
   return {
     login,
     getNewToken,
@@ -101,6 +127,8 @@ export const useUsers = () => {
     changePassword,
     updateAvatar,
     updateUser,
-    publicSearchUser
+    publicSearchUser,
+    adminListUsers,
+    updateUserActive
   }
 }

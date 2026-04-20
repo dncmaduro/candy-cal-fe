@@ -163,7 +163,8 @@ function RouteComponent() {
       publicSearchUser({
         page: 1,
         limit: 100,
-        role: "livestream-emp"
+        role: "livestream-emp",
+        status: "active"
       }),
     select: (data) => data.data.data
   })
@@ -174,7 +175,8 @@ function RouteComponent() {
       publicSearchUser({
         page: 1,
         limit: 100,
-        role: "livestream-ast"
+        role: "livestream-ast",
+        status: "active"
       }),
     select: (data) => data.data.data
   })

@@ -268,7 +268,12 @@ function SalaryModal({
   const { data: usersData } = useQuery({
     queryKey: ["salaryModalUsers"],
     queryFn: () =>
-      publicSearchUser({ page: 1, limit: 1000, role: "livestream-emp" }),
+      publicSearchUser({
+        page: 1,
+        limit: 1000,
+        role: "livestream-emp",
+        status: "active"
+      }),
     select: (data) => data.data.data
   })
 
