@@ -178,8 +178,8 @@ export const MonthlyDashboard = ({
     return <DashboardEmptyState onRetry={onRetry} />
   }
 
-  const revenueTargetPerDay = Number.isFinite(data.revenueTargetPerDay)
-    ? data.revenueTargetPerDay
+  const revenueTarget = Number.isFinite(data.revenueTarget)
+    ? data.revenueTarget
     : 0
 
   return (
@@ -204,7 +204,7 @@ export const MonthlyDashboard = ({
               trailing={
                 item.key === "avgRevenuePerDayVsKpi" ? (
                   <Text size="sm" fw={700} c="#475569">
-                    KPI ngày {formatCurrency(revenueTargetPerDay)}
+                    KPI tháng {formatCurrency(revenueTarget)}
                   </Text>
                 ) : relatedMetric ? (
                   <Text size="sm" fw={700} c="#475569">

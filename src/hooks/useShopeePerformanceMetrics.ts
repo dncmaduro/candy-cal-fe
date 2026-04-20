@@ -1,10 +1,20 @@
 import { useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
+import {
+  addMonths,
+  endOfMonth,
+  getDaysInMonth,
+  isAfter,
+  isValid,
+  parseISO,
+  startOfMonth
+} from "date-fns"
 import { useUserStore } from "../store/userStore"
 import { toQueryString } from "../utils/toQuery"
 import { callApi } from "./axios"
 import { SHOPEE_ALL_CHANNEL_ID } from "./shopeeDashboardApi"
 import type {
+  GetShopeeMonthKpisResponse,
   MonthlyKpisResponse,
   MonthlySummaryResponse,
   OrdersListResponse,
@@ -66,11 +76,47 @@ const normalizePageSize = (pageSize?: number) => {
   return Math.min(100, Math.max(5, Math.trunc(pageSize)))
 }
 
+const parseDateValue = (value?: string) => {
+  if (!value) return null
+
+  const parsed = parseISO(value)
+  if (!isValid(parsed)) return null
+
+  return parsed
+}
+
+const getRangeMonthSegments = (orderFrom?: string, orderTo?: string) => {
+  const fromDate = parseDateValue(orderFrom)
+  const toDate = parseDateValue(orderTo)
+
+  if (!fromDate || !toDate || isAfter(fromDate, toDate)) return []
+
+  const segments: Array<{ month: number; year: number; days: number }> = []
+  let cursor = startOfMonth(fromDate)
+
+  while (!isAfter(cursor, toDate)) {
+    const segmentStart = Math.max(cursor.getTime(), fromDate.getTime())
+    const segmentEnd = Math.min(endOfMonth(cursor).getTime(), toDate.getTime())
+    const days =
+      Math.floor((segmentEnd - segmentStart) / (24 * 60 * 60 * 1000)) + 1
+
+    segments.push({
+      month: cursor.getMonth() + 1,
+      year: cursor.getFullYear(),
+      days
+    })
+
+    cursor = addMonths(cursor, 1)
+  }
+
+  return segments
+}
+
 export interface MonthlyMetricsViewModel {
   summaryItems: ShopeeDashboardSummaryItem[]
   metrics: ShopeeDashboardMetricViewModel[]
   expectedProgressPercentage: number
-  revenueTargetPerDay: number
+  revenueTarget: number
   lastSyncedAt: string | null
   timezone: string
   currency: "VND"
@@ -93,6 +139,7 @@ export interface RangeNormalizedMetricItem {
 export interface RangeMetricsViewModel {
   summaryItems: ShopeeDashboardSummaryItem[]
   normalizedItems: RangeNormalizedMetricItem[]
+  rangeRevenueTarget: number
   series: RangeTimeseriesResponse["series"]
   orderFrom: string
   orderTo: string
@@ -108,26 +155,11 @@ const adaptMonthlyMetrics = (
   summary: MonthlySummaryResponse,
   kpis: MonthlyKpisResponse
 ): MonthlyMetricsViewModel => {
-  const totalDaysInMonth = new Date(
-    summary.scope.year,
-    summary.scope.month,
-    0
-  ).getDate()
-  const expectedProgressPercent = normalizeNumber(
-    summary.summary.expectedProgressPercent
-  )
-  const elapsedDays =
-    expectedProgressPercent >= 100
-      ? totalDaysInMonth
-      : totalDaysInMonth * safeDivide(expectedProgressPercent, 100)
   const currentRevenue = normalizeNumber(summary.summary.currentRevenue)
   const adsCost = normalizeNumber(summary.summary.adsCost)
   const revenueTarget = normalizeNumber(summary.summary.revenueTarget)
   const adsRevenueRatio = safeDivide(adsCost, currentRevenue) * 100
-  const revenueTargetPerDay = safeDivide(revenueTarget, totalDaysInMonth)
-  const actualRevenuePerElapsedDay = safeDivide(currentRevenue, elapsedDays)
-  const avgRevenuePerDayVsKpi =
-    safeDivide(actualRevenuePerElapsedDay, revenueTargetPerDay) * 100
+  const revenueVsMonthlyKpi = safeDivide(currentRevenue, revenueTarget) * 100
 
   const summaryItems: ShopeeDashboardSummaryItem[] = [
     {
@@ -167,18 +199,18 @@ const adaptMonthlyMetrics = (
     },
     {
       key: "adsRevenueRatio",
-      label: "% Ads so với doanh thu",
+      label: "% Ads so với doanh thu tháng",
       value: adsRevenueRatio,
       format: "percentage",
-      description: "Tỷ lệ chi phí ads trên doanh thu thực tế của tháng đang chọn."
+      description:
+        "Tỷ lệ chi phí ads trên doanh thu thực tế của tháng đang chọn."
     },
     {
       key: "avgRevenuePerDayVsKpi",
-      label: "% DT TB/ngày so với KPI ngày",
-      value: avgRevenuePerDayVsKpi,
+      label: "% DT so với KPI tháng",
+      value: revenueVsMonthlyKpi,
       format: "percentage",
-      description:
-        "So sánh doanh thu trung bình/ngày thực tế với KPI doanh thu/ngày, trong đó KPI ngày = KPI tháng / số ngày của tháng."
+      description: "So sánh doanh thu thực tế hiện tại với KPI doanh thu tháng."
     }
   ]
 
@@ -213,7 +245,7 @@ const adaptMonthlyMetrics = (
     expectedProgressPercentage: normalizeNumber(
       summary.summary.expectedProgressPercent
     ),
-    revenueTargetPerDay,
+    revenueTarget,
     lastSyncedAt: summary.meta.lastSyncedAt,
     timezone: summary.meta.timezone,
     currency: summary.meta.currency,
@@ -223,7 +255,8 @@ const adaptMonthlyMetrics = (
 
 const adaptRangeMetrics = (
   summary: RangeSummaryResponse,
-  timeseries: RangeTimeseriesResponse
+  timeseries: RangeTimeseriesResponse,
+  rangeRevenueTarget: number
 ): RangeMetricsViewModel => {
   const netRevenue = normalizeNumber(summary.summary.netRevenue)
   const adsRevenueRatio =
@@ -316,6 +349,7 @@ const adaptRangeMetrics = (
   return {
     summaryItems,
     normalizedItems,
+    rangeRevenueTarget,
     series: timeseries.series,
     orderFrom: summary.scope.orderFrom,
     orderTo: summary.scope.orderTo,
@@ -412,8 +446,10 @@ export const useRangeMetrics = ({
         orderFrom,
         orderTo
       })
+      const monthSegments = getRangeMonthSegments(orderFrom, orderTo)
 
-      const [summaryResponse, timeseriesResponse] = await Promise.all([
+      const [summaryResponse, timeseriesResponse, ...monthKpiResponses] =
+        await Promise.all([
         callApi<never, RangeSummaryResponse>({
           method: "GET",
           path: `/v1/shopee/analytics/range-summary?${query}`,
@@ -423,10 +459,38 @@ export const useRangeMetrics = ({
           method: "GET",
           path: `/v1/shopee/analytics/range-timeseries?${query}`,
           token: accessToken
-        })
+        }),
+        ...monthSegments.map((segment) =>
+          callApi<never, GetShopeeMonthKpisResponse>({
+            method: "GET",
+            path: `/v1/shopeemonthkpis?${toQueryString({
+              page: 1,
+              limit: 999,
+              month: segment.month,
+              year: segment.year,
+              channel: normalizedChannel
+            })}`,
+            token: accessToken
+          })
+        )
       ])
 
-      return adaptRangeMetrics(summaryResponse.data, timeseriesResponse.data)
+      const rangeRevenueTarget = monthSegments.reduce((total, segment, index) => {
+        const records = monthKpiResponses[index]?.data.data ?? []
+        const monthlyRevenueTarget = records.reduce(
+          (sum, item) => sum + normalizeNumber(item.revenueKpi),
+          0
+        )
+        const daysInMonth = getDaysInMonth(new Date(segment.year, segment.month - 1))
+
+        return total + safeDivide(monthlyRevenueTarget, daysInMonth) * segment.days
+      }, 0)
+
+      return adaptRangeMetrics(
+        summaryResponse.data,
+        timeseriesResponse.data,
+        rangeRevenueTarget
+      )
     },
     enabled:
       enabled && Boolean(accessToken) && Boolean(orderFrom) && Boolean(orderTo),
