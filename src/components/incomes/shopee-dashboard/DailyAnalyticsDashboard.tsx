@@ -195,6 +195,13 @@ export const DailyAnalyticsDashboard = ({
             value={formatSummaryValue(item)}
             tone={summaryTones[item.key]}
             icon={summaryIcons[item.key]}
+            trailing={
+              item.key === "revenue" ? (
+                <Text size="sm" fw={700} c="#475569">
+                  KPI: {formatCurrency(data.rangeRevenueTarget)}
+                </Text>
+              ) : undefined
+            }
           />
         ))}
       </Box>
