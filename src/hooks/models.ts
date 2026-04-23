@@ -655,7 +655,8 @@ export interface CreateDeliveredRequestResponse {
     _id: string
     quantity: number
   }[]
-  channel: {
+  channelId?: string
+  channel?: {
     _id: string
     name: string
     username: string
@@ -692,7 +693,8 @@ export interface CreateDeliveredRequestCommentResponse {
     _id: string
     quantity: number
   }[]
-  channel: {
+  channelId?: string
+  channel?: {
     _id: string
     name: string
     username: string
@@ -723,7 +725,8 @@ export interface AcceptDeliveredRequestResponse {
     _id: string
     quantity: number
   }[]
-  channel: {
+  channelId?: string
+  channel?: {
     _id: string
     name: string
     username: string
@@ -760,7 +763,8 @@ export interface SearchDeliveredRequestsResponse {
       _id: string
       quantity: number
     }[]
-    channel: {
+    channelId?: string
+    channel?: {
       _id: string
       name: string
       username: string
@@ -793,7 +797,8 @@ export interface GetDeliveredRequestResponse {
     _id: string
     quantity: number
   }[]
-  channel: {
+  channelId?: string
+  channel?: {
     _id: string
     name: string
     username: string

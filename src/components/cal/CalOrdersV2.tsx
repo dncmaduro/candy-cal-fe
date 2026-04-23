@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { useQuery, useMutation } from "@tanstack/react-query"
 import type { ColumnDef } from "@tanstack/react-table"
 import { isEqual } from "lodash"
@@ -27,6 +27,7 @@ import {
   Paper,
   ScrollArea,
   SegmentedControl,
+  Select,
   Stack,
   Text,
   Title,
@@ -37,6 +38,11 @@ import { DatePickerInput } from "@mantine/dates"
 
 import { CToast } from "../common/CToast"
 import { CDataTable } from "../common/CDataTable"
+import {
+  DELIVERED_REQUEST_CHANNEL_PLATFORM,
+  useDeliveredRequestChannels
+} from "../../hooks/useDeliveredRequestChannels"
+import { getDeliveredRequestChannelLabel } from "../delivered-requests/deliveredRequestChannel"
 
 interface Props {
   orders: {
@@ -78,10 +84,28 @@ export const CalOrdersV2 = ({
   const [calRest, setCalRest] = useState(false)
   const [viewMode, setViewMode] = useState<ViewMode>("all")
   const [requestDate, setRequestDate] = useState<Date | null>(date ?? null)
+  const requestPlatform =
+    platform === DELIVERED_REQUEST_CHANNEL_PLATFORM.SHOPEE
+      ? DELIVERED_REQUEST_CHANNEL_PLATFORM.SHOPEE
+      : DELIVERED_REQUEST_CHANNEL_PLATFORM.TIKTOKSHOP
+  const [selectedChannelId, setSelectedChannelId] = useState<string | null>(
+    channelId ?? null
+  )
+  const { data: channels = [], isLoading: isLoadingChannels } =
+    useDeliveredRequestChannels(requestPlatform)
 
   useEffect(() => {
     setRequestDate(date ?? null)
   }, [date])
+
+  useEffect(() => {
+    setSelectedChannelId(channelId ?? null)
+  }, [channelId])
+
+  useEffect(() => {
+    if (channelId || selectedChannelId || channels.length === 0) return
+    setSelectedChannelId(channels[0]._id)
+  }, [channelId, selectedChannelId, channels])
 
   const { data: meData } = useQuery({
     queryKey: ["getMe"],
@@ -134,27 +158,30 @@ export const CalOrdersV2 = ({
     [readyCombosData]
   )
 
-  const isOrderReady = (order: Props["orders"][0]) => {
-    if (!allProductsByName) return false
+  const isOrderReady = useCallback(
+    (order: Props["orders"][0]) => {
+      if (!allProductsByName) return false
 
-    const normalizedOrderProducts = normalizeProducts(
-      order.products.map((p) => ({
-        _id: allProductsByName[p.name]?._id ?? "UNKNOWN",
-        quantity: p.quantity
-      }))
-    )
+      const normalizedOrderProducts = normalizeProducts(
+        order.products.map((p) => ({
+          _id: allProductsByName[p.name]?._id ?? "UNKNOWN",
+          quantity: p.quantity
+        }))
+      )
 
-    return normalizedCombos.some((comboProducts) =>
-      isEqual(comboProducts, normalizedOrderProducts)
-    )
-  }
+      return normalizedCombos.some((comboProducts) =>
+        isEqual(comboProducts, normalizedOrderProducts)
+      )
+    },
+    [allProductsByName, normalizedCombos]
+  )
 
   const filteredOrders = useMemo(() => {
     if (!allProductsByName) return []
     if (viewMode === "ready") return orders.filter(isOrderReady)
     if (viewMode === "not-ready") return orders.filter((o) => !isOrderReady(o))
     return orders
-  }, [orders, allProductsByName, normalizedCombos, viewMode])
+  }, [orders, allProductsByName, isOrderReady, viewMode])
 
   const notReadyOrders = useMemo(() => {
     if (!allProductsByName) return []
@@ -170,7 +197,7 @@ export const CalOrdersV2 = ({
         )
       }))
       .filter((order) => order.products.length > 0)
-  }, [orders, allProductsByName, normalizedCombos])
+  }, [orders, allProductsByName, isOrderReady])
 
   const notReadyItems = useMemo(() => {
     if (!notReadyOrders.length || !allProductsByName) return {}
@@ -326,10 +353,24 @@ export const CalOrdersV2 = ({
   )
 
   // ===== UI helpers =====
+  const channelOptions = useMemo(
+    () =>
+      channels.map((channel) => ({
+        value: channel._id,
+        label: channel.name
+      })),
+    [channels]
+  )
+  const effectiveChannelId = channelId ?? selectedChannelId
   const canSend =
-    !!requestDate && !!chosenItems && selectedCount > 0 && !isPending
+    !!requestDate &&
+    !!chosenItems &&
+    !!effectiveChannelId &&
+    selectedCount > 0 &&
+    !isPending
   const canSendNotReady =
     !!requestDate &&
+    !!effectiveChannelId &&
     !isPending &&
     notReadyItems &&
     Object.keys(notReadyItems).length > 0
@@ -405,7 +446,7 @@ export const CalOrdersV2 = ({
       >
         {/* Left: Orders table */}
         <Paper withBorder radius="lg" p="md" style={{ flex: 1 }}>
-          <CDataTable<OrderRow, any>
+          <CDataTable<OrderRow, unknown>
             key={`${viewMode}-${orderRows.length}`} // remount để pageSize ăn khi viewMode đổi
             columns={orderColumns}
             data={orderRows}
@@ -534,6 +575,30 @@ export const CalOrdersV2 = ({
                 />
               )}
 
+              {!channelId && (
+                <>
+                  <Select
+                    label={getDeliveredRequestChannelLabel(requestPlatform)}
+                    placeholder="Chọn kênh"
+                    value={selectedChannelId}
+                    onChange={setSelectedChannelId}
+                    data={channelOptions}
+                    searchable
+                    clearable={false}
+                    disabled={isPending}
+                    rightSection={
+                      isLoadingChannels ? <Text size="xs">...</Text> : null
+                    }
+                  />
+
+                  {channelOptions.length === 0 && !isLoadingChannels && (
+                    <Text c="red" fz="xs">
+                      Không có kênh phù hợp để gửi yêu cầu xuất kho.
+                    </Text>
+                  )}
+                </>
+              )}
+
               <Button
                 color="indigo"
                 radius="xl"
@@ -553,7 +618,7 @@ export const CalOrdersV2 = ({
                   sendRequest({
                     items: body,
                     date: requestDate,
-                    channelId: channelId || undefined
+                    channelId: effectiveChannelId || undefined
                   })
                 }}
               >
@@ -579,7 +644,7 @@ export const CalOrdersV2 = ({
                   sendRequest({
                     items: body,
                     date: requestDate,
-                    channelId: channelId || undefined
+                    channelId: effectiveChannelId || undefined
                   })
                 }}
               >
