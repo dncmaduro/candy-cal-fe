@@ -88,6 +88,11 @@ export const ShopeeRevenueEntryModal = ({
   )
   const requiresChannelSelection = currentChannelId === SHOPEE_ALL_CHANNEL_ID
   const currentChannel = channels.find((channel) => channel._id === channelId)
+  const hasAdsCost =
+    adsCost !== "" && adsCost !== null && `${adsCost}`.trim() !== ""
+  const hasLiveRevenue =
+    liveRevenue !== "" && liveRevenue !== null && `${liveRevenue}`.trim() !== ""
+  const hasSubmissionInput = Boolean(orderFile) || hasAdsCost || hasLiveRevenue
 
   const { mutate: submitRevenueEntry, isPending } = useMutation({
     mutationFn: async () => {
@@ -99,18 +104,18 @@ export const ShopeeRevenueEntryModal = ({
         throw new Error("Vui lòng chọn shop Shopee")
       }
 
-      if (adsCost === "" || adsCost === null) {
-        throw new Error("Vui lòng nhập chi phí ads")
+      if (!hasSubmissionInput) {
+        throw new Error(
+          "Vui lòng nhập ít nhất 1 trong 3 mục: file đơn hàng, chi phí ads hoặc doanh thu live"
+        )
       }
 
-      const adsCostValue = Number(adsCost)
-      const hasLiveRevenue =
-        liveRevenue !== "" && liveRevenue !== null && `${liveRevenue}`.trim() !== ""
+      const adsCostValue = hasAdsCost ? Number(adsCost) : undefined
       const liveRevenueValue = hasLiveRevenue ? Number(liveRevenue) : undefined
 
       if (
-        Number.isNaN(adsCostValue) ||
-        adsCostValue < 0 ||
+        (typeof adsCostValue === "number" &&
+          (Number.isNaN(adsCostValue) || adsCostValue < 0)) ||
         (typeof liveRevenueValue === "number" &&
           (Number.isNaN(liveRevenueValue) || liveRevenueValue < 0))
       ) {
@@ -132,12 +137,14 @@ export const ShopeeRevenueEntryModal = ({
 
       try {
         const [adsResponse, liveRevenueResponse] = await Promise.all([
-          getShopeeDailyAds({
-            page: 1,
-            limit: 1,
-            channel: channelId,
-            date: dateKey
-          }),
+          hasAdsCost
+            ? getShopeeDailyAds({
+                page: 1,
+                limit: 1,
+                channel: channelId,
+                date: dateKey
+              })
+            : Promise.resolve(null),
           hasLiveRevenue
             ? getShopeeDailyLiveRevenues({
                 page: 1,
@@ -148,22 +155,26 @@ export const ShopeeRevenueEntryModal = ({
             : Promise.resolve(null)
         ])
 
-        const existingAds = adsResponse.data.data[0]
+        const existingAds = adsResponse?.data.data[0]
         const existingLiveRevenue = liveRevenueResponse?.data.data[0]
 
-        const saveRequests: Promise<unknown>[] = [
-          existingAds
-            ? updateShopeeDailyAds(existingAds._id, {
-                date,
-                channel: channelId,
-                adsCost: adsCostValue
-              })
-            : createShopeeDailyAds({
-                date,
-                channel: channelId,
-                adsCost: adsCostValue
-              })
-        ]
+        const saveRequests: Promise<unknown>[] = []
+
+        if (hasAdsCost && typeof adsCostValue === "number") {
+          saveRequests.push(
+            existingAds
+              ? updateShopeeDailyAds(existingAds._id, {
+                  date,
+                  channel: channelId,
+                  adsCost: adsCostValue
+                })
+              : createShopeeDailyAds({
+                  date,
+                  channel: channelId,
+                  adsCost: adsCostValue
+                })
+          )
+        }
 
         if (hasLiveRevenue && typeof liveRevenueValue === "number") {
           saveRequests.push(
@@ -181,7 +192,9 @@ export const ShopeeRevenueEntryModal = ({
           )
         }
 
-        await Promise.all(saveRequests)
+        if (saveRequests.length > 0) {
+          await Promise.all(saveRequests)
+        }
       } catch (error) {
         throw new Error(
           uploadedOrderFile
@@ -205,9 +218,7 @@ export const ShopeeRevenueEntryModal = ({
       ])
 
       CToast.success({
-        title: orderFile
-          ? "Thêm doanh số Shopee thành công"
-          : "Lưu chi phí ads thành công"
+        title: "Lưu dữ liệu Shopee thành công"
       })
       onSuccess?.()
       modals.closeAll()
@@ -227,8 +238,8 @@ export const ShopeeRevenueEntryModal = ({
         variant="light"
         icon={<IconInfoCircle size={16} />}
       >
-        Bạn có thể upload file đơn hàng để ghi nhận doanh số Shopee, hoặc bỏ qua
-        file và chỉ lưu chi phí ads. Doanh thu live là thông tin tùy chọn.
+        File đơn hàng, chi phí ads và doanh thu live đều là tùy chọn. Bạn cần
+        nhập ít nhất 1 trong 3 mục để có thể lưu.
       </Alert>
 
       <DatePickerInput
@@ -333,7 +344,7 @@ export const ShopeeRevenueEntryModal = ({
       </Stack>
 
       <NumberInput
-        label="Chi phí ads"
+        label="Chi phí ads (tùy chọn)"
         placeholder="Nhập chi phí ads"
         value={adsCost}
         onChange={setAdsCost}
@@ -346,7 +357,6 @@ export const ShopeeRevenueEntryModal = ({
           label: filterPlainLabelStyles,
           input: filterInputStyles
         }}
-        required
       />
 
       <NumberInput
@@ -363,14 +373,17 @@ export const ShopeeRevenueEntryModal = ({
           label: filterPlainLabelStyles,
           input: filterInputStyles
         }}
-        required
       />
 
       <Group justify="flex-end" mt="sm">
         <Button variant="default" onClick={() => modals.closeAll()}>
           Hủy
         </Button>
-        <Button onClick={() => submitRevenueEntry()} loading={isPending}>
+        <Button
+          onClick={() => submitRevenueEntry()}
+          loading={isPending}
+          disabled={!hasSubmissionInput}
+        >
           Lưu doanh số
         </Button>
       </Group>

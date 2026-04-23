@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Helmet } from "react-helmet-async"
 import { useQuery } from "@tanstack/react-query"
 import {
@@ -8,6 +8,7 @@ import {
   Group,
   Skeleton,
   Stack,
+  Switch,
   Tabs,
   Text,
   Tooltip,
@@ -15,6 +16,7 @@ import {
 } from "@mantine/core"
 import { IconPlus, IconTrash } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
+import { format } from "date-fns"
 import {
   SHOPEE_NAVS,
   SHOPEE_ROLES
@@ -43,6 +45,7 @@ import {
   getDaysInRange,
   resolvePresetRange
 } from "./performanceTimeUtils"
+import type { MonthlyMetricsViewModel } from "../../../hooks/useShopeePerformanceMetrics"
 
 export interface ShopeeDashboardSearchState {
   tab: "dashboard" | "orders"
@@ -81,6 +84,29 @@ const createYearOptions = (selectedYear: number): ShopeeChannelOption[] => {
   })
 }
 
+const SHOPEE_FILTER_STICKY_TOP = rem(76)
+
+const getMonthlyPaceStatus = (
+  achievedPercentage: number,
+  expectedPercentage: number,
+  target: number
+): MonthlyMetricsViewModel["metrics"][number]["paceStatus"] => {
+  if (!target || target <= 0 || expectedPercentage <= 0) return "unknown"
+
+  if (Math.abs(achievedPercentage - expectedPercentage) < 0.01) {
+    return "on-track"
+  }
+
+  return achievedPercentage > expectedPercentage ? "ahead" : "behind"
+}
+
+const safeDivide = (numerator: number, denominator: number) => {
+  if (!Number.isFinite(numerator) || !Number.isFinite(denominator)) return 0
+  if (denominator <= 0) return 0
+
+  return numerator / denominator
+}
+
 export const ShopeePerformanceDashboardPage = ({
   search,
   onSearchChange
@@ -95,9 +121,28 @@ export const ShopeePerformanceDashboardPage = ({
   const canMutateShopee = Boolean(
     meData?.roles?.includes("admin") || meData?.roles?.includes("shopee-emp")
   )
+  const [usePreviousDayKpiMode, setUsePreviousDayKpiMode] = useState(false)
 
   const monthOptions = useMemo(() => createMonthOptions(), [])
   const yearOptions = useMemo(() => createYearOptions(search.year), [search.year])
+  const today = useMemo(() => new Date(), [])
+  const currentYear = today.getFullYear()
+  const currentMonth = today.getMonth() + 1
+  const currentDate = today.getDate()
+  const isCurrentMonthSelection =
+    search.month === currentMonth && search.year === currentYear
+  const canUsePreviousDayKpiMode =
+    search.mode === "month" && isCurrentMonthSelection && currentDate >= 2
+  const previousDayDate = useMemo(
+    () => new Date(currentYear, currentMonth - 1, currentDate - 1),
+    [currentDate, currentMonth, currentYear]
+  )
+  const previousDayLabel = format(previousDayDate, "dd/MM/yyyy")
+
+  useEffect(() => {
+    if (canUsePreviousDayKpiMode) return
+    setUsePreviousDayKpiMode(false)
+  }, [canUsePreviousDayKpiMode])
 
   const channelsQuery = useShopeeChannels()
   const channelOptions = channelsQuery.data?.options ?? [
@@ -139,6 +184,50 @@ export const ShopeePerformanceDashboardPage = ({
     channelId: normalizedChannelId,
     enabled: search.tab === "dashboard" && search.mode === "month"
   })
+
+  const monthlyDashboardData = useMemo(() => {
+    const data = monthlyQuery.data
+
+    if (!data || !usePreviousDayKpiMode || !canUsePreviousDayKpiMode) {
+      return data
+    }
+
+    const daysInMonth = new Date(search.year, search.month, 0).getDate()
+    const expectedPercentage = Number(
+      (((currentDate - 1) / daysInMonth) * 100).toFixed(1)
+    )
+
+    return {
+      ...data,
+      expectedProgressPercentage: expectedPercentage,
+      metrics: data.metrics.map((metric) => {
+        const gapPercentage = metric.achievedPercentage - expectedPercentage
+        const paceRatio = safeDivide(
+          metric.achievedPercentage,
+          expectedPercentage
+        )
+
+        return {
+          ...metric,
+          expectedPercentage,
+          gapPercentage,
+          paceRatio,
+          paceStatus: getMonthlyPaceStatus(
+            metric.achievedPercentage,
+            expectedPercentage,
+            metric.target
+          )
+        }
+      })
+    } satisfies MonthlyMetricsViewModel
+  }, [
+    canUsePreviousDayKpiMode,
+    currentDate,
+    monthlyQuery.data,
+    search.month,
+    search.year,
+    usePreviousDayKpiMode
+  ])
 
   const rangeDays = getDaysInRange(search.orderFrom, search.orderTo)
   const isRangeReady =
@@ -224,16 +313,36 @@ export const ShopeePerformanceDashboardPage = ({
 
   const filterAction =
     search.mode === "month" ? (
-      <Button
-        variant="light"
-        color="blue"
-        leftSection={<IconPlus size={16} />}
-        onClick={handleOpenRevenueEntryModal}
-        disabled={channelsQuery.isLoading || !canMutateShopee}
-        title={!canMutateShopee ? "Bạn chỉ có quyền xem dữ liệu Shopee" : undefined}
-      >
-        Thêm doanh số
-      </Button>
+      <Group gap="md" align="center">
+        {canUsePreviousDayKpiMode && (
+          <Stack gap={2}>
+            <Switch
+              checked={usePreviousDayKpiMode}
+              onChange={(event) =>
+                setUsePreviousDayKpiMode(event.currentTarget.checked)
+              }
+              label="So với KPI ngày hôm trước"
+              size="sm"
+            />
+            {usePreviousDayKpiMode && (
+              <Text size="xs" c="dimmed">
+                Đang so với KPI đến ngày {previousDayLabel}
+              </Text>
+            )}
+          </Stack>
+        )}
+
+        <Button
+          variant="light"
+          color="blue"
+          leftSection={<IconPlus size={16} />}
+          onClick={handleOpenRevenueEntryModal}
+          disabled={channelsQuery.isLoading || !canMutateShopee}
+          title={!canMutateShopee ? "Bạn chỉ có quyền xem dữ liệu Shopee" : undefined}
+        >
+          Thêm doanh số
+        </Button>
+      </Group>
     ) : (
       <Group gap="sm">
         <Tooltip
@@ -285,7 +394,7 @@ export const ShopeePerformanceDashboardPage = ({
             px={{ base: 8, md: 28 }}
             style={{
               position: "sticky",
-              top: 0,
+              top: SHOPEE_FILTER_STICKY_TOP,
               zIndex: 10,
               borderRadius: rem(20),
               background: "rgba(255,255,255,0.98)",
@@ -386,7 +495,7 @@ export const ShopeePerformanceDashboardPage = ({
                   <Stack gap="lg">
                     {search.mode === "month" ? (
                       <MonthlyDashboard
-                        data={monthlyQuery.data}
+                        data={monthlyDashboardData}
                         isLoading={monthlyQuery.isLoading}
                         isError={monthlyQuery.isError}
                         onRetry={handleRetry}
