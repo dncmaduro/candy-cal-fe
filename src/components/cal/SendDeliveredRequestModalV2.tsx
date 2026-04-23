@@ -5,14 +5,20 @@ import {
   Group,
   NumberInput,
   ScrollArea,
+  Select,
   Stack,
   Table,
   Text
 } from "@mantine/core"
-import { useState, useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useMutation } from "@tanstack/react-query"
 import { CToast } from "../common/CToast"
 import { useDeliveredRequests } from "../../hooks/useDeliveredRequests"
+import {
+  DELIVERED_REQUEST_CHANNEL_PLATFORM,
+  useDeliveredRequestChannels
+} from "../../hooks/useDeliveredRequestChannels"
+import { getDeliveredRequestChannelLabel } from "../delivered-requests/deliveredRequestChannel"
 
 interface StorageItemInput {
   [storageKey: string]: number // use composite key: `${itemId}__${storageItemId}`
@@ -46,8 +52,17 @@ interface Props {
 
 export const SendDeliveredRequestModalV2 = ({ items, date }: Props) => {
   const { createDeliveredRequest } = useDeliveredRequests()
+  const platform = DELIVERED_REQUEST_CHANNEL_PLATFORM.TIKTOKSHOP
 
   const [quantities, setQuantities] = useState<StorageItemInput>({})
+  const [channelId, setChannelId] = useState<string | null>(null)
+  const { data: channels = [], isLoading: isLoadingChannels } =
+    useDeliveredRequestChannels(platform)
+
+  useEffect(() => {
+    if (channelId || channels.length === 0) return
+    setChannelId(channels[0]._id)
+  }, [channelId, channels])
 
   const itemTotalByItemId = useMemo(() => {
     const map: Record<string, number> = {}
@@ -95,6 +110,15 @@ export const SendDeliveredRequestModalV2 = ({ items, date }: Props) => {
       CToast.error({ title: "Gửi yêu cầu xuất kho thất bại" })
     }
   })
+
+  const channelOptions = useMemo(
+    () =>
+      channels.map((channel) => ({
+        value: channel._id,
+        label: channel.name
+      })),
+    [channels]
+  )
 
   return (
     <Box h={"80vh"}>
@@ -188,10 +212,30 @@ export const SendDeliveredRequestModalV2 = ({ items, date }: Props) => {
         </Stack>
       </ScrollArea.Autosize>
       <Divider my={20} />
-      <Group justify="flex-end">
+      <Stack gap="sm">
+        <Select
+          label={getDeliveredRequestChannelLabel(platform)}
+          placeholder="Chọn kênh"
+          value={channelId}
+          onChange={setChannelId}
+          data={channelOptions}
+          searchable
+          clearable={false}
+          disabled={isPending}
+          rightSection={isLoadingChannels ? <Text size="xs">...</Text> : null}
+        />
+        {channelOptions.length === 0 && !isLoadingChannels && (
+          <Text c="red" fz="xs">
+            Không có kênh phù hợp để gửi yêu cầu xuất kho.
+          </Text>
+        )}
+      </Stack>
+      <Group justify="flex-end" mt="md">
         <Button
-          onClick={() => sendRequest({ items: body, date })}
-          disabled={!isValid || isPending}
+          onClick={() =>
+            sendRequest({ items: body, date, channelId: channelId || undefined })
+          }
+          disabled={!isValid || isPending || !channelId}
           loading={isPending}
           color="indigo"
           radius="xl"

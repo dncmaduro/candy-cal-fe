@@ -95,7 +95,6 @@ export const ShopeeXlsxCalculator = ({ compact = false }: Props) => {
         <ShopeeCalResultModal
           items={lastShopeeResult.items}
           orders={lastShopeeResult.orders}
-          readOnly={true}
         />
       ),
       size: "70vw"

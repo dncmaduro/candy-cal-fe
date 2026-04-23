@@ -33,6 +33,11 @@ const formatDecimal = (value: number) => {
   })
 }
 
+const formatKpiProgress = (actual: number, target: number) => {
+  if (!target || target <= 0) return "-"
+  return `${formatDecimal((actual / target) * 100)}%`
+}
+
 const formatSummaryValue = (item: ShopeeDashboardSummaryItem) => {
   if (item.format === "currency") return formatCurrency(item.value)
   if (item.format === "percentage") return `${formatDecimal(item.value)}%`
@@ -197,9 +202,14 @@ export const DailyAnalyticsDashboard = ({
             icon={summaryIcons[item.key]}
             trailing={
               item.key === "revenue" ? (
-                <Text size="sm" fw={700} c="#475569">
-                  KPI: {formatCurrency(data.rangeRevenueTarget)}
-                </Text>
+                <Stack gap={2} align="flex-end">
+                  <Text size="sm" fw={700} c="#475569">
+                    KPI: {formatCurrency(data.rangeRevenueTarget)}
+                  </Text>
+                  <Text size="sm" fw={700} c="#2563eb">
+                    Đạt: {formatKpiProgress(item.value, data.rangeRevenueTarget)}
+                  </Text>
+                </Stack>
               ) : undefined
             }
           />

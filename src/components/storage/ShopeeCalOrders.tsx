@@ -11,11 +11,12 @@ import {
   Divider,
   Flex,
   Group,
+  Paper,
   ScrollArea,
+  Select,
   Stack,
   Table,
   Text,
-  Title,
   Badge,
   rem
 } from "@mantine/core"
@@ -26,6 +27,11 @@ import { useDeliveredRequests } from "../../hooks/useDeliveredRequests"
 import { useMutation } from "@tanstack/react-query"
 import { CToast } from "../common/CToast"
 import { DatePickerInput } from "@mantine/dates"
+import {
+  DELIVERED_REQUEST_CHANNEL_PLATFORM,
+  useDeliveredRequestChannels
+} from "../../hooks/useDeliveredRequestChannels"
+import { getDeliveredRequestChannelLabel } from "../delivered-requests/deliveredRequestChannel"
 
 type ShopeeProduct = SearchShopeeProductsResponse["data"][0]
 
@@ -67,12 +73,21 @@ export const ShopeeCalOrders = ({ orders, allCalItems, date }: Props) => {
   const { searchStorageItems } = useItems()
   const { getMe } = useUsers()
   const { createDeliveredRequest } = useDeliveredRequests()
+  const platform = DELIVERED_REQUEST_CHANNEL_PLATFORM.SHOPEE
   const [calRest, setCalRest] = useState<boolean>(false)
   const [requestDate, setRequestDate] = useState<Date | null>(date ?? null)
+  const [channelId, setChannelId] = useState<string | null>(null)
+  const { data: channels = [], isLoading: isLoadingChannels } =
+    useDeliveredRequestChannels(platform)
 
   useEffect(() => {
     setRequestDate(date ?? null)
   }, [date])
+
+  useEffect(() => {
+    if (channelId || channels.length === 0) return
+    setChannelId(channels[0]._id)
+  }, [channelId, channels])
 
   const { data: meData } = useQuery({
     queryKey: ["getMe"],
@@ -204,33 +219,57 @@ export const ShopeeCalOrders = ({ orders, allCalItems, date }: Props) => {
     [chosenOrders]
   )
 
-  const canSend = !!requestDate && !!chosenItems && selectedCount > 0 && !isPending
+  const channelOptions = useMemo(
+    () =>
+      channels.map((channel) => ({
+        value: channel._id,
+        label: channel.name
+      })),
+    [channels]
+  )
+
+  const canSend =
+    !!requestDate && !!chosenItems && !!channelId && selectedCount > 0 && !isPending
 
   return (
-    <Stack>
+    <Box>
       <Flex
-        gap={32}
-        py={8}
-        px={16}
+        gap={14}
         direction={{ base: "column", md: "row" }}
-        align={{ md: "flex-start", base: "stretch" }}
-        style={{
-          minHeight: 340,
-          background: "rgba(255,245,230,0.97)",
-          borderRadius: rem(16)
-        }}
+        align={{ base: "stretch", md: "flex-start" }}
       >
-        <Box w={{ base: "100%", md: "60%" }}>
-          <Text
-            fw={600}
-            fz="lg"
-            mb={8}
-            mt={4}
-            c="orange.8"
-            style={{ letterSpacing: 0.2 }}
-          >
-            Danh sách đơn Shopee cần đóng ({totalOrders} đơn)
-          </Text>
+        <Paper
+          withBorder
+          radius="lg"
+          p="md"
+          style={{
+            flex: 1,
+            background: "rgba(255,250,245,0.92)"
+          }}
+        >
+          <Group justify="space-between" align="center" wrap="wrap" gap={10}>
+            <Group gap={10} wrap="wrap">
+              <Text fw={700} c="orange.8">
+                Danh sách đơn Shopee cần đóng
+              </Text>
+
+              <Badge variant="light" color="orange">
+                {totalOrders} đơn
+              </Badge>
+
+              <Badge variant="light" color={selectedCount ? "yellow" : "gray"}>
+                Đã chọn: {selectedCount}
+              </Badge>
+            </Group>
+
+            <Checkbox
+              label="Tính số còn lại"
+              checked={calRest}
+              onChange={() => setCalRest((prev) => !prev)}
+              color="orange"
+            />
+          </Group>
+
           <ScrollArea.Autosize mah={460} mx={-2}>
             <Table
               highlightOnHover
@@ -284,117 +323,157 @@ export const ShopeeCalOrders = ({ orders, allCalItems, date }: Props) => {
               </Table.Tbody>
             </Table>
           </ScrollArea.Autosize>
-        </Box>
+        </Paper>
 
-        {chosenOrders.some((e) => e) && (
-          <>
-            <Divider orientation="vertical" visibleFrom="md" />
-            <Stack
-              gap={16}
-              pt={12}
-              className="grow"
-              px={{ base: 0, md: 14 }}
-              w={{ base: "100%", md: 320 }}
-              align="stretch"
-            >
-              <Flex align="center" gap={8}>
-                <Checkbox
-                  label="Tính số còn lại"
-                  checked={calRest}
-                  onChange={() => setCalRest((prev) => !prev)}
-                  color="orange"
-                />
-              </Flex>
-              <Divider w="100%" />
-              <Title order={6} fw={600} c="orange.8" mb={-6}>
-                Danh sách mặt hàng cần dùng
-              </Title>
-              <Stack gap={6}>
-                {chosenItems && Object.entries(chosenItems).length > 0 ? (
-                  Object.entries(chosenItems).map(([itemId, quantity]) => (
-                    <Text key={itemId} fz="sm" fw={500}>
-                      {allStorageItems?.[itemId]?.name || (
-                        <Text span c="red">
-                          ?
-                        </Text>
-                      )}
-                      :{" "}
-                      <Text span c="orange.7">
-                        {quantity}
-                      </Text>
-                    </Text>
-                  ))
-                ) : (
-                  <Text c="dimmed" fz="sm">
-                    Không có mặt hàng nào
-                  </Text>
-                )}
-              </Stack>
-            </Stack>
-          </>
-        )}
-      </Flex>
+        <Paper
+          withBorder
+          radius="lg"
+          p="md"
+          style={{
+            width: 360,
+            maxWidth: "100%",
+            background: "rgba(255,255,255,0.92)"
+          }}
+        >
+          <Group justify="space-between" align="center" mb={8}>
+            <Text fw={700} c="orange.8">
+              Mặt hàng cần dùng
+            </Text>
 
-      <Divider my={14} />
-      <Text fw={600} fz="sm" c="dimmed" mb={8}>
-        Gửi yêu cầu xuất kho
-      </Text>
-      {meData?.roles &&
-      ["admin", "accounting-emp"].some((role) => meData.roles.includes(role)) ? (
-        <Stack gap={10}>
-          {!date && (
-            <DatePickerInput
-              label="Chọn ngày xuất kho"
-              placeholder="DD/MM/YYYY"
-              value={requestDate}
-              onChange={setRequestDate}
-              valueFormat="DD/MM/YYYY"
-              size="sm"
-              radius="md"
-              clearable
-            />
-          )}
-
-          <Group justify="space-between" wrap="wrap">
-            <Badge variant="light" color={selectedCount ? "orange" : "gray"}>
-              Đã chọn: {selectedCount}
+            <Badge variant="light" color="orange">
+              {chosenItems ? Object.keys(chosenItems).length : 0} loại
             </Badge>
           </Group>
 
-          <Button
-            color="orange"
-            radius="xl"
-            fw={700}
-            variant="light"
-            loading={isPending}
-            disabled={!canSend}
-            onClick={() => {
-              if (!requestDate || !chosenItems) return
-              const body = Object.entries(chosenItems)
-                .filter(([itemId]) => !!allStorageItems?.[itemId])
-                .map(([itemId, quantity]) => ({
-                  _id: itemId,
-                  quantity
-                }))
-              if (body.length === 0) return
-              sendRequest({
-                items: body,
-                date: requestDate
-              })
-            }}
-          >
-            Gửi cho các đơn đã chọn
-          </Button>
+          <Divider mb={10} />
 
-          <Text c="dimmed" fz="xs">
-            Hệ thống sẽ tự loại các item không còn trong kho.
+          <ScrollArea.Autosize mah={360} offsetScrollbars>
+            <Stack gap={8}>
+              {chosenItems && Object.entries(chosenItems).length > 0 ? (
+                Object.entries(chosenItems).map(([itemId, quantity]) => (
+                  <Group
+                    key={itemId}
+                    justify="space-between"
+                    align="flex-start"
+                    wrap="nowrap"
+                    p={10}
+                    style={{
+                      borderRadius: rem(12),
+                      border: "1px solid rgba(0,0,0,0.06)",
+                      background: "rgba(255,247,237,0.75)"
+                    }}
+                  >
+                    <Box style={{ minWidth: 0 }}>
+                      <Text fz="sm" fw={600} lineClamp={2}>
+                        {allStorageItems?.[itemId]?.name || "?"}
+                      </Text>
+                      {!allStorageItems?.[itemId] && (
+                        <Text fz="xs" c="red">
+                          Không tìm thấy trong kho
+                        </Text>
+                      )}
+                    </Box>
+
+                    <Text fw={800} c="orange.7">
+                      {quantity}
+                    </Text>
+                  </Group>
+                ))
+              ) : (
+                <Box
+                  p={14}
+                  style={{
+                    borderRadius: rem(12),
+                    border: "1px dashed rgba(0,0,0,0.15)",
+                    background: "rgba(250,250,250,0.8)"
+                  }}
+                >
+                  <Text c="dimmed" fz="sm">
+                    Chưa có mặt hàng nào. Hãy chọn ít nhất 1 đơn ở bảng bên
+                    trái.
+                  </Text>
+                </Box>
+              )}
+            </Stack>
+          </ScrollArea.Autosize>
+
+          <Divider my={12} />
+
+          <Text fw={600} fz="sm" c="dimmed" mb={8}>
+            Gửi yêu cầu xuất kho
           </Text>
-        </Stack>
-      ) : (
-        <Text c="dimmed" fz="sm">
-          Bạn không có quyền gửi yêu cầu xuất kho.
-        </Text>
-      )}
-    </Stack>
+
+          {meData?.roles &&
+          ["admin", "accounting-emp"].some((role) => meData.roles.includes(role)) ? (
+            <Stack gap={10}>
+              {!date && (
+                <DatePickerInput
+                  label="Chọn ngày xuất kho"
+                  placeholder="DD/MM/YYYY"
+                  value={requestDate}
+                  onChange={setRequestDate}
+                  valueFormat="DD/MM/YYYY"
+                  size="sm"
+                  radius="md"
+                  clearable
+                />
+              )}
+
+              <Select
+                label={getDeliveredRequestChannelLabel(platform)}
+                placeholder="Chọn kênh"
+                value={channelId}
+                onChange={setChannelId}
+                data={channelOptions}
+                searchable
+                clearable={false}
+                disabled={isPending}
+                rightSection={isLoadingChannels ? <Text size="xs">...</Text> : null}
+              />
+
+              {channelOptions.length === 0 && !isLoadingChannels && (
+                <Text c="red" fz="xs">
+                  Không có kênh Shopee phù hợp để gửi yêu cầu xuất kho.
+                </Text>
+              )}
+
+              <Button
+                color="orange"
+                radius="xl"
+                fw={700}
+                variant="light"
+                loading={isPending}
+                disabled={!canSend}
+                onClick={() => {
+                  if (!requestDate || !chosenItems) return
+                  const body = Object.entries(chosenItems)
+                    .filter(([itemId]) => !!allStorageItems?.[itemId])
+                    .map(([itemId, quantity]) => ({
+                      _id: itemId,
+                      quantity
+                    }))
+                  if (body.length === 0) return
+                  sendRequest({
+                    items: body,
+                    date: requestDate,
+                    channelId: channelId || undefined
+                  })
+                }}
+              >
+                Gửi cho các đơn đã chọn
+              </Button>
+
+              <Text c="dimmed" fz="xs">
+                Hệ thống sẽ tự loại các item không còn trong kho.
+              </Text>
+            </Stack>
+          ) : (
+            <Text c="dimmed" fz="sm">
+              Bạn không có quyền gửi yêu cầu xuất kho.
+            </Text>
+          )}
+        </Paper>
+      </Flex>
+    </Box>
   )
 }
