@@ -1,8 +1,19 @@
 import { useEffect, useMemo } from "react"
 import { Helmet } from "react-helmet-async"
 import { useQuery } from "@tanstack/react-query"
-import { Box, Button, Divider, Skeleton, Stack, Tabs, Text, rem } from "@mantine/core"
-import { IconPlus } from "@tabler/icons-react"
+import {
+  Box,
+  Button,
+  Divider,
+  Group,
+  Skeleton,
+  Stack,
+  Tabs,
+  Text,
+  Tooltip,
+  rem
+} from "@mantine/core"
+import { IconPlus, IconTrash } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
 import {
   SHOPEE_NAVS,
@@ -26,6 +37,7 @@ import { MonthlyDashboard } from "./MonthlyDashboard"
 import { DailyAnalyticsDashboard } from "./DailyAnalyticsDashboard"
 import { ShopeeDashboardOrdersSection } from "./ShopeeDashboardOrdersSection"
 import { ShopeeRevenueEntryModal } from "./ShopeeRevenueEntryModal"
+import { DeleteShopeeRangeDataModal } from "./DeleteShopeeRangeDataModal"
 import {
   createDefaultRange,
   getDaysInRange,
@@ -102,6 +114,12 @@ export const ShopeePerformanceDashboardPage = ({
     search.channel === SHOPEE_ALL_CHANNEL_ID || selectedChannelExists
       ? search.channel
       : SHOPEE_ALL_CHANNEL_ID
+  const selectedChannelName =
+    normalizedChannelId === SHOPEE_ALL_CHANNEL_ID
+      ? "Tất cả kênh Shopee"
+      : channelsQuery.data?.channels.find(
+          (channel) => channel._id === normalizedChannelId
+        )?.name ?? normalizedChannelId
 
   useEffect(() => {
     if (!channelsQuery.isSuccess) return
@@ -170,6 +188,77 @@ export const ShopeePerformanceDashboardPage = ({
       )
     })
   }
+
+  const handleOpenDeleteDataModal = () => {
+    if (
+      !isRangeReady ||
+      normalizedChannelId === SHOPEE_ALL_CHANNEL_ID ||
+      !search.orderFrom ||
+      !search.orderTo
+    ) {
+      return
+    }
+
+    modals.open({
+      title: <b>Xóa dữ liệu Shopee</b>,
+      size: "md",
+      children: (
+        <DeleteShopeeRangeDataModal
+          channelId={normalizedChannelId}
+          channelName={selectedChannelName}
+          orderFrom={search.orderFrom}
+          orderTo={search.orderTo}
+        />
+      )
+    })
+  }
+
+  const rangeDeleteDisabledReason =
+    !canMutateShopee
+      ? "Bạn không có quyền xóa dữ liệu Shopee"
+      : !isRangeReady
+        ? "Vui lòng chọn đầy đủ khoảng ngày"
+        : normalizedChannelId === SHOPEE_ALL_CHANNEL_ID
+          ? "Vui lòng chọn 1 kênh Shopee cụ thể trước khi xóa dữ liệu"
+          : undefined
+
+  const filterAction =
+    search.mode === "month" ? (
+      <Button
+        variant="light"
+        color="blue"
+        leftSection={<IconPlus size={16} />}
+        onClick={handleOpenRevenueEntryModal}
+        disabled={channelsQuery.isLoading || !canMutateShopee}
+        title={!canMutateShopee ? "Bạn chỉ có quyền xem dữ liệu Shopee" : undefined}
+      >
+        Thêm doanh số
+      </Button>
+    ) : (
+      <Group gap="sm">
+        <Tooltip
+          label={rangeDeleteDisabledReason}
+          disabled={!rangeDeleteDisabledReason}
+          openDelay={0}
+          closeDelay={0}
+          withArrow
+          position="bottom-end"
+          transitionProps={{ duration: 80 }}
+        >
+          <span>
+            <Button
+              variant="light"
+              color="red"
+              leftSection={<IconTrash size={16} />}
+              onClick={handleOpenDeleteDataModal}
+              disabled={Boolean(rangeDeleteDisabledReason)}
+            >
+              Xóa dữ liệu
+            </Button>
+          </span>
+        </Tooltip>
+      </Group>
+    )
 
   return (
     <>
@@ -267,18 +356,7 @@ export const ShopeePerformanceDashboardPage = ({
                 )
               }
               action={
-                search.mode === "month" ? (
-                  <Button
-                    variant="light"
-                    color="blue"
-                    leftSection={<IconPlus size={16} />}
-                    onClick={handleOpenRevenueEntryModal}
-                    disabled={channelsQuery.isLoading || !canMutateShopee}
-                    title={!canMutateShopee ? "Bạn chỉ có quyền xem dữ liệu Shopee" : undefined}
-                  >
-                    Thêm doanh số
-                  </Button>
-                ) : undefined
+                filterAction
               }
             />
           </Box>

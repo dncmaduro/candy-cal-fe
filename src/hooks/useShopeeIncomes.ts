@@ -3,6 +3,8 @@ import { useUserStore } from "../store/userStore"
 import { toQueryString } from "../utils/toQuery"
 import { callApi } from "./axios"
 import {
+  DeleteShopeeIncomesRequest,
+  DeleteShopeeIncomesResponse,
   InsertIncomeShopeeRequest,
   SearchShopeeIncomeRequest,
   SearchShopeeIncomeResponse
@@ -54,8 +56,24 @@ export const useShopeeIncomes = () => {
     })
   }
 
+  const deleteShopeeIncomes = async (req: DeleteShopeeIncomesRequest) => {
+    const query = toQueryString({
+      ...req,
+      orderDate: normalizeOrderDateParam(req.orderDate),
+      orderStartDate: normalizeOrderDateParam(req.orderStartDate),
+      orderEndDate: normalizeOrderDateParam(req.orderEndDate)
+    })
+
+    return callApi<never, DeleteShopeeIncomesResponse>({
+      path: `/v1/shopeeincomes?${query}`,
+      method: "DELETE",
+      token: accessToken
+    })
+  }
+
   return {
     insertIncomeShopee,
-    searchShopeeIncome
+    searchShopeeIncome,
+    deleteShopeeIncomes
   }
 }
