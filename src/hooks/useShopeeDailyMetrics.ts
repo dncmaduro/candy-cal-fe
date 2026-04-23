@@ -4,6 +4,10 @@ import { callApi } from "./axios"
 import type {
   CreateShopeeDailyAdsRequest,
   CreateShopeeDailyLiveRevenueRequest,
+  DeleteShopeeDailyAdsRequest,
+  DeleteShopeeDailyAdsResponse,
+  DeleteShopeeDailyLiveRevenueRequest,
+  DeleteShopeeDailyLiveRevenueResponse,
   SearchShopeeDailyAdsRequest,
   SearchShopeeDailyAdsResponse,
   SearchShopeeDailyLiveRevenuesRequest,
@@ -44,6 +48,16 @@ export const useShopeeDailyMetrics = () => {
       path: `/v1/shopeedailyads/${id}`,
       method: "PUT",
       data: req,
+      token: accessToken
+    })
+  }
+
+  const deleteShopeeDailyAds = async (req: DeleteShopeeDailyAdsRequest) => {
+    const query = toQueryString(req)
+
+    return callApi<never, DeleteShopeeDailyAdsResponse>({
+      path: `/v1/shopeedailyads?${query}`,
+      method: "DELETE",
       token: accessToken
     })
   }
@@ -89,12 +103,26 @@ export const useShopeeDailyMetrics = () => {
     })
   }
 
+  const deleteShopeeDailyLiveRevenue = async (
+    req: DeleteShopeeDailyLiveRevenueRequest
+  ) => {
+    const query = toQueryString(req)
+
+    return callApi<never, DeleteShopeeDailyLiveRevenueResponse>({
+      path: `/v1/shopeedailyliverevenues?${query}`,
+      method: "DELETE",
+      token: accessToken
+    })
+  }
+
   return {
     getShopeeDailyAds,
     createShopeeDailyAds,
     updateShopeeDailyAds,
+    deleteShopeeDailyAds,
     getShopeeDailyLiveRevenues,
     createShopeeDailyLiveRevenue,
-    updateShopeeDailyLiveRevenue
+    updateShopeeDailyLiveRevenue,
+    deleteShopeeDailyLiveRevenue
   }
 }

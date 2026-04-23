@@ -5922,6 +5922,20 @@ export interface SearchShopeeIncomeResponse {
 }
 
 /** @interface */
+export interface DeleteShopeeIncomesRequest {
+  channelId: string
+  orderId?: string
+  orderDate?: string
+  orderStartDate?: string
+  orderEndDate?: string
+}
+
+/** @interface */
+export interface DeleteShopeeIncomesResponse {
+  deletedCount: number
+}
+
+/** @interface */
 export interface ShopeeDashboardOrderProductViewModel {
   code: string
   name: string
@@ -5993,6 +6007,17 @@ export interface UpdateShopeeDailyAdsRequest {
 }
 
 /** @interface */
+export interface DeleteShopeeDailyAdsRequest {
+  channel: string
+  date: string
+}
+
+/** @interface */
+export interface DeleteShopeeDailyAdsResponse {
+  deletedId: string
+}
+
+/** @interface */
 export interface ShopeeDailyLiveRevenueRecord {
   _id: string
   date: string
@@ -6030,4 +6055,15 @@ export interface UpdateShopeeDailyLiveRevenueRequest {
   date?: Date
   channel?: string
   liveRevenue?: number
+}
+
+/** @interface */
+export interface DeleteShopeeDailyLiveRevenueRequest {
+  channel: string
+  date: string
+}
+
+/** @interface */
+export interface DeleteShopeeDailyLiveRevenueResponse {
+  deletedId: string
 }
