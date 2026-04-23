@@ -15,7 +15,9 @@ import { callApi } from "./axios"
 import { SHOPEE_ALL_CHANNEL_ID } from "./shopeeDashboardApi"
 import type {
   GetShopeeMonthKpisResponse,
+  LivestreamChannel,
   MonthlyKpisResponse,
+  MonthlyKpiItem,
   MonthlySummaryResponse,
   OrdersListResponse,
   OrdersQueryRequest,
@@ -120,6 +122,35 @@ export interface MonthlyMetricsViewModel {
   lastSyncedAt: string | null
   timezone: string
   currency: "VND"
+  isEmpty: boolean
+}
+
+export interface MonthlyChannelComparisonMetricViewModel {
+  actual: number
+  target: number | null
+  achievedPercentage: number | null
+  expectedPercentage: number | null
+  expectedValue: number | null
+  format: "currency" | "decimal"
+}
+
+export interface MonthlyChannelComparisonRowViewModel {
+  channelId: string
+  channelName: string
+  revenue: MonthlyChannelComparisonMetricViewModel
+  liveRevenue: MonthlyChannelComparisonMetricViewModel
+  adsCost: MonthlyChannelComparisonMetricViewModel
+  roas: MonthlyChannelComparisonMetricViewModel
+  totalOrders: number
+  adsRevenueRatio: number
+  lastSyncedAt: string | null
+}
+
+export interface MonthlyChannelComparisonViewModel {
+  rows: MonthlyChannelComparisonRowViewModel[]
+  totals: MonthlyChannelComparisonRowViewModel
+  shopCount: number
+  lastSyncedAt: string | null
   isEmpty: boolean
 }
 
@@ -362,6 +393,221 @@ const adaptRangeMetrics = (
   }
 }
 
+const findMonthlyKpiItem = (
+  kpis: MonthlyKpiItem[],
+  key: MonthlyKpiItem["key"]
+) => {
+  return kpis.find((item) => item.key === key)
+}
+
+const resolveLatestSyncedAt = (
+  current?: string | null,
+  candidate?: string | null
+) => {
+  if (!candidate) return current ?? null
+  if (!current) return candidate
+
+  const currentTime = new Date(current).getTime()
+  const candidateTime = new Date(candidate).getTime()
+
+  if (Number.isNaN(currentTime)) return candidate
+  if (Number.isNaN(candidateTime)) return current
+
+  return candidateTime > currentTime ? candidate : current
+}
+
+const buildMonthlyComparisonMetric = ({
+  actual,
+  target,
+  achievedPercentage,
+  expectedPercentage,
+  expectedValue,
+  format
+}: {
+  actual: number
+  target?: number | null
+  achievedPercentage?: number | null
+  expectedPercentage?: number | null
+  expectedValue?: number | null
+  format: "currency" | "decimal"
+}): MonthlyChannelComparisonMetricViewModel => ({
+  actual: normalizeNumber(actual),
+  target:
+    typeof target === "number" && Number.isFinite(target)
+      ? normalizeNumber(target)
+      : null,
+  achievedPercentage:
+    typeof achievedPercentage === "number" && Number.isFinite(achievedPercentage)
+      ? normalizeNumber(achievedPercentage)
+      : null,
+  expectedPercentage:
+    typeof expectedPercentage === "number" && Number.isFinite(expectedPercentage)
+      ? normalizeNumber(expectedPercentage)
+      : null,
+  expectedValue:
+    typeof expectedValue === "number" && Number.isFinite(expectedValue)
+      ? normalizeNumber(expectedValue)
+      : typeof target === "number" &&
+          Number.isFinite(target) &&
+          typeof expectedPercentage === "number" &&
+          Number.isFinite(expectedPercentage)
+        ? normalizeNumber((target * expectedPercentage) / 100)
+      : null,
+  format
+})
+
+const adaptMonthlyChannelComparisonRow = (
+  channel: Pick<LivestreamChannel, "_id" | "name">,
+  summary: MonthlySummaryResponse,
+  kpis: MonthlyKpisResponse
+): MonthlyChannelComparisonRowViewModel => {
+  const revenueKpi = findMonthlyKpiItem(kpis.kpis, "revenue")
+  const adsCostKpi = findMonthlyKpiItem(kpis.kpis, "adsCost")
+  const roasKpi = findMonthlyKpiItem(kpis.kpis, "roas")
+  const revenueActual = normalizeNumber(summary.summary.currentRevenue)
+  const liveRevenueActual = normalizeNumber(summary.summary.liveRevenue)
+  const adsCostActual = normalizeNumber(summary.summary.adsCost)
+  const revenueExpectedValue =
+    revenueKpi?.target && revenueKpi.expectedProgressPercent !== undefined
+      ? (revenueKpi.target * revenueKpi.expectedProgressPercent) / 100
+      : undefined
+  const adsCostExpectedValue =
+    adsCostKpi?.target && adsCostKpi.expectedProgressPercent !== undefined
+      ? (adsCostKpi.target * adsCostKpi.expectedProgressPercent) / 100
+      : undefined
+  const roasExpectedValue =
+    typeof revenueExpectedValue === "number" &&
+    typeof adsCostExpectedValue === "number"
+      ? safeDivide(revenueExpectedValue, adsCostExpectedValue)
+      : undefined
+
+  return {
+    channelId: channel._id,
+    channelName: channel.name,
+    revenue: buildMonthlyComparisonMetric({
+      actual: revenueActual,
+      target: revenueKpi?.target || summary.summary.revenueTarget,
+      achievedPercentage:
+        revenueKpi?.actualProgressPercent ||
+        summary.summary.actualRevenueProgressPercent,
+      expectedPercentage: revenueKpi?.expectedProgressPercent,
+      format: "currency"
+    }),
+    liveRevenue: buildMonthlyComparisonMetric({
+      actual: liveRevenueActual,
+      format: "currency"
+    }),
+    adsCost: buildMonthlyComparisonMetric({
+      actual: adsCostActual,
+      target: adsCostKpi?.target || summary.summary.adsCostTarget,
+      achievedPercentage:
+        adsCostKpi?.actualProgressPercent ||
+        summary.summary.actualAdsCostProgressPercent,
+      expectedPercentage: adsCostKpi?.expectedProgressPercent,
+      format: "currency"
+    }),
+    roas: buildMonthlyComparisonMetric({
+      actual: normalizeNumber(summary.summary.roas),
+      target: roasKpi?.target || summary.summary.roasTarget,
+      achievedPercentage:
+        roasKpi?.actualProgressPercent ||
+        summary.summary.actualRoasProgressPercent,
+      expectedPercentage:
+        roasKpi?.target && typeof roasExpectedValue === "number"
+          ? safeDivide(roasExpectedValue, roasKpi.target) * 100
+          : roasKpi?.expectedProgressPercent,
+      expectedValue: roasExpectedValue,
+      format: "decimal"
+    }),
+    totalOrders: normalizeNumber(summary.summary.totalOrders),
+    adsRevenueRatio: safeDivide(adsCostActual, revenueActual) * 100,
+    lastSyncedAt: resolveLatestSyncedAt(
+      summary.meta.lastSyncedAt,
+      kpis.meta.lastSyncedAt
+    )
+  }
+}
+
+const buildMonthlyComparisonTotals = (
+  rows: MonthlyChannelComparisonRowViewModel[]
+): MonthlyChannelComparisonRowViewModel => {
+  const revenueActual = rows.reduce((total, row) => total + row.revenue.actual, 0)
+  const revenueTarget = rows.reduce(
+    (total, row) => total + (row.revenue.target ?? 0),
+    0
+  )
+  const liveRevenueActual = rows.reduce(
+    (total, row) => total + row.liveRevenue.actual,
+    0
+  )
+  const adsCostActual = rows.reduce((total, row) => total + row.adsCost.actual, 0)
+  const adsCostTarget = rows.reduce(
+    (total, row) => total + (row.adsCost.target ?? 0),
+    0
+  )
+  const totalOrders = rows.reduce((total, row) => total + row.totalOrders, 0)
+  const roasActual = safeDivide(revenueActual, adsCostActual)
+  const roasTarget = safeDivide(revenueTarget, adsCostTarget)
+  const revenueExpectedValue = rows.reduce(
+    (total, row) => total + (row.revenue.expectedValue ?? 0),
+    0
+  )
+  const adsCostExpectedValue = rows.reduce(
+    (total, row) => total + (row.adsCost.expectedValue ?? 0),
+    0
+  )
+  const roasExpectedValue = rows.reduce(
+    (total, row) => total + (row.revenue.expectedValue ?? 0),
+    0
+  )
+  const roasExpectedAdsValue = rows.reduce(
+    (total, row) => total + (row.adsCost.expectedValue ?? 0),
+    0
+  )
+  const roasExpectedMetricValue = safeDivide(roasExpectedValue, roasExpectedAdsValue)
+  const latestSyncedAt = rows.reduce<string | null>(
+    (latest, row) => resolveLatestSyncedAt(latest, row.lastSyncedAt),
+    null
+  )
+
+  return {
+    channelId: "total",
+    channelName: `Tổng ${rows.length} shop`,
+    revenue: buildMonthlyComparisonMetric({
+      actual: revenueActual,
+      target: revenueTarget,
+      achievedPercentage: safeDivide(revenueActual, revenueTarget) * 100,
+      expectedPercentage: safeDivide(revenueExpectedValue, revenueTarget) * 100,
+      format: "currency"
+    }),
+    liveRevenue: buildMonthlyComparisonMetric({
+      actual: liveRevenueActual,
+      format: "currency"
+    }),
+    adsCost: buildMonthlyComparisonMetric({
+      actual: adsCostActual,
+      target: adsCostTarget,
+      achievedPercentage: safeDivide(adsCostActual, adsCostTarget) * 100,
+      expectedPercentage: safeDivide(adsCostExpectedValue, adsCostTarget) * 100,
+      format: "currency"
+    }),
+    roas: buildMonthlyComparisonMetric({
+      actual: roasActual,
+      target: roasTarget > 0 ? roasTarget : null,
+      achievedPercentage: safeDivide(roasActual, roasTarget) * 100,
+      expectedPercentage:
+        roasTarget > 0
+          ? safeDivide(roasExpectedMetricValue, roasTarget) * 100
+          : null,
+      expectedValue: roasExpectedMetricValue,
+      format: "decimal"
+    }),
+    totalOrders,
+    adsRevenueRatio: safeDivide(adsCostActual, revenueActual) * 100,
+    lastSyncedAt: latestSyncedAt
+  }
+}
+
 export const useMonthlyMetrics = ({
   month,
   year,
@@ -414,6 +660,92 @@ export const useMonthlyMetrics = ({
       return adaptMonthlyMetrics(summaryResponse.data, kpisResponse.data)
     },
     enabled: enabled && Boolean(accessToken),
+    placeholderData: (previousData) => previousData
+  })
+}
+
+export const useMonthlyChannelComparison = ({
+  month,
+  year,
+  channels,
+  enabled = true
+}: {
+  month?: number
+  year?: number
+  channels: Array<Pick<LivestreamChannel, "_id" | "name">>
+  enabled?: boolean
+}) => {
+  const { accessToken } = useUserStore()
+  const normalizedMonth = normalizeMonth(month)
+  const normalizedYear = normalizeYear(year)
+  const channelKeys = useMemo(
+    () => channels.map((channel) => `${channel._id}:${channel.name}`),
+    [channels]
+  )
+
+  return useQuery({
+    queryKey: [
+      "shopee",
+      "monthlyChannelComparison",
+      normalizedMonth,
+      normalizedYear,
+      channelKeys
+    ],
+    queryFn: async (): Promise<MonthlyChannelComparisonViewModel> => {
+      const rows = await Promise.all(
+        channels.map(async (channel) => {
+          const query = toQueryString({
+            channel: channel._id,
+            month: normalizedMonth,
+            year: normalizedYear
+          })
+
+          const [summaryResponse, kpisResponse] = await Promise.all([
+            callApi<never, MonthlySummaryResponse>({
+              method: "GET",
+              path: `/v1/shopee/incomes/monthly-summary?${query}`,
+              token: accessToken
+            }),
+            callApi<never, MonthlyKpisResponse>({
+              method: "GET",
+              path: `/v1/shopee/incomes/monthly-kpis?${query}`,
+              token: accessToken
+            })
+          ])
+
+          return adaptMonthlyChannelComparisonRow(
+            channel,
+            summaryResponse.data,
+            kpisResponse.data
+          )
+        })
+      )
+
+      const sortedRows = [...rows].sort(
+        (left, right) => right.revenue.actual - left.revenue.actual
+      )
+      const totals = buildMonthlyComparisonTotals(sortedRows)
+      const lastSyncedAt = resolveLatestSyncedAt(
+        totals.lastSyncedAt,
+        null
+      )
+
+      return {
+        rows: sortedRows,
+        totals,
+        shopCount: sortedRows.length,
+        lastSyncedAt,
+        isEmpty: sortedRows.every(
+          (row) =>
+            row.revenue.actual === 0 &&
+            row.liveRevenue.actual === 0 &&
+            row.adsCost.actual === 0 &&
+            row.roas.actual === 0 &&
+            row.totalOrders === 0
+        )
+      }
+    },
+    enabled: enabled && Boolean(accessToken) && channels.length > 0,
     placeholderData: (previousData) => previousData
   })
 }
