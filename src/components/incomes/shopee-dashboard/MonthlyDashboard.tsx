@@ -1,4 +1,15 @@
-import { Alert, Box, Button, Group, Paper, Skeleton, Stack, Text, rem } from "@mantine/core"
+import {
+  Alert,
+  Box,
+  Button,
+  Group,
+  Paper,
+  Progress,
+  Skeleton,
+  Stack,
+  Text,
+  rem
+} from "@mantine/core"
 import {
   IconAlertCircle,
   IconBroadcast,
@@ -10,10 +21,18 @@ import {
   IconTargetArrow
 } from "@tabler/icons-react"
 import type { ShopeeDashboardMetricViewModel, ShopeeDashboardSummaryItem } from "../../../hooks/models"
-import type { MonthlyMetricsViewModel } from "../../../hooks/useShopeePerformanceMetrics"
-import { MetricStatCard } from "../analytics/MetricStatCard"
-import { formatCurrency } from "../analytics/formatters"
-import { ShopeeDashboardMetricCard } from "./ShopeeDashboardMetricCard"
+import type {
+  MonthlyChannelComparisonViewModel,
+  MonthlyMetricsViewModel
+} from "../../../hooks/useShopeePerformanceMetrics"
+import { formatCurrency, formatPercent } from "../analytics/formatters"
+import { MonthlyChannelComparisonTable } from "./MonthlyChannelComparisonTable"
+
+const metricSummaryKeys = new Set<ShopeeDashboardMetricViewModel["key"]>([
+  "revenue",
+  "adsCost",
+  "roas"
+])
 
 const createResponsiveGridStyle = (minColumnWidth: number) => ({
   display: "grid",
@@ -43,18 +62,150 @@ const formatMetricTarget = (metric?: ShopeeDashboardMetricViewModel) => {
     : formatDecimal(metric.target)
 }
 
+const clampPercentage = (value: number) => {
+  if (!Number.isFinite(value)) return 0
+  return Math.min(100, Math.max(0, value))
+}
+
+const SummaryProgressCard = ({
+  label,
+  value,
+  icon,
+  tone,
+  kpiLabel,
+  progressLabel,
+  progressValue,
+  auxiliary
+}: {
+  label: string
+  value: string
+  icon?: JSX.Element
+  tone: string
+  kpiLabel?: string
+  progressLabel?: string
+  progressValue?: number
+  auxiliary?: string
+}) => {
+  const toneStyles: Record<
+    string,
+    {
+      background: string
+      color: string
+      progress: string
+    }
+  > = {
+    blue: {
+      background: "#eff6ff",
+      color: "#3b82f6",
+      progress: "#60a5fa"
+    },
+    cyan: {
+      background: "#ecfeff",
+      color: "#06b6d4",
+      progress: "#2dd4bf"
+    },
+    teal: {
+      background: "#ecfdf5",
+      color: "#10b981",
+      progress: "#cbd5e1"
+    },
+    grape: {
+      background: "#faf5ff",
+      color: "#d946ef",
+      progress: "#c084fc"
+    },
+    orange: {
+      background: "#fff7ed",
+      color: "#f97316",
+      progress: "#fb923c"
+    }
+  }
+
+  const currentTone = toneStyles[tone] ?? toneStyles.blue
+  const hasProgress = typeof progressValue === "number"
+
+  return (
+    <Paper
+      withBorder
+      radius={18}
+      p="md"
+      style={{
+        height: "100%",
+        borderColor: "#dbe4f0",
+        boxShadow: "0 8px 28px rgba(15, 23, 42, 0.05)",
+        background: "#ffffff"
+      }}
+    >
+      <Stack gap={10} h="100%">
+        <Group justify="space-between" align="flex-start" wrap="nowrap">
+          <Text fz="sm" fw={500} c="#64748b">
+            {label}
+          </Text>
+          {icon && (
+            <Box
+              style={{
+                flexShrink: 0,
+                width: 36,
+                height: 36,
+                borderRadius: 12,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: currentTone.background,
+                color: currentTone.color
+              }}
+            >
+              {icon}
+            </Box>
+          )}
+        </Group>
+
+        <Text
+          fw={700}
+          fz="2rem"
+          lh={1.05}
+          c="#0f172a"
+          style={{ letterSpacing: "-0.04em" }}
+        >
+          {value}
+        </Text>
+
+        <Stack gap={2}>
+          <Text size="sm" fw={600} c="#475569">
+            {kpiLabel ?? "--"}
+          </Text>
+          {auxiliary && (
+            <Text size="sm" c="#64748b">
+              {auxiliary}
+            </Text>
+          )}
+        </Stack>
+
+        <Stack gap={6} mt="auto">
+          <Text size="sm" fw={600} c={hasProgress ? "#475569" : "#94a3b8"}>
+            {progressLabel ?? "--"}
+          </Text>
+          <Progress
+            radius="xl"
+            size="sm"
+            value={hasProgress ? clampPercentage(progressValue) : 0}
+            color={currentTone.progress}
+            styles={{
+              root: {
+                background: "#e5e7eb"
+              }
+            }}
+          />
+        </Stack>
+      </Stack>
+    </Paper>
+  )
+}
+
 const SummaryCardsSkeleton = () => (
   <Box style={createResponsiveGridStyle(280)}>
-    {Array.from({ length: 7 }).map((_, index) => (
+    {Array.from({ length: 5 }).map((_, index) => (
       <Skeleton key={index} height={154} radius="xl" />
-    ))}
-  </Box>
-)
-
-const MetricCardsSkeleton = () => (
-  <Box style={createResponsiveGridStyle(360)}>
-    {Array.from({ length: 3 }).map((_, index) => (
-      <Skeleton key={index} height={320} radius="xl" />
     ))}
   </Box>
 )
@@ -120,15 +271,23 @@ const DashboardErrorState = ({ onRetry }: { onRetry: () => void }) => (
 
 interface MonthlyDashboardProps {
   data?: MonthlyMetricsViewModel
+  comparisonData?: MonthlyChannelComparisonViewModel
   isLoading: boolean
   isError: boolean
+  comparisonLoading: boolean
+  comparisonError: boolean
+  selectedChannelId?: string
   onRetry: () => void
 }
 
 export const MonthlyDashboard = ({
   data,
+  comparisonData,
   isLoading,
   isError,
+  comparisonLoading,
+  comparisonError,
+  selectedChannelId,
   onRetry
 }: MonthlyDashboardProps) => {
   const metricsByKey = new Map<
@@ -164,86 +323,75 @@ export const MonthlyDashboard = ({
   }
 
   if (isLoading && !data) {
-    return (
-      <>
-        <SummaryCardsSkeleton />
-        <MetricCardsSkeleton />
-      </>
-    )
+    return <SummaryCardsSkeleton />
   }
 
   if (!data) return null
 
-  if (data.isEmpty) {
+  if (data.isEmpty && (!comparisonData || comparisonData.isEmpty)) {
     return <DashboardEmptyState onRetry={onRetry} />
   }
 
-  const revenueTarget = Number.isFinite(data.revenueTarget)
-    ? data.revenueTarget
-    : 0
+  const visibleSummaryItems = data.summaryItems.filter(
+    (item) =>
+      item.key !== "adsRevenueRatio" && item.key !== "avgRevenuePerDayVsKpi"
+  )
+  const adsRevenueRatioItem = data.summaryItems.find(
+    (item) => item.key === "adsRevenueRatio"
+  )
 
   return (
     <>
       <Box style={createResponsiveGridStyle(280)}>
-        {data.summaryItems.map((item) => {
+        {visibleSummaryItems.map((item) => {
           const relatedMetric =
             item.key === "totalOrders" ||
             item.key === "liveRevenue" ||
-            item.key === "adsRevenueRatio" ||
-            item.key === "avgRevenuePerDayVsKpi"
+            !metricSummaryKeys.has(
+              item.key as ShopeeDashboardMetricViewModel["key"]
+            )
               ? undefined
-              : metricsByKey.get(item.key)
+              : metricsByKey.get(item.key as ShopeeDashboardMetricViewModel["key"])
 
           return (
-            <MetricStatCard
+            <SummaryProgressCard
               key={item.key}
               label={item.label}
               value={formatSummaryValue(item)}
               tone={summaryTones[item.key]}
               icon={summaryIcons[item.key]}
-              trailing={
-                item.key === "avgRevenuePerDayVsKpi" ? (
-                  <Text size="sm" fw={700} c="#475569">
-                    KPI tháng {formatCurrency(revenueTarget)}
-                  </Text>
-                ) : relatedMetric ? (
-                  <Text size="sm" fw={700} c="#475569">
-                    KPI {formatMetricTarget(relatedMetric)}
-                  </Text>
-                ) : undefined
+              kpiLabel={
+                relatedMetric
+                  ? `KPI ${formatMetricTarget(relatedMetric)}`
+                  : "--"
+              }
+              auxiliary={
+                item.key === "roas" && adsRevenueRatioItem
+                  ? `% Ads so với doanh thu: ${formatSummaryValue(adsRevenueRatioItem)}`
+                  : undefined
+              }
+              progressLabel={
+                relatedMetric
+                  ? `${formatPercent(relatedMetric.achievedPercentage)} đạt kế hoạch`
+                  : undefined
+              }
+              progressValue={
+                relatedMetric
+                  ? relatedMetric.achievedPercentage
+                  : undefined
               }
             />
           )
         })}
       </Box>
 
-      <Paper
-        withBorder
-        radius={24}
-        p="lg"
-        style={{
-          borderColor: "#dbe4f0",
-          background: "#ffffff",
-          boxShadow: "0 12px 34px rgba(15, 23, 42, 0.05)"
-        }}
-      >
-        <Stack gap="md">
-          <div>
-            <Text fz="sm" fw={600} c="#0f172a">
-              KPI và tiến độ
-            </Text>
-            <Text fw={700} fz="xl" mt={4}>
-              Theo dõi chỉ tiêu và tiến độ theo từng chỉ số
-            </Text>
-          </div>
-
-          <Box style={createResponsiveGridStyle(360)}>
-            {data.metrics.map((metric) => (
-              <ShopeeDashboardMetricCard key={metric.key} metric={metric} />
-            ))}
-          </Box>
-        </Stack>
-      </Paper>
+      <MonthlyChannelComparisonTable
+        data={comparisonData}
+        isLoading={comparisonLoading}
+        isError={comparisonError}
+        selectedChannelId={selectedChannelId}
+        onRetry={onRetry}
+      />
     </>
   )
 }

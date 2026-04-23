@@ -1,10 +1,13 @@
 import type { ReactNode } from "react"
 import { Group, Loader, SegmentedControl, Stack, Text } from "@mantine/core"
 import type { ShopeeChannelOption } from "../../../hooks/shopeeDashboardApi"
-import type { ShopeePerformanceTimeMode, ShopeeRangePreset } from "../../../hooks/models"
+import type {
+  ShopeePerformanceTimeMode,
+  ShopeeRangePreset
+} from "../../../hooks/models"
 import { MonthFilterFields } from "./MonthFilterFields"
 import { DateRangeFilterFields } from "./DateRangeFilterFields"
-import { filterSegmentedStyles } from "../filterStyles"
+import { compactFilterSegmentedStyles } from "../filterStyles"
 
 interface PerformanceTimeFilterProps {
   mode: ShopeePerformanceTimeMode
@@ -19,6 +22,7 @@ interface PerformanceTimeFilterProps {
   yearOptions: ShopeeChannelOption[]
   isChannelsLoading?: boolean
   isRefreshing?: boolean
+  lastUpdatedLabel?: string
   action?: ReactNode
   onModeChange: (mode: ShopeePerformanceTimeMode) => void
   onMonthChannelChange: (value: string) => void
@@ -45,6 +49,7 @@ export const PerformanceTimeFilter = ({
   yearOptions,
   isChannelsLoading = false,
   isRefreshing = false,
+  lastUpdatedLabel,
   action,
   onModeChange,
   onMonthChannelChange,
@@ -52,26 +57,36 @@ export const PerformanceTimeFilter = ({
   onYearChange,
   onRangeApply
 }: PerformanceTimeFilterProps) => {
+  const filterMeta = (
+    <Group gap={6} align="center" wrap="wrap">
+      {lastUpdatedLabel && (
+        <Text size="xs" c="dimmed">
+          Cập nhật lúc: {lastUpdatedLabel}
+        </Text>
+      )}
+      {isRefreshing && (
+        <Group gap={6} c="dimmed">
+          <Loader size="xs" />
+          <Text size="xs">Đang cập nhật</Text>
+        </Group>
+      )}
+    </Group>
+  )
+
   return (
-    <Stack gap="lg">
-      <Group justify="space-between" align="center" gap="md" wrap="wrap">
+    <Stack gap="sm">
+      <Group justify="space-between" align="center" gap="sm" wrap="wrap">
         <SegmentedControl
           value={mode}
           onChange={(value) => onModeChange(value as ShopeePerformanceTimeMode)}
           data={[
-            { label: "Theo tháng", value: "month" },
-            { label: "Khoảng ngày", value: "range" }
+            { label: "Tổng quan", value: "month" },
+            { label: "Chi tiết", value: "range" }
           ]}
-          styles={filterSegmentedStyles}
+          styles={compactFilterSegmentedStyles}
         />
 
-        <Group gap="sm" align="center">
-          {isRefreshing && (
-            <Group gap={8} c="dimmed">
-              <Loader size="xs" />
-              <Text size="sm">Đang cập nhật</Text>
-            </Group>
-          )}
+        <Group gap={8} align="center" wrap="wrap">
           {action}
         </Group>
       </Group>
@@ -85,6 +100,7 @@ export const PerformanceTimeFilter = ({
           monthOptions={monthOptions}
           yearOptions={yearOptions}
           isChannelsLoading={isChannelsLoading}
+          rightSection={filterMeta}
           onChannelChange={onMonthChannelChange}
           onMonthChange={onMonthChange}
           onYearChange={onYearChange}
@@ -97,6 +113,7 @@ export const PerformanceTimeFilter = ({
           preset={preset}
           channelOptions={channelOptions}
           isChannelsLoading={isChannelsLoading}
+          rightSection={filterMeta}
           onApply={onRangeApply}
         />
       )}
