@@ -17,19 +17,21 @@ import {
 import { IconPlus, IconTrash } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
 import { format } from "date-fns"
-import {
-  SHOPEE_NAVS,
-  SHOPEE_ROLES
-} from "../../../constants/navs"
+import { SHOPEE_NAVS, SHOPEE_ROLES } from "../../../constants/navs"
 import { useAuthGuard } from "../../../hooks/useAuthGuard"
 import type {
   ShopeePerformanceTimeMode,
   ShopeeRangePreset
 } from "../../../hooks/models"
-import { SHOPEE_ALL_CHANNEL_ID, type ShopeeChannelOption } from "../../../hooks/shopeeDashboardApi"
+import {
+  SHOPEE_ALL_CHANNEL_ID,
+  type ShopeeChannelOption
+} from "../../../hooks/shopeeDashboardApi"
 import { useShopeeChannels } from "../../../hooks/useShopeeChannels"
 import { useUsers } from "../../../hooks/useUsers"
 import {
+  type MonthlyChannelComparisonViewModel,
+  useMonthlyChannelComparison,
   useMonthlyMetrics,
   useRangeMetrics
 } from "../../../hooks/useShopeePerformanceMetrics"
@@ -86,6 +88,15 @@ const createYearOptions = (selectedYear: number): ShopeeChannelOption[] => {
 
 const SHOPEE_FILTER_STICKY_TOP = rem(76)
 
+const formatLastUpdatedLabel = (value?: string | null) => {
+  if (!value) return undefined
+
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return undefined
+
+  return format(parsed, "HH:mm dd/MM/yyyy")
+}
+
 const getMonthlyPaceStatus = (
   achievedPercentage: number,
   expectedPercentage: number,
@@ -124,7 +135,10 @@ export const ShopeePerformanceDashboardPage = ({
   const [usePreviousDayKpiMode, setUsePreviousDayKpiMode] = useState(false)
 
   const monthOptions = useMemo(() => createMonthOptions(), [])
-  const yearOptions = useMemo(() => createYearOptions(search.year), [search.year])
+  const yearOptions = useMemo(
+    () => createYearOptions(search.year),
+    [search.year]
+  )
   const today = useMemo(() => new Date(), [])
   const currentYear = today.getFullYear()
   const currentMonth = today.getMonth() + 1
@@ -162,9 +176,9 @@ export const ShopeePerformanceDashboardPage = ({
   const selectedChannelName =
     normalizedChannelId === SHOPEE_ALL_CHANNEL_ID
       ? "Tất cả kênh Shopee"
-      : channelsQuery.data?.channels.find(
+      : (channelsQuery.data?.channels.find(
           (channel) => channel._id === normalizedChannelId
-        )?.name ?? normalizedChannelId
+        )?.name ?? normalizedChannelId)
 
   useEffect(() => {
     if (!channelsQuery.isSuccess) return
@@ -183,6 +197,15 @@ export const ShopeePerformanceDashboardPage = ({
     year: search.year,
     channelId: normalizedChannelId,
     enabled: search.tab === "dashboard" && search.mode === "month"
+  })
+  const monthlyComparisonQuery = useMonthlyChannelComparison({
+    month: search.month,
+    year: search.year,
+    channels: channelsQuery.data?.channels ?? [],
+    enabled:
+      search.tab === "dashboard" &&
+      search.mode === "month" &&
+      channelsQuery.isSuccess
   })
 
   const monthlyDashboardData = useMemo(() => {
@@ -229,6 +252,74 @@ export const ShopeePerformanceDashboardPage = ({
     usePreviousDayKpiMode
   ])
 
+  const monthlyComparisonData = useMemo(() => {
+    const data = monthlyComparisonQuery.data
+
+    if (!data || !usePreviousDayKpiMode || !canUsePreviousDayKpiMode) {
+      return data
+    }
+
+    const daysInMonth = new Date(search.year, search.month, 0).getDate()
+    const expectedPercentage = Number(
+      (((currentDate - 1) / daysInMonth) * 100).toFixed(1)
+    )
+
+    const applyExpectedProgress = <
+      T extends MonthlyChannelComparisonViewModel["rows"][number]
+    >(
+      row: T
+    ): T => {
+      const revenueExpectedValue =
+        row.revenue.target && row.revenue.target > 0
+          ? (row.revenue.target * expectedPercentage) / 100
+          : null
+      const adsExpectedValue =
+        row.adsCost.target && row.adsCost.target > 0
+          ? (row.adsCost.target * expectedPercentage) / 100
+          : null
+      const roasExpectedValue =
+        typeof revenueExpectedValue === "number" &&
+        typeof adsExpectedValue === "number"
+          ? safeDivide(revenueExpectedValue, adsExpectedValue)
+          : null
+
+      return {
+        ...row,
+        revenue: {
+          ...row.revenue,
+          expectedPercentage,
+          expectedValue: revenueExpectedValue
+        },
+        adsCost: {
+          ...row.adsCost,
+          expectedPercentage,
+          expectedValue: adsExpectedValue
+        },
+        roas: {
+          ...row.roas,
+          expectedValue: roasExpectedValue,
+          expectedPercentage:
+            row.roas.target && row.roas.target > 0 && roasExpectedValue !== null
+              ? safeDivide(roasExpectedValue, row.roas.target) * 100
+              : null
+        }
+      }
+    }
+
+    return {
+      ...data,
+      rows: data.rows.map((row) => applyExpectedProgress(row)),
+      totals: applyExpectedProgress(data.totals)
+    } satisfies MonthlyChannelComparisonViewModel
+  }, [
+    canUsePreviousDayKpiMode,
+    currentDate,
+    monthlyComparisonQuery.data,
+    search.month,
+    search.year,
+    usePreviousDayKpiMode
+  ])
+
   const rangeDays = getDaysInRange(search.orderFrom, search.orderTo)
   const isRangeReady =
     Boolean(search.orderFrom) && Boolean(search.orderTo) && rangeDays > 0
@@ -237,11 +328,17 @@ export const ShopeePerformanceDashboardPage = ({
     orderFrom: search.orderFrom,
     orderTo: search.orderTo,
     channelId: normalizedChannelId,
-    enabled: search.tab === "dashboard" && search.mode === "range" && isRangeReady
+    enabled:
+      search.tab === "dashboard" && search.mode === "range" && isRangeReady
   })
 
   const activeDashboardFetching =
     search.mode === "month" ? monthlyQuery.isFetching : rangeQuery.isFetching
+  const lastUpdatedLabel = formatLastUpdatedLabel(
+    search.mode === "month"
+      ? monthlyDashboardData?.lastSyncedAt
+      : rangeQuery.data?.lastSyncedAt
+  )
 
   const handleRetry = () => {
     channelsQuery.refetch()
@@ -250,6 +347,7 @@ export const ShopeePerformanceDashboardPage = ({
 
     if (search.mode === "month") {
       monthlyQuery.refetch()
+      monthlyComparisonQuery.refetch()
       return
     }
 
@@ -269,6 +367,7 @@ export const ShopeePerformanceDashboardPage = ({
           onSuccess={() => {
             if (search.mode === "month") {
               monthlyQuery.refetch()
+              monthlyComparisonQuery.refetch()
             } else {
               rangeQuery.refetch()
             }
@@ -302,14 +401,13 @@ export const ShopeePerformanceDashboardPage = ({
     })
   }
 
-  const rangeDeleteDisabledReason =
-    !canMutateShopee
-      ? "Bạn không có quyền xóa dữ liệu Shopee"
-      : !isRangeReady
-        ? "Vui lòng chọn đầy đủ khoảng ngày"
-        : normalizedChannelId === SHOPEE_ALL_CHANNEL_ID
-          ? "Vui lòng chọn 1 kênh Shopee cụ thể trước khi xóa dữ liệu"
-          : undefined
+  const rangeDeleteDisabledReason = !canMutateShopee
+    ? "Bạn không có quyền xóa dữ liệu Shopee"
+    : !isRangeReady
+      ? "Vui lòng chọn đầy đủ khoảng ngày"
+      : normalizedChannelId === SHOPEE_ALL_CHANNEL_ID
+        ? "Vui lòng chọn 1 kênh Shopee cụ thể trước khi xóa dữ liệu"
+        : undefined
 
   const filterAction =
     search.mode === "month" ? (
@@ -335,10 +433,13 @@ export const ShopeePerformanceDashboardPage = ({
         <Button
           variant="light"
           color="blue"
+          size="sm"
           leftSection={<IconPlus size={16} />}
           onClick={handleOpenRevenueEntryModal}
           disabled={channelsQuery.isLoading || !canMutateShopee}
-          title={!canMutateShopee ? "Bạn chỉ có quyền xem dữ liệu Shopee" : undefined}
+          title={
+            !canMutateShopee ? "Bạn chỉ có quyền xem dữ liệu Shopee" : undefined
+          }
         >
           Thêm doanh số
         </Button>
@@ -389,8 +490,8 @@ export const ShopeePerformanceDashboardPage = ({
           }}
         >
           <Box
-            pt={32}
-            pb={16}
+            pt={{ base: 16, md: 20 }}
+            pb={{ base: 12, md: 16 }}
             px={{ base: 8, md: 28 }}
             style={{
               position: "sticky",
@@ -399,7 +500,9 @@ export const ShopeePerformanceDashboardPage = ({
               borderRadius: rem(20),
               background: "rgba(255,255,255,0.98)",
               backdropFilter: "blur(10px)",
-              borderBottom: "1px solid #e9ecef"
+              borderBottom: "1px solid #e9ecef",
+              boxShadow: "0 10px 24px rgba(15, 23, 42, 0.06)",
+              overflow: "hidden"
             }}
           >
             <PerformanceTimeFilter
@@ -418,6 +521,7 @@ export const ShopeePerformanceDashboardPage = ({
                 channelsQuery.isFetching ||
                 (search.tab === "dashboard" && activeDashboardFetching)
               }
+              lastUpdatedLabel={lastUpdatedLabel}
               onModeChange={(mode) => {
                 if (mode === search.mode) return
 
@@ -464,9 +568,7 @@ export const ShopeePerformanceDashboardPage = ({
                   true
                 )
               }
-              action={
-                filterAction
-              }
+              action={filterAction}
             />
           </Box>
 
@@ -496,8 +598,12 @@ export const ShopeePerformanceDashboardPage = ({
                     {search.mode === "month" ? (
                       <MonthlyDashboard
                         data={monthlyDashboardData}
+                        comparisonData={monthlyComparisonData}
                         isLoading={monthlyQuery.isLoading}
                         isError={monthlyQuery.isError}
+                        comparisonLoading={monthlyComparisonQuery.isLoading}
+                        comparisonError={monthlyComparisonQuery.isError}
+                        selectedChannelId={normalizedChannelId}
                         onRetry={handleRetry}
                       />
                     ) : isRangeReady ? (

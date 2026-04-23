@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, type ReactNode } from "react"
 import { Alert, Badge, Group, Select, Stack, Text } from "@mantine/core"
 import { DatePickerInput } from "@mantine/dates"
 import { IconAlertCircle } from "@tabler/icons-react"
@@ -13,8 +13,8 @@ import {
   toDateInputValue
 } from "./performanceTimeUtils"
 import {
-  filterInputStyles,
-  filterPlainLabelStyles
+  compactFilterInputStyles,
+  compactFilterPlainLabelStyles
 } from "../filterStyles"
 
 const PRESET_OPTIONS: Array<{
@@ -35,6 +35,7 @@ interface DateRangeFilterFieldsProps {
   preset?: ShopeeRangePreset
   channelOptions: ShopeeChannelOption[]
   isChannelsLoading?: boolean
+  rightSection?: ReactNode
   onApply: (payload: {
     channel: string
     orderFrom: string
@@ -50,13 +51,16 @@ export const DateRangeFilterFields = ({
   preset,
   channelOptions,
   isChannelsLoading = false,
+  rightSection,
   onApply
 }: DateRangeFilterFieldsProps) => {
   const [draftChannel, setDraftChannel] = useState(channelId)
   const [draftFrom, setDraftFrom] = useState<Date | null>(
     parseDateInputValue(orderFrom)
   )
-  const [draftTo, setDraftTo] = useState<Date | null>(parseDateInputValue(orderTo))
+  const [draftTo, setDraftTo] = useState<Date | null>(
+    parseDateInputValue(orderTo)
+  )
   const [draftPreset, setDraftPreset] = useState<ShopeeRangePreset | undefined>(
     preset
   )
@@ -135,55 +139,62 @@ export const DateRangeFilterFields = ({
 
   return (
     <Stack gap="sm">
-      <div className="grid gap-3 md:grid-cols-3">
-        <Select
-          label="Kênh Shopee"
-          placeholder="Chọn kênh"
-          value={draftChannel}
-          onChange={(value) => value && setDraftChannel(value)}
-          data={channelOptions}
-          searchable
-          disabled={isChannelsLoading}
-          nothingFoundMessage="Không có kênh"
-          size="sm"
-          styles={{
-            label: filterPlainLabelStyles,
-            input: filterInputStyles
-          }}
-        />
+      <Group justify="space-between" align="flex-end" gap="sm" wrap="wrap">
+        <Group align="flex-end" gap={10} wrap="wrap" style={{ flex: 1 }}>
+          <Select
+            label="Kênh Shopee"
+            placeholder="Chọn kênh"
+            value={draftChannel}
+            onChange={(value) => value && setDraftChannel(value)}
+            data={channelOptions}
+            searchable
+            disabled={isChannelsLoading}
+            nothingFoundMessage="Không có kênh"
+            size="sm"
+            w={280}
+            styles={{
+              label: compactFilterPlainLabelStyles,
+              input: compactFilterInputStyles
+            }}
+          />
 
-        <DatePickerInput
-          label="Từ ngày"
-          placeholder="Chọn từ ngày"
-          value={draftFrom}
-          onChange={(value) => {
-            setDraftFrom(value)
-            setDraftPreset(undefined)
-          }}
-          valueFormat="DD/MM/YYYY"
-          clearable={false}
-          styles={{
-            label: filterPlainLabelStyles,
-            input: filterInputStyles
-          }}
-        />
+          <DatePickerInput
+            label="Từ ngày"
+            placeholder="Chọn từ ngày"
+            value={draftFrom}
+            onChange={(value) => {
+              setDraftFrom(value)
+              setDraftPreset(undefined)
+            }}
+            valueFormat="DD/MM/YYYY"
+            clearable={false}
+            w={180}
+            styles={{
+              label: compactFilterPlainLabelStyles,
+              input: compactFilterInputStyles
+            }}
+          />
 
-        <DatePickerInput
-          label="Đến ngày"
-          placeholder="Chọn đến ngày"
-          value={draftTo}
-          onChange={(value) => {
-            setDraftTo(value)
-            setDraftPreset(undefined)
-          }}
-          valueFormat="DD/MM/YYYY"
-          clearable={false}
-          styles={{
-            label: filterPlainLabelStyles,
-            input: filterInputStyles
-          }}
-        />
-      </div>
+          <DatePickerInput
+            label="Đến ngày"
+            placeholder="Chọn đến ngày"
+            value={draftTo}
+            onChange={(value) => {
+              setDraftTo(value)
+              setDraftPreset(undefined)
+            }}
+            valueFormat="DD/MM/YYYY"
+            clearable={false}
+            w={180}
+            styles={{
+              label: compactFilterPlainLabelStyles,
+              input: compactFilterInputStyles
+            }}
+          />
+        </Group>
+
+        {rightSection}
+      </Group>
 
       <Group gap={8} wrap="wrap">
         {PRESET_OPTIONS.map((option) => {
