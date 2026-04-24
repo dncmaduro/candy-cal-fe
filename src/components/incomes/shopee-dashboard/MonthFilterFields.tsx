@@ -11,6 +11,7 @@ interface MonthFilterFieldsProps {
   channelId: string
   month: number
   year: number
+  hideChannelField?: boolean
   channelOptions: ShopeeChannelOption[]
   monthOptions: ShopeeChannelOption[]
   yearOptions: ShopeeChannelOption[]
@@ -25,6 +26,7 @@ export const MonthFilterFields = ({
   channelId,
   month,
   year,
+  hideChannelField = false,
   channelOptions,
   monthOptions,
   yearOptions,
@@ -37,23 +39,25 @@ export const MonthFilterFields = ({
   return (
     <Group justify="space-between" align="flex-end" gap="sm" wrap="wrap">
       <Group align="flex-end" gap={10} wrap="wrap" style={{ flex: 1 }}>
-        <Select
-          label="Kênh Shopee"
-          placeholder="Chọn kênh"
-          value={channelId}
-          onChange={(value) => value && onChannelChange(value)}
-          data={channelOptions}
-          searchable
-          disabled={isChannelsLoading}
-          nothingFoundMessage="Không có kênh"
-          size="sm"
-          w={280}
-          styles={{
-            label: compactFilterPlainLabelStyles,
-            input: compactFilterInputStyles,
-            dropdown: filterDropdownStyles
-          }}
-        />
+        {!hideChannelField && (
+          <Select
+            label="Kênh Shopee"
+            placeholder="Chọn kênh"
+            value={channelId}
+            onChange={(value) => value && onChannelChange(value)}
+            data={channelOptions}
+            searchable
+            disabled={isChannelsLoading}
+            nothingFoundMessage="Không có kênh"
+            size="sm"
+            w={280}
+            styles={{
+              label: compactFilterPlainLabelStyles,
+              input: compactFilterInputStyles,
+              dropdown: filterDropdownStyles
+            }}
+          />
+        )}
 
         <Select
           label="Tháng"

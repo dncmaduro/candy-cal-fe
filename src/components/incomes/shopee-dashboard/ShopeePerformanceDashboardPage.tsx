@@ -170,9 +170,13 @@ export const ShopeePerformanceDashboardPage = ({
     (channel) => channel._id === search.channel
   )
   const normalizedChannelId =
-    search.channel === SHOPEE_ALL_CHANNEL_ID || selectedChannelExists
-      ? search.channel
-      : SHOPEE_ALL_CHANNEL_ID
+    search.mode === "month"
+      ? SHOPEE_ALL_CHANNEL_ID
+      : !channelsQuery.isSuccess
+        ? search.channel
+        : search.channel === SHOPEE_ALL_CHANNEL_ID || selectedChannelExists
+          ? search.channel
+          : SHOPEE_ALL_CHANNEL_ID
   const selectedChannelName =
     normalizedChannelId === SHOPEE_ALL_CHANNEL_ID
       ? "Tất cả kênh Shopee"
@@ -181,6 +185,13 @@ export const ShopeePerformanceDashboardPage = ({
         )?.name ?? normalizedChannelId)
 
   useEffect(() => {
+    if (search.mode === "month") {
+      if (search.channel === SHOPEE_ALL_CHANNEL_ID) return
+
+      onSearchChange({ channel: SHOPEE_ALL_CHANNEL_ID }, true)
+      return
+    }
+
     if (!channelsQuery.isSuccess) return
     if (search.channel === normalizedChannelId) return
 
@@ -189,7 +200,8 @@ export const ShopeePerformanceDashboardPage = ({
     channelsQuery.isSuccess,
     normalizedChannelId,
     onSearchChange,
-    search.channel
+    search.channel,
+    search.mode
   ])
 
   const monthlyQuery = useMonthlyMetrics({
@@ -507,9 +519,10 @@ export const ShopeePerformanceDashboardPage = ({
           >
             <PerformanceTimeFilter
               mode={search.mode}
-              channelId={search.channel}
+              channelId={normalizedChannelId}
               month={search.month}
               year={search.year}
+              hideMonthChannelField={search.mode === "month"}
               orderFrom={search.orderFrom}
               orderTo={search.orderTo}
               preset={search.preset}

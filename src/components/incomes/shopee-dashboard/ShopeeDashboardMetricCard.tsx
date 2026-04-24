@@ -1,4 +1,13 @@
-import { Badge, Box, Group, Paper, Progress, Stack, Text, rem } from "@mantine/core"
+import {
+  Badge,
+  Box,
+  Group,
+  Paper,
+  Progress,
+  Stack,
+  Text,
+  rem
+} from "@mantine/core"
 import type { ShopeeDashboardMetricViewModel } from "../../../hooks/shopeeDashboardApi"
 import {
   formatCurrency,
@@ -154,7 +163,10 @@ export const ShopeeDashboardMetricCard = ({
             label="Chênh lệch"
             value={formatSignedPercent(metric.gapPercentage)}
           />
-          <DetailItem label="Tốc độ" value={formatPaceRatio(metric.paceRatio)} />
+          <DetailItem
+            label="Tốc độ"
+            value={formatPaceRatio(metric.paceRatio)}
+          />
         </Box>
       </Stack>
     </Paper>
