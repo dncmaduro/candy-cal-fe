@@ -14,6 +14,7 @@ interface PerformanceTimeFilterProps {
   channelId: string
   month: number
   year: number
+  hideMonthChannelField?: boolean
   orderFrom?: string
   orderTo?: string
   preset?: ShopeeRangePreset
@@ -41,6 +42,7 @@ export const PerformanceTimeFilter = ({
   channelId,
   month,
   year,
+  hideMonthChannelField = false,
   orderFrom,
   orderTo,
   preset,
@@ -96,6 +98,7 @@ export const PerformanceTimeFilter = ({
           channelId={channelId}
           month={month}
           year={year}
+          hideChannelField={hideMonthChannelField}
           channelOptions={channelOptions}
           monthOptions={monthOptions}
           yearOptions={yearOptions}
