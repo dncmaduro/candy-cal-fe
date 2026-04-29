@@ -450,6 +450,7 @@ export interface GetStorageLogsRequest {
   status?: string
   tag?: string
   itemId?: string
+  channelId?: string
 }
 
 /** @interface */
