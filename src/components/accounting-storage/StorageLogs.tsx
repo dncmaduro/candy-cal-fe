@@ -2,7 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { useDebouncedValue } from "@mantine/hooks"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import {
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient
+} from "@tanstack/react-query"
 import type { ColumnDef, Row } from "@tanstack/react-table"
 import {
   ActionIcon,
@@ -32,6 +37,8 @@ import {
 import { format } from "date-fns"
 
 import { useItems } from "../../hooks/useItems"
+import { useDeliveredRequests } from "../../hooks/useDeliveredRequests"
+import { useLivestreamChannels } from "../../hooks/useLivestreamChannels"
 import { useLogs } from "../../hooks/useLogs"
 import { StorageLogModal } from "./StorageLogModal"
 
@@ -57,6 +64,7 @@ type StorageLog = {
   status: string
   tag?: string
   note?: string
+  deliveredRequestId?: string
   item?: LogItem
   items?: LogItem[]
 }
@@ -68,6 +76,7 @@ type LogRow = {
   status: string
   tag?: string
   note?: string
+  deliveredRequestId?: string
   items: LogItem[]
 }
 
@@ -91,11 +100,14 @@ export const StorageLogs = ({ activeTab }: Props) => {
   const [startDate, setStartDate] = useState<Date | null>(null)
   const [endDate, setEndDate] = useState<Date | null>(null)
   const [itemId, setItemId] = useState<string | null>(null)
+  const [channelId, setChannelId] = useState<string | null>(null)
   const [status, setStatus] = useState<string | null>(null)
   const [tag, setTag] = useState<string | null>(null)
 
   const { searchStorageItems } = useItems()
   const { getStorageLogs, deleteStorageLog } = useLogs()
+  const { getDeliveredRequest } = useDeliveredRequests()
+  const { searchLivestreamChannels } = useLivestreamChannels()
 
   // Items list for filter + name map
   const { data: itemsData } = useQuery({
@@ -117,6 +129,23 @@ export const StorageLogs = ({ activeTab }: Props) => {
     return map
   }, [itemsData])
 
+  const { data: channelsData } = useQuery({
+    queryKey: ["livestreamChannels", activeTab],
+    queryFn: async () => {
+      const response = await searchLivestreamChannels({ page: 1, limit: 200 })
+      return response.data.data ?? []
+    }
+  })
+
+  const channelOptions = useMemo(
+    () =>
+      (channelsData ?? []).map((channel) => ({
+        value: channel._id,
+        label: channel.name
+      })),
+    [channelsData]
+  )
+
   // Logs query (server pagination)
   const {
     data: logsRes,
@@ -131,7 +160,8 @@ export const StorageLogs = ({ activeTab }: Props) => {
       endDate?.toISOString() ?? null,
       status ?? null,
       tag ?? null,
-      itemId ?? null
+      itemId ?? null,
+      channelId ?? null
     ],
     queryFn: () =>
       getStorageLogs({
@@ -141,13 +171,53 @@ export const StorageLogs = ({ activeTab }: Props) => {
         endDate: endDate ? toIsoEndOfDay(new Date(endDate)) : undefined,
         status: status || undefined,
         tag: tag || undefined,
-        itemId: itemId || undefined
+        itemId: itemId || undefined,
+        channelId: channelId || undefined
       }),
     select: (res) => res.data
   })
 
   const logs: StorageLog[] = logsRes?.data ?? []
   const total = Number(logsRes?.total ?? 0)
+
+  const deliveredRequestIds = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          logs
+            .map((log) => log.deliveredRequestId)
+            .filter((requestId): requestId is string => Boolean(requestId))
+        )
+      ),
+    [logs]
+  )
+
+  const deliveredRequestsLookup = useQueries({
+    queries: deliveredRequestIds.map((requestId) => ({
+      queryKey: ["deliveredRequest", requestId],
+      queryFn: async () => (await getDeliveredRequest({ requestId })).data,
+      staleTime: 5 * 60 * 1000
+    })),
+    combine: (results) => ({
+      channelsByRequestId: results.reduce<Record<string, string | undefined>>(
+        (acc, result, index) => {
+          const requestId = deliveredRequestIds[index]
+          if (!requestId) return acc
+
+          acc[requestId] = result.data?.channel?.name
+          return acc
+        },
+        {}
+      ),
+      loadingRequestIds: new Set(
+        results
+          .map((result, index) =>
+            result.isPending ? deliveredRequestIds[index] : null
+          )
+          .filter((requestId): requestId is string => Boolean(requestId))
+      )
+    })
+  })
 
   const openModal = (log?: StorageLog) => {
     modals.open({
@@ -181,7 +251,7 @@ export const StorageLogs = ({ activeTab }: Props) => {
 
   useEffect(() => {
     setPage(1)
-  }, [startDate, endDate, status, tag, itemId, limit])
+  }, [startDate, endDate, status, tag, itemId, channelId, limit])
 
   const statusLabel = (v: string) =>
     STATUS_OPTIONS.find((s) => s.value === v)?.label ?? v
@@ -200,6 +270,7 @@ export const StorageLogs = ({ activeTab }: Props) => {
         status: log.status,
         tag: log.tag,
         note: log.note,
+        deliveredRequestId: log.deliveredRequestId,
         items: its
       }
     })
@@ -258,11 +329,11 @@ export const StorageLogs = ({ activeTab }: Props) => {
             qty: Number(it.quantity) || 0
           }))
 
-          const preview = pairs
-            .slice(0, 2)
-            .map((p) => `${p.name} ×${p.qty}`)
-            .join(", ")
-          const rest = Math.max(0, pairs.length - 2)
+          const firstItem = pairs[0]
+          const preview = firstItem
+            ? `${firstItem.name} ×${firstItem.qty}`
+            : "-"
+          const rest = Math.max(0, pairs.length - 1)
 
           return (
             <Group gap={8} wrap="nowrap">
@@ -295,6 +366,40 @@ export const StorageLogs = ({ activeTab }: Props) => {
             {tagLabel(row.original.tag)}
           </Badge>
         )
+      },
+      {
+        id: "channel",
+        header: "Kênh",
+        cell: ({ row }) => {
+          const requestId = row.original.deliveredRequestId
+
+          if (!requestId) {
+            return (
+              <Text fz="sm" c="dimmed">
+                -
+              </Text>
+            )
+          }
+
+          if (deliveredRequestsLookup.loadingRequestIds.has(requestId)) {
+            return (
+              <Text fz="sm" c="dimmed">
+                Đang tải...
+              </Text>
+            )
+          }
+
+          const channelName =
+            deliveredRequestsLookup.channelsByRequestId[requestId]
+
+          return channelName ? (
+            <Text fz="sm">{channelName}</Text>
+          ) : (
+            <Text fz="sm" c="dimmed">
+              -
+            </Text>
+          )
+        }
       },
       {
         id: "actions",
@@ -369,7 +474,7 @@ export const StorageLogs = ({ activeTab }: Props) => {
         }
       }
     ],
-    [itemsMap, isDeleting, remove, logs]
+    [deliveredRequestsLookup, itemsMap, isDeleting, remove, logs]
   )
 
   // Expanded content (accordion body) per row
@@ -535,6 +640,19 @@ export const StorageLogs = ({ activeTab }: Props) => {
           w={260}
         />
 
+        <Select
+          data={channelOptions}
+          value={channelId}
+          onChange={setChannelId}
+          placeholder="Chọn kênh"
+          label="Kênh"
+          clearable
+          searchable
+          size="sm"
+          radius="md"
+          w={220}
+        />
+
         <Group gap={8} ml="auto">
           <NumberInput
             label="Dòng/trang"
@@ -554,7 +672,7 @@ export const StorageLogs = ({ activeTab }: Props) => {
       {/* DataTable */}
       <Box px={{ base: 4, md: 28 }} py={18}>
         <CDataTable<LogRow, any>
-          key={`${page}-${debouncedLimit}-${rows.length}-${itemId}-${status}-${tag}-${startDate?.toISOString() ?? ""}-${endDate?.toISOString() ?? ""}`}
+          key={`${page}-${debouncedLimit}-${rows.length}-${itemId}-${channelId}-${status}-${tag}-${startDate?.toISOString() ?? ""}-${endDate?.toISOString() ?? ""}`}
           columns={columns}
           data={rows}
           isLoading={isLoading}
