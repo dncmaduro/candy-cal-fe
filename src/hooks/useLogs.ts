@@ -61,7 +61,8 @@ export const useLogs = () => {
       endDate: req.endDate,
       status: req.status,
       tag: req.tag,
-      itemId: req.itemId
+      itemId: req.itemId,
+      channelId: req.channelId
     })
     return callApi<never, GetStorageLogsResponse>({
       path: `/v1/storagelogs?${query}`,
