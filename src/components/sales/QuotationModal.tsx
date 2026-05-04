@@ -59,6 +59,35 @@ interface Props {
   shippingCost?: number
 }
 
+const FALLBACK_TEXT = "Chưa có"
+
+const getOrderContactInfo = (order: any) => {
+  const customerName = order?.salesFunnelId?.name || FALLBACK_TEXT
+  const primaryPhone =
+    order?.salesFunnelId?.phoneNumber || order?.phoneNumber || FALLBACK_TEXT
+  const secondaryPhoneNumbers =
+    order?.salesFunnelId?.secondaryPhoneNumbers?.filter(Boolean) || []
+
+  const phoneWithSecondary =
+    secondaryPhoneNumbers.length > 0
+      ? `${primaryPhone}/${secondaryPhoneNumbers.join("/")}`
+      : primaryPhone
+
+  const address = order?.address || ""
+  const provinceName = order?.province?.name || ""
+  const fullAddress =
+    [address, provinceName].filter(Boolean).join(", ") || FALLBACK_TEXT
+  const summaryLine = `${customerName} - ${primaryPhone} - ${fullAddress}`
+
+  return {
+    customerName,
+    primaryPhone,
+    phoneWithSecondary,
+    fullAddress,
+    summaryLine
+  }
+}
+
 /* =========================
  *  CAPTURE COMPONENT: BÁO GIÁ (PHIẾU XUẤT HÀNG DỰ KIẾN)
  *  Layout = giống contentRef cũ nhưng tách riêng, table nổi bật
@@ -77,6 +106,8 @@ const QuotationCaptureContent = ({
   items,
   calculations
 }: QuotationCaptureContentProps) => {
+  const { summaryLine } = getOrderContactInfo(order)
+
   return (
     <Paper
       withBorder
@@ -105,8 +136,7 @@ const QuotationCaptureContent = ({
         </Text>
 
         <Text size="sm" fw={700} c="red" ta="right">
-          {order.salesFunnelId.name} - {order.salesFunnelId.phoneNumber} -{" "}
-          {order.address}
+          {summaryLine}
         </Text>
       </Group>
 
@@ -384,6 +414,8 @@ const WarehouseOrderCaptureContent = ({
   items,
   calculations
 }: WarehouseOrderCaptureContentProps) => {
+  const { summaryLine } = getOrderContactInfo(order)
+
   return (
     <Paper
       withBorder
@@ -405,8 +437,7 @@ const WarehouseOrderCaptureContent = ({
         </Text>
 
         <Text size="sm" fw={600} ta="right">
-          {order.salesFunnelId.name} - {order.salesFunnelId.phoneNumber} -{" "}
-          {order.address}
+          {summaryLine}
         </Text>
       </Group>
 
@@ -673,6 +704,8 @@ export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
 
   const order = orderData.data
   const channel = channelData
+  const { customerName, primaryPhone, phoneWithSecondary, fullAddress } =
+    getOrderContactInfo(order)
 
   return (
     <Stack gap="md">
@@ -711,7 +744,7 @@ export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
                 {channel?.channel.address}
               </Text>
               <Text size="xs" fw={500}>
-                Sđt: {order.phoneNumber}
+                Sđt: {primaryPhone}
               </Text>
             </Stack>
           </Group>
@@ -744,15 +777,13 @@ export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
           <Group ml={8} justify="space-between" align="flex-start">
             <Stack gap={4}>
               <Text size="sm">
-                <b>Khách hàng:</b> {order.salesFunnelId.name}
+                <b>Khách hàng:</b> {customerName}
               </Text>
               <Text size="sm">
-                <b>Địa chỉ:</b> {order.address}, {order.province.name}
+                <b>Địa chỉ:</b> {fullAddress}
               </Text>
               <Text size="sm">
-                <b>Số điện thoại:</b> {order.salesFunnelId.phoneNumber}
-                {order.salesFunnelId.secondaryPhoneNumbers &&
-                  `${order.salesFunnelId.secondaryPhoneNumbers.length > 0 ? "/" + order.salesFunnelId.secondaryPhoneNumbers.join("/") : ""}`}
+                <b>Số điện thoại:</b> {phoneWithSecondary}
               </Text>
             </Stack>
           </Group>
