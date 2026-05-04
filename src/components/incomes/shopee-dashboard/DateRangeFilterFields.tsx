@@ -30,6 +30,7 @@ const PRESET_OPTIONS: Array<{
 
 interface DateRangeFilterFieldsProps {
   channelId: string
+  hideChannelField?: boolean
   orderFrom?: string
   orderTo?: string
   preset?: ShopeeRangePreset
@@ -46,6 +47,7 @@ interface DateRangeFilterFieldsProps {
 
 export const DateRangeFilterFields = ({
   channelId,
+  hideChannelField = false,
   orderFrom,
   orderTo,
   preset,
@@ -141,22 +143,24 @@ export const DateRangeFilterFields = ({
     <Stack gap="sm">
       <Group justify="space-between" align="flex-end" gap="sm" wrap="wrap">
         <Group align="flex-end" gap={10} wrap="wrap" style={{ flex: 1 }}>
-          <Select
-            label="Kênh Shopee"
-            placeholder="Chọn kênh"
-            value={draftChannel}
-            onChange={(value) => value && setDraftChannel(value)}
-            data={channelOptions}
-            searchable
-            disabled={isChannelsLoading}
-            nothingFoundMessage="Không có kênh"
-            size="sm"
-            w={280}
-            styles={{
-              label: compactFilterPlainLabelStyles,
-              input: compactFilterInputStyles
-            }}
-          />
+          {!hideChannelField && (
+            <Select
+              label="Kênh Shopee"
+              placeholder="Chọn kênh"
+              value={draftChannel}
+              onChange={(value) => value && setDraftChannel(value)}
+              data={channelOptions}
+              searchable
+              disabled={isChannelsLoading}
+              nothingFoundMessage="Không có kênh"
+              size="sm"
+              w={280}
+              styles={{
+                label: compactFilterPlainLabelStyles,
+                input: compactFilterInputStyles
+              }}
+            />
+          )}
 
           <DatePickerInput
             label="Từ ngày"

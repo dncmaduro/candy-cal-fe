@@ -276,7 +276,6 @@ interface MonthlyDashboardProps {
   isError: boolean
   comparisonLoading: boolean
   comparisonError: boolean
-  selectedChannelId?: string
   onRetry: () => void
 }
 
@@ -287,7 +286,6 @@ export const MonthlyDashboard = ({
   isError,
   comparisonLoading,
   comparisonError,
-  selectedChannelId,
   onRetry
 }: MonthlyDashboardProps) => {
   const metricsByKey = new Map<
@@ -389,7 +387,6 @@ export const MonthlyDashboard = ({
         data={comparisonData}
         isLoading={comparisonLoading}
         isError={comparisonError}
-        selectedChannelId={selectedChannelId}
         onRetry={onRetry}
       />
     </>
