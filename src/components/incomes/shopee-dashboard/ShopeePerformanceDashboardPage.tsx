@@ -17,7 +17,7 @@ import {
 import { IconPlus, IconTrash } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
 import { format } from "date-fns"
-import { SHOPEE_NAVS, SHOPEE_ROLES } from "../../../constants/navs"
+import { NAVS, SHOPEE_NAVS, SHOPEE_ROLES } from "../../../constants/navs"
 import { useAuthGuard } from "../../../hooks/useAuthGuard"
 import type {
   ShopeePerformanceTimeMode,
@@ -66,6 +66,9 @@ interface ShopeePerformanceDashboardPageProps {
     nextSearch: Partial<ShopeeDashboardSearchState>,
     replace?: boolean
   ) => void
+  allowedRoles?: string[]
+  navs?: typeof NAVS
+  pageTitle?: string
 }
 
 const createMonthOptions = (): ShopeeChannelOption[] => {
@@ -120,9 +123,12 @@ const safeDivide = (numerator: number, denominator: number) => {
 
 export const ShopeePerformanceDashboardPage = ({
   search,
-  onSearchChange
+  onSearchChange,
+  allowedRoles = SHOPEE_ROLES,
+  navs = SHOPEE_NAVS,
+  pageTitle = "Dashboard Shopee"
 }: ShopeePerformanceDashboardPageProps) => {
-  useAuthGuard(SHOPEE_ROLES)
+  useAuthGuard(allowedRoles)
   const { getMe } = useUsers()
   const { data: meData } = useQuery({
     queryKey: ["getMe"],
@@ -485,10 +491,10 @@ export const ShopeePerformanceDashboardPage = ({
   return (
     <>
       <Helmet>
-        <title>Dashboard Shopee | MyCandy</title>
+        <title>{pageTitle} | MyCandy</title>
       </Helmet>
 
-      <AppLayout navs={SHOPEE_NAVS}>
+      <AppLayout navs={navs}>
         <Box
           mt={40}
           mx="auto"
