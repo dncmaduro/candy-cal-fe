@@ -12,5 +12,10 @@ export const Route = createFileRoute("/mkt-storage/incomes/")({
 function RouteComponent() {
   const search = Route.useSearch()
 
-  return <StorageIncomesPage search={search} />
+  return (
+    <StorageIncomesPage
+      search={search}
+      allowedPlatforms={["tiktokshop", "tiktok"]}
+    />
+  )
 }

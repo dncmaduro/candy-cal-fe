@@ -17,6 +17,7 @@ import {
 } from "@tanstack/react-table"
 import {
   Button,
+  type ButtonProps,
   Checkbox,
   Menu,
   Pagination,
@@ -57,6 +58,10 @@ export type DataTableProps<TData, TValue> = {
   onGlobalFilterChange?: (value: string) => void
   hideSearch?: boolean
   hideColumnToggle?: boolean
+  columnToggleLabel?: string
+  emptyState?: React.ReactNode
+  stickyHeaderOffset?: number
+  tableContainerClassName?: string
 
   // External pagination (server-side)
   page?: number
@@ -73,7 +78,7 @@ export type DataTableProps<TData, TValue> = {
 
   // Expanding rows
   enableExpanding?: boolean
-  renderRowSubComponent?: (ctx: { row: any }) => React.ReactNode
+  renderRowSubComponent?: (ctx: { row: Row<TData> }) => React.ReactNode
 
   getRowId?: (originalRow: TData, index: number, parent?: Row<TData>) => string
   onRowSelectionChange?: (selectedRows: TData[]) => void
@@ -101,6 +106,10 @@ export function CDataTable<TData, TValue>({
   onGlobalFilterChange,
   hideSearch: hideSearchProp,
   hideColumnToggle: hideColumnToggleProp,
+  columnToggleLabel = "Cột hiển thị",
+  emptyState,
+  stickyHeaderOffset = 0,
+  tableContainerClassName,
   // expanding rows
   enableExpanding = false,
   renderRowSubComponent,
@@ -322,6 +331,7 @@ export function CDataTable<TData, TValue>({
   )
 
   const currentVariant = variantClasses[variant]
+  const columnToggleVariant = currentVariant.columnButton as ButtonProps["variant"]
 
   const getAlignmentClass = React.useCallback(
     (
@@ -377,13 +387,13 @@ export function CDataTable<TData, TValue>({
               <Menu withinPortal>
                 <Menu.Target>
                   <Button
-                    variant={currentVariant.columnButton as any}
+                    variant={columnToggleVariant}
                     radius={variant === "default" ? "md" : "xl"}
                     size={variant === "compact" ? "xs" : "sm"}
                     rightSection={<IconChevronDown size={16} />}
                     disabled={isLoading}
                   >
-                    Cột hiển thị
+                    {columnToggleLabel}
                   </Button>
                 </Menu.Target>
                 <Menu.Dropdown>
@@ -436,12 +446,16 @@ export function CDataTable<TData, TValue>({
         <div
           className={clsx(
             "overflow-x-auto",
+            tableContainerClassName,
             currentVariant.tableShell,
             isLoading && "opacity-90"
           )}
         >
           <table className="w-full border-collapse">
-            <thead className={currentVariant.header}>
+            <thead
+              className={currentVariant.header}
+              style={{ top: stickyHeaderOffset }}
+            >
               {table.getHeaderGroups().map((hg) => (
                 <tr key={hg.id} className={currentVariant.headerRow}>
                   {hg.headers.map((header) => {
@@ -482,7 +496,12 @@ export function CDataTable<TData, TValue>({
                             header.getContext()
                           )}
                           {canSort && (
-                            <span className="text-xs text-gray-400">
+                            <span
+                              className={clsx(
+                                "text-xs",
+                                sortDir ? "text-indigo-600" : "text-gray-400"
+                              )}
+                            >
                               {sortDir === "asc"
                                 ? "▲"
                                 : sortDir === "desc"
@@ -506,7 +525,7 @@ export function CDataTable<TData, TValue>({
                     className={currentVariant.empty}
                     colSpan={colCount}
                   >
-                    Không có dữ liệu.
+                    {emptyState ?? "Không có dữ liệu."}
                   </td>
                 </tr>
               ) : (
