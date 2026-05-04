@@ -6,28 +6,27 @@ import {
   Button,
   Divider,
   Group,
+  Paper,
   Select,
   Switch,
   Text,
-  TextInput,
-  rem
+  TextInput
 } from "@mantine/core"
 import { modals } from "@mantine/modals"
-import { IconPlus, IconSearch } from "@tabler/icons-react"
+import { IconPlus, IconRefresh, IconSearch } from "@tabler/icons-react"
 
 import { useItems } from "../../hooks/useItems"
 import { Can } from "../common/Can"
 import { StorageItemModal } from "./StorageItemModal"
-import { MonthLogsModal } from "./MonthLogsModal"
 import { StorageItemsTable } from "./StorageItemsTable"
 
 type ShowMode = "both" | "quantity" | "real"
 
 const MODE_OPTIONS = [
-  { value: "quantity", label: "Chỉ Số lượng" },
-  { value: "real", label: "Chỉ Thực tế" },
-  { value: "both", label: "Cả Số lượng & Thực tế" }
-] as const
+  { value: "quantity", label: "Số lượng" },
+  { value: "real", label: "Thực tế" },
+  { value: "both", label: "Số lượng & Thực tế" }
+]
 
 interface Props {
   readOnly?: boolean
@@ -64,32 +63,30 @@ export const StorageItems = ({ readOnly, activeTab }: Props) => {
 
   const extraFilters = useMemo(() => {
     return (
-      <Group gap={10} wrap="wrap" align="end">
+      <Group gap={12} wrap="wrap" align="end">
         <TextInput
           value={searchText}
           onChange={(e) => setSearchText(e.currentTarget.value)}
           leftSection={<IconSearch size={16} />}
-          placeholder="Tìm kiếm mặt hàng..."
-          w={260}
+          placeholder="Tìm kiếm theo tên hoặc mã mặt hàng"
+          w={{ base: "100%", sm: 320 }}
         />
 
         <Switch
-          label="Hiển thị đã xoá"
+          label="Bao gồm mặt hàng đã xóa"
           checked={showDeleted}
           onChange={(e) => setShowDeleted(e.currentTarget.checked)}
-          color="red"
+          color="indigo"
         />
 
-        {!showDeleted && (
-          <Select
-            label="Kiểu hiển thị"
-            data={MODE_OPTIONS as any}
-            value={showMode}
-            onChange={(val) => setShowMode((val as ShowMode) ?? "quantity")}
-            w={220}
-            allowDeselect={false}
-          />
-        )}
+        <Select
+          label="Đơn vị hiển thị"
+          data={MODE_OPTIONS}
+          value={showMode}
+          onChange={(val) => setShowMode((val as ShowMode) ?? "quantity")}
+          w={{ base: "100%", sm: 220 }}
+          allowDeselect={false}
+        />
       </Group>
     )
   }, [searchText, showDeleted, showMode])
@@ -97,59 +94,52 @@ export const StorageItems = ({ readOnly, activeTab }: Props) => {
   const extraActions = useMemo(() => {
     return (
       <Group gap={10} wrap="wrap">
-        {!showDeleted && (
-          <>
-            <Button
-              variant="outline"
-              onClick={() =>
-                modals.open({
-                  size: "1100",
-                  title: <b>Số liệu theo tháng</b>,
-                  children: <MonthLogsModal initialMonth={new Date()} />
-                })
-              }
-            >
-              Xem theo tháng
-            </Button>
+        <Button
+          variant="subtle"
+          color="gray"
+          leftSection={<IconRefresh size={16} />}
+          onClick={() => refetch()}
+        >
+          Làm mới
+        </Button>
 
-            <Can roles={["admin", "accounting-emp"]}>
-              <Button
-                color="indigo"
-                leftSection={<IconPlus size={18} />}
-                radius="xl"
-                hidden={readOnly}
-                onClick={() =>
-                  modals.open({
-                    size: "lg",
-                    title: (
-                      <Text fw={700} fz="md">
-                        Thêm mặt hàng mới
-                      </Text>
-                    ),
-                    children: <StorageItemModal refetch={refetch} />
-                  })
-                }
-              >
-                Thêm mặt hàng
-              </Button>
-            </Can>
-          </>
-        )}
+        <Can roles={["admin", "accounting-emp"]}>
+          <Button
+            color="indigo"
+            leftSection={<IconPlus size={18} />}
+            radius="md"
+            hidden={readOnly}
+            onClick={() =>
+              modals.open({
+                size: "lg",
+                title: (
+                  <Text fw={700} fz="md">
+                    Thêm mặt hàng mới
+                  </Text>
+                ),
+                children: <StorageItemModal refetch={refetch} />
+              })
+            }
+          >
+            Thêm mặt hàng
+          </Button>
+        </Can>
       </Group>
     )
-  }, [showDeleted, readOnly, refetch])
+  }, [readOnly, refetch])
 
   return (
-    <Box
-      mt={40}
+    <Paper
+      mt={30}
       mx="auto"
       px={{ base: 8, md: 0 }}
+      py={0}
       w="100%"
-      maw={1600}
+      maw={1640}
+      radius="lg"
       style={{
         background: "rgba(255,255,255,0.97)",
-        borderRadius: rem(20),
-        boxShadow: "0 4px 32px 0 rgba(60,80,180,0.07)",
+        boxShadow: "0 4px 24px 0 rgba(50, 64, 117, 0.06)",
         border: "1px solid #ececec"
       }}
     >
@@ -157,24 +147,22 @@ export const StorageItems = ({ readOnly, activeTab }: Props) => {
       <Group
         justify="space-between"
         align="center"
-        pt={26}
-        pb={10}
-        px={{ base: 8, md: 28 }}
+        pt={24}
+        pb={12}
+        px={{ base: 12, md: 28 }}
         wrap="wrap"
       >
         <Box>
-          <Text fw={700} fz="xl" mb={2}>
-            {showDeleted ? "Các mặt hàng đã xoá" : "Các mặt hàng đang có"}
+          <Text fw={800} fz="xl" mb={4}>
+            Danh sách mặt hàng tồn kho
           </Text>
           <Text c="dimmed" fz="sm">
-            {showDeleted
-              ? "Tra cứu và chỉnh sửa thông tin mặt hàng đã xoá"
-              : "Quản lý, theo dõi nhập/xuất/tồn kho theo mặt hàng"}
+            Theo dõi nhập, xuất và tồn kho theo từng mặt hàng
           </Text>
         </Box>
 
-        <Text c="dimmed" fz="sm">
-          Tổng: <b>{(data ?? []).length}</b>
+        <Text c="gray.7" fz="md" fw={700} style={{ fontVariantNumeric: "tabular-nums" }}>
+          {(data ?? []).length.toLocaleString("vi-VN")} mặt hàng
         </Text>
       </Group>
 
@@ -193,6 +181,6 @@ export const StorageItems = ({ readOnly, activeTab }: Props) => {
           extraActions={extraActions}
         />
       </Box>
-    </Box>
+    </Paper>
   )
 }

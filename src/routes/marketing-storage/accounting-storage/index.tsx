@@ -56,10 +56,13 @@ export function AccountingStoragePage({
       value: "monthly-exports"
     }
   ]
+  const tabValues = tabOptions.map((option) => option.value)
+  const currentTab = tabValues.includes(tab) ? tab : "items"
 
   const handleChange = (value: string | null) => {
     navigate({
-      to: `${baseUrl}/accounting-storage?tab=${value ?? "items"}`
+      to: `${baseUrl}/accounting-storage`,
+      search: { tab: value ?? "items" }
     })
   }
 
@@ -70,7 +73,7 @@ export function AccountingStoragePage({
         search: { tab: "items" }
       })
     }
-  }, [])
+  }, [tab, navigate, baseUrl])
 
   return (
     <>
@@ -80,7 +83,7 @@ export function AccountingStoragePage({
       <AppLayout navs={navs}>
         <Tabs
           orientation="horizontal"
-          defaultValue={tab}
+          value={currentTab}
           mt={16}
           onChange={(value) => handleChange(value)}
           h={"90vh"}

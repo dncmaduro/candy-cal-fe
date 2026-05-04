@@ -32,12 +32,13 @@ export const KHO_VAN_EDITOR_ROLES = ["admin", "accounting-emp"]
 
 /** @constant */
 export const NAVS = [
-  {
-    to: `${NAVS_URL}/logs`,
-    label: "Lịch sử kho",
-    roles: KHO_VAN_ROLES,
-    icon: "IconHistory"
-  },
+  // Ẩn khỏi sidebar kho vận theo yêu cầu hiện tại
+  // {
+  //   to: `${NAVS_URL}/logs`,
+  //   label: "Lịch sử kho",
+  //   roles: KHO_VAN_ROLES,
+  //   icon: "IconHistory"
+  // },
   {
     to: `${NAVS_URL}/accounting-storage`,
     label: "Kho hàng",
@@ -52,8 +53,14 @@ export const NAVS = [
   },
   {
     to: `${NAVS_URL}/incomes`,
-    label: "Doanh thu",
-    icon: "IconCoin",
+    label: "Doanh thu TikTok",
+    icon: "IconBrandTiktok",
+    roles: KHO_VAN_ROLES
+  },
+  {
+    to: `${NAVS_URL}/shopee-incomes`,
+    label: "Doanh thu Shopee",
+    icon: "IconBrandShopee",
     roles: KHO_VAN_ROLES
   },
   {
