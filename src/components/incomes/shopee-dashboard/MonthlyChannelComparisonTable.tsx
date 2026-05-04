@@ -16,7 +16,6 @@ import type {
   MonthlyChannelComparisonRowViewModel,
   MonthlyChannelComparisonViewModel
 } from "../../../hooks/useShopeePerformanceMetrics"
-import { SHOPEE_ALL_CHANNEL_ID } from "../../../hooks/shopeeDashboardApi"
 import { formatCurrency, formatPercent } from "../analytics/formatters"
 
 const toneByKey = {
@@ -134,29 +133,16 @@ const MetricTableCell = ({
 }
 
 const createTableRow = ({
-  row,
-  selectedChannelId,
-  isTotal = false
+  row
 }: {
   row: MonthlyChannelComparisonRowViewModel
-  selectedChannelId?: string
-  isTotal?: boolean
 }) => {
-  const isSelected =
-    !isTotal &&
-    selectedChannelId &&
-    selectedChannelId !== SHOPEE_ALL_CHANNEL_ID &&
-    row.channelId === selectedChannelId
+  const isSummaryRow = row.channelId === "total"
 
   return (
-    <Table.Tr
-      key={`${isTotal ? "total" : "row"}-${row.channelId}`}
-      style={{
-        background: isTotal ? "#f8fafc" : isSelected ? "#f8fbff" : "#ffffff"
-      }}
-    >
+    <Table.Tr key={`row-${row.channelId}`} style={{ background: "#ffffff" }}>
       <Table.Td miw={140}>
-        <Text fw={isTotal ? 700 : 600} c="#0f172a">
+        <Text fw={isSummaryRow ? 700 : 600} c="#0f172a">
           {row.channelName}
         </Text>
       </Table.Td>
@@ -211,13 +197,11 @@ export const MonthlyChannelComparisonTable = ({
   data,
   isLoading,
   isError,
-  selectedChannelId,
   onRetry
 }: {
   data?: MonthlyChannelComparisonViewModel
   isLoading: boolean
   isError: boolean
-  selectedChannelId?: string
   onRetry: () => void
 }) => {
   if (isLoading && !data) {
@@ -303,15 +287,9 @@ export const MonthlyChannelComparisonTable = ({
                 <Table.Th miw={90}>%Ads/DT</Table.Th>
               </Table.Tr>
             </Table.Thead>
-            <Table.Tbody>
-              {data.rows.map((row) =>
-                createTableRow({ row, selectedChannelId })
-              )}
-              {createTableRow({
-                row: data.totals,
-                selectedChannelId,
-                isTotal: true
-              })}
+              <Table.Tbody>
+              {data.rows.map((row) => createTableRow({ row }))}
+              {createTableRow({ row: data.totals })}
             </Table.Tbody>
           </Table>
         </ScrollArea>
