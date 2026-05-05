@@ -1,5 +1,6 @@
 import { notifications } from "@mantine/notifications"
 import { ReactNode } from "react"
+import { consumeLatestApiErrorMessage } from "../../hooks/axios"
 
 type ToastType = {
   title: string
@@ -22,10 +23,14 @@ export const CToast = {
   },
 
   error: (toast: ToastType) => {
+    const apiMessage = toast.subtitle
+      ? undefined
+      : consumeLatestApiErrorMessage()
+
     notifications.show({
       id: toast.id,
       title: toast.title,
-      message: toast.subtitle ?? "",
+      message: toast.subtitle ?? apiMessage ?? "",
       color: "red",
       position: "top-right",
       onClick: toast.onClick,

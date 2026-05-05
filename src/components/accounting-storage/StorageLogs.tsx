@@ -527,31 +527,52 @@ export const StorageLogs = ({ activeTab }: Props) => {
                 </Button>
               </Can>
 
-              <Can roles={["admin", "accounting-emp"]}>
-                <Tooltip
-                  label="Không thể xóa giao dịch này"
-                  withArrow
-                  disabled={canDelete}
+              <Can roles={["admin"]}>
+                <Button
+                  variant="light"
+                  color="red"
+                  size="xs"
+                  radius="md"
+                  miw={78}
+                  justify="center"
+                  leftSection={<IconTrash size={16} />}
+                  loading={isDeleting}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    remove(log.logId)
+                  }}
                 >
-                  <Button
-                    variant="light"
-                    color="red"
-                    size="xs"
-                    radius="md"
-                    miw={78}
-                    justify="center"
-                    leftSection={<IconTrash size={16} />}
-                    loading={isDeleting}
-                    disabled={!canDelete}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      if (!canDelete) return
-                      remove(log.logId)
-                    }}
+                  Xóa
+                </Button>
+              </Can>
+
+              <Can roles={["accounting-emp"]}>
+                <Can roles={["admin"]} not>
+                  <Tooltip
+                    label="Không thể xóa giao dịch này"
+                    withArrow
+                    disabled={canDelete}
                   >
-                    Xóa
-                  </Button>
-                </Tooltip>
+                    <Button
+                      variant="light"
+                      color="red"
+                      size="xs"
+                      radius="md"
+                      miw={78}
+                      justify="center"
+                      leftSection={<IconTrash size={16} />}
+                      loading={isDeleting}
+                      disabled={!canDelete}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        if (!canDelete) return
+                        remove(log.logId)
+                      }}
+                    >
+                      Xóa
+                    </Button>
+                  </Tooltip>
+                </Can>
               </Can>
             </Group>
           )
