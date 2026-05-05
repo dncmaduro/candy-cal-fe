@@ -529,7 +529,6 @@ export const ShopeePerformanceDashboardPage = ({
               month={search.month}
               year={search.year}
               hideMonthChannelField
-              hideRangeChannelField
               orderFrom={search.orderFrom}
               orderTo={search.orderTo}
               preset={search.preset}
