@@ -1,9 +1,8 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { DatePickerInput } from "@mantine/dates"
 import {
   Alert,
-  Badge,
   Flex,
   Grid,
   Group,
@@ -20,7 +19,6 @@ import {
   IconChartBar,
   IconCalendarStats,
   IconDiscount2,
-  IconFilter,
   IconPercentage,
   IconReceipt2
 } from "@tabler/icons-react"
@@ -43,6 +41,7 @@ import { RevenueOverviewCard } from "./analytics/RevenueOverviewCard"
 import { MetricStatCard } from "./analytics/MetricStatCard"
 import { TrendBadge } from "./analytics/TrendBadge"
 import { formatCurrency, formatPercent } from "./analytics/formatters"
+import { getRangeStatsOrderMetrics } from "./rangeStatsOrders"
 import {
   filterDropdownStyles,
   filterInputStyles,
@@ -167,7 +166,7 @@ type ModeSelectorProps = {
 
 const ModeSelector = ({ mode, onChange }: ModeSelectorProps) => {
   return (
-    <Stack gap={6}>
+    <Stack gap={0}>
       <Text style={filterLabelStyles}>Chế độ dữ liệu</Text>
       <SegmentedControl
         value={mode}
@@ -306,7 +305,10 @@ export const RangeStats = () => {
     staleTime: 60 * 1000
   })
 
-  const { data: rangeMonthProgressStats, isLoading: isLoadingRangeMonthProgress } = useQuery({
+  const {
+    data: rangeMonthProgressStats,
+    isLoading: isLoadingRangeMonthProgress
+  } = useQuery({
     queryKey: [
       "getRangeStats",
       "range-month-progress",
@@ -352,24 +354,33 @@ export const RangeStats = () => {
     endDate &&
     endDate.getTime() < startDate.getTime()
   )
-  const currentChannelName =
-    channels.find((c) => c._id === selectedChannelId)?.name || "Kênh đã chọn"
-  const modeLabel = mode === "afterDiscount" ? "Sau chiết khấu" : "Trước chiết khấu"
+  const modeLabel =
+    mode === "afterDiscount" ? "Sau chiết khấu" : "Trước chiết khấu"
 
   const liveIncome = current?.[mode].liveIncome ?? 0
-  const shopIncome = (current?.[mode].videoIncome || 0) + (current?.[mode].otherIncome || 0)
+  const shopIncome =
+    (current?.[mode].videoIncome || 0) + (current?.[mode].otherIncome || 0)
   const totalRevenue = current?.[mode].totalIncome ?? 0
   const totalAdsCost =
     current?.ads?.totalAdsCost ??
     (current?.ads?.liveAdsCost ?? 0) + (current?.ads?.shopAdsCost ?? 0)
   const totalAdsToRevenuePct =
     totalRevenue > 0 ? (totalAdsCost / totalRevenue) * 100 : 0
-  const totalOrders = rangeIncomes?.total
+  const orderMetrics = getRangeStatsOrderMetrics(data)
+  const liveOrders = orderMetrics.live
+  const shopOrders = orderMetrics.shop
+  const totalOrders = orderMetrics.total
+  const liveOrdersPct = orderMetrics.livePct
+  const shopOrdersPct = orderMetrics.shopPct
+  const totalOrdersPct = orderMetrics.totalPct
   const currentPeriodDays = data?.period.days ?? 0
   const filterMonthGoalTotal =
-    (filterMonthGoalData?.liveStreamGoal ?? 0) + (filterMonthGoalData?.shopGoal ?? 0)
+    (filterMonthGoalData?.liveStreamGoal ?? 0) +
+    (filterMonthGoalData?.shopGoal ?? 0)
   const filterDailyGoalTotal =
-    filterMonthGoalTotal > 0 ? filterMonthGoalTotal / daysInRangeGoalMonth : undefined
+    filterMonthGoalTotal > 0
+      ? filterMonthGoalTotal / daysInRangeGoalMonth
+      : undefined
   const rangeGoalTotal =
     typeof filterDailyGoalTotal === "number" && currentPeriodDays > 0
       ? filterDailyGoalTotal * currentPeriodDays
@@ -389,7 +400,8 @@ export const RangeStats = () => {
     typeof filterMonthGoalData?.shopGoal === "number" &&
     filterMonthGoalData.shopGoal > 0 &&
     currentPeriodDays > 0
-      ? (filterMonthGoalData.shopGoal / daysInRangeGoalMonth) * currentPeriodDays
+      ? (filterMonthGoalData.shopGoal / daysInRangeGoalMonth) *
+        currentPeriodDays
       : undefined
   const rangeLivePct =
     typeof rangeLiveGoal === "number" && rangeLiveGoal > 0
@@ -484,11 +496,30 @@ export const RangeStats = () => {
     return totals
   }, [mode, rangeIncomes])
 
+  useEffect(() => {
+    if (!current) return
+    if (liveOrders + shopOrders !== totalOrders) {
+      console.warn("[RangeStats] Inconsistent order split from BE", {
+        channelId: selectedChannelId,
+        range: range?.label,
+        live: liveOrders,
+        shop: shopOrders,
+        total: totalOrders
+      })
+    }
+  }, [
+    current,
+    liveOrders,
+    shopOrders,
+    totalOrders,
+    selectedChannelId,
+    range?.label
+  ])
+
   return (
     <CDashboardLayout
       icon={<IconCalendarStats size={24} color="#1d4ed8" />}
-      title="Dashboard khoảng thời gian"
-      subheader="Tập trung vào KPI ngày, doanh thu range hiện tại và những nguồn đóng góp chính."
+      title="Thống kê tuỳ chọn"
       rightHeader={
         <Group align="flex-end" gap="md" wrap="wrap">
           <ChannelSelector
@@ -519,50 +550,19 @@ export const RangeStats = () => {
             </Alert>
           )}
 
-          {(selectedChannelId || range) && (
-            <Paper
-              withBorder
-              p="md"
-              radius="xl"
-              mb="lg"
-              style={{
-                borderColor: "#dbe4f0",
-                background:
-                  "linear-gradient(180deg, rgba(248,250,252,0.95) 0%, rgba(255,255,255,1) 100%)"
-              }}
-            >
-              <Group justify="space-between" gap="md">
-                <Group gap="sm">
-                  <IconFilter size={16} color="#2563eb" />
-                  <Stack gap={2}>
-                    <Text fz="xs" fw={700} c="dimmed" tt="uppercase">
-                      Phạm vi phân tích
-                    </Text>
-                    <Text fw={700}>{range?.label || "Chưa chọn khoảng"}</Text>
-                  </Stack>
-                </Group>
-
-                <Group gap={8}>
-                  <Badge radius="xl" variant="light" color="blue">
-                    {currentChannelName}
-                  </Badge>
-                  <Badge radius="xl" variant="light" color="grape">
-                    {modeLabel}
-                  </Badge>
-                  {currentPeriodDays > 0 && (
-                    <Badge radius="xl" variant="light" color="gray">
-                      {currentPeriodDays} ngày
-                    </Badge>
-                  )}
-                </Group>
-              </Group>
-            </Paper>
-          )}
-
           {!selectedChannelId ? (
             <Paper withBorder p="xl" radius="xl" bg="gray.0">
-              <Flex justify="center" align="center" h={160} direction="column" gap="md">
-                <IconCalendarStats size={48} color="var(--mantine-color-gray-5)" />
+              <Flex
+                justify="center"
+                align="center"
+                h={160}
+                direction="column"
+                gap="md"
+              >
+                <IconCalendarStats
+                  size={48}
+                  color="var(--mantine-color-gray-5)"
+                />
                 <Text c="dimmed" fw={500} size="lg">
                   Chọn kênh để xem dashboard
                 </Text>
@@ -616,6 +616,7 @@ export const RangeStats = () => {
                           revenue={totalRevenue}
                           goal={rangeGoalTotal}
                           totalOrders={totalOrders}
+                          totalOrdersChangePct={totalOrdersPct}
                           achievedPct={rangeGoalPct}
                           expectedPct={rangeProgressPercentage}
                           deltaPct={deltaVsRangeExpectation}
@@ -663,12 +664,16 @@ export const RangeStats = () => {
                       <LiveAndVideoStats
                         title="Livestream"
                         income={current[mode].liveIncome}
+                        ordersCount={liveOrders}
+                        ordersChangePct={liveOrdersPct}
                         incomePct={rangeLivePct}
                         incomeGoal={rangeLiveGoal}
                         goalLabel={rangeGoalLabel}
                         adsCost={current.ads.liveAdsCost}
                         adsCostChangePct={changes?.ads?.liveAdsCostPct}
-                        adsSharePctDiff={changes?.ads?.liveAdsToLiveIncomePctDiff}
+                        adsSharePctDiff={
+                          changes?.ads?.liveAdsToLiveIncomePctDiff
+                        }
                         flex={1}
                       />
                     </Grid.Col>
@@ -676,12 +681,16 @@ export const RangeStats = () => {
                       <LiveAndVideoStats
                         title="Doanh thu Sàn"
                         income={shopIncome}
+                        ordersCount={shopOrders}
+                        ordersChangePct={shopOrdersPct}
                         incomePct={rangeShopPct}
                         incomeGoal={rangeShopGoal}
                         goalLabel={rangeGoalLabel}
                         adsCost={current.ads.shopAdsCost}
                         adsCostChangePct={changes?.ads?.shopAdsCostPct}
-                        adsSharePctDiff={changes?.ads?.shopAdsToShopIncomePctDiff}
+                        adsSharePctDiff={
+                          changes?.ads?.shopAdsToShopIncomePctDiff
+                        }
                         ownVideoIncome={current[mode].ownVideoIncome}
                         otherVideoIncome={current[mode].otherVideoIncome}
                         otherIncome={current[mode].otherIncome}
@@ -711,7 +720,8 @@ export const RangeStats = () => {
                       )}
                   </Grid>
 
-                  {(((current as any).boxes && (current as any).boxes.length > 0) ||
+                  {(((current as any).boxes &&
+                    (current as any).boxes.length > 0) ||
                     (current.shippingProviders &&
                       current.shippingProviders.length > 0)) && (
                     <Grid gutter="md">

@@ -126,6 +126,14 @@ function RouteComponent() {
 
   const report = data?.data
 
+  const goBackToDailyReports = () => {
+    if (window.history.length > 1) {
+      window.history.back()
+      return
+    }
+    navigate({ to: "/sales/dashboard/daily-reports" })
+  }
+
   // ====== CÁC GIÁ TRỊ DỰ BÁO (LŨY KẾ + NGÀY HIỆN TẠI) ======
   const projectedRevenue =
     (report?.accumulatedRevenue ?? 0) + (report?.revenue ?? 0)
@@ -195,7 +203,7 @@ function RouteComponent() {
             <Button
               variant="subtle"
               leftSection={<IconArrowLeft size={16} aria-hidden="true" />}
-              onClick={() => navigate({ to: "/sales/dashboard/daily-reports" })}
+              onClick={goBackToDailyReports}
               aria-label="Quay lại danh sách báo cáo ngày"
             >
               Quay lại

@@ -1661,6 +1661,11 @@ export interface GetRangeStatsResponse {
       avgDiscountPerOrder: number
       discountPercentage: number
     }
+    orders: {
+      total: number
+      live: number
+      shop: number
+    }
     productsQuantity: {
       [code: string]: number
     }
@@ -1722,6 +1727,11 @@ export interface GetRangeStatsResponse {
       totalDiscountPct: number
       avgDiscountPerOrderPct: number
       discountPercentageDiff: number
+    }
+    orders?: {
+      totalPct: number
+      livePct: number
+      shopPct: number
     }
   }
 }

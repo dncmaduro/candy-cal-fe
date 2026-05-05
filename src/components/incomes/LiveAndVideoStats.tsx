@@ -1,5 +1,9 @@
 import { Group, Paper, SimpleGrid, Stack, Text } from "@mantine/core"
-import { IconBroadcast, IconShoppingBag } from "@tabler/icons-react"
+import {
+  IconBroadcast,
+  IconReceipt2,
+  IconShoppingBag
+} from "@tabler/icons-react"
 import { DashboardSectionCard } from "./DashboardSectionCard"
 import { RankedBarList } from "./analytics/RankedBarList"
 import { TrendBadge } from "./analytics/TrendBadge"
@@ -15,6 +19,8 @@ type Props = {
   incomeGoal?: number
   goalLabel?: string
   adsCost: number
+  ordersCount?: number
+  ordersChangePct?: number
   adsCostChangePct?: number
   adsSharePctDiff?: number
   ownVideoIncome?: number
@@ -31,6 +37,8 @@ export const LiveAndVideoStats = ({
   incomeGoal,
   goalLabel = "KPI ngày",
   adsCost,
+  ordersCount,
+  ordersChangePct,
   adsCostChangePct,
   adsSharePctDiff,
   ownVideoIncome,
@@ -95,7 +103,7 @@ export const LiveAndVideoStats = ({
         )}
       </Group>
 
-      <SimpleGrid cols={{ base: 1, md: 2 }} spacing="sm">
+      <SimpleGrid cols={{ base: 1, md: 3 }} spacing="sm">
         <Paper
           radius="lg"
           p="md"
@@ -125,6 +133,30 @@ export const LiveAndVideoStats = ({
               <Text fw={700}>{formatPercent(adsShare)}</Text>
             </Stack>
             <TrendBadge value={adsSharePctDiff} positiveMeaning="bad" />
+          </Group>
+        </Paper>
+
+        <Paper
+          radius="lg"
+          p="md"
+          style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}
+        >
+          <Group justify="space-between" align="flex-start">
+            <Stack gap={4}>
+              <Text fz="xs" fw={700} c="dimmed" tt="uppercase">
+                Đơn hàng
+              </Text>
+              <Text fw={700}>
+                {typeof ordersCount === "number"
+                  ? `${ordersCount.toLocaleString("vi-VN")} đơn`
+                  : "..."}
+              </Text>
+            </Stack>
+            {typeof ordersChangePct === "number" ? (
+              <TrendBadge value={ordersChangePct} />
+            ) : (
+              <IconReceipt2 size={18} color="var(--mantine-color-gray-6)" />
+            )}
           </Group>
         </Paper>
       </SimpleGrid>

@@ -2,7 +2,6 @@ export const filterLabelStyles = {
   fontSize: "11px",
   fontWeight: 600,
   textTransform: "uppercase" as const,
-  letterSpacing: "0.16em",
   color: "#94a3b8",
   marginBottom: 6
 }
@@ -21,7 +20,7 @@ export const compactFilterPlainLabelStyles = {
 }
 
 export const filterInputStyles = {
-  height: 44,
+  height: 36,
   borderRadius: 18,
   borderColor: "#dbe4f0",
   background: "#ffffff",
