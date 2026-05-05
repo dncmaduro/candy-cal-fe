@@ -130,6 +130,14 @@ function RouteComponent() {
 
   const canPerformActions = isAdmin || isResponsibleUser
 
+  const goBackToFunnelList = () => {
+    if (window.history.length > 1) {
+      window.history.back()
+      return
+    }
+    navigate({ to: "/sales/funnel" })
+  }
+
   type OrderHistoryItem = {
     _id: string
     date: string
@@ -320,7 +328,7 @@ function RouteComponent() {
         message: "Xóa funnel thành công",
         color: "green"
       })
-      navigate({ to: "/sales/funnel" })
+      goBackToFunnelList()
     },
     onError: () => {
       notifications.show({
@@ -387,7 +395,7 @@ function RouteComponent() {
             <Group>
               <ActionIcon
                 variant="subtle"
-                onClick={() => navigate({ to: "/sales/funnel" })}
+                onClick={goBackToFunnelList}
               >
                 <IconArrowLeft size={20} />
               </ActionIcon>

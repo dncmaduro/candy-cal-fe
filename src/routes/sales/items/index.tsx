@@ -1,5 +1,4 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { useState } from "react"
 import { ColumnDef } from "@tanstack/react-table"
 import {
   Button,
@@ -17,6 +16,7 @@ import { useQuery, useMutation } from "@tanstack/react-query"
 import {
   IconUpload,
   IconPlus,
+  IconEye,
   IconEdit,
   IconTrash,
   IconDownload
@@ -35,6 +35,45 @@ import { Can } from "../../../components/common/Can"
 import { CToast } from "../../../components/common/CToast"
 
 export const Route = createFileRoute("/sales/items/")({
+  validateSearch: (search: Record<string, unknown>) => {
+    const parsePositiveInt = (value: unknown, fallback: number) => {
+      const parsed = Number(value)
+      return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback
+    }
+    const parseString = (value: unknown) => {
+      if (typeof value !== "string") return undefined
+      const trimmed = value.trim()
+      return trimmed.length > 0 ? trimmed : undefined
+    }
+    const parseFactory = (value: unknown): SalesItemFactory | undefined => {
+      const parsed = parseString(value)
+      if (
+        parsed === "candy" ||
+        parsed === "manufacturing" ||
+        parsed === "position_MongCai" ||
+        parsed === "jelly" ||
+        parsed === "import"
+      ) {
+        return parsed
+      }
+      return undefined
+    }
+    const parseSource = (value: unknown): SalesItemSource | undefined => {
+      const parsed = parseString(value)
+      if (parsed === "inside" || parsed === "outside") {
+        return parsed
+      }
+      return undefined
+    }
+
+    return {
+      page: parsePositiveInt(search.page, 1),
+      pageSize: parsePositiveInt(search.pageSize, 10),
+      searchText: parseString(search.searchText),
+      factoryFilter: parseFactory(search.factoryFilter),
+      sourceFilter: parseSource(search.sourceFilter)
+    }
+  },
   component: RouteComponent
 })
 
@@ -42,6 +81,7 @@ type SalesItem = SearchSalesItemsResponse["data"][0]
 
 function RouteComponent() {
   const navigate = useNavigate()
+  const search = Route.useSearch()
   const {
     searchSalesItems,
     deleteSalesItem,
@@ -51,12 +91,11 @@ function RouteComponent() {
     exportSalesItemsToXlsx
   } = useSalesItems()
 
-  // Table state
-  const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
-  const [searchText, setSearchText] = useState("")
-  const [factoryFilter, setFactoryFilter] = useState<SalesItemFactory | "">("")
-  const [sourceFilter, setSourceFilter] = useState<SalesItemSource | "">("")
+  const page = search.page
+  const pageSize = search.pageSize
+  const searchText = search.searchText ?? ""
+  const factoryFilter = search.factoryFilter ?? ""
+  const sourceFilter = search.sourceFilter ?? ""
 
   // Debounce search text để tránh call API quá nhiều
   const [debouncedSearchText] = useDebouncedValue(searchText, 500)
@@ -295,6 +334,19 @@ function RouteComponent() {
         return (
           <Can roles={["admin", "sales-emp"]}>
             <Group gap="xs">
+              <Tooltip label="Xem chi tiết" withArrow>
+                <ActionIcon
+                  variant="light"
+                  color="teal"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    navigate({ to: `/sales/items/${item._id}` })
+                  }}
+                >
+                  <IconEye size={16} />
+                </ActionIcon>
+              </Tooltip>
               <Tooltip label="Chỉnh sửa" withArrow>
                 <ActionIcon
                   variant="light"
@@ -389,19 +441,39 @@ function RouteComponent() {
             isLoading={isLoading}
             page={page}
             totalPages={Math.ceil((data?.data.total || 0) / pageSize)}
-            onPageChange={setPage}
-            onPageSizeChange={setPageSize}
+            onPageChange={(nextPage) =>
+              navigate({
+                to: "/sales/items",
+                search: {
+                  ...search,
+                  page: nextPage
+                }
+              })
+            }
+            onPageSizeChange={(nextPageSize) =>
+              navigate({
+                to: "/sales/items",
+                search: {
+                  ...search,
+                  pageSize: nextPageSize,
+                  page: 1
+                }
+              })
+            }
             initialPageSize={pageSize}
             pageSizeOptions={[10, 20, 50, 100]}
             enableGlobalFilter={true}
             globalFilterValue={searchText}
             onGlobalFilterChange={(value) => {
-              setSearchText(value)
-              setPage(1)
+              navigate({
+                to: "/sales/items",
+                search: {
+                  ...search,
+                  searchText: value || undefined,
+                  page: 1
+                }
+              })
             }}
-            onRowClick={(row) =>
-              navigate({ to: `/sales/items/${row.original._id}` })
-            }
             extraFilters={
               <>
                 <Select
@@ -416,8 +488,15 @@ function RouteComponent() {
                     }))
                   ]}
                   onChange={(value) => {
-                    setFactoryFilter((value as SalesItemFactory | "") || "")
-                    setPage(1)
+                    navigate({
+                      to: "/sales/items",
+                      search: {
+                        ...search,
+                        factoryFilter:
+                          (value as SalesItemFactory | "") || undefined,
+                        page: 1
+                      }
+                    })
                   }}
                   clearable
                   style={{ width: 220 }}
@@ -434,8 +513,15 @@ function RouteComponent() {
                     }))
                   ]}
                   onChange={(value) => {
-                    setSourceFilter((value as SalesItemSource | "") || "")
-                    setPage(1)
+                    navigate({
+                      to: "/sales/items",
+                      search: {
+                        ...search,
+                        sourceFilter:
+                          (value as SalesItemSource | "") || undefined,
+                        page: 1
+                      }
+                    })
                   }}
                   clearable
                   style={{ width: 200 }}

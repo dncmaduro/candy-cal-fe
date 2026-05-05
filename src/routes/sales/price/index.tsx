@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { SalesLayout } from "../../../components/layouts/SalesLayout"
 import { useSalesPriceItems } from "../../../hooks/useSalesPriceItems"
 import { useItems } from "../../../hooks/useItems"
@@ -8,23 +8,42 @@ import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
 import { Can } from "../../../components/common/Can"
 import { CToast } from "../../../components/common/CToast"
-import { useState, useMemo } from "react"
+import { useMemo } from "react"
 import { SalesPriceItemModal } from "../../../components/sales/SalesPriceItemModal"
 import { CDataTable } from "../../../components/common/CDataTable"
 import { ColumnDef } from "@tanstack/react-table"
 import { format } from "date-fns"
 
 export const Route = createFileRoute("/sales/price/")({
+  validateSearch: (search: Record<string, unknown>) => {
+    const parsePositiveInt = (value: unknown, fallback: number) => {
+      const parsed = Number(value)
+      return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback
+    }
+    const parseString = (value: unknown) => {
+      if (typeof value !== "string") return undefined
+      const trimmed = value.trim()
+      return trimmed.length > 0 ? trimmed : undefined
+    }
+
+    return {
+      page: parsePositiveInt(search.page, 1),
+      limit: parsePositiveInt(search.limit, 10),
+      searchText: parseString(search.searchText)
+    }
+  },
   component: RouteComponent
 })
 
 function RouteComponent() {
+  const navigate = useNavigate({ from: "/sales/price/" })
+  const search = Route.useSearch()
   const { getSalesPriceItems, deleteSalesPriceItem } = useSalesPriceItems()
   const { searchStorageItems } = useItems()
 
-  const [page, setPage] = useState(1)
-  const [limit, setLimit] = useState(10)
-  const [searchText, setSearchText] = useState("")
+  const page = search.page
+  const limit = search.limit
+  const searchText = search.searchText ?? ""
 
   const { data: priceItemsData, refetch } = useQuery({
     queryKey: ["getSalesPriceItems", page, limit],
@@ -216,11 +235,37 @@ function RouteComponent() {
             data={filteredPriceItems}
             enableGlobalFilter={true}
             globalFilterValue={searchText}
-            onGlobalFilterChange={setSearchText}
+            onGlobalFilterChange={(value) =>
+              navigate({
+                to: "/sales/price",
+                search: {
+                  ...search,
+                  searchText: value || undefined,
+                  page: 1
+                }
+              })
+            }
             page={page}
             totalPages={Math.ceil(total / limit)}
-            onPageChange={setPage}
-            onPageSizeChange={setLimit}
+            onPageChange={(nextPage) =>
+              navigate({
+                to: "/sales/price",
+                search: {
+                  ...search,
+                  page: nextPage
+                }
+              })
+            }
+            onPageSizeChange={(nextLimit) =>
+              navigate({
+                to: "/sales/price",
+                search: {
+                  ...search,
+                  limit: nextLimit,
+                  page: 1
+                }
+              })
+            }
             initialPageSize={limit}
             pageSizeOptions={[10, 20, 50, 100]}
             extraActions={

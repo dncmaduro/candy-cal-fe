@@ -13,6 +13,7 @@ interface DailyKpiSummaryProps {
   revenue: number
   goal?: number
   totalOrders?: number
+  totalOrdersChangePct?: number
   achievedPct?: number
   expectedPct: number
   deltaPct?: number
@@ -26,6 +27,7 @@ export const DailyKpiSummary = ({
   revenue,
   goal,
   totalOrders,
+  totalOrdersChangePct,
   achievedPct,
   expectedPct,
   deltaPct,
@@ -136,6 +138,7 @@ export const DailyKpiSummary = ({
           hint="Tổng số đơn hàng trong khoảng đang lọc."
           icon={<IconReceipt2 size={20} />}
           tone="teal"
+          trailing={<TrendBadge value={totalOrdersChangePct} />}
         />
         {typeof forecastMonthRevenue === "number" && (
           <MetricStatCard
