@@ -10,7 +10,7 @@ import {
   Tooltip
 } from "@mantine/core"
 import { useQuery, useMutation } from "@tanstack/react-query"
-import { useMemo, useState } from "react"
+import { useMemo } from "react"
 import { modals } from "@mantine/modals"
 import { format } from "date-fns"
 import {
@@ -28,6 +28,25 @@ import { CToast } from "../../../components/common/CToast"
 import { ColumnDef } from "@tanstack/react-table"
 
 export const Route = createFileRoute("/sales/tasks/")({
+  validateSearch: (search: Record<string, unknown>) => {
+    const parsePositiveInt = (value: unknown, fallback: number) => {
+      const parsed = Number(value)
+      return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback
+    }
+    const parseString = (value: unknown) => {
+      if (typeof value !== "string") return undefined
+      const trimmed = value.trim()
+      return trimmed.length > 0 ? trimmed : undefined
+    }
+
+    return {
+      page: parsePositiveInt(search.page, 1),
+      limit: parsePositiveInt(search.limit, 10),
+      typeFilter: parseString(search.typeFilter),
+      statusFilter: parseString(search.statusFilter),
+      assigneeFilter: parseString(search.assigneeFilter)
+    }
+  },
   component: RouteComponent
 })
 
@@ -54,14 +73,15 @@ type TaskItem = {
 
 function RouteComponent() {
   const navigate = useNavigate()
+  const search = Route.useSearch()
   const { getSalesTasks, completeTask, deleteSalesTask } = useSalesTasks()
   const { publicSearchUser, getMe } = useUsers()
 
-  const [page, setPage] = useState(1)
-  const [limit, setLimit] = useState(10)
-  const [typeFilter, setTypeFilter] = useState<string>("")
-  const [statusFilter, setStatusFilter] = useState<string>("")
-  const [assigneeFilter, setAssigneeFilter] = useState<string>("")
+  const page = search.page
+  const limit = search.limit
+  const typeFilter = search.typeFilter ?? ""
+  const statusFilter = search.statusFilter ?? ""
+  const assigneeFilter = search.assigneeFilter ?? ""
 
   // Load reference data
   const { data: meData } = useQuery({
@@ -334,8 +354,25 @@ function RouteComponent() {
             enableGlobalFilter={false}
             page={page}
             totalPages={Math.ceil((data?.data.total || 0) / limit)}
-            onPageChange={setPage}
-            onPageSizeChange={setLimit}
+            onPageChange={(nextPage) =>
+              navigate({
+                to: "/sales/tasks",
+                search: {
+                  ...search,
+                  page: nextPage
+                }
+              })
+            }
+            onPageSizeChange={(nextLimit) =>
+              navigate({
+                to: "/sales/tasks",
+                search: {
+                  ...search,
+                  limit: nextLimit,
+                  page: 1
+                }
+              })
+            }
             initialPageSize={limit}
             pageSizeOptions={[10, 20, 50, 100]}
             extraFilters={
@@ -350,7 +387,16 @@ function RouteComponent() {
                     { value: "other", label: "Khác" }
                   ]}
                   value={typeFilter}
-                  onChange={(value) => setTypeFilter(value || "")}
+                  onChange={(value) =>
+                    navigate({
+                      to: "/sales/tasks",
+                      search: {
+                        ...search,
+                        typeFilter: value || undefined,
+                        page: 1
+                      }
+                    })
+                  }
                   clearable
                   style={{ width: 180 }}
                 />
@@ -364,7 +410,16 @@ function RouteComponent() {
                     { value: "pending", label: "Chưa hoàn thành" }
                   ]}
                   value={statusFilter}
-                  onChange={(value) => setStatusFilter(value || "")}
+                  onChange={(value) =>
+                    navigate({
+                      to: "/sales/tasks",
+                      search: {
+                        ...search,
+                        statusFilter: value || undefined,
+                        page: 1
+                      }
+                    })
+                  }
                   clearable
                   style={{ width: 200 }}
                 />
@@ -377,7 +432,16 @@ function RouteComponent() {
                     ...userOptions
                   ]}
                   value={assigneeFilter}
-                  onChange={(value) => setAssigneeFilter(value || "")}
+                  onChange={(value) =>
+                    navigate({
+                      to: "/sales/tasks",
+                      search: {
+                        ...search,
+                        assigneeFilter: value || undefined,
+                        page: 1
+                      }
+                    })
+                  }
                   searchable
                   clearable
                   style={{ width: 220 }}

@@ -96,6 +96,14 @@ function RouteComponent() {
   const stats = quantityData?.data
   const topCustomers = topCustomersData?.data?.topCustomers || []
 
+  const goBackToItems = () => {
+    if (window.history.length > 1) {
+      window.history.back()
+      return
+    }
+    navigate({ to: "/sales/items" })
+  }
+
   const handleEditItem = () => {
     if (!item) return
     modals.open({
@@ -129,7 +137,7 @@ function RouteComponent() {
         try {
           await deleteSalesItem(item._id)
           CToast.success({ title: "Xóa sản phẩm thành công" })
-          navigate({ to: "/sales/items" })
+          goBackToItems()
         } catch (error: any) {
           CToast.error({
             title:
@@ -236,7 +244,7 @@ function RouteComponent() {
             <Group>
               <ActionIcon
                 variant="subtle"
-                onClick={() => navigate({ to: "/sales/items" })}
+                onClick={goBackToItems}
               >
                 <IconArrowLeft size={20} />
               </ActionIcon>

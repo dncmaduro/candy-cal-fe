@@ -69,6 +69,14 @@ function RouteComponent() {
     updateSalesOrderDate
   } = useSalesOrders()
 
+  const goBackToOrders = () => {
+    if (window.history.length > 1) {
+      window.history.back()
+      return
+    }
+    navigate({ to: "/sales/orders" })
+  }
+
   // No longer need state for editable fields - now read-only from API
 
   const { data, refetch } = useQuery({
@@ -490,7 +498,7 @@ function RouteComponent() {
                     await deleteSalesOrder({ id: order._id })
                     CToast.success({ title: "Xóa đơn hàng thành công" })
                     modals.closeAll()
-                    navigate({ to: "/sales/orders" })
+                    goBackToOrders()
                   } catch (error: any) {
                     CToast.error({
                       title:
@@ -557,7 +565,7 @@ function RouteComponent() {
             <Group>
               <ActionIcon
                 variant="subtle"
-                onClick={() => navigate({ to: "/sales/orders?refetch=true" })}
+                onClick={goBackToOrders}
               >
                 <IconArrowLeft size={20} />
               </ActionIcon>

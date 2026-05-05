@@ -46,6 +46,54 @@ import { notifications } from "@mantine/notifications"
 // import { useMetaServices } from "../../../hooks/useMetaServices"
 
 export const Route = createFileRoute("/sales/funnel/")({
+  validateSearch: (search: Record<string, unknown>) => {
+    const parsePositiveInt = (value: unknown, fallback: number) => {
+      const parsed = Number(value)
+      return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback
+    }
+    const parseString = (value: unknown) => {
+      if (typeof value !== "string") return undefined
+      const trimmed = value.trim()
+      return trimmed.length > 0 ? trimmed : undefined
+    }
+    const parseBool = (value: unknown, fallback = false) => {
+      if (value === true || value === "true" || value === "1") return true
+      if (value === false || value === "false" || value === "0") return false
+      return fallback
+    }
+    const parseSortBy = (value: unknown) => {
+      const parsed = parseString(value)
+      if (parsed === "totalIncome" || parsed === "lastTimeBuyed") return parsed
+      return undefined
+    }
+    const parseSortOrder = (value: unknown) => {
+      const parsed = parseString(value)
+      return parsed === "asc" ? "asc" : "desc"
+    }
+    const parseFunnelSource = (value: unknown) => {
+      const parsed = parseString(value)
+      if (parsed === "ads" || parsed === "seeding" || parsed === "referral") {
+        return parsed
+      }
+      return undefined
+    }
+
+    return {
+      page: parsePositiveInt(search.page, 1),
+      limit: parsePositiveInt(search.limit, 10),
+      searchText: parseString(search.searchText),
+      stageFilter: parseString(search.stageFilter),
+      provinceFilter: parseString(search.provinceFilter),
+      channelFilter: parseString(search.channelFilter),
+      userFilter: parseString(search.userFilter),
+      rankFilter: parseString(search.rankFilter),
+      noActivityDaysFilter: parseString(search.noActivityDaysFilter),
+      funnelSourceFilter: parseFunnelSource(search.funnelSourceFilter),
+      showDeleted: parseBool(search.showDeleted, false),
+      sortBy: parseSortBy(search.sortBy),
+      sortOrder: parseSortOrder(search.sortOrder)
+    }
+  },
   component: RouteComponent
 })
 
@@ -97,43 +145,52 @@ const RANK_COLORS: Record<string, string> = {
 
 function RouteComponent() {
   const navigate = useNavigate()
+  const search = Route.useSearch()
   const { searchFunnel, deleteFunnel } = useSalesFunnel()
   const { getProvinces } = useProvinces()
   const { publicSearchUser, getMe } = useUsers()
   const { searchSalesChannels, getMyChannel } = useSalesChannels()
   // const { getConversationIdByPsid } = useMetaServices()
 
-  const [page, setPage] = useState(1)
-  const [limit, setLimit] = useState(10)
-  const [searchText, setSearchText] = useState("")
-  const [stageFilter, setStageFilter] = useState<string>("")
-  const [provinceFilter, setProvinceFilter] = useState<string>("")
-  const [channelFilter, setChannelFilter] = useState<string>("")
-  const [userFilter, setUserFilter] = useState<string>("")
-  const [rankFilter, setRankFilter] = useState<string>("")
-  const [noActivityDaysFilter, setNoActivityDaysFilter] = useState<string>("")
+  const page = search.page
+  const limit = search.limit
+  const searchText = search.searchText ?? ""
+  const stageFilter = search.stageFilter ?? ""
+  const provinceFilter = search.provinceFilter ?? ""
+  const channelFilter = search.channelFilter ?? ""
+  const userFilter = search.userFilter ?? ""
+  const rankFilter = search.rankFilter ?? ""
+  const noActivityDaysFilter = search.noActivityDaysFilter ?? ""
   const [activitiesDrawerOpen, setActivitiesDrawerOpen] = useState(false)
   const [selectedFunnelId, setSelectedFunnelId] = useState<string | null>(null)
   const [selectedFunnelName, setSelectedFunnelName] = useState<string>("")
-  const [funnelSourceFilter, setFunnelSourceFilter] = useState<
-    "ads" | "seeding" | "referral" | undefined
-  >(undefined)
-  const [showDeleted, setShowDeleted] = useState(false)
-  const [sortBy, setSortBy] = useState<
-    "totalIncome" | "lastTimeBuyed" | undefined
-  >(undefined)
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
+  const funnelSourceFilter = search.funnelSourceFilter
+  const showDeleted = search.showDeleted
+  const sortBy = search.sortBy
+  const sortOrder = search.sortOrder
 
   const handleSortChange = (
     newSortBy: string | undefined,
     newSortOrder: "asc" | "desc"
   ) => {
     if (newSortBy === "totalIncome" || newSortBy === "lastTimeBuyed") {
-      setSortBy(newSortBy)
-      setSortOrder(newSortOrder)
+      navigate({
+        to: "/sales/funnel",
+        search: {
+          ...search,
+          sortBy: newSortBy,
+          sortOrder: newSortOrder
+        }
+      })
     } else {
-      setSortBy(undefined)
-      setSortOrder("desc")
+      navigate({
+        to: "/sales/funnel",
+        search: {
+          ...search,
+          sortBy: undefined,
+          sortOrder: "desc"
+        }
+      })
     }
   }
 
@@ -239,10 +296,18 @@ function RouteComponent() {
     })) || []
 
   useEffect(() => {
-    if (myChannelData?.channel?._id) {
-      setChannelFilter(myChannelData.channel._id)
+    if (myChannelData?.channel?._id && !channelFilter) {
+      navigate({
+        to: "/sales/funnel",
+        search: {
+          ...search,
+          channelFilter: myChannelData.channel._id,
+          page: 1
+        },
+        replace: true
+      })
     }
-  }, [myChannelData])
+  }, [channelFilter, myChannelData, navigate, search])
 
   const handleCreateLead = () => {
     modals.open({
@@ -419,10 +484,25 @@ function RouteComponent() {
 
   // Auto-apply user filter for sales-emp
   useEffect(() => {
-    if (isSalesEmp && !isAdmin && !isSystemEmp && !isSalesLeader && me?._id) {
-      setUserFilter(me._id)
+    if (
+      isSalesEmp &&
+      !isAdmin &&
+      !isSystemEmp &&
+      !isSalesLeader &&
+      me?._id &&
+      !userFilter
+    ) {
+      navigate({
+        to: "/sales/funnel",
+        search: {
+          ...search,
+          userFilter: me._id,
+          page: 1
+        },
+        replace: true
+      })
     }
-  }, [isSalesEmp, isAdmin, isSystemEmp, isSalesLeader, me?._id])
+  }, [isSalesEmp, isAdmin, isSystemEmp, isSalesLeader, me?._id, navigate, userFilter, search])
 
   const mapFunnelSource = {
     ads: "Ads",
@@ -661,11 +741,37 @@ function RouteComponent() {
             data={funnelData}
             enableGlobalFilter={true}
             globalFilterValue={searchText}
-            onGlobalFilterChange={setSearchText}
+            onGlobalFilterChange={(value) =>
+              navigate({
+                to: "/sales/funnel",
+                search: {
+                  ...search,
+                  searchText: value || undefined,
+                  page: 1
+                }
+              })
+            }
             page={page}
             totalPages={Math.ceil((data?.data.total || 0) / limit)}
-            onPageChange={setPage}
-            onPageSizeChange={setLimit}
+            onPageChange={(nextPage) =>
+              navigate({
+                to: "/sales/funnel",
+                search: {
+                  ...search,
+                  page: nextPage
+                }
+              })
+            }
+            onPageSizeChange={(nextLimit) =>
+              navigate({
+                to: "/sales/funnel",
+                search: {
+                  ...search,
+                  limit: nextLimit,
+                  page: 1
+                }
+              })
+            }
             initialPageSize={limit}
             pageSizeOptions={[10, 20, 50, 100]}
             sortBy={sortBy}
@@ -687,7 +793,16 @@ function RouteComponent() {
                     { value: "closed", label: "Đã đóng" }
                   ]}
                   value={stageFilter}
-                  onChange={(value) => setStageFilter(value || "")}
+                  onChange={(value) =>
+                    navigate({
+                      to: "/sales/funnel",
+                      search: {
+                        ...search,
+                        stageFilter: value || undefined,
+                        page: 1
+                      }
+                    })
+                  }
                   clearable
                   style={{ width: 200 }}
                 />
@@ -700,7 +815,16 @@ function RouteComponent() {
                     ...provinceOptions
                   ]}
                   value={provinceFilter}
-                  onChange={(value) => setProvinceFilter(value || "")}
+                  onChange={(value) =>
+                    navigate({
+                      to: "/sales/funnel",
+                      search: {
+                        ...search,
+                        provinceFilter: value || undefined,
+                        page: 1
+                      }
+                    })
+                  }
                   searchable
                   clearable
                   style={{ width: 200 }}
@@ -715,7 +839,16 @@ function RouteComponent() {
                       ...channelOptions
                     ]}
                     value={channelFilter}
-                    onChange={(value) => setChannelFilter(value || "")}
+                    onChange={(value) =>
+                      navigate({
+                        to: "/sales/funnel",
+                        search: {
+                          ...search,
+                          channelFilter: value || undefined,
+                          page: 1
+                        }
+                      })
+                    }
                     searchable
                     clearable
                     style={{ width: 200 }}
@@ -731,7 +864,16 @@ function RouteComponent() {
                       ...userOptions
                     ]}
                     value={userFilter}
-                    onChange={(value) => setUserFilter(value || "")}
+                    onChange={(value) =>
+                      navigate({
+                        to: "/sales/funnel",
+                        search: {
+                          ...search,
+                          userFilter: value || undefined,
+                          page: 1
+                        }
+                      })
+                    }
                     searchable
                     clearable
                     style={{ width: 200 }}
@@ -748,7 +890,16 @@ function RouteComponent() {
                     { value: "bronze", label: "Đồng" }
                   ]}
                   value={rankFilter}
-                  onChange={(value) => setRankFilter(value || "")}
+                  onChange={(value) =>
+                    navigate({
+                      to: "/sales/funnel",
+                      search: {
+                        ...search,
+                        rankFilter: value || undefined,
+                        page: 1
+                      }
+                    })
+                  }
                   clearable
                   style={{ width: 180 }}
                   renderOption={({ option }) => {
@@ -779,7 +930,16 @@ function RouteComponent() {
                     { value: "90", label: "> 90 ngày" }
                   ]}
                   value={noActivityDaysFilter}
-                  onChange={(value) => setNoActivityDaysFilter(value || "")}
+                  onChange={(value) =>
+                    navigate({
+                      to: "/sales/funnel",
+                      search: {
+                        ...search,
+                        noActivityDaysFilter: value || undefined,
+                        page: 1
+                      }
+                    })
+                  }
                   clearable
                   style={{ width: 180 }}
                 />
@@ -794,13 +954,19 @@ function RouteComponent() {
                   ]}
                   value={funnelSourceFilter}
                   onChange={(value) =>
-                    setFunnelSourceFilter(
-                      value === "ads" ||
-                        value === "seeding" ||
-                        value === "referral"
-                        ? value
-                        : undefined
-                    )
+                    navigate({
+                      to: "/sales/funnel",
+                      search: {
+                        ...search,
+                        funnelSourceFilter:
+                          value === "ads" ||
+                          value === "seeding" ||
+                          value === "referral"
+                            ? value
+                            : undefined,
+                        page: 1
+                      }
+                    })
                   }
                   clearable
                   style={{ width: 180 }}
@@ -810,7 +976,14 @@ function RouteComponent() {
                   label="Hiển thị đã xóa"
                   checked={showDeleted}
                   onChange={(event) =>
-                    setShowDeleted(event.currentTarget.checked)
+                    navigate({
+                      to: "/sales/funnel",
+                      search: {
+                        ...search,
+                        showDeleted: event.currentTarget.checked,
+                        page: 1
+                      }
+                    })
                   }
                   color="red"
                   styles={{ body: { alignItems: "center" } }}

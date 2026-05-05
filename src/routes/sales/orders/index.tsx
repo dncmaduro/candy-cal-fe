@@ -40,7 +40,28 @@ import { FormProvider, useForm } from "react-hook-form"
 export const Route = createFileRoute("/sales/orders/")({
   component: RouteComponent,
   validateSearch: (search: Record<string, unknown>) => {
+    const parsePositiveInt = (value: unknown, fallback: number) => {
+      const parsed = Number(value)
+      return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback
+    }
+    const parseString = (value: unknown) => {
+      if (typeof value !== "string") return undefined
+      const trimmed = value.trim()
+      return trimmed.length > 0 ? trimmed : undefined
+    }
+
     return {
+      page: parsePositiveInt(search.page, 1),
+      limit: parsePositiveInt(search.limit, 10),
+      searchText: parseString(search.searchText),
+      returningFilter: parseString(search.returningFilter),
+      funnelFilter: parseString(search.funnelFilter),
+      shippingTypeFilter: parseString(search.shippingTypeFilter),
+      statusFilter: parseString(search.statusFilter),
+      startDate: parseString(search.startDate),
+      endDate: parseString(search.endDate),
+      userIdFilter: parseString(search.userIdFilter),
+      channelIdFilter: parseString(search.channelIdFilter),
       createNew: search.createNew as string | undefined,
       channelId: search.channelId as string | undefined,
       funnelId: search.funnelId as string | undefined,
@@ -90,17 +111,17 @@ function RouteComponent() {
   const { getMe } = useUsers()
   const { searchSalesChannels, getMyChannel } = useSalesChannels()
 
-  const [page, setPage] = useState(1)
-  const [limit, setLimit] = useState(10)
-  const [searchText, setSearchText] = useState("")
-  const [returningFilter, setReturningFilter] = useState<string>("")
-  const [funnelFilter, setFunnelFilter] = useState<string>("")
-  const [shippingTypeFilter, setShippingTypeFilter] = useState<string>("")
-  const [statusFilter, setStatusFilter] = useState<string>("")
-  const [startDate, setStartDate] = useState<Date | null>(null)
-  const [endDate, setEndDate] = useState<Date | null>(null)
-  const [userIdFilter, setUserIdFilter] = useState<string>("")
-  const [channelIdFilter, setChannelIdFilter] = useState<string>("")
+  const page = search.page
+  const limit = search.limit
+  const searchText = search.searchText ?? ""
+  const returningFilter = search.returningFilter ?? ""
+  const funnelFilter = search.funnelFilter ?? ""
+  const shippingTypeFilter = search.shippingTypeFilter ?? ""
+  const statusFilter = search.statusFilter ?? ""
+  const startDate = search.startDate ? new Date(search.startDate) : null
+  const endDate = search.endDate ? new Date(search.endDate) : null
+  const userIdFilter = search.userIdFilter ?? ""
+  const channelIdFilter = search.channelIdFilter ?? ""
   const [selectedOrders, setSelectedOrders] = useState<SalesOrderItem[]>([])
 
   const selectedOrderIds = selectedOrders.map((o) => o._id)
@@ -126,10 +147,18 @@ function RouteComponent() {
   })
 
   useEffect(() => {
-    if (myChannelData?.channel?._id) {
-      setChannelIdFilter(myChannelData.channel._id)
+    if (myChannelData?.channel?._id && !channelIdFilter) {
+      navigate({
+        to: "/sales/orders",
+        search: {
+          ...search,
+          channelIdFilter: myChannelData.channel._id,
+          page: 1
+        },
+        replace: true
+      })
     }
-  }, [myChannelData])
+  }, [channelIdFilter, myChannelData, navigate, search])
 
   const me = meData?.data
 
@@ -171,10 +200,18 @@ function RouteComponent() {
 
   // Auto-apply user filter for sales-emp
   useEffect(() => {
-    if (!canSeeAllFunnels && isSalesEmp && me?._id) {
-      setUserIdFilter(me._id)
+    if (!canSeeAllFunnels && isSalesEmp && me?._id && !userIdFilter) {
+      navigate({
+        to: "/sales/orders",
+        search: {
+          ...search,
+          userIdFilter: me._id,
+          page: 1
+        },
+        replace: true
+      })
     }
-  }, [canSeeAllFunnels, isSalesEmp, me?._id])
+  }, [canSeeAllFunnels, isSalesEmp, me?._id, navigate, userIdFilter, search])
 
   // Load reference data - use appropriate query based on role
   const { data: funnelData } = useQuery({
@@ -681,8 +718,8 @@ function RouteComponent() {
     // (khuyến nghị) clear params để F5 / rerender không mở lại
     navigate({
       to: "/sales/orders",
-      search: (prev: any) => ({
-        ...prev,
+      search: {
+        ...search,
         createNew: undefined,
         channelId: undefined,
         funnelId: undefined,
@@ -690,7 +727,7 @@ function RouteComponent() {
         orderDiscount: undefined,
         otherDiscount: undefined,
         deposit: undefined
-      }),
+      },
       replace: true
     })
   }, [
@@ -732,11 +769,37 @@ function RouteComponent() {
             data={ordersData}
             enableGlobalFilter={true}
             globalFilterValue={searchText}
-            onGlobalFilterChange={setSearchText}
+            onGlobalFilterChange={(value) =>
+              navigate({
+                to: "/sales/orders",
+                search: {
+                  ...search,
+                  searchText: value || undefined,
+                  page: 1
+                }
+              })
+            }
             page={page}
             totalPages={Math.ceil((data?.data.total || 0) / limit)}
-            onPageChange={setPage}
-            onPageSizeChange={setLimit}
+            onPageChange={(nextPage) =>
+              navigate({
+                to: "/sales/orders",
+                search: {
+                  ...search,
+                  page: nextPage
+                }
+              })
+            }
+            onPageSizeChange={(nextLimit) =>
+              navigate({
+                to: "/sales/orders",
+                search: {
+                  ...search,
+                  limit: nextLimit,
+                  page: 1
+                }
+              })
+            }
             initialPageSize={limit}
             pageSizeOptions={[10, 20, 50, 100]}
             isLoading={isLoading}
@@ -759,7 +822,16 @@ function RouteComponent() {
                     { value: "true", label: "Khách cũ" }
                   ]}
                   value={returningFilter}
-                  onChange={(value) => setReturningFilter(value || "")}
+                  onChange={(value) =>
+                    navigate({
+                      to: "/sales/orders",
+                      search: {
+                        ...search,
+                        returningFilter: value || undefined,
+                        page: 1
+                      }
+                    })
+                  }
                   clearable
                   style={{ width: 200 }}
                 />
@@ -772,7 +844,16 @@ function RouteComponent() {
                     ...funnelOptions
                   ]}
                   value={funnelFilter}
-                  onChange={(value) => setFunnelFilter(value || "")}
+                  onChange={(value) =>
+                    navigate({
+                      to: "/sales/orders",
+                      search: {
+                        ...search,
+                        funnelFilter: value || undefined,
+                        page: 1
+                      }
+                    })
+                  }
                   searchable
                   clearable
                   style={{ width: 250 }}
@@ -787,7 +868,16 @@ function RouteComponent() {
                     { value: "shipping_cargo", label: "Shipcode lên chành" }
                   ]}
                   value={shippingTypeFilter}
-                  onChange={(value) => setShippingTypeFilter(value || "")}
+                  onChange={(value) =>
+                    navigate({
+                      to: "/sales/orders",
+                      search: {
+                        ...search,
+                        shippingTypeFilter: value || undefined,
+                        page: 1
+                      }
+                    })
+                  }
                   clearable
                   style={{ width: 200 }}
                 />
@@ -801,7 +891,16 @@ function RouteComponent() {
                     { value: "official", label: "Chính thức" }
                   ]}
                   value={statusFilter}
-                  onChange={(value) => setStatusFilter(value || "")}
+                  onChange={(value) =>
+                    navigate({
+                      to: "/sales/orders",
+                      search: {
+                        ...search,
+                        statusFilter: value || undefined,
+                        page: 1
+                      }
+                    })
+                  }
                   clearable
                   style={{ width: 180 }}
                 />
@@ -814,7 +913,16 @@ function RouteComponent() {
                     ...channelOptions
                   ]}
                   value={channelIdFilter}
-                  onChange={(value) => setChannelIdFilter(value || "")}
+                  onChange={(value) =>
+                    navigate({
+                      to: "/sales/orders",
+                      search: {
+                        ...search,
+                        channelIdFilter: value || undefined,
+                        page: 1
+                      }
+                    })
+                  }
                   searchable
                   clearable
                   style={{ width: 200 }}
@@ -824,7 +932,18 @@ function RouteComponent() {
                   label="Từ ngày"
                   placeholder="Từ ngày"
                   value={startDate}
-                  onChange={setStartDate}
+                  onChange={(value) =>
+                    navigate({
+                      to: "/sales/orders",
+                      search: {
+                        ...search,
+                        startDate: value
+                          ? format(value, "yyyy-MM-dd")
+                          : undefined,
+                        page: 1
+                      }
+                    })
+                  }
                   clearable
                   valueFormat="DD/MM/YYYY"
                   style={{ width: 180 }}
@@ -834,7 +953,16 @@ function RouteComponent() {
                   label="Đến ngày"
                   placeholder="Đến ngày"
                   value={endDate}
-                  onChange={setEndDate}
+                  onChange={(value) =>
+                    navigate({
+                      to: "/sales/orders",
+                      search: {
+                        ...search,
+                        endDate: value ? format(value, "yyyy-MM-dd") : undefined,
+                        page: 1
+                      }
+                    })
+                  }
                   clearable
                   valueFormat="DD/MM/YYYY"
                   style={{ width: 180 }}

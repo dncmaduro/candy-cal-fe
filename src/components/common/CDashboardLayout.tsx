@@ -43,10 +43,10 @@ export const CDashboardLayout = ({
         }}
       >
         <Flex
-          align="flex-start"
+          align="center"
           justify="space-between"
-          pt={28}
-          pb={20}
+          pt={12}
+          pb={8}
           px={{ base: 16, md: 32 }}
           direction={{ base: "column", sm: "row" }}
           gap={20}
@@ -54,7 +54,12 @@ export const CDashboardLayout = ({
           <Box>
             <Flex align="center" gap="sm" mb={8}>
               {icon}
-              <Text fw={800} fz="2rem" c="#0f172a" style={{ letterSpacing: "-0.04em" }}>
+              <Text
+                fw={800}
+                fz="1.5rem"
+                c="#0f172a"
+                style={{ letterSpacing: "-0.04em" }}
+              >
                 {title}
               </Text>
             </Flex>
