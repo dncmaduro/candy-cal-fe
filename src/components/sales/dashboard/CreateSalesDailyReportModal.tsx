@@ -24,6 +24,7 @@ import { useForm, Controller } from "react-hook-form"
 import { CreateSalesDailyReportRequest } from "../../../hooks/models"
 import { useSalesChannels } from "../../../hooks/useSalesChannels"
 import { useEffect, useMemo } from "react"
+import { getDaysInMonth } from "date-fns"
 import { IconAlertCircle, IconDeviceFloppy } from "@tabler/icons-react"
 import { DailyReportByText } from "./DailyReportByText"
 import { useUsers } from "../../../hooks/useUsers"
@@ -311,6 +312,21 @@ export const CreateSalesDailyReportModal = () => {
     }
   }, [revenueData, setValue])
 
+  // Auto-fill KPI ngày = KPI tháng / số ngày trong tháng của ngày báo cáo
+  useEffect(() => {
+    if (!(selectedDate instanceof Date)) return
+
+    const monthKpi = kpiData?.kpi ?? 0
+    if (monthKpi <= 0) {
+      setValue("dateKpi", 0)
+      return
+    }
+
+    const daysInMonth = getDaysInMonth(selectedDate)
+    const dailyKpi = Math.round(monthKpi / daysInMonth)
+    setValue("dateKpi", dailyKpi)
+  }, [selectedDate, kpiData?.kpi, setValue])
+
   const isLoading = channelLoading || revenueLoading || kpiLoading
 
   // Calculate KPI percentage
@@ -491,9 +507,9 @@ export const CreateSalesDailyReportModal = () => {
                     <NumberInput
                       {...field}
                       label="KPI ngày"
-                      placeholder="Nhập KPI ngày"
+                      placeholder="Tự động từ KPI tháng"
                       thousandSeparator=","
-                      required
+                      readOnly
                       leftSection={<Text size="sm">đ</Text>}
                       styles={{
                         input: { fontWeight: 500 }

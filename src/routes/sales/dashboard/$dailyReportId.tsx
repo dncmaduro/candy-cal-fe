@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import {
   Box,
   Paper,
@@ -6,20 +6,27 @@ import {
   Group,
   Badge,
   Grid,
-  Divider,
   Stack,
   Button,
-  LoadingOverlay
+  LoadingOverlay,
+  Tabs,
+  Progress,
+  rem
 } from "@mantine/core"
 import { useQuery } from "@tanstack/react-query"
 import { format } from "date-fns"
-import { IconArrowLeft, IconCalendar } from "@tabler/icons-react"
+import {
+  IconArrowLeft,
+  IconCalendar,
+  IconBuildingStore,
+  IconChartBar,
+  IconChartPie
+} from "@tabler/icons-react"
 import { SalesLayout } from "../../../components/layouts/SalesLayout"
 import { useSalesDailyReports } from "../../../hooks/useSalesDailyReports"
-import { useNavigate } from "@tanstack/react-router"
-import { ReactNode } from "react"
+import { ReactNode, useMemo } from "react"
 import { DailyReportByText } from "../../../components/sales/dashboard/DailyReportByText"
-import { modals } from "@mantine/modals"
+import { PieChart, BarChart } from "@mantine/charts"
 
 export const Route = createFileRoute("/sales/dashboard/$dailyReportId")({
   component: RouteComponent
@@ -27,76 +34,41 @@ export const Route = createFileRoute("/sales/dashboard/$dailyReportId")({
 
 type SectionCardProps = {
   title: string
-  badgeLabel?: string
-  badgeColor?: string
-  description?: ReactNode
+  icon?: ReactNode
   children: ReactNode
 }
 
-const SectionCard = ({
-  title,
-  badgeLabel,
-  badgeColor = "gray",
-  description,
-  children
-}: SectionCardProps) => (
-  <Paper withBorder p="lg" radius="md">
-    <Stack gap="sm">
-      <Group justify="space-between" align="flex-start">
-        <Box>
-          <Text fw={600} size="md">
-            {title}
-          </Text>
-          {description && (
-            <Text size="sm" c="dimmed" mt={2}>
-              {description}
-            </Text>
-          )}
-        </Box>
-        {badgeLabel && (
-          <Badge size="sm" variant="outline" color={badgeColor}>
-            {badgeLabel}
-          </Badge>
-        )}
-      </Group>
-      <Divider />
-      {children}
-    </Stack>
+const sectionCardStyle = {
+  border: "1px solid #E5E7EB",
+  borderRadius: rem(14),
+  boxShadow: "0 8px 24px rgba(15, 23, 42, 0.06)",
+  background: "#fff"
+}
+
+const SectionCard = ({ title, icon, children }: SectionCardProps) => (
+  <Paper p="md" style={sectionCardStyle}>
+    <Group gap="xs" mb="sm">
+      {icon}
+      <Text fw={600}>{title}</Text>
+    </Group>
+    {children}
   </Paper>
 )
 
-type StatCardProps = {
+type MetricTileProps = {
   label: string
-  value: ReactNode
+  value: string
   valueColor?: string
-  tone?: "neutral" | "accent"
-  footer?: ReactNode
 }
 
-const StatCard = ({
-  label,
-  value,
-  valueColor,
-  tone = "neutral",
-  footer
-}: StatCardProps) => (
-  <Paper
-    p="md"
-    withBorder
-    radius="sm"
-    bg={tone === "accent" ? "gray.0" : "white"}
-  >
-    <Text size="sm" c="dimmed" mb={4} fw={500}>
+const MetricTile = ({ label, value, valueColor }: MetricTileProps) => (
+  <Paper withBorder p="sm" radius="md" bg="white" h="100%">
+    <Text size="xs" c="dimmed" mb={4}>
       {label}
     </Text>
-    <Text size="lg" fw={600} c={valueColor}>
+    <Text fw={700} size="xl" c={valueColor}>
       {value}
     </Text>
-    {footer && (
-      <Text size="sm" c="dimmed" mt="xs">
-        {footer}
-      </Text>
-    )}
   </Paper>
 )
 
@@ -110,360 +82,303 @@ function RouteComponent() {
     queryFn: () => getSalesDailyReportDetail({ id: dailyReportId })
   })
 
-  const { data: kpiData } = useQuery({
-    queryKey: ["getSalesMonthKpi", dailyReportId, data?.data],
-    queryFn: () => {
-      if (data?.data) {
-        return getSalesMonthKpi({
-          date: new Date(data.data.date),
-          channelId: data.data.channel._id
-        })
-      }
-      return Promise.resolve({ data: { kpi: 1 } })
-    },
-    select: (data) => data.data.kpi ?? 1
-  })
-
   const report = data?.data
+
+  const { data: kpiData } = useQuery({
+    queryKey: ["getSalesMonthKpi", dailyReportId, report?.date, report?.channel?._id],
+    queryFn: () => {
+      if (!report) return Promise.resolve({ data: { kpi: 0 } })
+      return getSalesMonthKpi({
+        date: new Date(report.date),
+        channelId: report.channel._id
+      })
+    },
+    select: (response) => response.data.kpi ?? 0,
+    enabled: !!report
+  })
 
   const goBackToDailyReports = () => {
     if (window.history.length > 1) {
       window.history.back()
       return
     }
-    navigate({ to: "/sales/dashboard/daily-reports" })
+    navigate({ to: "/sales/daily-reports" })
   }
 
-  // ====== CÁC GIÁ TRỊ DỰ BÁO (LŨY KẾ + NGÀY HIỆN TẠI) ======
   const projectedRevenue =
     (report?.accumulatedRevenue ?? 0) + (report?.revenue ?? 0)
 
-  const projectedKpiPercent = kpiData
-    ? ((projectedRevenue / kpiData) * 100).toFixed(2)
-    : "0.00"
+  const dailyNewRevenue =
+    (report?.newFunnelRevenue.ads ?? 0) + (report?.newFunnelRevenue.other ?? 0)
 
-  const projectedAdsCost =
-    (report?.accumulatedAdsCost ?? 0) + (report?.adsCost ?? 0)
+  const dailyKpiPercent = useMemo(() => {
+    if (!report?.dateKpi) return 0
+    return (report.revenue / report.dateKpi) * 100
+  }, [report?.dateKpi, report?.revenue])
 
-  const projectedNewFunnelRevenueAds =
-    (report?.accumulatedNewFunnelRevenue.ads ?? 0) +
-    (report?.newFunnelRevenue.ads ?? 0)
+  const monthlyKpiPercent = useMemo(() => {
+    if (!kpiData) return 0
+    return (projectedRevenue / kpiData) * 100
+  }, [kpiData, projectedRevenue])
 
-  const projectedCacPercent =
-    projectedNewFunnelRevenueAds > 0
-      ? ((projectedAdsCost / projectedNewFunnelRevenueAds) * 100).toFixed(2)
-      : "0.00"
+  const revenueStructureData = useMemo(
+    () => [
+      {
+        name: "Khách cũ",
+        value: report?.returningFunnelRevenue ?? 0,
+        color: "blue.6"
+      },
+      {
+        name: "Khách mới",
+        value: dailyNewRevenue,
+        color: "violet.6"
+      }
+    ],
+    [report?.returningFunnelRevenue, dailyNewRevenue]
+  )
 
-  // const projectedRoiPercent =
-  //   projectedAdsCost > 0
-  //     ? ((projectedNewFunnelRevenueAds / projectedAdsCost) * 100).toFixed(2)
-  //     : "0.00"
+  const totalStructureRevenue = useMemo(() => {
+    return revenueStructureData.reduce((sum, item) => sum + item.value, 0)
+  }, [revenueStructureData])
 
-  const openMessageModal = () => {
-    if (!report) return
-
-    const convertedReport = {
-      _id: report._id,
-      date: report.date,
-      channel: report.channel._id,
-      adsCost: report.adsCost,
-      dateKpi: report.dateKpi,
-      revenue: report.revenue,
-      newFunnelRevenue: report.newFunnelRevenue,
-      returningFunnelRevenue: report.returningFunnelRevenue,
-      newOrder: report.newOrder,
-      returningOrder: report.returningOrder,
-      accumulatedRevenue: report.accumulatedRevenue,
-      accumulatedAdsCost: report.accumulatedAdsCost,
-      accumulatedNewFunnelRevenue: report.accumulatedNewFunnelRevenue,
-      createdAt: report.createdAt,
-      updatedAt: report.updatedAt
-    }
-
-    modals.open({
-      id: "create-sales-daily-report",
-      title: <b>Tin nhắn báo cáo</b>,
-      children: <DailyReportByText report={convertedReport} />,
-      size: "lg"
-    })
-  }
+  const adsVsRevenueData = useMemo(
+    () => [
+      {
+        label: "Báo cáo ngày",
+        revenue: report?.revenue ?? 0,
+        adsCost: report?.adsCost ?? 0
+      }
+    ],
+    [report?.revenue, report?.adsCost]
+  )
 
   return (
     <SalesLayout>
-      <Box pos="relative" mih={400}>
+      <Box
+        pos="relative"
+        mih={400}
+        px={{ base: 8, md: 16 }}
+        py="md"
+        bg="#f4f7fb"
+      >
         <LoadingOverlay
           visible={isLoading}
           zIndex={1000}
           overlayProps={{ radius: "md", blur: 2 }}
         />
 
-        {/* Header */}
-        <Paper p="lg" mb="lg" withBorder radius="md">
-          <Group justify="space-between" align="flex-start" mb="md">
-            <Button
-              variant="subtle"
-              leftSection={<IconArrowLeft size={16} aria-hidden="true" />}
-              onClick={goBackToDailyReports}
-              aria-label="Quay lại danh sách báo cáo ngày"
-            >
-              Quay lại
-            </Button>
-            <Group gap="sm">
-              {report && (
-                <Button variant="light" color="blue" onClick={openMessageModal}>
-                  Xem tin nhắn báo cáo
+        {report && (
+          <Stack gap="md" maw={1280} mx="auto">
+            <Paper p="md" style={sectionCardStyle}>
+              <Group justify="space-between" align="flex-start" wrap="wrap" gap="sm">
+                <Button
+                  variant="subtle"
+                  leftSection={<IconArrowLeft size={16} aria-hidden="true" />}
+                  onClick={goBackToDailyReports}
+                  aria-label="Quay lại danh sách báo cáo ngày"
+                >
+                  Quay lại
                 </Button>
-              )}
-              {report && (
                 <Badge size="md" variant="outline" color="blue">
                   {format(new Date(report.date), "dd/MM/yyyy")}
                 </Badge>
-              )}
-            </Group>
-          </Group>
+              </Group>
 
-          {report && (
-            <Group gap="md" align="center">
-              <Box
-                w={44}
-                h={44}
-                className="rounded-full"
-                bg="blue.0"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center"
-                }}
-                aria-hidden="true"
-              >
-                <IconCalendar size={22} color="var(--mantine-color-blue-6)" />
-              </Box>
-              <Box>
-                <Text size="xl" fw={700}>
-                  Báo cáo ngày {format(new Date(report.date), "dd/MM/yyyy")}
-                </Text>
-                <Text size="sm" c="dimmed" mt={4}>
-                  Cập nhật lúc:{" "}
-                  {format(new Date(report.updatedAt), "HH:mm dd/MM/yyyy")}
-                </Text>
-              </Box>
-            </Group>
-          )}
-        </Paper>
+              <Group mt="sm" gap="md" align="center" wrap="wrap">
+                <Box
+                  w={42}
+                  h={42}
+                  bg="blue.0"
+                  style={{
+                    borderRadius: "999px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center"
+                  }}
+                >
+                  <IconCalendar size={20} color="var(--mantine-color-blue-6)" />
+                </Box>
+                <Box>
+                  <Text size="xl" fw={700}>
+                    Báo cáo ngày {format(new Date(report.date), "dd/MM/yyyy")}
+                  </Text>
+                  <Text size="sm" c="dimmed">
+                    Cập nhật lúc: {format(new Date(report.updatedAt), "HH:mm dd/MM/yyyy")}
+                  </Text>
+                </Box>
+              </Group>
+            </Paper>
 
-        {report && (
-          <Stack gap="lg">
-            {/* Dữ liệu doanh thu ngày */}
-            <SectionCard
-              title="Dữ liệu doanh thu ngày"
-              badgeLabel="Dữ liệu ngày"
-              badgeColor="blue"
-              description="Tổng quan doanh thu và số đơn trong ngày."
-            >
-              <Grid gutter="md">
-                <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-                  <StatCard
-                    label="Tổng doanh thu"
-                    value={`${report.revenue.toLocaleString("vi-VN")}đ`}
-                    valueColor="blue"
-                    tone="accent"
-                  />
-                </Grid.Col>
+            <Tabs defaultValue="visual">
+              <Tabs.List grow>
+                <Tabs.Tab value="visual" leftSection={<IconChartBar size={16} />}>
+                  Biểu đồ
+                </Tabs.Tab>
+                <Tabs.Tab value="message" leftSection={<IconChartPie size={16} />}>
+                  Tin nhắn báo cáo
+                </Tabs.Tab>
+              </Tabs.List>
 
-                <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-                  <Paper p="md" withBorder radius="sm" bg="gray.0">
-                    <Text size="sm" c="dimmed" mb={4} fw={500}>
-                      Doanh thu khách mới
-                    </Text>
-                    <Text size="lg" fw={600}>
-                      {(
-                        report.newFunnelRevenue.ads +
-                        report.newFunnelRevenue.other
-                      ).toLocaleString("vi-VN")}
-                      đ
-                    </Text>
-                    <Group gap="xs" mt="xs" wrap="wrap">
-                      <Text size="sm" c="dimmed">
-                        Ads:{" "}
-                        {report.newFunnelRevenue.ads.toLocaleString("vi-VN")}đ
-                      </Text>
-                      <Text size="sm" c="dimmed">
-                        • Khác:{" "}
-                        {report.newFunnelRevenue.other.toLocaleString("vi-VN")}đ
-                      </Text>
-                    </Group>
-                  </Paper>
-                </Grid.Col>
+              <Tabs.Panel value="visual" pt="md">
+                <Stack gap="md">
+                  <SectionCard title="Thông tin báo cáo" icon={<IconBuildingStore size={18} />}>
+                    <Grid gutter="md">
+                      <Grid.Col span={{ base: 12, md: 6 }}>
+                        <MetricTile label="Kênh" value={report.channel.channelName} />
+                      </Grid.Col>
+                      <Grid.Col span={{ base: 12, md: 6 }}>
+                        <MetricTile
+                          label="Ngày báo cáo"
+                          value={format(new Date(report.date), "dd/MM/yyyy")}
+                        />
+                      </Grid.Col>
+                    </Grid>
+                  </SectionCard>
 
-                <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-                  <StatCard
-                    label="Doanh thu khách quay lại"
-                    value={`${report.returningFunnelRevenue.toLocaleString(
-                      "vi-VN"
-                    )}đ`}
-                    tone="accent"
-                  />
-                </Grid.Col>
-
-                <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                  <StatCard
-                    label="Số đơn khách mới"
-                    value={report.newOrder}
-                    tone="accent"
-                  />
-                </Grid.Col>
-
-                <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                  <StatCard
-                    label="Số đơn khách cũ"
-                    value={report.returningOrder}
-                    tone="accent"
-                  />
-                </Grid.Col>
-
-                <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                  <StatCard
-                    label="Chi phí quảng cáo"
-                    value={`${report.adsCost.toLocaleString("vi-VN")}đ`}
-                    valueColor="red"
-                    tone="accent"
-                  />
-                </Grid.Col>
-
-                <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                  <StatCard
-                    label="KPI ngày"
-                    value={`${report.dateKpi.toLocaleString("vi-VN")}đ`}
-                    valueColor="yellow.9"
-                    tone="accent"
-                  />
-                </Grid.Col>
-              </Grid>
-            </SectionCard>
-
-            {/* Dữ liệu lũy kế tháng */}
-            <SectionCard
-              title="Dữ liệu lũy kế tháng"
-              badgeLabel="Dữ liệu tích lũy"
-              badgeColor="grape"
-              description="Tổng quan doanh thu và chi phí ads đến trước ngày hôm nay."
-            >
-              <Grid gutter="md">
-                <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-                  <StatCard
-                    label="Tổng doanh thu lũy kế"
-                    value={`${report.accumulatedRevenue.toLocaleString(
-                      "vi-VN"
-                    )}đ`}
-                    valueColor="green"
-                    tone="accent"
-                  />
-                </Grid.Col>
-
-                <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-                  <Paper p="md" withBorder radius="sm" bg="gray.0">
-                    <Text size="sm" c="dimmed" mb={4} fw={500}>
-                      Doanh thu khách mới lũy kế
-                    </Text>
-                    <Text size="lg" fw={600}>
-                      {(
-                        report.accumulatedNewFunnelRevenue.ads +
-                        report.accumulatedNewFunnelRevenue.other
-                      ).toLocaleString("vi-VN")}
-                      đ
-                    </Text>
-                    <Group gap="xs" mt="xs" wrap="wrap">
-                      <Text size="sm" c="dimmed">
-                        Ads:{" "}
-                        {report.accumulatedNewFunnelRevenue.ads.toLocaleString(
-                          "vi-VN"
-                        )}
-                        đ
-                      </Text>
-                      <Text size="sm" c="dimmed">
-                        • Khác:{" "}
-                        {report.accumulatedNewFunnelRevenue.other.toLocaleString(
-                          "vi-VN"
-                        )}
-                        đ
-                      </Text>
-                    </Group>
-                  </Paper>
-                </Grid.Col>
-
-                <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-                  <StatCard
-                    label="Tổng chi phí ads lũy kế"
-                    value={`${report.accumulatedAdsCost.toLocaleString(
-                      "vi-VN"
-                    )}đ`}
-                    valueColor="red"
-                    tone="accent"
-                  />
-                </Grid.Col>
-              </Grid>
-            </SectionCard>
-
-            {/* Chỉ số hiệu suất */}
-            <SectionCard
-              title="Chỉ số hiệu suất"
-              description="Các chỉ số tính trên lũy kế + ngày được báo cáo (tính đến thời điểm hiện tại)."
-            >
-              <Grid gutter="lg">
-                <Grid.Col span={{ base: 12, md: 6 }}>
-                  <Paper p="md" withBorder radius="md" bg="gray.0">
-                    <Stack gap="xs" align="center">
-                      <Text size="sm" fw={600} c="dimmed" ta="center">
-                        Đạt KPI (Tổng doanh thu / KPI Tháng)
-                      </Text>
-                      <Text fw={700} style={{ fontSize: 28 }} c="orange">
-                        {projectedKpiPercent}%
-                      </Text>
-                      <Text size="sm" c="dimmed" ta="center">
-                        <Text component="span" fw={600} c="orange">
+                  <Grid gutter="md">
+                    <Grid.Col span={{ base: 12, sm: 6, lg: 3 }}>
+                      <MetricTile
+                        label="Doanh số ngày"
+                        value={`${report.revenue.toLocaleString("vi-VN")}đ`}
+                        valueColor="blue"
+                      />
+                    </Grid.Col>
+                    <Grid.Col span={{ base: 12, sm: 6, lg: 3 }}>
+                      <MetricTile
+                        label="KPI ngày"
+                        value={`${report.dateKpi.toLocaleString("vi-VN")}đ`}
+                        valueColor="violet"
+                      />
+                    </Grid.Col>
+                    <Grid.Col span={{ base: 12, sm: 6, lg: 3 }}>
+                      <MetricTile
+                        label="Tỉ lệ đạt KPI ngày"
+                        value={`${dailyKpiPercent.toFixed(2)}%`}
+                        valueColor="teal"
+                      />
+                    </Grid.Col>
+                    <Grid.Col span={{ base: 12, sm: 6, lg: 3 }}>
+                      <Paper withBorder p="sm" radius="md" bg="white" h="100%">
+                        <Text size="xs" c="dimmed" mb={4}>
+                          Lũy kế tháng
+                        </Text>
+                        <Text fw={700} size="xl" c="orange" mb={8}>
                           {projectedRevenue.toLocaleString("vi-VN")}đ
                         </Text>
-                        {" / "}
-                        <Text component="span" fw={600}>
-                          {kpiData?.toLocaleString("vi-VN")}đ
+                        <Text size="xs" c="dimmed">
+                          KPI tháng: {(kpiData || 0).toLocaleString("vi-VN")}đ
                         </Text>
-                      </Text>
-                      <Text size="xs" c="dimmed" ta="center">
-                        Đã cộng cả chi phí & doanh thu từ Ads của ngày{" "}
-                        {format(new Date(report.date), "dd/MM")}
-                      </Text>
-                    </Stack>
-                  </Paper>
-                </Grid.Col>
+                        <Text size="xs" c="dimmed" mb={8}>
+                          Tỉ lệ hoàn thành: {monthlyKpiPercent.toFixed(2)}%
+                        </Text>
+                        <Progress
+                          value={Math.min(monthlyKpiPercent, 100)}
+                          color="orange"
+                          radius="xl"
+                          size="md"
+                        />
+                      </Paper>
+                    </Grid.Col>
+                  </Grid>
 
-                <Grid.Col span={{ base: 12, md: 6 }}>
-                  <Paper p="md" withBorder radius="md" bg="gray.0">
-                    <Stack gap="xs" align="center">
-                      <Text size="sm" fw={600} c="dimmed" ta="center">
-                        CAC (Chi phí / Doanh thu từ Ads)
-                      </Text>
-                      <Text fw={700} style={{ fontSize: 28 }} c="orange">
-                        {projectedCacPercent}%
-                      </Text>
-                      <Text size="sm" c="dimmed" ta="center">
-                        <Text component="span" fw={600} c="orange">
-                          {projectedAdsCost.toLocaleString("vi-VN")}đ
+                  <Grid gutter="md">
+                    <Grid.Col span={{ base: 12, md: 6 }}>
+                      <SectionCard title="Cơ cấu doanh số">
+                        <Box
+                          style={{
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center"
+                          }}
+                        >
+                          <PieChart
+                            data={revenueStructureData}
+                            size={260}
+                            withTooltip
+                            tooltipDataSource="segment"
+                          />
+                        </Box>
+                        <Stack gap={6} mt="sm">
+                          {revenueStructureData.map((item) => {
+                            const percent =
+                              totalStructureRevenue > 0
+                                ? (item.value / totalStructureRevenue) * 100
+                                : 0
+                            return (
+                              <Group key={item.name} justify="space-between" wrap="nowrap">
+                                <Group gap="xs">
+                                  <Box
+                                    w={10}
+                                    h={10}
+                                    style={{
+                                      borderRadius: 999,
+                                      background:
+                                        item.color === "blue.6"
+                                          ? "var(--mantine-color-blue-6)"
+                                          : "var(--mantine-color-violet-6)"
+                                    }}
+                                  />
+                                  <Text size="sm">{item.name}</Text>
+                                </Group>
+                                <Text size="sm" c="dimmed">
+                                  {item.value.toLocaleString("vi-VN")}đ ({percent.toFixed(1)}%)
+                                </Text>
+                              </Group>
+                            )
+                          })}
+                        </Stack>
+                      </SectionCard>
+                    </Grid.Col>
+
+                    <Grid.Col span={{ base: 12, md: 6 }}>
+                      <SectionCard title="Chi phí ads">
+                        <Text fw={700} size="xl" c="red" mb="sm">
+                          {report.adsCost.toLocaleString("vi-VN")}đ
                         </Text>
-                        {" / "}
-                        <Text component="span" fw={600}>
-                          {projectedNewFunnelRevenueAds.toLocaleString("vi-VN")}
-                          đ
-                        </Text>
-                      </Text>
-                      <Text size="xs" c="dimmed" ta="center">
-                        Đã cộng cả chi phí & doanh thu từ Ads của ngày{" "}
-                        {format(new Date(report.date), "dd/MM")}
-                      </Text>
-                    </Stack>
-                  </Paper>
-                </Grid.Col>
-              </Grid>
-            </SectionCard>
+                        <BarChart
+                          h={220}
+                          data={adsVsRevenueData}
+                          dataKey="label"
+                          withLegend
+                          series={[
+                            { name: "revenue", label: "Doanh thu", color: "blue.6" },
+                            { name: "adsCost", label: "Chi phí ads", color: "red.6" }
+                          ]}
+                          yAxisProps={{ width: 80 }}
+                          tickLine="y"
+                          gridAxis="y"
+                        />
+                      </SectionCard>
+                    </Grid.Col>
+                  </Grid>
+
+                </Stack>
+              </Tabs.Panel>
+
+              <Tabs.Panel value="message" pt="md">
+                <Paper p="md" style={sectionCardStyle}>
+                  <DailyReportByText
+                    report={{
+                      _id: report._id,
+                      date: report.date,
+                      channel: report.channel._id,
+                      adsCost: report.adsCost,
+                      dateKpi: report.dateKpi,
+                      revenue: report.revenue,
+                      newFunnelRevenue: report.newFunnelRevenue,
+                      returningFunnelRevenue: report.returningFunnelRevenue,
+                      newOrder: report.newOrder,
+                      returningOrder: report.returningOrder,
+                      accumulatedRevenue: report.accumulatedRevenue,
+                      accumulatedAdsCost: report.accumulatedAdsCost,
+                      accumulatedNewFunnelRevenue: report.accumulatedNewFunnelRevenue,
+                      createdAt: report.createdAt,
+                      updatedAt: report.updatedAt
+                    }}
+                  />
+                </Paper>
+              </Tabs.Panel>
+            </Tabs>
           </Stack>
         )}
       </Box>

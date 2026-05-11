@@ -11,7 +11,8 @@ import {
   ThemeIcon,
   RingProgress,
   Stack,
-  Badge
+  Badge,
+  rem
 } from "@mantine/core"
 import {
   IconTrendingUp,
@@ -55,6 +56,13 @@ interface MonthlyMetricsProps {
   topCustomersLoading: boolean
 }
 
+const sectionCardStyle = {
+  border: "1px solid #E5E7EB",
+  borderRadius: rem(14),
+  boxShadow: "0 1px 3px rgba(15, 23, 42, 0.06)",
+  background: "#fff"
+}
+
 export function MonthlyMetrics({
   isLoading,
   data,
@@ -74,49 +82,48 @@ export function MonthlyMetrics({
 
   return (
     <>
-      {/* Metrics KPI Cards */}
-      <Grid gutter="md" mb="xl">
-        <Grid.Col span={{ base: 12, sm: 6, md: 6 }}>
-          <Card shadow="sm" padding="lg" radius="md" withBorder>
+      <Grid gutter={14} mb="md">
+        <Grid.Col span={{ base: 12, md: 6 }}>
+          <Card padding="md" style={sectionCardStyle}>
             {isLoading ? (
-              <Skeleton height={100} />
+              <Skeleton height={72} />
             ) : (
               <Tooltip label="Giá trị đơn hàng trung bình">
                 <Box>
-                  <Group justify="space-between" mb="xs">
-                    <Text size="sm" c="dimmed">
+                  <Group justify="space-between" mb={8}>
+                    <Text size="xs" c="dimmed" fw={500}>
                       Giá trị đơn hàng trung bình
                     </Text>
-                    <ThemeIcon variant="light" size="lg" color="pink">
-                      <IconTrendingUp size={20} />
+                    <ThemeIcon variant="light" size={34} radius={10} color="pink">
+                      <IconTrendingUp size={18} />
                     </ThemeIcon>
                   </Group>
-                  <Text fw={700} fz="xl">
-                    {data?.avgDealSize.toLocaleString("vi-VN")}đ
+                  <Text fw={700} fz={{ base: "xl", md: 28 }}>
+                    {(data?.avgDealSize ?? 0).toLocaleString("vi-VN")}đ
                   </Text>
                 </Box>
               </Tooltip>
             )}
           </Card>
         </Grid.Col>
-        <Grid.Col span={{ base: 12, sm: 6, md: 6 }}>
-          <Card shadow="sm" padding="lg" radius="md" withBorder>
+        <Grid.Col span={{ base: 12, md: 6 }}>
+          <Card padding="md" style={sectionCardStyle}>
             {isLoading ? (
-              <Skeleton height={100} />
+              <Skeleton height={72} />
             ) : (
-              <Tooltip label="Giá trị đơn hàng trung bình">
+              <Tooltip label="KPI tháng">
                 <Box>
-                  <Group justify="space-between" mb="xs">
-                    <Text size="sm" c="dimmed">
+                  <Group justify="space-between" mb={8}>
+                    <Text size="xs" c="dimmed" fw={500}>
                       KPI
                     </Text>
-                    <ThemeIcon variant="light" size="lg" color="red">
-                      <IconTargetArrow size={20} />
+                    <ThemeIcon variant="light" size={34} radius={10} color="red">
+                      <IconTargetArrow size={18} />
                     </ThemeIcon>
                   </Group>
-                  <Text fw={700} fz="xl">
-                    {data?.monthlyGoal.toLocaleString("vi-VN")}đ (
-                    {data?.goalCompletionPercentage.toFixed(2)}%)
+                  <Text fw={700} fz={{ base: "xl", md: 28 }}>
+                    {(data?.monthlyGoal ?? 0).toLocaleString("vi-VN")}đ (
+                    {(data?.goalCompletionPercentage ?? 0).toFixed(2)}%)
                   </Text>
                 </Box>
               </Tooltip>
@@ -125,14 +132,7 @@ export function MonthlyMetrics({
         </Grid.Col>
       </Grid>
 
-      <Card
-        shadow="sm"
-        padding="lg"
-        radius="md"
-        withBorder
-        mt="xl"
-        maw={"100%"}
-      >
+      <Card padding="md" style={sectionCardStyle} mb="md">
         <TopCustomersChart
           isLoading={topCustomersLoading}
           data={topCustomersData?.data}
@@ -140,27 +140,21 @@ export function MonthlyMetrics({
         />
       </Card>
 
-      {/* Stage Transitions */}
-      <Card
-        shadow="sm"
-        padding="lg"
-        radius="md"
-        withBorder
-        className="standards"
-      >
-        <Group mb="md">
-          <IconTrendingUp size={20} />
+      <Card padding="md" style={sectionCardStyle}>
+        <Group mb="md" gap="xs">
+          <IconTrendingUp size={18} />
           <Text fw={600}>Chuyển đổi giai đoạn</Text>
         </Group>
+
         {isLoading ? (
-          <Skeleton height={200} />
+          <Skeleton height={210} />
         ) : data && stagePercentages ? (
-          <Grid gutter="xl">
-            <Grid.Col span={3}>
-              <Stack align="center" gap="xs">
+          <Grid gutter={10} align="center">
+            <Grid.Col span={{ base: 6, sm: 6, lg: 3 }}>
+              <Stack align="center" gap={6}>
                 <RingProgress
-                  size={140}
-                  thickness={14}
+                  size={112}
+                  thickness={11}
                   sections={[{ value: 100, color: "blue" }]}
                   label={
                     <Text ta="center" fw={700} size="xl">
@@ -168,7 +162,7 @@ export function MonthlyMetrics({
                     </Text>
                   }
                 />
-                <Badge size="lg" color="blue">
+                <Badge size="md" color="blue" radius="xl" tt="uppercase">
                   Lead
                 </Badge>
                 <Text size="sm" c="dimmed" fw={600}>
@@ -176,24 +170,20 @@ export function MonthlyMetrics({
                 </Text>
               </Stack>
             </Grid.Col>
-            <Grid.Col span={3}>
-              <Stack align="center" gap="xs">
+
+            <Grid.Col span={{ base: 6, sm: 6, lg: 3 }}>
+              <Stack align="center" gap={6}>
                 <RingProgress
-                  size={140}
-                  thickness={14}
-                  sections={[
-                    {
-                      value: stagePercentages.contacted,
-                      color: "cyan"
-                    }
-                  ]}
+                  size={112}
+                  thickness={11}
+                  sections={[{ value: stagePercentages.contacted, color: "cyan" }]}
                   label={
                     <Text ta="center" fw={700} size="xl">
                       {data.stageTransitions.contacted}
                     </Text>
                   }
                 />
-                <Badge size="lg" color="cyan">
+                <Badge size="md" color="cyan" radius="xl" tt="uppercase">
                   Đã liên hệ
                 </Badge>
                 <Text size="sm" c="dimmed" fw={600}>
@@ -201,21 +191,20 @@ export function MonthlyMetrics({
                 </Text>
               </Stack>
             </Grid.Col>
-            <Grid.Col span={3}>
-              <Stack align="center" gap="xs">
+
+            <Grid.Col span={{ base: 6, sm: 6, lg: 3 }}>
+              <Stack align="center" gap={6}>
                 <RingProgress
-                  size={140}
-                  thickness={14}
-                  sections={[
-                    { value: stagePercentages.customer, color: "green" }
-                  ]}
+                  size={112}
+                  thickness={11}
+                  sections={[{ value: stagePercentages.customer, color: "green" }]}
                   label={
                     <Text ta="center" fw={700} size="xl">
                       {data.stageTransitions.customer}
                     </Text>
                   }
                 />
-                <Badge size="lg" color="green">
+                <Badge size="md" color="green" radius="xl" tt="uppercase">
                   Khách hàng
                 </Badge>
                 <Text size="sm" c="dimmed" fw={600}>
@@ -223,11 +212,12 @@ export function MonthlyMetrics({
                 </Text>
               </Stack>
             </Grid.Col>
-            <Grid.Col span={3}>
-              <Stack align="center" gap="xs">
+
+            <Grid.Col span={{ base: 6, sm: 6, lg: 3 }}>
+              <Stack align="center" gap={6}>
                 <RingProgress
-                  size={140}
-                  thickness={14}
+                  size={112}
+                  thickness={11}
                   sections={[{ value: stagePercentages.closed, color: "gray" }]}
                   label={
                     <Text ta="center" fw={700} size="xl">
@@ -235,7 +225,7 @@ export function MonthlyMetrics({
                     </Text>
                   }
                 />
-                <Badge size="lg" color="gray">
+                <Badge size="md" color="gray" radius="xl" tt="uppercase">
                   Đã đóng
                 </Badge>
                 <Text size="sm" c="dimmed" fw={600}>
@@ -245,7 +235,7 @@ export function MonthlyMetrics({
             </Grid.Col>
           </Grid>
         ) : (
-          <Alert color="yellow" icon={<IconAlertCircle />}>
+          <Alert color="yellow" icon={<IconAlertCircle />} radius="md" p="sm">
             Không có dữ liệu
           </Alert>
         )}

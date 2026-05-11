@@ -7,7 +7,8 @@ import {
   Alert,
   Skeleton,
   SegmentedControl,
-  Paper
+  Paper,
+  rem
 } from "@mantine/core"
 import { IconChartBar, IconAlertCircle } from "@tabler/icons-react"
 import { BarChart, PieChart } from "@mantine/charts"
@@ -17,6 +18,13 @@ interface TopProductsChartProps {
   topItemsByRevenue?: Array<{ code: string; name: string; revenue: number }>
   topItemsByQuantity?: Array<{ code: string; name: string; quantity: number }>
   otherItemsRevenue?: number
+}
+
+const cardStyle = {
+  border: "1px solid #E5E7EB",
+  borderRadius: rem(14),
+  boxShadow: "0 1px 3px rgba(15, 23, 42, 0.06)",
+  background: "#fff"
 }
 
 export function TopProductsChart({
@@ -70,7 +78,9 @@ export function TopProductsChart({
       }
 
       return items
-    } else if (topItemsView === "quantity" && topItemsByQuantity) {
+    }
+
+    if (topItemsView === "quantity" && topItemsByQuantity) {
       return topItemsByQuantity.map((item, index) => ({
         name: `${item.code} - ${item.name}`,
         value: item.quantity,
@@ -81,27 +91,28 @@ export function TopProductsChart({
     return []
   }, [topItemsByRevenue, topItemsByQuantity, otherItemsRevenue, topItemsView])
 
-  console.log(topItemsPieData)
-
   return (
-    <Card shadow="sm" padding="lg" radius="md" withBorder>
-      <Group mb="md" justify="space-between" wrap="wrap">
-        <Group>
-          <IconChartBar size={20} />
+    <Card padding="md" style={cardStyle}>
+      <Group mb="sm" justify="space-between" wrap="wrap" gap={10}>
+        <Group gap="xs">
+          <IconChartBar size={18} />
           <Text fw={600}>Top 10 sản phẩm bán chạy</Text>
         </Group>
-        <Group gap="sm">
+
+        <Group gap={8} wrap="wrap">
           <SegmentedControl
+            size="xs"
+            radius="md"
             value={topItemsView}
-            onChange={(value) =>
-              setTopItemsView(value as "revenue" | "quantity")
-            }
+            onChange={(value) => setTopItemsView(value as "revenue" | "quantity")}
             data={[
               { label: "Theo doanh thu", value: "revenue" },
               { label: "Theo số lượng", value: "quantity" }
             ]}
           />
           <SegmentedControl
+            size="xs"
+            radius="md"
             value={topItemsChartType}
             onChange={(value) => setTopItemsChartType(value as "bar" | "pie")}
             data={[
@@ -113,21 +124,12 @@ export function TopProductsChart({
       </Group>
 
       {isLoading ? (
-        <Skeleton height={400} />
+        <Skeleton height={260} />
       ) : topItemsChartType === "bar" ? (
         filteredItems.length > 0 ? (
-          <Box
-            style={{
-              "& .recharts-bar-rectangle:hover": {
-                opacity: 0.8
-              },
-              "& .recharts-active-bar": {
-                filter: "none"
-              }
-            }}
-          >
+          <Box>
             <BarChart
-              h={400}
+              h={260}
               data={filteredItems.map((item) => ({
                 name: `${item.code} - ${item.name}`,
                 value:
@@ -147,7 +149,7 @@ export function TopProductsChart({
               tickLine="x"
               withLegend={false}
               withYAxis
-              yAxisProps={{ width: 100 }}
+              yAxisProps={{ width: 96 }}
               tooltipProps={{
                 content: ({ active, payload, label }: any) => {
                   if (active && payload && payload.length) {
@@ -176,10 +178,7 @@ export function TopProductsChart({
                             }}
                           />
                           <Text size="sm">
-                            {topItemsView === "revenue"
-                              ? "Doanh thu"
-                              : "Số lượng"}
-                            :
+                            {topItemsView === "revenue" ? "Doanh thu" : "Số lượng"}:
                           </Text>
                           <Text size="sm" fw={600}>
                             {topItemsView === "revenue"
@@ -192,38 +191,37 @@ export function TopProductsChart({
                   }
                   return null
                 },
-                cursor: {
-                  fill: "transparent"
-                }
+                cursor: { fill: "transparent" }
               }}
             />
           </Box>
         ) : (
-          <Alert color="yellow" icon={<IconAlertCircle />}>
+          <Alert
+            color="yellow"
+            icon={<IconAlertCircle size={14} />}
+            radius="md"
+            p="sm"
+            styles={{
+              root: { background: "#fff7e8", borderColor: "#fde7c2" },
+              message: { fontSize: 13 }
+            }}
+          >
             Không có dữ liệu
           </Alert>
         )
       ) : topItemsPieData.length > 0 ? (
         <Box
-          w={"100%"}
-          h={380}
+          w="100%"
+          h={260}
           mx="auto"
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center"
-          }}
+          style={{ display: "flex", justifyContent: "center", alignItems: "center" }}
         >
           <PieChart
             data={topItemsPieData}
             withLabels
             withTooltip
-            styles={{
-              root: {
-                width: "100%"
-              }
-            }}
-            size={320}
+            styles={{ root: { width: "100%" } }}
+            size={220}
             tooltipDataSource="segment"
             valueFormatter={(value: number) =>
               topItemsView === "revenue"
@@ -233,7 +231,16 @@ export function TopProductsChart({
           />
         </Box>
       ) : (
-        <Alert color="yellow" icon={<IconAlertCircle />}>
+        <Alert
+          color="yellow"
+          icon={<IconAlertCircle size={14} />}
+          radius="md"
+          p="sm"
+          styles={{
+            root: { background: "#fff7e8", borderColor: "#fde7c2" },
+            message: { fontSize: 13 }
+          }}
+        >
           Không có dữ liệu
         </Alert>
       )}
