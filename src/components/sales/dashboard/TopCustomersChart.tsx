@@ -1,12 +1,4 @@
-import {
-  Box,
-  Group,
-  Paper,
-  Skeleton,
-  Text,
-  Title,
-  ScrollArea
-} from "@mantine/core"
+import { Box, Group, Paper, Skeleton, Text, Title, ScrollArea } from "@mantine/core"
 import { BarChart } from "@mantine/charts"
 import { IconCrown } from "@tabler/icons-react"
 
@@ -31,28 +23,34 @@ export const TopCustomersChart = ({
 }: TopCustomersChartProps) => {
   if (isLoading) {
     return (
-      <Paper p="md" withBorder>
-        <Skeleton height={30} width="60%" mb="md" />
-        <Skeleton height={300} />
+      <Paper p={0} withBorder={false}>
+        <Skeleton height={28} width="52%" mb="md" />
+        <Skeleton height={320} radius="md" />
       </Paper>
     )
   }
 
   if (!data || data.length === 0) {
     return (
-      <Paper p="md" withBorder>
+      <Paper p={0} withBorder={false}>
         <Group gap="xs" mb="md">
-          <IconCrown size={20} color="var(--mantine-color-yellow-6)" />
+          <IconCrown size={18} color="var(--mantine-color-yellow-6)" />
           <Title order={4}>Top khách hàng theo doanh thu</Title>
         </Group>
-        <Text c="dimmed" ta="center" py={60}>
-          Không có dữ liệu
-        </Text>
+        <Paper
+          withBorder
+          radius="md"
+          p="sm"
+          style={{ background: "#fff7e8", borderColor: "#fde7c2" }}
+        >
+          <Text c="dimmed" size="sm">
+            Không có dữ liệu
+          </Text>
+        </Paper>
       </Paper>
     )
   }
 
-  // Prepare chart data
   const chartData = data.map((customer) => ({
     customer: customer.customerName,
     "Doanh thu": customer.revenue,
@@ -60,13 +58,11 @@ export const TopCustomersChart = ({
     orders: customer.orderCount
   }))
 
-  // Calculate minimum width for scrollable area based on number of items
-
   return (
     <Box style={{ width: "100%", overflow: "hidden" }}>
       <Group justify="space-between" mb="md">
         <Group gap="xs">
-          <IconCrown size={20} color="var(--mantine-color-yellow-6)" />
+          <IconCrown size={18} color="var(--mantine-color-yellow-6)" />
           <Title order={4}>Top khách hàng theo doanh thu</Title>
         </Group>
         <Text size="sm" c="dimmed">
@@ -75,7 +71,7 @@ export const TopCustomersChart = ({
       </Group>
 
       <ScrollArea>
-        <Box style={{ minWidth: `1000%` }}>
+        <Box style={{ minWidth: "1000%" }}>
           <BarChart
             h={400}
             data={chartData}
@@ -84,27 +80,24 @@ export const TopCustomersChart = ({
             tickLine="y"
             gridAxis="y"
             withLegend
-            yAxisProps={{
-              width: 100
-            }}
+            yAxisProps={{ width: 100 }}
             tooltipProps={{
               content: ({ label, payload }) => {
                 if (!payload || payload.length === 0) return null
-                const data = payload[0].payload
+                const point = payload[0].payload
                 return (
                   <Paper px="md" py="sm" withBorder shadow="md" radius="md">
                     <Text fw={600} mb={4}>
                       {label}
                     </Text>
                     <Text size="sm" c="dimmed" mb={8}>
-                      {data.phone}
+                      {point.phone}
                     </Text>
                     <Text size="sm" mb={4}>
-                      <strong>Doanh thu:</strong>{" "}
-                      {data["Doanh thu"].toLocaleString("vi-VN")}đ
+                      <strong>Doanh thu:</strong> {point["Doanh thu"].toLocaleString("vi-VN")}đ
                     </Text>
                     <Text size="sm">
-                      <strong>Số đơn:</strong> {data.orders}
+                      <strong>Số đơn:</strong> {point.orders}
                     </Text>
                   </Paper>
                 )

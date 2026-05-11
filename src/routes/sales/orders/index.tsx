@@ -18,6 +18,7 @@ import { format } from "date-fns"
 import {
   IconPlus,
   IconEdit,
+  IconEye,
   IconTrash,
   IconDownload,
   IconFileUpload
@@ -434,6 +435,14 @@ function RouteComponent() {
     [deleteSalesOrder, refetch]
   )
 
+  const handleOpenFunnelDetail = useCallback(
+    (funnelId?: string) => {
+      if (!funnelId) return
+      navigate({ to: `/sales/funnel/${funnelId}` })
+    },
+    [navigate]
+  )
+
   const handleRowSelectionChange = useCallback(
     (rowsOnThisPageSelected: SalesOrderItem[]) => {
       setSelectedOrders((prev) => {
@@ -483,25 +492,40 @@ function RouteComponent() {
       {
         accessorKey: "salesFunnelId.name",
         header: "Khách hàng",
-        cell: ({ row }) => (
-          <div>
-            <Flex gap={4} align={"center"}>
-              <Text fw={500} size="sm">
-                {row.original.salesFunnelId.name}
-              </Text>
-              <Badge
-                variant="light"
+        cell: ({ row }) => {
+          const funnelId = row.original.salesFunnelId?._id
+
+          return (
+            <div>
+              <Flex gap={4} align={"center"}>
+                <Text
+                  fw={500}
+                  size="sm"
+                  style={funnelId ? { cursor: "pointer" } : undefined}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleOpenFunnelDetail(funnelId)
+                  }}
+                >
+                  {row.original.salesFunnelId.name}
+                </Text>
+                <Badge
+                  variant="light"
+                  size="xs"
+                  color={row.original.returning ? "violet" : "green"}
+                >
+                  {row.original.returning ? "Khách cũ" : "Khách mới"}
+                </Badge>
+              </Flex>
+              <Text
                 size="xs"
-                color={row.original.returning ? "violet" : "green"}
+                c="dimmed"
               >
-                {row.original.returning ? "Khách cũ" : "Khách mới"}
-              </Badge>
-            </Flex>
-            <Text size="xs" c="dimmed">
-              {row.original.salesFunnelId.phoneNumber}
-            </Text>
-          </div>
-        )
+                {row.original.salesFunnelId.phoneNumber}
+              </Text>
+            </div>
+          )
+        }
       },
       {
         accessorKey: "items",
@@ -602,6 +626,18 @@ function RouteComponent() {
             <Group gap="xs">
               <ActionIcon
                 variant="light"
+                color="blue"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  navigate({ to: `/sales/orders/${row.original._id}` })
+                }}
+                title="Xem chi tiết"
+              >
+                <IconEye size={16} />
+              </ActionIcon>
+              <ActionIcon
+                variant="light"
                 color="indigo"
                 size="sm"
                 onClick={(e) => {
@@ -631,7 +667,11 @@ function RouteComponent() {
         enableSorting: false
       }
     ],
-    [handleUpdateItems, handleDeleteOrder]
+    [
+      handleUpdateItems,
+      handleDeleteOrder,
+      handleOpenFunnelDetail
+    ]
   )
 
   const normalizeQuoted = (v?: string) => {
@@ -803,11 +843,9 @@ function RouteComponent() {
             initialPageSize={limit}
             pageSizeOptions={[10, 20, 50, 100]}
             isLoading={isLoading}
-            onRowClick={(row) =>
-              navigate({ to: `/sales/orders/${row.original._id}` })
-            }
             getRowId={getRowId}
             enableRowSelection={true}
+            onRowClick={(row) => row.toggleSelected()}
             onRowSelectionChange={(rows) =>
               handleRowSelectionChange(rows as SalesOrderItem[])
             }
