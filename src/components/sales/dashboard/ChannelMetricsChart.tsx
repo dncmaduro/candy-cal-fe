@@ -7,7 +7,8 @@ import {
   Alert,
   Skeleton,
   SegmentedControl,
-  Paper
+  Paper,
+  rem
 } from "@mantine/core"
 import { IconChartBar, IconAlertCircle } from "@tabler/icons-react"
 import { BarChart } from "@mantine/charts"
@@ -24,6 +25,13 @@ interface ChannelMetricsChartProps {
   data?: ChannelData[]
 }
 
+const cardStyle = {
+  border: "1px solid #E5E7EB",
+  borderRadius: rem(14),
+  boxShadow: "0 1px 3px rgba(15, 23, 42, 0.06)",
+  background: "#fff"
+}
+
 export function ChannelMetricsChart({
   isLoading,
   data
@@ -33,13 +41,15 @@ export function ChannelMetricsChart({
   >("revenue")
 
   return (
-    <Card shadow="sm" padding="lg" radius="md" withBorder>
-      <Group mb="md" justify="space-between">
-        <Group>
-          <IconChartBar size={20} />
+    <Card padding="md" style={cardStyle}>
+      <Group mb="sm" justify="space-between" wrap="wrap" align="center" gap={10}>
+        <Group gap="xs">
+          <IconChartBar size={18} />
           <Text fw={600}>Chỉ số theo kênh</Text>
         </Group>
         <SegmentedControl
+          size="xs"
+          radius="md"
           value={channelMetricView}
           onChange={(value) =>
             setChannelMetricView(value as "revenue" | "quantity")
@@ -50,25 +60,16 @@ export function ChannelMetricsChart({
           ]}
         />
       </Group>
+
       {isLoading ? (
-        <Skeleton height={300} />
+        <Skeleton height={220} />
       ) : data && data.length > 0 ? (
-        <Box
-          style={{
-            "& .rechartsBarRectangle:hover": {
-              opacity: 0.8
-            },
-            "& .rechartsActiveBar": {
-              filter: "none"
-            }
-          }}
-        >
+        <Box>
           <BarChart
-            h={300}
+            h={220}
             data={data.map((ch) => ({
               channelName: ch.channelName,
-              value:
-                channelMetricView === "revenue" ? ch.revenue : ch.orderCount
+              value: channelMetricView === "revenue" ? ch.revenue : ch.orderCount
             }))}
             dataKey="channelName"
             series={[
@@ -81,7 +82,7 @@ export function ChannelMetricsChart({
             tickLine="y"
             withLegend={false}
             withYAxis
-            yAxisProps={{ width: 100 }}
+            yAxisProps={{ width: 80 }}
             tooltipProps={{
               content: ({ active, payload, label }: any) => {
                 if (active && payload && payload.length) {
@@ -110,10 +111,7 @@ export function ChannelMetricsChart({
                           }}
                         />
                         <Text size="sm">
-                          {channelMetricView === "revenue"
-                            ? "Doanh thu"
-                            : "Số đơn"}
-                          :
+                          {channelMetricView === "revenue" ? "Doanh thu" : "Số đơn"}:
                         </Text>
                         <Text size="sm" fw={600}>
                           {channelMetricView === "revenue"
@@ -126,14 +124,21 @@ export function ChannelMetricsChart({
                 }
                 return null
               },
-              cursor: {
-                fill: "transparent"
-              }
+              cursor: { fill: "transparent" }
             }}
           />
         </Box>
       ) : (
-        <Alert color="yellow" icon={<IconAlertCircle />}>
+        <Alert
+          color="yellow"
+          icon={<IconAlertCircle size={14} />}
+          radius="md"
+          p="sm"
+          styles={{
+            root: { background: "#fff7e8", borderColor: "#fde7c2" },
+            message: { fontSize: 13 }
+          }}
+        >
           Không có dữ liệu
         </Alert>
       )}

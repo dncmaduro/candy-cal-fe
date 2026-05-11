@@ -9,7 +9,8 @@ import {
   ScrollArea,
   Table,
   TextInput,
-  Badge
+  Badge,
+  rem
 } from "@mantine/core"
 import { IconSearch, IconAlertCircle } from "@tabler/icons-react"
 
@@ -39,6 +40,13 @@ interface RevenueTablesProps {
   items?: ItemData[]
   channels?: ChannelData[]
   users?: UserData[]
+}
+
+const cardStyle = {
+  border: "1px solid #E5E7EB",
+  borderRadius: rem(14),
+  boxShadow: "0 1px 3px rgba(15, 23, 42, 0.06)",
+  background: "#fff"
 }
 
 export function RevenueTables({
@@ -72,24 +80,26 @@ export function RevenueTables({
   }, [users, userFilter])
 
   return (
-    <Grid gutter="md">
-      {/* Items Table */}
-      <Grid.Col span={{ base: 12 }}>
-        <Card shadow="sm" padding="lg" radius="md" withBorder>
-          <Group mb="md" justify="space-between">
+    <Grid gutter={14}>
+      <Grid.Col span={{ base: 12, md: 6, xl: 4 }}>
+        <Card padding="md" style={cardStyle}>
+          <Group mb="sm" justify="space-between" wrap="wrap" gap={8}>
             <Text fw={600}>Sản phẩm bán chạy</Text>
             <TextInput
               placeholder="Tìm kiếm..."
-              size="xs"
+              size="sm"
+              h={40}
+              radius="md"
               leftSection={<IconSearch size={14} />}
               value={itemsFilter}
               onChange={(e) => setItemsFilter(e.currentTarget.value)}
-              style={{ width: 200 }}
+              miw={170}
             />
           </Group>
-          <ScrollArea h={400}>
+
+          <ScrollArea mah={360}>
             {isLoading ? (
-              <Skeleton height={400} />
+              <Skeleton height={240} />
             ) : filteredItems.length > 0 ? (
               <Table striped highlightOnHover>
                 <Table.Thead>
@@ -114,14 +124,11 @@ export function RevenueTables({
                         </Text>
                       </Table.Td>
                       <Table.Td ta="right">
-                        <Badge size="sm">
-                          {(item as any).quantity || (item as any).revenue}
-                        </Badge>
+                        <Badge size="sm">{(item as any).quantity || (item as any).revenue}</Badge>
                       </Table.Td>
                       <Table.Td ta="right">
                         <Text size="sm" fw={500}>
-                          {((item as any).revenue || 0).toLocaleString("vi-VN")}
-                          đ
+                          {((item as any).revenue || 0).toLocaleString("vi-VN")}đ
                         </Text>
                       </Table.Td>
                     </Table.Tr>
@@ -129,7 +136,16 @@ export function RevenueTables({
                 </Table.Tbody>
               </Table>
             ) : (
-              <Alert color="yellow" icon={<IconAlertCircle />}>
+              <Alert
+                color="yellow"
+                icon={<IconAlertCircle size={14} />}
+                radius="md"
+                p="sm"
+                styles={{
+                  root: { background: "#fff7e8", borderColor: "#fde7c2" },
+                  message: { fontSize: 13 }
+                }}
+              >
                 Không có dữ liệu
               </Alert>
             )}
@@ -137,23 +153,25 @@ export function RevenueTables({
         </Card>
       </Grid.Col>
 
-      {/* Channels Table */}
-      <Grid.Col span={{ base: 12 }}>
-        <Card shadow="sm" padding="lg" radius="md" withBorder>
-          <Group mb="md" justify="space-between">
+      <Grid.Col span={{ base: 12, md: 6, xl: 4 }}>
+        <Card padding="md" style={cardStyle}>
+          <Group mb="sm" justify="space-between" wrap="wrap" gap={8}>
             <Text fw={600}>Theo kênh</Text>
             <TextInput
               placeholder="Tìm kiếm..."
-              size="xs"
+              size="sm"
+              h={40}
+              radius="md"
               leftSection={<IconSearch size={14} />}
               value={channelFilter}
               onChange={(e) => setChannelFilter(e.currentTarget.value)}
-              style={{ width: 200 }}
+              miw={170}
             />
           </Group>
-          <ScrollArea h={400}>
+
+          <ScrollArea mah={360}>
             {isLoading ? (
-              <Skeleton height={400} />
+              <Skeleton height={240} />
             ) : filteredChannels.length > 0 ? (
               <Table striped highlightOnHover>
                 <Table.Thead>
@@ -183,9 +201,7 @@ export function RevenueTables({
                       <Table.Td ta="right">
                         <Text size="sm" c="dimmed">
                           {ch.orderCount > 0
-                            ? (ch.revenue / ch.orderCount).toLocaleString(
-                                "vi-VN"
-                              )
+                            ? (ch.revenue / ch.orderCount).toLocaleString("vi-VN")
                             : "0"}
                           đ
                         </Text>
@@ -195,7 +211,16 @@ export function RevenueTables({
                 </Table.Tbody>
               </Table>
             ) : (
-              <Alert color="yellow" icon={<IconAlertCircle />}>
+              <Alert
+                color="yellow"
+                icon={<IconAlertCircle size={14} />}
+                radius="md"
+                p="sm"
+                styles={{
+                  root: { background: "#fff7e8", borderColor: "#fde7c2" },
+                  message: { fontSize: 13 }
+                }}
+              >
                 Không có dữ liệu
               </Alert>
             )}
@@ -203,23 +228,25 @@ export function RevenueTables({
         </Card>
       </Grid.Col>
 
-      {/* Users Table */}
-      <Grid.Col span={{ base: 12 }}>
-        <Card shadow="sm" padding="lg" radius="md" withBorder>
-          <Group mb="md" justify="space-between">
+      <Grid.Col span={{ base: 12, md: 6, xl: 4 }}>
+        <Card padding="md" style={cardStyle}>
+          <Group mb="sm" justify="space-between" wrap="wrap" gap={8}>
             <Text fw={600}>Theo nhân viên</Text>
             <TextInput
               placeholder="Tìm kiếm..."
-              size="xs"
+              size="sm"
+              h={40}
+              radius="md"
               leftSection={<IconSearch size={14} />}
               value={userFilter}
               onChange={(e) => setUserFilter(e.currentTarget.value)}
-              style={{ width: 200 }}
+              miw={170}
             />
           </Group>
-          <ScrollArea h={400}>
+
+          <ScrollArea mah={360}>
             {isLoading ? (
-              <Skeleton height={400} />
+              <Skeleton height={240} />
             ) : filteredUsers.length > 0 ? (
               <Table striped highlightOnHover>
                 <Table.Thead>
@@ -259,7 +286,16 @@ export function RevenueTables({
                 </Table.Tbody>
               </Table>
             ) : (
-              <Alert color="yellow" icon={<IconAlertCircle />}>
+              <Alert
+                color="yellow"
+                icon={<IconAlertCircle size={14} />}
+                radius="md"
+                p="sm"
+                styles={{
+                  root: { background: "#fff7e8", borderColor: "#fde7c2" },
+                  message: { fontSize: 13 }
+                }}
+              >
                 Không có dữ liệu
               </Alert>
             )}

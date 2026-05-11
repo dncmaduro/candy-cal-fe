@@ -7,7 +7,8 @@ import {
   Alert,
   Skeleton,
   SegmentedControl,
-  Paper
+  Paper,
+  rem
 } from "@mantine/core"
 import { IconChartBar, IconAlertCircle } from "@tabler/icons-react"
 import { BarChart } from "@mantine/charts"
@@ -32,19 +33,28 @@ interface UserMetricsChartProps {
   data?: UserData[]
 }
 
+const cardStyle = {
+  border: "1px solid #E5E7EB",
+  borderRadius: rem(14),
+  boxShadow: "0 1px 3px rgba(15, 23, 42, 0.06)",
+  background: "#fff"
+}
+
 export function UserMetricsChart({ isLoading, data }: UserMetricsChartProps) {
   const [userMetricView, setUserMetricView] = useState<"revenue" | "orders">(
     "revenue"
   )
 
   return (
-    <Card shadow="sm" padding="lg" radius="md" withBorder>
-      <Group mb="md" justify="space-between">
-        <Group>
-          <IconChartBar size={20} />
+    <Card padding="md" style={cardStyle}>
+      <Group mb="sm" justify="space-between" wrap="wrap" gap={10}>
+        <Group gap="xs">
+          <IconChartBar size={18} />
           <Text fw={600}>Chỉ số theo nhân viên</Text>
         </Group>
         <SegmentedControl
+          size="xs"
+          radius="md"
           value={userMetricView}
           onChange={(value) => setUserMetricView(value as "revenue" | "orders")}
           data={[
@@ -53,21 +63,13 @@ export function UserMetricsChart({ isLoading, data }: UserMetricsChartProps) {
           ]}
         />
       </Group>
+
       {isLoading ? (
-        <Skeleton height={300} />
+        <Skeleton height={220} />
       ) : data && data.length > 0 ? (
-        <Box
-          style={{
-            "& .rechartsBarRectangle:hover": {
-              opacity: 0.8
-            },
-            "& .rechartsActiveBar": {
-              filter: "none"
-            }
-          }}
-        >
+        <Box>
           <BarChart
-            h={300}
+            h={220}
             data={data.map((u) => ({
               userName: u.userName,
               new:
@@ -81,45 +83,26 @@ export function UserMetricsChart({ isLoading, data }: UserMetricsChartProps) {
             }))}
             dataKey="userName"
             series={[
-              {
-                name: "new",
-                label: "Khách mới",
-                color: "blue.6"
-              },
-              {
-                name: "returning",
-                label: "Khách quay lại",
-                color: "teal.6"
-              }
+              { name: "new", label: "Khách mới", color: "blue.6" },
+              { name: "returning", label: "Khách quay lại", color: "teal.6" }
             ]}
             orientation="horizontal"
             tickLine="x"
             withLegend
             withYAxis
-            yAxisProps={{ width: 100 }}
-            styles={{
-              legend: {
-                display: "flex",
-                gap: "16px",
-                border: "2px solid #eee",
-                padding: "8px",
-                borderRadius: "8px"
-              }
-            }}
+            yAxisProps={{ width: 96 }}
             legendProps={{
               layout: "horizontal",
-              align: "center",
+              align: "left",
               verticalAlign: "bottom",
               wrapperStyle: {
-                paddingTop: 18,
-                paddingLeft: 36,
+                paddingTop: 10,
                 display: "flex",
-                flexDirection: "row",
-                justifyContent: "left",
-                gap: 24
+                gap: 16,
+                flexWrap: "wrap"
               }
             }}
-            m={{ top: 0, right: 0, bottom: 32, left: 0 }}
+            m={{ top: 0, right: 0, bottom: 24, left: 0 }}
             tooltipProps={{
               content: ({ active, payload, label }: any) => {
                 if (active && payload && payload.length) {
@@ -149,10 +132,7 @@ export function UserMetricsChart({ isLoading, data }: UserMetricsChartProps) {
                             }}
                           />
                           <Text size="sm">
-                            {entry.name === "new"
-                              ? "Khách mới"
-                              : "Khách quay lại"}
-                            :
+                            {entry.name === "new" ? "Khách mới" : "Khách quay lại"}:
                           </Text>
                           <Text size="sm" fw={600}>
                             {userMetricView === "revenue"
@@ -166,14 +146,21 @@ export function UserMetricsChart({ isLoading, data }: UserMetricsChartProps) {
                 }
                 return null
               },
-              cursor: {
-                fill: "transparent"
-              }
+              cursor: { fill: "transparent" }
             }}
           />
         </Box>
       ) : (
-        <Alert color="yellow" icon={<IconAlertCircle />}>
+        <Alert
+          color="yellow"
+          icon={<IconAlertCircle size={14} />}
+          radius="md"
+          p="sm"
+          styles={{
+            root: { background: "#fff7e8", borderColor: "#fde7c2" },
+            message: { fontSize: 13 }
+          }}
+        >
           Không có dữ liệu
         </Alert>
       )}
