@@ -28,6 +28,7 @@ import {
 import { IconChevronDown, IconSearch } from "@tabler/icons-react"
 
 type CDataTableVariant = "default" | "analytics" | "compact"
+type CDataTableGlobalFilterMode = "controlled" | "initial"
 type CDataTableColumnMeta = {
   align?: "left" | "center" | "right"
   isNumeric?: boolean
@@ -56,6 +57,8 @@ export type DataTableProps<TData, TValue> = {
   extraActions?: React.ReactNode
   globalFilterValue?: string
   onGlobalFilterChange?: (value: string) => void
+  globalFilterDebounceMs?: number
+  globalFilterMode?: CDataTableGlobalFilterMode
   hideSearch?: boolean
   hideColumnToggle?: boolean
   columnToggleLabel?: string
@@ -104,6 +107,8 @@ export function CDataTable<TData, TValue>({
   extraActions,
   globalFilterValue,
   onGlobalFilterChange,
+  globalFilterDebounceMs = 0,
+  globalFilterMode = "controlled",
   hideSearch: hideSearchProp,
   hideColumnToggle: hideColumnToggleProp,
   columnToggleLabel = "Cột hiển thị",
@@ -180,11 +185,39 @@ export function CDataTable<TData, TValue>({
 
   const gf = globalFilterValue ?? internalGlobalFilter
   const setGf = onGlobalFilterChange ?? setInternalGlobalFilter
+  const [searchInputValue, setSearchInputValue] = React.useState(gf)
   const hideSearch = hideSearchProp ?? variant !== "default"
   const hideColumnToggle = hideColumnToggleProp ?? variant !== "default"
   const hidePaginationInformation =
     hidePaginationInformationProp ?? variant !== "default"
   const hidePagination = hidePaginationProp ?? false
+
+  React.useEffect(() => {
+    if (globalFilterMode !== "controlled") return
+    setSearchInputValue(gf)
+  }, [gf, globalFilterMode])
+
+  React.useEffect(() => {
+    if (!enableGlobalFilter || hideSearch || searchInputValue === gf) return
+
+    if (globalFilterDebounceMs <= 0) {
+      setGf(searchInputValue)
+      return
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setGf(searchInputValue)
+    }, globalFilterDebounceMs)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [
+    enableGlobalFilter,
+    gf,
+    globalFilterDebounceMs,
+    hideSearch,
+    searchInputValue,
+    setGf
+  ])
 
   // Determine if using server-side pagination
   const isServerPagination = !!(page && totalPages && onPageChange)
@@ -436,8 +469,8 @@ export function CDataTable<TData, TValue>({
               leftSection={<IconSearch size={16} />}
               size={variant === "default" ? "sm" : "xs"}
               radius={variant === "default" ? "md" : "xl"}
-              value={gf}
-              onChange={(e) => setGf(e.currentTarget.value)}
+              value={searchInputValue}
+              onChange={(e) => setSearchInputValue(e.currentTarget.value)}
             />
           )}
 
