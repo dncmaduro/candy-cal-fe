@@ -51,6 +51,10 @@ export const Route = createFileRoute("/sales/funnel/")({
       const parsed = Number(value)
       return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback
     }
+    const parseSearchText = (value: unknown) => {
+      if (typeof value !== "string") return undefined
+      return value.length > 0 ? value : undefined
+    }
     const parseString = (value: unknown) => {
       if (typeof value !== "string") return undefined
       const trimmed = value.trim()
@@ -81,7 +85,7 @@ export const Route = createFileRoute("/sales/funnel/")({
     return {
       page: parsePositiveInt(search.page, 1),
       limit: parsePositiveInt(search.limit, 10),
-      searchText: parseString(search.searchText),
+      searchText: parseSearchText(search.searchText),
       stageFilter: parseString(search.stageFilter),
       provinceFilter: parseString(search.provinceFilter),
       channelFilter: parseString(search.channelFilter),
@@ -740,6 +744,8 @@ function RouteComponent() {
             columns={columns}
             data={funnelData}
             enableGlobalFilter={true}
+            globalFilterDebounceMs={300}
+            globalFilterMode="initial"
             globalFilterValue={searchText}
             onGlobalFilterChange={(value) =>
               navigate({
@@ -748,7 +754,8 @@ function RouteComponent() {
                   ...search,
                   searchText: value || undefined,
                   page: 1
-                }
+                },
+                replace: true
               })
             }
             page={page}

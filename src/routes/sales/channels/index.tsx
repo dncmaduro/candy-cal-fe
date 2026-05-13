@@ -21,16 +21,15 @@ export const Route = createFileRoute("/sales/channels/")({
       const parsed = Number(value)
       return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback
     }
-    const parseString = (value: unknown) => {
+    const parseSearchText = (value: unknown) => {
       if (typeof value !== "string") return undefined
-      const trimmed = value.trim()
-      return trimmed.length > 0 ? trimmed : undefined
+      return value.length > 0 ? value : undefined
     }
 
     return {
       page: parsePositiveInt(search.page, 1),
       limit: parsePositiveInt(search.limit, 10),
-      searchText: parseString(search.searchText)
+      searchText: parseSearchText(search.searchText)
     }
   },
   component: RouteComponent
@@ -213,6 +212,8 @@ function RouteComponent() {
             columns={columns}
             data={channels}
             enableGlobalFilter={true}
+            globalFilterDebounceMs={300}
+            globalFilterMode="initial"
             globalFilterValue={searchText}
             onGlobalFilterChange={(value) =>
               navigate({
@@ -221,7 +222,8 @@ function RouteComponent() {
                   ...search,
                   searchText: value || undefined,
                   page: 1
-                }
+                },
+                replace: true
               })
             }
             page={page}

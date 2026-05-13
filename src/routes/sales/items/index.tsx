@@ -40,6 +40,10 @@ export const Route = createFileRoute("/sales/items/")({
       const parsed = Number(value)
       return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback
     }
+    const parseSearchText = (value: unknown) => {
+      if (typeof value !== "string") return undefined
+      return value.length > 0 ? value : undefined
+    }
     const parseString = (value: unknown) => {
       if (typeof value !== "string") return undefined
       const trimmed = value.trim()
@@ -69,7 +73,7 @@ export const Route = createFileRoute("/sales/items/")({
     return {
       page: parsePositiveInt(search.page, 1),
       pageSize: parsePositiveInt(search.pageSize, 10),
-      searchText: parseString(search.searchText),
+      searchText: parseSearchText(search.searchText),
       factoryFilter: parseFactory(search.factoryFilter),
       sourceFilter: parseSource(search.sourceFilter)
     }
@@ -463,6 +467,8 @@ function RouteComponent() {
             initialPageSize={pageSize}
             pageSizeOptions={[10, 20, 50, 100]}
             enableGlobalFilter={true}
+            globalFilterDebounceMs={300}
+            globalFilterMode="initial"
             globalFilterValue={searchText}
             onGlobalFilterChange={(value) => {
               navigate({
@@ -471,7 +477,8 @@ function RouteComponent() {
                   ...search,
                   searchText: value || undefined,
                   page: 1
-                }
+                },
+                replace: true
               })
             }}
             extraFilters={
