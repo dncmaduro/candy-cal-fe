@@ -140,6 +140,43 @@ export function CDataTable<TData, TValue>({
   const [rowSelection, setRowSelection] = React.useState<
     Record<string, boolean>
   >({})
+  const setRowSelected = React.useCallback((rowId: string, checked: boolean) => {
+    setRowSelection((prev) => {
+      if (checked) {
+        if (prev[rowId]) return prev
+        return { ...prev, [rowId]: true }
+      }
+
+      if (!prev[rowId]) return prev
+      const next = { ...prev }
+      delete next[rowId]
+      return next
+    })
+  }, [])
+
+  const setManyRowsSelected = React.useCallback(
+    (rowIds: string[], checked: boolean) => {
+      setRowSelection((prev) => {
+        const next = { ...prev }
+        let changed = false
+
+        for (const rowId of rowIds) {
+          if (checked) {
+            if (!next[rowId]) {
+              next[rowId] = true
+              changed = true
+            }
+          } else if (next[rowId]) {
+            delete next[rowId]
+            changed = true
+          }
+        }
+
+        return changed ? next : prev
+      })
+    },
+    []
+  )
 
   const gf = globalFilterValue ?? internalGlobalFilter
   const setGf = onGlobalFilterChange ?? setInternalGlobalFilter
@@ -197,19 +234,36 @@ export function CDataTable<TData, TValue>({
         header: ({ table: tbl }) => (
           <Checkbox
             aria-label="Chọn tất cả"
-            checked={tbl.getIsAllPageRowsSelected()}
-            indeterminate={tbl.getIsSomePageRowsSelected()}
+            checked={(() => {
+              const pageRowIds = tbl.getRowModel().rows.map((row) => row.id)
+              return (
+                pageRowIds.length > 0 &&
+                pageRowIds.every((rowId) => !!rowSelection[rowId])
+              )
+            })()}
+            indeterminate={(() => {
+              const pageRowIds = tbl.getRowModel().rows.map((row) => row.id)
+              const selectedCount = pageRowIds.filter(
+                (rowId) => !!rowSelection[rowId]
+              ).length
+
+              return selectedCount > 0 && selectedCount < pageRowIds.length
+            })()}
             onChange={(e) =>
-              tbl.toggleAllPageRowsSelected(e.currentTarget.checked)
+              setManyRowsSelected(
+                tbl.getRowModel().rows.map((row) => row.id),
+                e.currentTarget.checked
+              )
             }
+            onClick={(e) => e.stopPropagation()}
           />
         ),
         cell: ({ row }) => (
           <Checkbox
             aria-label="Chọn dòng"
-            checked={row.getIsSelected()}
-            indeterminate={row.getIsSomeSelected()}
-            onChange={(e) => row.toggleSelected(e.currentTarget.checked)}
+            checked={!!rowSelection[row.id]}
+            onChange={(e) => setRowSelected(row.id, e.currentTarget.checked)}
+            onClick={(e) => e.stopPropagation()}
           />
         ),
         enableSorting: false,
@@ -217,7 +271,13 @@ export function CDataTable<TData, TValue>({
         size: 48
       }
       return [selectionCol, ...columns]
-    }, [columns, enableRowSelection]),
+    }, [
+      columns,
+      enableRowSelection,
+      rowSelection,
+      setManyRowsSelected,
+      setRowSelected
+    ]),
     state: {
       sorting,
       columnVisibility,
@@ -568,6 +628,12 @@ export function CDataTable<TData, TValue>({
                                 cell.column.id === "__select__"
                               ) {
                                 e.stopPropagation()
+                                if (cell.column.id === "__select__") {
+                                  setRowSelected(
+                                    row.id,
+                                    !row.getIsSelected()
+                                  )
+                                }
                               }
                             }}
                           >
