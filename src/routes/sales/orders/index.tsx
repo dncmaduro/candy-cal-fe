@@ -517,10 +517,7 @@ function RouteComponent() {
                   {row.original.returning ? "Khách cũ" : "Khách mới"}
                 </Badge>
               </Flex>
-              <Text
-                size="xs"
-                c="dimmed"
-              >
+              <Text size="xs" c="dimmed">
                 {row.original.salesFunnelId.phoneNumber}
               </Text>
             </div>
@@ -630,6 +627,7 @@ function RouteComponent() {
                 size="sm"
                 onClick={(e) => {
                   e.stopPropagation()
+                  console.log("click")
                   navigate({ to: `/sales/orders/${row.original._id}` })
                 }}
                 title="Xem chi tiết"
@@ -667,11 +665,7 @@ function RouteComponent() {
         enableSorting: false
       }
     ],
-    [
-      handleUpdateItems,
-      handleDeleteOrder,
-      handleOpenFunnelDetail
-    ]
+    [handleUpdateItems, handleDeleteOrder, handleOpenFunnelDetail]
   )
 
   const normalizeQuoted = (v?: string) => {
@@ -995,7 +989,9 @@ function RouteComponent() {
                       to: "/sales/orders",
                       search: {
                         ...search,
-                        endDate: value ? format(value, "yyyy-MM-dd") : undefined,
+                        endDate: value
+                          ? format(value, "yyyy-MM-dd")
+                          : undefined,
                         page: 1
                       }
                     })
