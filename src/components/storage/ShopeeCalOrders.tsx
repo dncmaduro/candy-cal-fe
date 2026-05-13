@@ -14,6 +14,7 @@ import {
   Paper,
   ScrollArea,
   Select,
+  Skeleton,
   Stack,
   Table,
   Text,
@@ -428,7 +429,11 @@ export const ShopeeCalOrders = ({ orders, allCalItems, date }: Props) => {
                 searchable
                 clearable={false}
                 disabled={isPending}
-                rightSection={isLoadingChannels ? <Text size="xs">...</Text> : null}
+                rightSection={
+                  isLoadingChannels ? (
+                    <Skeleton height={10} width={18} radius="xl" />
+                  ) : null
+                }
               />
 
               {channelOptions.length === 0 && !isLoadingChannels && (

@@ -1,4 +1,8 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router"
+import {
+  createFileRoute,
+  useLocation,
+  useNavigate
+} from "@tanstack/react-router"
 import {
   Badge,
   Button,
@@ -11,7 +15,7 @@ import {
   Flex
 } from "@mantine/core"
 import { DatePickerInput } from "@mantine/dates"
-import { useQuery, useMutation } from "@tanstack/react-query"
+import { useMutation } from "@tanstack/react-query"
 import { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { modals } from "@mantine/modals"
 import { format } from "date-fns"
@@ -28,15 +32,14 @@ import { SalesLayout } from "../../../components/layouts/SalesLayout"
 import { Can } from "../../../components/common/Can"
 import { CDataTable } from "../../../components/common/CDataTable"
 import { useSalesOrders } from "../../../hooks/useSalesOrders"
-import { useSalesFunnel } from "../../../hooks/useSalesFunnel"
-import { useUsers } from "../../../hooks/useUsers"
 import { CreateSalesOrderModal } from "../../../components/sales/CreateSalesOrderModal"
 import { UpdateOrderItemsModal } from "../../../components/sales/UpdateOrderItemsModal"
 import { UploadSalesOrdersModal } from "../../../components/sales/UploadSalesOrdersModal"
 import { CToast } from "../../../components/common/CToast"
 import { SearchSalesOrderResponse } from "../../../hooks/models"
-import { useSalesChannels } from "../../../hooks/useSalesChannels"
 import { FormProvider, useForm } from "react-hook-form"
+import { useSalesOrdersList } from "../../../hooks/useSalesOrdersList"
+import { useSalesOrderReferenceData } from "../../../hooks/useSalesOrderReferenceData"
 
 export const Route = createFileRoute("/sales/orders/")({
   component: RouteComponent,
@@ -100,17 +103,14 @@ type CreateSalesOrderFormData = {
 
 function RouteComponent() {
   const navigate = useNavigate()
+  const location = useLocation()
   const search = Route.useSearch()
   const {
-    searchSalesOrders,
     deleteSalesOrder,
     exportXlsxSalesOrder,
     exportXlsxSalesOrderByIds,
     exportXlsxSalesOrderForAccounting
   } = useSalesOrders()
-  const { searchFunnel, getFunnelByUser } = useSalesFunnel()
-  const { getMe } = useUsers()
-  const { searchSalesChannels, getMyChannel } = useSalesChannels()
 
   const page = search.page
   const limit = search.limit
@@ -124,30 +124,25 @@ function RouteComponent() {
   const userIdFilter = search.userIdFilter ?? ""
   const channelIdFilter = search.channelIdFilter ?? ""
   const [selectedOrders, setSelectedOrders] = useState<SalesOrderItem[]>([])
+  const isOrdersListRoute =
+    location.pathname === "/sales/orders" || location.pathname === "/sales/orders/"
 
   const selectedOrderIds = selectedOrders.map((o) => o._id)
 
-  // Get current user info
-  const { data: meData } = useQuery({
-    queryKey: ["getMe"],
-    queryFn: getMe
-  })
-
-  const { data: channelsData } = useQuery({
-    queryKey: ["salesChannels", "all"],
-    queryFn: () => searchSalesChannels({ page: 1, limit: 999 }),
-    staleTime: 100000
-  })
-
-  const { data: myChannelData } = useQuery({
-    queryKey: ["getMyChannel"],
-    queryFn: getMyChannel,
-    select: (data) => data.data,
-    enabled: !!meData?.data,
-    staleTime: 100000
+  const {
+    me,
+    channelsData,
+    myChannelData,
+    funnelData,
+    canSeeAllFunnels,
+    isSalesEmp,
+    isAccountingEmp
+  } = useSalesOrderReferenceData({
+    enabled: isOrdersListRoute
   })
 
   useEffect(() => {
+    if (!isOrdersListRoute) return
     if (myChannelData?.channel?._id && !channelIdFilter) {
       navigate({
         to: "/sales/orders",
@@ -159,18 +154,7 @@ function RouteComponent() {
         replace: true
       })
     }
-  }, [channelIdFilter, myChannelData, navigate, search])
-
-  const me = meData?.data
-
-  // Check user roles
-  const isAdmin = me?.roles.includes("admin")
-  const isSystemEmp = me?.roles.includes("system-emp")
-  const isSalesLeader = me?.roles.includes("sales-leader")
-  const isSalesEmp = me?.roles.includes("sales-emp")
-  const isAccountingEmp =
-    me?.roles.includes("accounting-emp") ||
-    me?.roles.includes("sales-accounting")
+  }, [channelIdFilter, isOrdersListRoute, myChannelData, navigate, search])
 
   const formMethods = useForm<CreateSalesOrderFormData>({
     defaultValues: {
@@ -196,11 +180,9 @@ function RouteComponent() {
     }
   })
 
-  // Determine if user can see all funnels or only their own
-  const canSeeAllFunnels = isAdmin || isSystemEmp || isSalesLeader
-
   // Auto-apply user filter for sales-emp
   useEffect(() => {
+    if (!isOrdersListRoute) return
     if (!canSeeAllFunnels && isSalesEmp && me?._id && !userIdFilter) {
       navigate({
         to: "/sales/orders",
@@ -212,69 +194,31 @@ function RouteComponent() {
         replace: true
       })
     }
-  }, [canSeeAllFunnels, isSalesEmp, me?._id, navigate, userIdFilter, search])
-
-  // Load reference data - use appropriate query based on role
-  const { data: funnelData } = useQuery({
-    queryKey: ["salesFunnel", canSeeAllFunnels ? "all" : me?._id],
-    queryFn: async () => {
-      if (canSeeAllFunnels) {
-        return await searchFunnel({
-          page: 1,
-          limit: 999
-        })
-      } else if (me?._id) {
-        return await getFunnelByUser(me._id, {
-          limit: 999
-        })
-      }
-      return undefined
-    },
-    enabled: !!me,
-    staleTime: 100000
-  })
+  }, [
+    canSeeAllFunnels,
+    isOrdersListRoute,
+    isSalesEmp,
+    me?._id,
+    navigate,
+    userIdFilter,
+    search
+  ])
 
   // Load orders data with filters
-  const { data, refetch, isLoading } = useQuery({
-    queryKey: [
-      "salesOrders",
-      page,
-      limit,
-      searchText,
-      returningFilter,
-      funnelFilter,
-      shippingTypeFilter,
-      statusFilter,
-      startDate,
-      endDate,
-      userIdFilter,
-      channelIdFilter,
-      search.refetch
-    ],
-    queryFn: () =>
-      searchSalesOrders({
-        page,
-        limit,
-        searchText: searchText || undefined,
-        returning:
-          returningFilter === "" ? undefined : returningFilter === "true",
-        salesFunnelId: funnelFilter || undefined,
-        shippingType:
-          shippingTypeFilter === ""
-            ? undefined
-            : (shippingTypeFilter as "shipping_vtp" | "shipping_cargo"),
-        status:
-          statusFilter === ""
-            ? undefined
-            : (statusFilter as "draft" | "official"),
-        startDate: startDate ? format(startDate, "yyyy-MM-dd") : undefined,
-        endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
-        userId: userIdFilter || undefined,
-        channelId: channelIdFilter || undefined
-      }),
-    staleTime: 5 * 60 * 1000, // 5 phút
-    refetchOnWindowFocus: false,
-    refetchOnMount: false
+  const { data, refetch, isLoading } = useSalesOrdersList({
+    page,
+    limit,
+    searchText,
+    returningFilter,
+    funnelFilter,
+    shippingTypeFilter,
+    statusFilter,
+    startDate,
+    endDate,
+    userIdFilter,
+    channelIdFilter,
+    refetchKey: search.refetch,
+    enabled: isOrdersListRoute
   })
 
   // Export Excel mutation
@@ -329,11 +273,6 @@ function RouteComponent() {
       CToast.error({ title: "Có lỗi xảy ra khi xuất file Excel kế toán" })
     }
   })
-
-  useEffect(() => {
-    console.log("SalesLayout mounted")
-    return () => console.log("SalesLayout unmounted")
-  }, [])
 
   const ordersData = data?.data.data || []
 
@@ -715,6 +654,7 @@ function RouteComponent() {
   const openedFromUrlRef = useRef(false)
 
   useEffect(() => {
+    if (!isOrdersListRoute) return
     if (openedFromUrlRef.current) return
     if (!parseBool(search.createNew)) return
 
@@ -765,6 +705,7 @@ function RouteComponent() {
       replace: true
     })
   }, [
+    isOrdersListRoute,
     search,
     myChannelData?.channel?._id,
     handleCreateOrder,

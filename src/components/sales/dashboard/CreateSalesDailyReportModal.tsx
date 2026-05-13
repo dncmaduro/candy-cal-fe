@@ -4,7 +4,7 @@ import {
   Stack,
   NumberInput,
   Button,
-  Loader,
+  Skeleton,
   Text,
   Paper,
   Divider,
@@ -37,14 +37,19 @@ type SummaryStatProps = {
   label: string
   value: string | number
   hint?: string
+  isLoading?: boolean
 }
 
-const SummaryStat = ({ label, value, hint }: SummaryStatProps) => (
+const SummaryStat = ({ label, value, hint, isLoading }: SummaryStatProps) => (
   <Stack gap={2}>
     <Text size="xs" c="dimmed">
       {label}
     </Text>
-    <Text fw={600}>{value}</Text>
+    {isLoading ? (
+      <Skeleton height={16} width={120} radius="xl" />
+    ) : (
+      <Text fw={600}>{value}</Text>
+    )}
     {hint && (
       <Text size="xs" c="dimmed">
         {hint}
@@ -403,17 +408,20 @@ export const CreateSalesDailyReportModal = () => {
                   <SummaryStat
                     label="Kênh phụ trách"
                     value={channelData?.channel?.channelName || "Chưa được gán"}
+                    isLoading={isLoading}
                   />
                   {kpiData?.kpi && (
                     <SummaryStat
                       label="KPI tháng"
                       value={`${kpiData.kpi.toLocaleString()}đ`}
                       hint="Dùng để tính % KPI đạt được"
+                      isLoading={isLoading}
                     />
                   )}
                   <SummaryStat
                     label="Trạng thái dữ liệu"
-                    value={isLoading ? "Đang tải..." : "Đã cập nhật"}
+                    value="Đã cập nhật"
+                    isLoading={isLoading}
                   />
                 </Group>
               </Box>
@@ -462,12 +470,11 @@ export const CreateSalesDailyReportModal = () => {
           </Paper>
 
           {isLoading && (
-            <Group justify="center" py="lg" aria-live="polite">
-              <Loader size="sm" />
-              <Text c="dimmed" size="sm">
-                Đang tải dữ liệu doanh thu và KPI...
-              </Text>
-            </Group>
+            <Stack py="lg" gap="xs" aria-live="polite">
+              <Skeleton height={16} width={240} radius="xl" />
+              <Skeleton height={12} width="100%" radius="xl" />
+              <Skeleton height={12} width="90%" radius="xl" />
+            </Stack>
           )}
 
           {/* Manual inputs - always visible */}
