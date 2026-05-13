@@ -22,6 +22,7 @@ import {
   Pagination,
   Paper,
   Select,
+  Skeleton,
   SimpleGrid,
   Text,
   Tooltip
@@ -454,9 +455,7 @@ export const StorageLogs = ({ activeTab }: Props) => {
 
           if (deliveredRequestsLookup.loadingRequestIds.has(requestId)) {
             return (
-              <Text fz="sm" c="dimmed">
-                Đang tải...
-              </Text>
+              <Skeleton height={10} width={70} radius="xl" />
             )
           }
 

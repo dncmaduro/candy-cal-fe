@@ -12,9 +12,9 @@ import {
   Divider,
   ActionIcon,
   Tooltip,
-  Button
+  Button,
+  Skeleton
 } from "@mantine/core"
-import { useQuery } from "@tanstack/react-query"
 import { format } from "date-fns"
 import {
   IconArrowLeft,
@@ -32,6 +32,7 @@ import { useMutation } from "@tanstack/react-query"
 import { SalesLayout } from "../../../components/layouts/SalesLayout"
 import { CDataTable } from "../../../components/common/CDataTable"
 import { useSalesOrders } from "../../../hooks/useSalesOrders"
+import { useSalesOrderDetail } from "../../../hooks/useSalesOrderDetail"
 import { UpdateShippingCodeModal } from "../../../components/sales/UpdateShippingCodeModal"
 import { UpdateOrderItemsModal } from "../../../components/sales/UpdateOrderItemsModal"
 import { ConvertToOfficialModal } from "../../../components/sales/ConvertToOfficialModal"
@@ -59,11 +60,25 @@ const STAGE_LABEL: Record<string, string> = {
   closed: "Đã đóng"
 }
 
+const LoadingField = ({
+  label,
+  width = "100%"
+}: {
+  label: string
+  width?: string | number
+}) => (
+  <div>
+    <Text size="sm" c="dimmed" mb={4}>
+      {label}
+    </Text>
+    <Skeleton height={14} width={width} radius="xl" />
+  </div>
+)
+
 function RouteComponent() {
   const { orderId } = Route.useParams()
   const navigate = useNavigate()
   const {
-    getSalesOrderById,
     deleteSalesOrder,
     updateSalesOrderItems,
     updateSalesOrderDate
@@ -79,10 +94,7 @@ function RouteComponent() {
 
   // No longer need state for editable fields - now read-only from API
 
-  const { data, refetch } = useQuery({
-    queryKey: ["salesOrder", orderId],
-    queryFn: () => getSalesOrderById(orderId)
-  })
+  const { data, refetch } = useSalesOrderDetail(orderId)
 
   const order = data?.data
 
@@ -520,8 +532,40 @@ function RouteComponent() {
   if (!order) {
     return (
       <SalesLayout>
-        <Box p="xl">
-          <Text>Đang tải...</Text>
+        <Box p="xl" maw={1200} mx="auto">
+          <Group mb="md">
+            <Skeleton height={20} width={220} radius="xl" />
+          </Group>
+          <Grid>
+            <Grid.Col span={{ base: 12, md: 6 }}>
+              <Paper p="lg" withBorder>
+                <Title order={4} mb="md">
+                  Thông tin khách hàng
+                </Title>
+                <Divider mb="md" />
+                <Stack gap={12}>
+                  <LoadingField label="Tên khách hàng" width="70%" />
+                  <LoadingField label="Số điện thoại" width="55%" />
+                  <LoadingField label="Địa chỉ" width="95%" />
+                  <LoadingField label="Kênh bán hàng" width="60%" />
+                </Stack>
+              </Paper>
+            </Grid.Col>
+            <Grid.Col span={{ base: 12, md: 6 }}>
+              <Paper p="lg" withBorder>
+                <Title order={4} mb="md">
+                  Thông tin đơn hàng
+                </Title>
+                <Divider mb="md" />
+                <Stack gap={12}>
+                  <LoadingField label="Trạng thái" width="40%" />
+                  <LoadingField label="Mã vận đơn" width="65%" />
+                  <LoadingField label="Ngày đặt hàng" width="45%" />
+                  <LoadingField label="Đơn vị vận chuyển" width="60%" />
+                </Stack>
+              </Paper>
+            </Grid.Col>
+          </Grid>
         </Box>
       </SalesLayout>
     )

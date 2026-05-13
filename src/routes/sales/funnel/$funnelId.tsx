@@ -13,7 +13,8 @@ import {
   ActionIcon,
   Tooltip,
   Pagination,
-  Button
+  Button,
+  Skeleton
 } from "@mantine/core"
 import { useQuery, useMutation } from "@tanstack/react-query"
 import { format } from "date-fns"
@@ -63,6 +64,21 @@ const STAGE_LABEL: Record<string, string> = {
   customer: "Khách hàng",
   closed: "Đã đóng"
 }
+
+const LoadingField = ({
+  label,
+  width = "100%"
+}: {
+  label: string
+  width?: string | number
+}) => (
+  <div>
+    <Text size="sm" c="dimmed" mb={4}>
+      {label}
+    </Text>
+    <Skeleton height={14} width={width} radius="xl" />
+  </div>
+)
 
 function RouteComponent() {
   const { funnelId } = Route.useParams()
@@ -358,8 +374,39 @@ function RouteComponent() {
   if (isCheckingPermission || !funnel) {
     return (
       <SalesLayout>
-        <Box p="xl">
-          <Text>Đang tải...</Text>
+        <Box p="xl" maw={1200} mx="auto">
+          <Group mb="md">
+            <Skeleton height={20} width={220} radius="xl" />
+          </Group>
+          <Grid>
+            <Grid.Col span={{ base: 12, md: 6 }}>
+              <Paper p="lg" withBorder>
+                <Title order={4} mb="md">
+                  Thông tin khách hàng
+                </Title>
+                <Divider mb="md" />
+                <Stack gap={12}>
+                  <LoadingField label="Tên khách hàng" width="70%" />
+                  <LoadingField label="Số điện thoại" width="55%" />
+                  <LoadingField label="Địa chỉ" width="95%" />
+                  <LoadingField label="Kênh bán hàng" width="60%" />
+                </Stack>
+              </Paper>
+            </Grid.Col>
+            <Grid.Col span={{ base: 12, md: 6 }}>
+              <Paper p="lg" withBorder>
+                <Title order={4} mb="md">
+                  Thông tin Funnel
+                </Title>
+                <Divider mb="md" />
+                <Stack gap={12}>
+                  <LoadingField label="Giai đoạn" width="40%" />
+                  <LoadingField label="Người phụ trách" width="55%" />
+                  <LoadingField label="Nguồn khách" width="45%" />
+                </Stack>
+              </Paper>
+            </Grid.Col>
+          </Grid>
         </Box>
       </SalesLayout>
     )
@@ -641,7 +688,11 @@ function RouteComponent() {
                 </Group>
                 <Divider mb="md" />
                 {isLoadingActivities ? (
-                  <Text c="dimmed">Đang tải...</Text>
+                  <Stack gap="xs">
+                    <Skeleton height={12} width="100%" radius="xl" />
+                    <Skeleton height={12} width="90%" radius="xl" />
+                    <Skeleton height={12} width="95%" radius="xl" />
+                  </Stack>
                 ) : !activitiesData?.data?.data ||
                   (Array.isArray(activitiesData.data.data) &&
                     activitiesData.data.data.length === 0) ? (
@@ -733,7 +784,11 @@ function RouteComponent() {
                 </Group>
                 <Divider mb="md" />
                 {isLoadingOrders ? (
-                  <Text c="dimmed">Đang tải...</Text>
+                  <Stack gap="xs">
+                    <Skeleton height={12} width="100%" radius="xl" />
+                    <Skeleton height={12} width="90%" radius="xl" />
+                    <Skeleton height={12} width="95%" radius="xl" />
+                  </Stack>
                 ) : orderHistoryData.length === 0 ? (
                   <Box py="xl">
                     <Text c="dimmed" ta="center">

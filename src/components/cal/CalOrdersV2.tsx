@@ -28,6 +28,7 @@ import {
   ScrollArea,
   SegmentedControl,
   Select,
+  Skeleton,
   Stack,
   Text,
   Title,
@@ -587,7 +588,9 @@ export const CalOrdersV2 = ({
                     clearable={false}
                     disabled={isPending}
                     rightSection={
-                      isLoadingChannels ? <Text size="xs">...</Text> : null
+                      isLoadingChannels ? (
+                        <Skeleton height={10} width={18} radius="xl" />
+                      ) : null
                     }
                   />
 

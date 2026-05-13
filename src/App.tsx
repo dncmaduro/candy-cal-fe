@@ -45,7 +45,23 @@ const theme = createTheme({
   }
 })
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false
+    }
+  }
+})
+
+queryClient.setQueryDefaults(["getMe"], {
+  staleTime: 5 * 60 * 1000,
+  gcTime: 30 * 60 * 1000,
+  refetchOnMount: false,
+  refetchOnWindowFocus: false,
+  refetchOnReconnect: false
+})
 
 function App() {
   return (
