@@ -6,10 +6,10 @@ import {
   Flex,
   Grid,
   Group,
-  Loader,
   Paper,
   SegmentedControl,
   Select,
+  Skeleton,
   SimpleGrid,
   Stack,
   Text
@@ -579,10 +579,9 @@ export const RangeStats = () => {
                     direction="column"
                     gap="md"
                   >
-                    <Loader size="lg" />
-                    <Text c="dimmed" size="sm">
-                      Đang tải dashboard khoảng thời gian...
-                    </Text>
+                    <Skeleton height={18} width={260} radius="xl" />
+                    <Skeleton height={14} width={340} radius="xl" />
+                    <Skeleton height={14} width={300} radius="xl" />
                   </Flex>
                 </Paper>
               ) : error ? (

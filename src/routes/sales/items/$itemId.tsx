@@ -11,7 +11,8 @@ import {
   Title,
   Divider,
   ActionIcon,
-  Tooltip
+  Tooltip,
+  Skeleton
 } from "@mantine/core"
 import { DatePickerInput } from "@mantine/dates"
 import { useQuery } from "@tanstack/react-query"
@@ -35,6 +36,21 @@ import { CDataTable } from "../../../components/common/CDataTable"
 export const Route = createFileRoute("/sales/items/$itemId")({
   component: RouteComponent
 })
+
+const LoadingField = ({
+  label,
+  width = "100%"
+}: {
+  label: string
+  width?: string | number
+}) => (
+  <div>
+    <Text size="sm" c="dimmed" mb={4}>
+      {label}
+    </Text>
+    <Skeleton height={14} width={width} radius="xl" />
+  </div>
+)
 
 function RouteComponent() {
   const { itemId } = Route.useParams()
@@ -217,8 +233,39 @@ function RouteComponent() {
   if (!item) {
     return (
       <SalesLayout>
-        <Box p="xl">
-          <Text>Đang tải...</Text>
+        <Box p="xl" maw={1200} mx="auto">
+          <Group mb="md">
+            <Skeleton height={20} width={220} radius="xl" />
+          </Group>
+          <Grid>
+            <Grid.Col span={{ base: 12, md: 6 }}>
+              <Paper p="lg" withBorder>
+                <Title order={4} mb="md">
+                  Thông tin mặt hàng
+                </Title>
+                <Divider mb="md" />
+                <Stack gap={12}>
+                  <LoadingField label="Mã sản phẩm" width="50%" />
+                  <LoadingField label="Tên sản phẩm" width="85%" />
+                  <LoadingField label="Đơn giá" width="40%" />
+                  <LoadingField label="Nhóm hàng" width="60%" />
+                </Stack>
+              </Paper>
+            </Grid.Col>
+            <Grid.Col span={{ base: 12, md: 6 }}>
+              <Paper p="lg" withBorder>
+                <Title order={4} mb="md">
+                  Thống kê nhanh
+                </Title>
+                <Divider mb="md" />
+                <Stack gap={12}>
+                  <LoadingField label="Số lượng bán" width="35%" />
+                  <LoadingField label="Doanh thu" width="45%" />
+                  <LoadingField label="Khách hàng" width="40%" />
+                </Stack>
+              </Paper>
+            </Grid.Col>
+          </Grid>
         </Box>
       </SalesLayout>
     )

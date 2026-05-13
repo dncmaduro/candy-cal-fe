@@ -19,11 +19,11 @@ import {
   Button,
   type ButtonProps,
   Checkbox,
+  Loader,
   Menu,
   Pagination,
   Select,
   TextInput,
-  Loader
 } from "@mantine/core"
 import { IconChevronDown, IconSearch } from "@tabler/icons-react"
 

@@ -11,7 +11,8 @@ import {
   Button,
   MultiSelect,
   Group,
-  Divider
+  Divider,
+  Skeleton
 } from "@mantine/core"
 
 interface Props {
@@ -117,8 +118,9 @@ export const ItemModal = ({ item, refetch }: Props) => {
               placeholder="Chọn sản phẩm"
               searchable
               clearable
-              nothingFoundMessage={
-                isLoading ? "Đang tải..." : "Không có sản phẩm"
+              nothingFoundMessage={"Không có sản phẩm"}
+              rightSection={
+                isLoading ? <Skeleton height={10} width={24} radius="xl" /> : null
               }
               // Loại bỏ self nếu đang edit
               disabled={isLoading}

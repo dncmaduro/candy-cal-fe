@@ -7,7 +7,8 @@ import {
   Group,
   Popover,
   TextInput,
-  Select
+  Select,
+  Skeleton
 } from "@mantine/core"
 import {
   IconEye,
@@ -150,7 +151,7 @@ const AltAssigneeInfo = ({
             </Text>
           </Stack>
         ) : (
-          <Text size="sm">Đang tải...</Text>
+          <Skeleton height={12} width={180} radius="xl" />
         )}
       </Popover.Dropdown>
     </Popover>

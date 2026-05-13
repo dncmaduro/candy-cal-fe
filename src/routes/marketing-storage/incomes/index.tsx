@@ -6,7 +6,7 @@ import {
   Tabs,
   SegmentedControl,
   Stack,
-  Loader,
+  Skeleton,
   Text,
   Box,
   Paper,
@@ -197,8 +197,8 @@ export function StorageIncomesPage({
               }}
             >
               <Stack align="center" gap="md">
-                <Loader size="lg" />
-                <Text>Đang tải danh sách kênh...</Text>
+                <Skeleton height={20} width={220} radius="xl" />
+                <Skeleton height={14} width={300} radius="xl" />
               </Stack>
             </Box>
           ) : channels.length === 0 ? (

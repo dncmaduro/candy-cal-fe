@@ -1,7 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { useLanding } from "../../../hooks/useLanding"
 import { useQuery } from "@tanstack/react-query"
-import { Box, Table, Text, Flex, rem, Pagination, Divider } from "@mantine/core"
+import {
+  Box,
+  Table,
+  Text,
+  Flex,
+  rem,
+  Pagination,
+  Divider,
+  Skeleton,
+  Stack
+} from "@mantine/core"
 import { format } from "date-fns"
 import { useState } from "react"
 import { LandingLayout } from "../../../components/layouts/LandingLayout"
@@ -86,8 +96,12 @@ function RouteComponent() {
               {isLoading ? (
                 <Table.Tr>
                   <Table.Td colSpan={5}>
-                    <Flex justify="center" align="center" h={60}>
-                      <Text c="dimmed">Đang tải dữ liệu...</Text>
+                    <Flex justify="center" align="center" h={90}>
+                      <Stack w="100%" maw={560} gap="xs">
+                        <Skeleton height={12} width="100%" radius="xl" />
+                        <Skeleton height={12} width="92%" radius="xl" />
+                        <Skeleton height={12} width="96%" radius="xl" />
+                      </Stack>
                     </Flex>
                   </Table.Td>
                 </Table.Tr>
