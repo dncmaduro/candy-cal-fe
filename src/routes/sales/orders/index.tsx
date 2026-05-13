@@ -845,7 +845,6 @@ function RouteComponent() {
             isLoading={isLoading}
             getRowId={getRowId}
             enableRowSelection={true}
-            onRowClick={(row) => row.toggleSelected()}
             onRowSelectionChange={(rows) =>
               handleRowSelectionChange(rows as SalesOrderItem[])
             }
