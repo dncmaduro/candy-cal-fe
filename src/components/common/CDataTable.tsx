@@ -328,6 +328,7 @@ export function CDataTable<TData, TValue>({
 
   const currentPage = page ?? table.getState().pagination.pageIndex + 1
   const total = Math.max(1, totalPages ?? table.getPageCount())
+  const isInitialLoading = isLoading && data.length === 0
   const hasToolbar =
     (enableGlobalFilter && !hideSearch) ||
     !!extraFilters ||
@@ -598,13 +599,17 @@ export function CDataTable<TData, TValue>({
                         enableRowSelection &&
                           row.getIsSelected() &&
                           "bg-blue-50/60",
-                        isLoading && "pointer-events-none",
+                        isInitialLoading && "pointer-events-none",
                         getRowClassName && getRowClassName(row)
                       )}
                       onClick={
-                        !isLoading && onRowClick
-                          ? () => onRowClick(row)
-                          : undefined
+                        isInitialLoading
+                          ? undefined
+                          : onRowClick
+                            ? () => onRowClick(row)
+                            : enableRowSelection
+                              ? () => setRowSelected(row.id, !row.getIsSelected())
+                              : undefined
                       }
                     >
                       {row.getVisibleCells().map((cell) => {
@@ -622,18 +627,11 @@ export function CDataTable<TData, TValue>({
                               meta?.cellClassName
                             )}
                             onClick={(e) => {
-                              // Prevent row click when clicking on actions column
                               if (
                                 cell.column.id === "actions" ||
                                 cell.column.id === "__select__"
                               ) {
                                 e.stopPropagation()
-                                if (cell.column.id === "__select__") {
-                                  setRowSelected(
-                                    row.id,
-                                    !row.getIsSelected()
-                                  )
-                                }
                               }
                             }}
                           >
