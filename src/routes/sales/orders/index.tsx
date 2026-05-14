@@ -291,6 +291,7 @@ function RouteComponent() {
       value: channel._id,
       label: channel.channelName
     })) || []
+  const currentChannelId = myChannelData?.channel?._id || ""
 
   const handleCreateOrder = (channelId: string) => {
     modals.open({
@@ -1270,12 +1271,11 @@ function RouteComponent() {
                     Upload XLSX
                   </Button>
                   <Button
-                    onClick={() =>
-                      handleCreateOrder(myChannelData?.channel._id || "")
-                    }
+                    onClick={() => handleCreateOrder(currentChannelId)}
                     leftSection={<IconPlus size={16} />}
                     size="sm"
                     radius="md"
+                    disabled={!currentChannelId}
                   >
                     Tạo đơn hàng
                   </Button>
