@@ -205,17 +205,9 @@ export const UpdateOrderItemsModal = ({
         }}
       />
 
-      <Group mb="xs" align="center" justify="space-between">
-        <strong>Sản phẩm</strong>
-        <Button
-          size="xs"
-          variant="light"
-          leftSection={<IconPlus size={14} />}
-          onClick={handleAddItem}
-        >
-          Thêm sản phẩm
-        </Button>
-      </Group>
+      <Text fw={700} mb="xs">
+        Sản phẩm
+      </Text>
 
       {items.map((item, index) => (
         <Group key={index} mb="sm" align="flex-end">
@@ -259,6 +251,17 @@ export const UpdateOrderItemsModal = ({
           )}
         </Group>
       ))}
+
+      <Group mb="md" justify="flex-start">
+        <Button
+          size="xs"
+          variant="light"
+          leftSection={<IconPlus size={14} />}
+          onClick={handleAddItem}
+        >
+          Thêm sản phẩm
+        </Button>
+      </Group>
 
       <Group justify="flex-end" mt="xl">
         <Button type="submit" loading={mutation.isPending}>

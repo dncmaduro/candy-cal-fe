@@ -5,7 +5,6 @@ import {
 } from "@tanstack/react-router"
 import { routeTree } from "./routeTree.gen"
 import { Notifications } from "@mantine/notifications"
-import { ModalsProvider } from "@mantine/modals"
 import { HelmetProvider } from "react-helmet-async"
 
 import "./App.css"
@@ -18,6 +17,7 @@ import "@mantine/charts/styles.css"
 import { createTheme, MantineProvider, Modal } from "@mantine/core"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { MaintenancePage } from "./components/common/MaintenancePage"
+import { ConfirmingModalsProvider } from "./components/common/ConfirmingModalsProvider"
 
 const router = createRouter({
   routeTree,
@@ -68,7 +68,7 @@ function App() {
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
         <MantineProvider theme={theme}>
-          <ModalsProvider
+          <ConfirmingModalsProvider
             modalProps={{
               overlayProps: {
                 backgroundOpacity: 0.6,
@@ -79,7 +79,7 @@ function App() {
           >
             <Notifications />
             <RouterProvider router={router} />
-          </ModalsProvider>
+          </ConfirmingModalsProvider>
         </MantineProvider>
       </QueryClientProvider>
     </HelmetProvider>

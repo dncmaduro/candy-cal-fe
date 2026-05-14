@@ -165,8 +165,18 @@ export const SalesActivitiesDrawer = ({
   }
 
   const handleClose = () => {
-    resetActivityForm()
-    onClose()
+    modals.openConfirmModal({
+      title: <b>Xác nhận đóng</b>,
+      centered: true,
+      children: (
+        <Text size="sm">Bạn có chắc chắn muốn đóng cửa sổ này không?</Text>
+      ),
+      labels: { confirm: "Đóng", cancel: "Ở lại" },
+      onConfirm: () => {
+        resetActivityForm()
+        onClose()
+      }
+    })
   }
 
   console.log(activitiesData?.data)
