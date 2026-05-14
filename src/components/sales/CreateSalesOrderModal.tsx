@@ -575,17 +575,9 @@ export const CreateSalesOrderModal = ({
         )}
       />
 
-      <Group mb="xs" align="center" justify="space-between">
-        <strong>Sản phẩm</strong>
-        <Button
-          size="xs"
-          variant="light"
-          leftSection={<IconPlus size={14} />}
-          onClick={handleAddItem}
-        >
-          Thêm sản phẩm
-        </Button>
-      </Group>
+      <Text fw={700} mb="xs">
+        Sản phẩm
+      </Text>
 
       {duplicatedCodes.length > 0 && (
         <Stack gap={4} mb="sm">
@@ -684,6 +676,17 @@ export const CreateSalesOrderModal = ({
           )}
         </Group>
       ))}
+
+      <Group mb="md" justify="flex-start">
+        <Button
+          size="xs"
+          variant="light"
+          leftSection={<IconPlus size={14} />}
+          onClick={handleAddItem}
+        >
+          Thêm sản phẩm
+        </Button>
+      </Group>
 
       <Group justify="flex-end" mt="xl">
         <Button type="submit" loading={mutation.isPending}>
