@@ -35,7 +35,7 @@ import { useSalesOrders } from "../../../hooks/useSalesOrders"
 import { useSalesOrderDetail } from "../../../hooks/useSalesOrderDetail"
 import { UpdateShippingCodeModal } from "../../../components/sales/UpdateShippingCodeModal"
 import { UpdateOrderItemsModal } from "../../../components/sales/UpdateOrderItemsModal"
-import { ConvertToOfficialModal } from "../../../components/sales/ConvertToOfficialModal"
+import { TransitionOrderStatusModal } from "../../../components/sales/ConvertToOfficialModal"
 import { CToast } from "../../../components/common/CToast"
 import { Can } from "../../../components/common/Can"
 import { QuotationModal } from "../../../components/sales/QuotationModal"
@@ -45,6 +45,10 @@ import {
   calculatePercentFromAmount,
   formatOrderDiscountPercent
 } from "../../../utils/salesOrderDiscount"
+import {
+  getSalesOrderStatusColor,
+  getSalesOrderStatusLabel
+} from "../../../utils/salesOrderStatus"
 
 export const Route = createFileRoute("/sales/orders/$orderId")({
   component: RouteComponent
@@ -433,13 +437,14 @@ function RouteComponent() {
     })
   }
 
-  const handleConvertToOfficial = () => {
+  const handleTransitionStatus = () => {
     if (!order) return
     modals.open({
-      title: <b>Chuyển đơn hàng sang chính thức</b>,
+      title: <b>Cập nhật trạng thái đơn hàng</b>,
       children: (
-        <ConvertToOfficialModal
+        <TransitionOrderStatusModal
           orderId={order._id}
+          currentStatus={order.status}
           currentShippingCode={order.shippingCode}
           currentShippingType={order.shippingType}
           currentTax={order.tax}
@@ -669,27 +674,29 @@ function RouteComponent() {
                     <IconTruck size={20} />
                   </ActionIcon>
                 </Tooltip>
-                {order.status === "draft" && (
+                {(order.status === "draft" || order.status === "confirmed") && (
                   <>
                     <Button
                       variant="light"
                       color="green"
                       leftSection={<IconTruck size={18} />}
-                      onClick={handleConvertToOfficial}
+                      onClick={handleTransitionStatus}
                     >
-                      Chuyển sang chính thức
+                      Cập nhật trạng thái
                     </Button>
 
-                    <Tooltip label="Cập nhật sản phẩm" withArrow>
-                      <ActionIcon
-                        variant="light"
-                        color="indigo"
-                        size="lg"
-                        onClick={handleUpdateItems}
-                      >
-                        <IconEdit size={20} />
-                      </ActionIcon>
-                    </Tooltip>
+                    {order.status === "draft" && (
+                      <Tooltip label="Cập nhật sản phẩm" withArrow>
+                        <ActionIcon
+                          variant="light"
+                          color="indigo"
+                          size="lg"
+                          onClick={handleUpdateItems}
+                        >
+                          <IconEdit size={20} />
+                        </ActionIcon>
+                      </Tooltip>
+                    )}
                   </>
                 )}
 
@@ -829,12 +836,10 @@ function RouteComponent() {
                           Trạng thái
                         </Text>
                         <Badge
-                          color={order.status === "official" ? "green" : "gray"}
+                          color={getSalesOrderStatusColor(order.status)}
                           size="lg"
                         >
-                          {order.status === "official"
-                            ? "Chính thức"
-                            : "Báo giá"}
+                          {getSalesOrderStatusLabel(order.status)}
                         </Badge>
                       </div>
                       <div>
