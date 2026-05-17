@@ -40,6 +40,11 @@ import { SearchSalesOrderResponse } from "../../../hooks/models"
 import { FormProvider, useForm } from "react-hook-form"
 import { useSalesOrdersList } from "../../../hooks/useSalesOrdersList"
 import { useSalesOrderReferenceData } from "../../../hooks/useSalesOrderReferenceData"
+import {
+  calculatePercentFromAmount,
+  formatOrderDiscountPercent,
+  type SalesOrderDiscountType
+} from "../../../utils/salesOrderDiscount"
 
 export const Route = createFileRoute("/sales/orders/")({
   component: RouteComponent,
@@ -57,6 +62,8 @@ export const Route = createFileRoute("/sales/orders/")({
       const trimmed = value.trim()
       return trimmed.length > 0 ? trimmed : undefined
     }
+    const parseOrderDiscountType = (value: unknown) =>
+      value === "percent" || value === "value" ? value : undefined
 
     return {
       page: parsePositiveInt(search.page, 1),
@@ -75,6 +82,7 @@ export const Route = createFileRoute("/sales/orders/")({
       funnelId: search.funnelId as string | undefined,
       items: search.items as string | undefined,
       orderDiscount: search.orderDiscount as string | undefined,
+      orderDiscountType: parseOrderDiscountType(search.orderDiscountType),
       otherDiscount: search.otherDiscount as string | undefined,
       deposit: search.deposit as string | undefined,
       refetch: search.refetch as string | undefined
@@ -89,6 +97,7 @@ type CreateSalesOrderFormData = {
   storage: "position_HaNam" | "position_MKT"
   date: Date
   orderDiscount?: number
+  orderDiscountType?: SalesOrderDiscountType
   otherDiscount?: number
   deposit?: number
   // New customer info
@@ -165,9 +174,10 @@ function RouteComponent() {
       salesFunnelId: search.funnelId || "",
       storage: "position_HaNam",
       date: new Date(new Date().setHours(0, 0, 0, 0)),
-      orderDiscount: search.orderDiscount ?? 0,
-      otherDiscount: search.otherDiscount ?? 0,
-      deposit: search.deposit ?? 0,
+      orderDiscount: Number(search.orderDiscount) || 0,
+      orderDiscountType: search.orderDiscountType ?? "value",
+      otherDiscount: Number(search.otherDiscount) || 0,
+      deposit: Number(search.deposit) || 0,
       isNewCustomer: false,
       newCustomerName: "",
       newCustomerChannel: "",
@@ -340,6 +350,7 @@ function RouteComponent() {
               note: si.note
             }))}
             currentOrderDiscount={item.orderDiscount}
+            currentOrderDiscountType={item.orderDiscountType}
             currentOtherDiscount={item.otherDiscount}
             currentDeposit={item.deposit}
             onSuccess={() => {
@@ -493,9 +504,24 @@ function RouteComponent() {
           const orderDiscount = row.original.orderDiscount || 0
           const otherDiscount = row.original.otherDiscount || 0
           const totalDiscount = orderDiscount + otherDiscount
+          const subtotal = row.original.items.reduce(
+            (sum, item) => sum + item.price * item.quantity,
+            0
+          )
+          const orderDiscountPercent =
+            row.original.orderDiscountType === "percent"
+              ? calculatePercentFromAmount(subtotal, orderDiscount)
+              : 0
 
           return totalDiscount > 0 ? (
-            <Text size="sm">{totalDiscount.toLocaleString("vi-VN")}đ</Text>
+            <Box>
+              <Text size="sm">{totalDiscount.toLocaleString("vi-VN")}đ</Text>
+              {row.original.orderDiscountType === "percent" && (
+                <Badge mt={4} variant="light" color="orange" size="xs">
+                  CK đơn: {formatOrderDiscountPercent(orderDiscountPercent)}%
+                </Badge>
+              )}
+            </Box>
           ) : (
             <Text size="sm" c="dimmed">
               -
@@ -636,6 +662,16 @@ function RouteComponent() {
     return Number.isFinite(n) ? n : fallback
   }
 
+  const parseOrderDiscountType = (
+    v?: string
+  ): SalesOrderDiscountType | undefined => {
+    const normalized = normalizeQuoted(v)
+
+    return normalized === "percent" || normalized === "value"
+      ? normalized
+      : undefined
+  }
+
   const parseItems = (
     v?: string
   ): { code: string; quantity: number; note?: string }[] => {
@@ -674,6 +710,7 @@ function RouteComponent() {
       storage: "position_HaNam",
       date: new Date(new Date().setHours(0, 0, 0, 0)),
       orderDiscount: parseNumber(search.orderDiscount, 0),
+      orderDiscountType: parseOrderDiscountType(search.orderDiscountType) || "value",
       otherDiscount: parseNumber(search.otherDiscount, 0),
       deposit: parseNumber(search.deposit, 0),
       isNewCustomer: false,
@@ -704,6 +741,7 @@ function RouteComponent() {
         funnelId: undefined,
         items: undefined,
         orderDiscount: undefined,
+        orderDiscountType: undefined,
         otherDiscount: undefined,
         deposit: undefined
       },

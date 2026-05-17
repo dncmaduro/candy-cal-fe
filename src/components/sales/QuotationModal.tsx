@@ -23,6 +23,10 @@ import {
   getSalesShippingSummary,
   getSalesShippingUnitPriceLabel
 } from "../../utils/salesShipping"
+import {
+  calculatePercentFromAmount,
+  formatOrderDiscountPercent
+} from "../../utils/salesOrderDiscount"
 
 interface ItemWithExtendedData {
   code: string
@@ -107,6 +111,17 @@ const QuotationCaptureContent = ({
   calculations
 }: QuotationCaptureContentProps) => {
   const { summaryLine } = getOrderContactInfo(order)
+  const orderDiscountPercent =
+    order?.orderDiscountType === "percent"
+      ? calculatePercentFromAmount(
+          calculations.subtotal,
+          calculations.orderDiscount
+        )
+      : 0
+  const orderDiscountLabel =
+    order?.orderDiscountType === "percent"
+      ? `Chiết khấu đơn hàng (${formatOrderDiscountPercent(orderDiscountPercent)}%)`
+      : "Chiết khấu đơn hàng"
 
   return (
     <Paper
@@ -305,7 +320,7 @@ const QuotationCaptureContent = ({
                 <Table.Td />
                 <Table.Td colSpan={6}>
                   <Text size="xs" c="orange">
-                    Chiết khấu đơn hàng
+                    {orderDiscountLabel}
                   </Text>
                 </Table.Td>
                 <Table.Td ta="right" fw={600} c="orange">
@@ -629,6 +644,18 @@ export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
       remainingAmount
     }
   }, [itemsWithExtendedData, orderData?.data, shippingCost])
+
+  const orderDiscountPercent =
+    orderData?.data.orderDiscountType === "percent"
+      ? calculatePercentFromAmount(
+          calculations.subtotal,
+          calculations.orderDiscount
+        )
+      : 0
+  const orderDiscountLabel =
+    orderData?.data.orderDiscountType === "percent"
+      ? `Chiết khấu đơn hàng (${formatOrderDiscountPercent(orderDiscountPercent)}%)`
+      : "Chiết khấu đơn hàng"
 
   const handleCaptureScreenshot = async () => {
     if (!contentRef.current) return
@@ -960,7 +987,7 @@ export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
 
               {calculations.orderDiscount > 0 && (
                 <Group justify="space-between">
-                  <Text size="sm">Chiết khấu đơn hàng:</Text>
+                  <Text size="sm">{orderDiscountLabel}:</Text>
                   <Text size="sm" fw={500} c="orange">
                     -{calculations.orderDiscount.toLocaleString("vi-VN")}đ
                   </Text>

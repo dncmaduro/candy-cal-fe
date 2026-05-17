@@ -7,6 +7,7 @@ import {
   Text,
   TextInput,
   Stack,
+  Flex,
   ActionIcon,
   Divider,
   Checkbox,
@@ -17,18 +18,28 @@ import { Controller, useFormContext, useFieldArray } from "react-hook-form"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { IconPlus, IconTrash } from "@tabler/icons-react"
 import type { AxiosError } from "axios"
+import { useEffect, useMemo, useState } from "react"
 import { CToast } from "../common/CToast"
 import { useSalesOrders } from "../../hooks/useSalesOrders"
 import { useSalesFunnel } from "../../hooks/useSalesFunnel"
 import { useSalesItems } from "../../hooks/useSalesItems"
 import { useProvinces } from "../../hooks/useProvinces"
 import { useSalesChannels } from "../../hooks/useSalesChannels"
+import {
+  calculatePercentDiscountAmount,
+  calculatePercentFromAmount,
+  formatOrderDiscountPercent,
+  getEffectiveOrderDiscountType,
+  type SalesOrderDiscountType
+} from "../../utils/salesOrderDiscount"
+import { OrderDiscountModeToggle } from "./OrderDiscountModeToggle"
 
 type CreateSalesOrderFormData = {
   salesFunnelId: string
   storage: "position_HaNam" | "position_MKT"
   date: Date
   orderDiscount?: number
+  orderDiscountType?: SalesOrderDiscountType
   otherDiscount?: number
   deposit?: number
   // New customer info
@@ -50,6 +61,12 @@ type CreateSalesOrderModalProps = {
   onSuccess: () => void
 }
 
+const RHF_INTERACTION_OPTIONS = {
+  shouldDirty: true,
+  shouldTouch: true,
+  shouldValidate: true
+} as const
+
 export const CreateSalesOrderModal = ({
   channelId,
   onSuccess
@@ -63,12 +80,20 @@ export const CreateSalesOrderModal = ({
   const {
     control,
     handleSubmit,
+    setValue,
     watch,
     formState: { errors }
   } = useFormContext<CreateSalesOrderFormData>()
 
   const watchIsNewCustomer = watch("isNewCustomer")
   const watchItems = watch("items") || []
+  const watchOrderDiscountAmount = Number(watch("orderDiscount") || 0)
+  const watchOtherDiscountAmount = Number(watch("otherDiscount") || 0)
+  const watchOrderDiscountType = getEffectiveOrderDiscountType(
+    watch("orderDiscountType")
+  )
+  const [orderDiscountPercent, setOrderDiscountPercent] = useState(0)
+  const [isPercentInitialized, setIsPercentInitialized] = useState(false)
 
   // Use useFieldArray to manage items and secondaryPhones
   const {
@@ -102,6 +127,37 @@ export const CreateSalesOrderModal = ({
       })
   })
 
+  const salesItemPriceByCode = useMemo(
+    () =>
+      new Map(
+        (salesItemsData?.data.data || []).map((item) => [item.code, item.price])
+      ),
+    [salesItemsData?.data.data]
+  )
+
+  const calculateItemsSubtotal = (
+    items: { code: string; quantity: number; note?: string }[]
+  ) =>
+    items.reduce((sum, item) => {
+      const price = salesItemPriceByCode.get(item.code) || 0
+      const quantity = Number(item.quantity) || 0
+
+      return sum + price * quantity
+    }, 0)
+
+  const subtotal = calculateItemsSubtotal(watchItems)
+  const currentOrderDiscountAmount =
+    watchOrderDiscountType === "percent"
+      ? calculatePercentDiscountAmount(subtotal, orderDiscountPercent)
+      : watchOrderDiscountAmount
+  const totalDiscountAmount =
+    currentOrderDiscountAmount + watchOtherDiscountAmount
+  const estimatedOrderSubtotal = subtotal - totalDiscountAmount
+  const orderDiscountPercentError =
+    orderDiscountPercent < 0 || orderDiscountPercent > 100
+      ? "Phần trăm chiết khấu phải từ 0 đến 100"
+      : undefined
+
   // Load provinces
   const { data: provincesData } = useQuery({
     queryKey: ["provinces"],
@@ -114,6 +170,46 @@ export const CreateSalesOrderModal = ({
     queryFn: () => searchSalesChannels({ page: 1, limit: 999 })
   })
 
+  useEffect(() => {
+    if (watchOrderDiscountType !== "percent") return
+    if (isPercentInitialized) return
+    if (watchItems.length > 0 && !salesItemsData) return
+
+    const nextPercent = calculatePercentFromAmount(
+      subtotal,
+      watchOrderDiscountAmount
+    )
+
+    setOrderDiscountPercent(nextPercent)
+    setIsPercentInitialized(true)
+  }, [
+    isPercentInitialized,
+    salesItemsData,
+    subtotal,
+    watchItems.length,
+    watchOrderDiscountAmount,
+    watchOrderDiscountType
+  ])
+
+  useEffect(() => {
+    if (watchOrderDiscountType !== "percent") return
+
+    const nextAmount = calculatePercentDiscountAmount(
+      subtotal,
+      orderDiscountPercent
+    )
+
+    if (watchOrderDiscountAmount !== nextAmount) {
+      setValue("orderDiscount", nextAmount, RHF_INTERACTION_OPTIONS)
+    }
+  }, [
+    orderDiscountPercent,
+    setValue,
+    subtotal,
+    watchOrderDiscountAmount,
+    watchOrderDiscountType
+  ])
+
   const mutation = useMutation({
     mutationFn: async (data: CreateSalesOrderFormData) => {
       // Filter out empty items
@@ -124,6 +220,18 @@ export const CreateSalesOrderModal = ({
       if (validItems.length === 0) {
         throw new Error("Vui lòng thêm ít nhất một sản phẩm")
       }
+
+      const effectiveOrderDiscountType = getEffectiveOrderDiscountType(
+        data.orderDiscountType
+      )
+      const validItemsSubtotal = calculateItemsSubtotal(validItems)
+      const orderDiscount =
+        effectiveOrderDiscountType === "percent"
+          ? calculatePercentDiscountAmount(
+              validItemsSubtotal,
+              orderDiscountPercent
+            )
+          : Number(data.orderDiscount) || 0
 
       let funnelId = data.salesFunnelId
 
@@ -160,7 +268,8 @@ export const CreateSalesOrderModal = ({
         items: validItems,
         storage: data.storage,
         date: data.date,
-        orderDiscount: data.orderDiscount,
+        orderDiscount,
+        orderDiscountType: effectiveOrderDiscountType,
         otherDiscount: data.otherDiscount,
         deposit: data.deposit
       })
@@ -170,9 +279,8 @@ export const CreateSalesOrderModal = ({
       onSuccess()
     },
     onError: (error: unknown) => {
-      const message = (
-        error as AxiosError<{ message?: string }>
-      )?.response?.data?.message
+      const message = (error as AxiosError<{ message?: string }>)?.response
+        ?.data?.message
 
       CToast.error({
         title: message || "Có lỗi xảy ra khi tạo đơn hàng"
@@ -181,6 +289,14 @@ export const CreateSalesOrderModal = ({
   })
 
   const onSubmit = (data: CreateSalesOrderFormData) => {
+    if (
+      getEffectiveOrderDiscountType(data.orderDiscountType) === "percent" &&
+      orderDiscountPercentError
+    ) {
+      CToast.error({ title: orderDiscountPercentError })
+      return
+    }
+
     if (!data.isNewCustomer && !data.salesFunnelId) {
       CToast.error({ title: "Vui lòng chọn khách hàng" })
       return
@@ -194,8 +310,6 @@ export const CreateSalesOrderModal = ({
     }
     mutation.mutate(data)
   }
-
-  const { setValue } = useFormContext<CreateSalesOrderFormData>()
   const secondaryPhones = watch("secondaryPhones") || []
 
   const addSecondaryPhone = () => {
@@ -221,6 +335,44 @@ export const CreateSalesOrderModal = ({
 
   const handleRemoveItem = (index: number) => {
     removeItem(index)
+  }
+
+  const handleOrderDiscountTypeChange = (nextType: SalesOrderDiscountType) => {
+    if (nextType === watchOrderDiscountType) return
+
+    if (nextType === "percent") {
+      const canInitializePercent =
+        watchItems.length === 0 || Boolean(salesItemsData)
+
+      if (canInitializePercent) {
+        const nextPercent = calculatePercentFromAmount(
+          subtotal,
+          watchOrderDiscountAmount
+        )
+
+        setOrderDiscountPercent(nextPercent)
+      }
+
+      setIsPercentInitialized(canInitializePercent)
+    }
+
+    if (nextType === "value") {
+      const nextAmount = calculatePercentDiscountAmount(
+        subtotal,
+        orderDiscountPercent
+      )
+
+      setValue("orderDiscount", nextAmount, RHF_INTERACTION_OPTIONS)
+      setIsPercentInitialized(false)
+    }
+
+    setValue("orderDiscountType", nextType, RHF_INTERACTION_OPTIONS)
+  }
+
+  const toggleOrderDiscountType = () => {
+    handleOrderDiscountTypeChange(
+      watchOrderDiscountType === "percent" ? "value" : "percent"
+    )
   }
 
   const duplicateCodeIndexes = watchItems.reduce(
@@ -489,33 +641,79 @@ export const CreateSalesOrderModal = ({
       />
 
       <Controller
+        name="orderDiscountType"
+        control={control}
+        render={({ field }) => <input type="hidden" {...field} />}
+      />
+
+      <Controller
         name="orderDiscount"
         control={control}
         render={({ field }) => (
-          <NumberInput
-            {...field}
-            label={
-              <Text fw={700} size="md" c="orange">
-                Chiết khấu đơn hàng
-              </Text>
-            }
-            placeholder="Nhập số tiền chiết khấu đơn hàng"
-            description="Số tiền chiết khấu áp dụng trực tiếp cho đơn hàng"
-            error={errors.orderDiscount?.message}
-            mb="md"
-            min={0}
-            thousandSeparator=","
-            suffix=" đ"
-            styles={{
-              input: {
-                borderColor: "orange",
-                borderWidth: 2,
-                fontWeight: 600
+          <Flex align="flex-end" gap="xs" mb="md">
+            <NumberInput
+              value={
+                watchOrderDiscountType === "percent"
+                  ? orderDiscountPercent
+                  : field.value || 0
               }
-            }}
-          />
+              onChange={(value) => {
+                if (watchOrderDiscountType === "percent") {
+                  setOrderDiscountPercent(Number(value) || 0)
+                  return
+                }
+
+                setValue(
+                  "orderDiscount",
+                  Number(value) || 0,
+                  RHF_INTERACTION_OPTIONS
+                )
+              }}
+              label={
+                <Text fw={700} size="md" c="orange">
+                  Chiết khấu đơn hàng
+                </Text>
+              }
+              placeholder={
+                watchOrderDiscountType === "percent"
+                  ? "Nhập phần trăm chiết khấu"
+                  : "Nhập số tiền chiết khấu đơn hàng"
+              }
+              description="Chiết khấu trực tiếp lên các mặt hàng"
+              error={
+                (watchOrderDiscountType === "percent"
+                  ? orderDiscountPercentError
+                  : undefined) || errors.orderDiscount?.message
+              }
+              min={0}
+              max={watchOrderDiscountType === "percent" ? 100 : undefined}
+              step={watchOrderDiscountType === "percent" ? 0.5 : 1}
+              decimalScale={watchOrderDiscountType === "percent" ? 2 : 0}
+              hideControls
+              thousandSeparator=","
+              flex={1}
+              styles={{
+                input: {
+                  borderColor: "orange",
+                  borderWidth: 2,
+                  fontWeight: 600
+                }
+              }}
+            />
+
+            <OrderDiscountModeToggle
+              mode={watchOrderDiscountType}
+              onToggle={toggleOrderDiscountType}
+            />
+          </Flex>
         )}
       />
+
+      {watchOrderDiscountType === "percent" && (
+        <Text size="xs" c="orange.7" mb="md" mt={-8}>
+          CK đơn hiện tại: {formatOrderDiscountPercent(orderDiscountPercent)}%
+        </Text>
+      )}
 
       <Controller
         name="otherDiscount"
@@ -604,7 +802,9 @@ export const CreateSalesOrderModal = ({
               const sameCodeIndexes = currentCode
                 ? duplicateCodeIndexes[currentCode] || []
                 : []
-              const duplicateIndexes = sameCodeIndexes.filter((i) => i !== index)
+              const duplicateIndexes = sameCodeIndexes.filter(
+                (i) => i !== index
+              )
               const rowSalesItemOptions = salesItemOptions.map((option) => {
                 const selectedIndexes = duplicateCodeIndexes[option.value] || []
                 const isSelected = selectedIndexes.length > 0
@@ -615,8 +815,7 @@ export const CreateSalesOrderModal = ({
                 return {
                   ...option,
                   label: `${option.label}${isSelected ? " (đã chọn)" : ""}`,
-                  disabled:
-                    selectedOnAnotherRow && option.value !== currentCode
+                  disabled: selectedOnAnotherRow && option.value !== currentCode
                 }
               })
 
@@ -687,6 +886,19 @@ export const CreateSalesOrderModal = ({
           Thêm sản phẩm
         </Button>
       </Group>
+
+      <Stack gap={2} mb="md">
+        <Text fw={700} size="md">
+          Tạm tính
+        </Text>
+        <Text size="sm" fw={600}>
+          {estimatedOrderSubtotal.toLocaleString("vi-VN")}đ
+        </Text>
+        <Text size="xs" c="dimmed">
+          {subtotal.toLocaleString("vi-VN")}đ tiền hàng -{" "}
+          {totalDiscountAmount.toLocaleString("vi-VN")}đ chiết khấu
+        </Text>
+      </Stack>
 
       <Group justify="flex-end" mt="xl">
         <Button type="submit" loading={mutation.isPending}>

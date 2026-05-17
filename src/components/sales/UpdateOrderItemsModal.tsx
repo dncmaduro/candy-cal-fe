@@ -4,15 +4,26 @@ import {
   Select,
   NumberInput,
   Text,
-  TextInput
+  TextInput,
+  Stack,
+  Flex
 } from "@mantine/core"
 import { useForm } from "react-hook-form"
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { IconPlus, IconTrash } from "@tabler/icons-react"
+import type { AxiosError } from "axios"
 import { CToast } from "../common/CToast"
 import { useSalesOrders } from "../../hooks/useSalesOrders"
 import { useSalesItems } from "../../hooks/useSalesItems"
+import {
+  calculatePercentDiscountAmount,
+  calculatePercentFromAmount,
+  formatOrderDiscountPercent,
+  getEffectiveOrderDiscountType,
+  type SalesOrderDiscountType
+} from "../../utils/salesOrderDiscount"
+import { OrderDiscountModeToggle } from "./OrderDiscountModeToggle"
 
 type ItemInput = {
   code: string
@@ -22,8 +33,9 @@ type ItemInput = {
 
 type UpdateOrderItemsModalProps = {
   orderId: string
-  currentItems: { code: string; quantity: number }[]
+  currentItems: { code: string; quantity: number; note?: string }[]
   currentOrderDiscount?: number
+  currentOrderDiscountType?: SalesOrderDiscountType | null
   currentOtherDiscount?: number
   currentDeposit?: number
   onSuccess: () => void
@@ -33,6 +45,7 @@ export const UpdateOrderItemsModal = ({
   orderId,
   currentItems,
   currentOrderDiscount,
+  currentOrderDiscountType,
   currentOtherDiscount,
   currentDeposit,
   onSuccess
@@ -45,17 +58,22 @@ export const UpdateOrderItemsModal = ({
       ? currentItems
       : [{ code: "", quantity: 1, note: "" }]
   )
+  const [orderDiscountType, setOrderDiscountType] =
+    useState<SalesOrderDiscountType>(
+      getEffectiveOrderDiscountType(currentOrderDiscountType)
+    )
   const [orderDiscount, setOrderDiscount] = useState<number>(
     currentOrderDiscount || 0
   )
+  const [orderDiscountPercent, setOrderDiscountPercent] = useState<number>(0)
   const [otherDiscount, setOtherDiscount] = useState<number>(
     currentOtherDiscount || 0
   )
   const [deposit, setDeposit] = useState<number>(currentDeposit || 0)
+  const [isPercentInitialized, setIsPercentInitialized] = useState(false)
 
   const { handleSubmit } = useForm()
 
-  // Load sales items for dropdown
   const { data: salesItemsData } = useQuery({
     queryKey: ["salesItems", "all"],
     queryFn: () =>
@@ -65,30 +83,101 @@ export const UpdateOrderItemsModal = ({
       })
   })
 
+  const salesItemPriceByCode = useMemo(
+    () =>
+      new Map(
+        (salesItemsData?.data.data || []).map((item) => [item.code, item.price])
+      ),
+    [salesItemsData?.data.data]
+  )
+
+  const calculateItemsSubtotal = (nextItems: ItemInput[]) =>
+    nextItems.reduce((sum, item) => {
+      const price = salesItemPriceByCode.get(item.code) || 0
+      const quantity = Number(item.quantity) || 0
+
+      return sum + price * quantity
+    }, 0)
+
+  const subtotal = calculateItemsSubtotal(items)
+  const currentOrderDiscountAmount =
+    orderDiscountType === "percent"
+      ? calculatePercentDiscountAmount(subtotal, orderDiscountPercent)
+      : orderDiscount
+  const totalDiscountAmount = currentOrderDiscountAmount + otherDiscount
+  const estimatedOrderSubtotal = subtotal - totalDiscountAmount
+  const orderDiscountPercentError =
+    orderDiscountPercent < 0 || orderDiscountPercent > 100
+      ? "Phần trăm chiết khấu phải từ 0 đến 100"
+      : undefined
+
+  useEffect(() => {
+    if (orderDiscountType !== "percent") return
+    if (isPercentInitialized) return
+    if (items.length > 0 && !salesItemsData) return
+
+    setOrderDiscountPercent(calculatePercentFromAmount(subtotal, orderDiscount))
+    setIsPercentInitialized(true)
+  }, [
+    isPercentInitialized,
+    items.length,
+    orderDiscount,
+    orderDiscountType,
+    salesItemsData,
+    subtotal
+  ])
+
+  useEffect(() => {
+    if (orderDiscountType !== "percent") return
+
+    const nextAmount = calculatePercentDiscountAmount(
+      subtotal,
+      orderDiscountPercent
+    )
+
+    if (orderDiscount !== nextAmount) {
+      setOrderDiscount(nextAmount)
+    }
+  }, [orderDiscount, orderDiscountPercent, orderDiscountType, subtotal])
+
   const mutation = useMutation({
     mutationFn: () => {
-      // Filter out empty items
       const validItems = items.filter((item) => item.code && item.quantity > 0)
 
       if (validItems.length === 0) {
         throw new Error("Vui lòng thêm ít nhất một sản phẩm")
       }
 
+      if (orderDiscountType === "percent" && orderDiscountPercentError) {
+        throw new Error(orderDiscountPercentError)
+      }
+
       return updateSalesOrderItems(orderId, {
         items: validItems,
-        orderDiscount: orderDiscount,
-        otherDiscount: otherDiscount,
-        deposit: deposit
+        orderDiscount:
+          orderDiscountType === "percent"
+            ? calculatePercentDiscountAmount(
+                calculateItemsSubtotal(validItems),
+                orderDiscountPercent
+              )
+            : orderDiscount,
+        orderDiscountType,
+        otherDiscount,
+        deposit
       })
     },
     onSuccess: () => {
       CToast.success({ title: "Cập nhật sản phẩm thành công" })
       onSuccess()
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      const message = (error as AxiosError<{ message?: string }>)?.response
+        ?.data?.message
+
       CToast.error({
         title:
-          error?.response?.data?.message ||
+          message ||
+          (error as Error | undefined)?.message ||
           "Có lỗi xảy ra khi cập nhật sản phẩm"
       })
     }
@@ -116,6 +205,30 @@ export const UpdateOrderItemsModal = ({
     setItems(newItems)
   }
 
+  const handleOrderDiscountTypeChange = (value: string) => {
+    const nextType = value as SalesOrderDiscountType
+
+    if (nextType === "percent") {
+      const canInitializePercent = items.length === 0 || Boolean(salesItemsData)
+
+      if (canInitializePercent) {
+        setOrderDiscountPercent(
+          calculatePercentFromAmount(subtotal, orderDiscount)
+        )
+      }
+
+      setIsPercentInitialized(canInitializePercent)
+    }
+
+    setOrderDiscountType(nextType)
+  }
+
+  const toggleOrderDiscountType = () => {
+    handleOrderDiscountTypeChange(
+      orderDiscountType === "percent" ? "value" : "percent"
+    )
+  }
+
   const salesItemOptions =
     salesItemsData?.data.data.map((item) => ({
       value: item.code,
@@ -124,32 +237,64 @@ export const UpdateOrderItemsModal = ({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      <NumberInput
-        label={
-          <Text fw={700} size="md" c="orange">
-            Chiết khấu đơn hàng
-          </Text>
-        }
-        placeholder="Nhập số tiền chiết khấu đơn hàng"
-        description={
-          <Text size="xs" c="dimmed">
-            Số tiền chiết khấu áp dụng trực tiếp cho đơn hàng
-          </Text>
-        }
-        value={orderDiscount}
-        onChange={(value) => setOrderDiscount(Number(value) || 0)}
-        mb="md"
-        min={0}
-        thousandSeparator=","
-        suffix=" đ"
-        styles={{
-          input: {
-            borderColor: "orange",
-            borderWidth: 2,
-            fontWeight: 600
+      <Flex align="flex-end" gap="xs" mb="md">
+        <NumberInput
+          label={
+            <Text fw={700} size="md" c="orange">
+              Chiết khấu đơn hàng
+            </Text>
           }
-        }}
-      />
+          placeholder={
+            orderDiscountType === "percent"
+              ? "Nhập phần trăm chiết khấu"
+              : "Nhập số tiền chiết khấu đơn hàng"
+          }
+          description="Chiết khấu trực tiếp lên các mặt hàng"
+          value={
+            orderDiscountType === "percent"
+              ? orderDiscountPercent
+              : orderDiscount
+          }
+          onChange={(value) => {
+            if (orderDiscountType === "percent") {
+              setOrderDiscountPercent(Number(value) || 0)
+              return
+            }
+
+            setOrderDiscount(Number(value) || 0)
+          }}
+          error={
+            orderDiscountType === "percent"
+              ? orderDiscountPercentError
+              : undefined
+          }
+          min={0}
+          max={orderDiscountType === "percent" ? 100 : undefined}
+          step={orderDiscountType === "percent" ? 0.5 : 1}
+          decimalScale={orderDiscountType === "percent" ? 2 : 0}
+          hideControls
+          thousandSeparator=","
+          flex={1}
+          styles={{
+            input: {
+              borderColor: "orange",
+              borderWidth: 2,
+              fontWeight: 600
+            }
+          }}
+        />
+
+        <OrderDiscountModeToggle
+          mode={orderDiscountType}
+          onToggle={toggleOrderDiscountType}
+        />
+      </Flex>
+
+      {orderDiscountType === "percent" && (
+        <Text size="xs" c="orange.7" mb="md" mt={-8}>
+          CK đơn hiện tại: {formatOrderDiscountPercent(orderDiscountPercent)}%
+        </Text>
+      )}
 
       <NumberInput
         label={
@@ -262,6 +407,17 @@ export const UpdateOrderItemsModal = ({
           Thêm sản phẩm
         </Button>
       </Group>
+
+      <Stack gap={2} mb="md">
+        <Text fw={700} size="md">
+          Tạm tính: {estimatedOrderSubtotal.toLocaleString("vi-VN")}đ
+        </Text>
+        <Text size="sm" fw={600}></Text>
+        <Text size="xs" c="dimmed">
+          {subtotal.toLocaleString("vi-VN")}đ tiền hàng -{" "}
+          {totalDiscountAmount.toLocaleString("vi-VN")}đ chiết khấu
+        </Text>
+      </Stack>
 
       <Group justify="flex-end" mt="xl">
         <Button type="submit" loading={mutation.isPending}>
