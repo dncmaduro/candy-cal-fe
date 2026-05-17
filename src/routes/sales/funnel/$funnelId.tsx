@@ -38,6 +38,10 @@ import { ColumnDef } from "@tanstack/react-table"
 import { SalesLayout } from "../../../components/layouts/SalesLayout"
 import { useSalesFunnel } from "../../../hooks/useSalesFunnel"
 import { useSalesOrders } from "../../../hooks/useSalesOrders"
+import {
+  getSalesOrderStatusColor,
+  getSalesOrderStatusLabel
+} from "../../../utils/salesOrderStatus"
 import { useSalesActivities } from "../../../hooks/useSalesActivities"
 import { useUsers } from "../../../hooks/useUsers"
 import { UpdateFunnelInfoModal } from "../../../components/sales/UpdateFunnelInfoModal"
@@ -158,7 +162,7 @@ function RouteComponent() {
     _id: string
     date: string
     total: number
-    status: "draft" | "official"
+    status: "draft" | "confirmed" | "official"
     shippingCode?: string
     itemCount: number
     discount?: number
@@ -182,10 +186,10 @@ function RouteComponent() {
         header: "Trạng thái",
         cell: ({ row }) => (
           <Badge
-            color={row.original.status === "official" ? "green" : "gray"}
+            color={getSalesOrderStatusColor(row.original.status)}
             size="sm"
           >
-            {row.original.status === "official" ? "Chính thức" : "Báo giá"}
+            {getSalesOrderStatusLabel(row.original.status)}
           </Badge>
         )
       },

@@ -45,6 +45,11 @@ import {
   formatOrderDiscountPercent,
   type SalesOrderDiscountType
 } from "../../../utils/salesOrderDiscount"
+import {
+  SALES_ORDER_STATUS_OPTIONS,
+  getSalesOrderStatusColor,
+  getSalesOrderStatusLabel
+} from "../../../utils/salesOrderStatus"
 
 export const Route = createFileRoute("/sales/orders/")({
   component: RouteComponent,
@@ -535,10 +540,10 @@ function RouteComponent() {
         cell: ({ row }) => (
           <Badge
             variant="light"
-            color={row.original.status === "official" ? "green" : "gray"}
+            color={getSalesOrderStatusColor(row.original.status)}
             size="sm"
           >
-            {row.original.status === "official" ? "Chính thức" : "Báo giá"}
+            {getSalesOrderStatusLabel(row.original.status)}
           </Badge>
         )
       },
@@ -613,7 +618,7 @@ function RouteComponent() {
                   handleUpdateItems(row.original)
                 }}
                 title="Cập nhật sản phẩm"
-                hidden={row.original.status === "official"}
+                hidden={row.original.status !== "draft"}
               >
                 <IconEdit size={16} />
               </ActionIcon>
@@ -905,8 +910,10 @@ function RouteComponent() {
                   placeholder="Trạng thái"
                   data={[
                     { value: "", label: "Tất cả trạng thái" },
-                    { value: "draft", label: "Báo giá" },
-                    { value: "official", label: "Chính thức" }
+                    ...SALES_ORDER_STATUS_OPTIONS.map((option) => ({
+                      value: option.value,
+                      label: option.label
+                    }))
                   ]}
                   value={statusFilter}
                   onChange={(value) =>
@@ -1061,9 +1068,12 @@ function RouteComponent() {
                                 <Text size="sm" mb={4}>
                                   • Trạng thái:{" "}
                                   <strong>
-                                    {statusFilter === "draft"
-                                      ? "Báo giá"
-                                      : "Chính thức"}
+                                    {getSalesOrderStatusLabel(
+                                      statusFilter as
+                                        | "draft"
+                                        | "confirmed"
+                                        | "official"
+                                    )}
                                   </strong>
                                 </Text>
                               )}
@@ -1127,7 +1137,10 @@ function RouteComponent() {
                           status:
                             statusFilter === ""
                               ? undefined
-                              : (statusFilter as "draft" | "official"),
+                              : (statusFilter as
+                                  | "draft"
+                                  | "confirmed"
+                                  | "official"),
                           startDate: startDate
                             ? format(startDate, "yyyy-MM-dd")
                             : undefined,
@@ -1215,9 +1228,12 @@ function RouteComponent() {
                                 <Text size="sm" mb={4}>
                                   • Trạng thái:{" "}
                                   <strong>
-                                    {statusFilter === "draft"
-                                      ? "Báo giá"
-                                      : "Chính thức"}
+                                    {getSalesOrderStatusLabel(
+                                      statusFilter as
+                                        | "draft"
+                                        | "confirmed"
+                                        | "official"
+                                    )}
                                   </strong>
                                 </Text>
                               )}
@@ -1278,7 +1294,10 @@ function RouteComponent() {
                             status:
                               statusFilter === ""
                                 ? undefined
-                                : (statusFilter as "draft" | "official"),
+                                : (statusFilter as
+                                    | "draft"
+                                    | "confirmed"
+                                    | "official"),
                             startDate: startDate
                               ? format(startDate, "yyyy-MM-dd")
                               : undefined,
