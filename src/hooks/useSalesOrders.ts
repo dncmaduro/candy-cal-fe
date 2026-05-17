@@ -11,10 +11,10 @@ import {
   GetOrdersByFunnelRequest,
   GetOrdersByFunnelResponse,
   GetSalesOrderByIdResponse,
-  MoveSalesOrderToOfficialRequest,
-  MoveSalesOrderToOfficialResponse,
   SearchSalesOrderRequest,
   SearchSalesOrderResponse,
+  TransitionSalesOrderStatusRequest,
+  TransitionSalesOrderStatusResponse,
   UpdateSalesOrderDateRequest,
   UpdateSalesOrderDateResponse,
   UpdateSalesOrderItemsRequest,
@@ -133,15 +133,15 @@ export const useSalesOrders = () => {
     })
   }
 
-  const moveSalesOrderToOfficial = async (
+  const transitionSalesOrderStatus = async (
     id: string,
-    req: MoveSalesOrderToOfficialRequest
+    req: TransitionSalesOrderStatusRequest
   ) => {
     return callApi<
-      MoveSalesOrderToOfficialRequest,
-      MoveSalesOrderToOfficialResponse
+      TransitionSalesOrderStatusRequest,
+      TransitionSalesOrderStatusResponse
     >({
-      path: `/v1/salesorders/${id}/convert-official`,
+      path: `/v1/salesorders/${id}/status`,
       method: "PATCH",
       data: req,
       token: accessToken
@@ -242,7 +242,7 @@ export const useSalesOrders = () => {
     exportXlsxSalesOrder,
     exportXlsxSalesOrderForAccounting,
     updateSalesOrderTaxShipping,
-    moveSalesOrderToOfficial,
+    transitionSalesOrderStatus,
     getOrdersByFunnel,
     exportXlsxSalesOrderByIds,
     updateSalesOrderDate

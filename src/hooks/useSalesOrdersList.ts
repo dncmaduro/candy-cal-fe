@@ -69,7 +69,7 @@ export const useSalesOrdersList = ({
         status:
           statusFilter === ""
             ? undefined
-            : (statusFilter as "draft" | "official"),
+            : (statusFilter as "draft" | "confirmed" | "official"),
         startDate: startDateValue,
         endDate: endDateValue,
         userId: userIdFilter || undefined,

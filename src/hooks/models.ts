@@ -3932,7 +3932,7 @@ export interface CreateSalesOrderResponse {
   orderDiscount?: number
   orderDiscountType?: "percent" | "value" | null
   otherDiscount?: number
-  status: "draft" | "official"
+  status: "draft" | "confirmed" | "official"
   phoneNumber: string
   address: string
   province: {
@@ -4014,7 +4014,7 @@ export interface UpdateSalesOrderItemsResponse {
   orderDiscount?: number
   orderDiscountType?: "percent" | "value" | null
   otherDiscount?: number
-  status: "draft" | "official"
+  status: "draft" | "confirmed" | "official"
   phoneNumber: string
   address: string
   province: {
@@ -4087,7 +4087,7 @@ export interface UpdateSalesOrderDateResponse {
   orderDiscount?: number
   orderDiscountType?: "percent" | "value" | null
   otherDiscount?: number
-  status: "draft" | "official"
+  status: "draft" | "confirmed" | "official"
   phoneNumber: string
   address: string
   province: {
@@ -4163,7 +4163,7 @@ export interface UpdateShippingInfoResponse {
   deposit?: number
   discount?: number
   orderDiscountType?: "percent" | "value" | null
-  status: "draft" | "official"
+  status: "draft" | "confirmed" | "official"
   phoneNumber: string
   address: string
   province: {
@@ -4235,7 +4235,7 @@ export interface GetSalesOrderByIdResponse {
   deposit?: number
   tax?: number
   shippingCost?: number
-  status: "draft" | "official"
+  status: "draft" | "confirmed" | "official"
   phoneNumber: string
   address: string
   province: {
@@ -4261,7 +4261,7 @@ export interface SearchSalesOrderRequest {
   userId?: string
   searchText?: string
   shippingType?: "shipping_vtp" | "shipping_cargo"
-  status?: "draft" | "official"
+  status?: "draft" | "confirmed" | "official"
   rank?: "gold" | "silver" | "bronze"
   channelId?: string
   page: number
@@ -4278,7 +4278,7 @@ export interface ExportXlsxSalesOrderRequest {
   endDate?: string
   searchText?: string
   shippingType?: "shipping_vtp" | "shipping_cargo"
-  status?: "draft" | "official"
+  status?: "draft" | "confirmed" | "official"
   page: number
   limit: number
 }
@@ -4293,7 +4293,7 @@ export interface ExportXlsxSalesOrderForAccountingRequest {
   endDate?: string
   searchText?: string
   shippingType?: "shipping_vtp" | "shipping_cargo"
-  status?: "draft" | "official"
+  status?: "draft" | "confirmed" | "official"
   page: number
   limit: number
 }
@@ -4357,7 +4357,7 @@ export interface SearchSalesOrderResponse {
     orderDiscountType?: "percent" | "value" | null
     otherDiscount?: number
     deposit?: number
-    status: "draft" | "official"
+    status: "draft" | "confirmed" | "official"
     phoneNumber: string
     address: string
     province: {
@@ -4433,7 +4433,7 @@ export interface UpdateSalesOrderTaxShippingResponse {
   deposit?: number
   tax: number
   shippingCost: number
-  status: "draft" | "official"
+  status: "draft" | "confirmed" | "official"
   phoneNumber: string
   address: string
   province: {
@@ -4446,16 +4446,17 @@ export interface UpdateSalesOrderTaxShippingResponse {
 }
 
 /** @interface */
-export interface MoveSalesOrderToOfficialRequest {
-  shippingCode: string
-  shippingType: "shipping_vtp" | "shipping_cargo"
-  tax: number
-  shippingCost: number
+export interface TransitionSalesOrderStatusRequest {
+  status: "draft" | "confirmed" | "official"
+  shippingCode?: string
+  shippingType?: "shipping_vtp" | "shipping_cargo"
+  tax?: number
+  shippingCost?: number
   receivedDate?: string
 }
 
 /** @interface */
-export interface MoveSalesOrderToOfficialResponse {
+export interface TransitionSalesOrderStatusResponse {
   _id: string
   salesFunnelId: string
   items: {
@@ -4479,6 +4480,7 @@ export interface MoveSalesOrderToOfficialResponse {
   tax: number
   shippingCost: number
   receivedDate?: string
+  status: "draft" | "confirmed" | "official"
   createdAt: string
   updatedAt: string
 }
@@ -4514,7 +4516,7 @@ export interface GetOrdersByFunnelResponse {
     deposit?: number
     tax?: number
     shippingCost?: number
-    status: "draft" | "official"
+    status: "draft" | "confirmed" | "official"
     phoneNumber: string
     address: string
     province: {
