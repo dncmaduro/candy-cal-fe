@@ -3899,6 +3899,7 @@ export interface CreateSalesOrderRequest {
   storage: "position_HaNam" | "position_MKT"
   date: Date
   orderDiscount?: number
+  orderDiscountType?: "percent" | "value" | null
   otherDiscount?: number
   deposit?: number
 }
@@ -3929,6 +3930,7 @@ export interface CreateSalesOrderResponse {
   shippingCost?: number
   deposit?: number
   orderDiscount?: number
+  orderDiscountType?: "percent" | "value" | null
   otherDiscount?: number
   status: "draft" | "official"
   phoneNumber: string
@@ -3950,6 +3952,7 @@ export interface UpdateSalesOrderItemsRequest {
     note?: string
   }[]
   orderDiscount?: number
+  orderDiscountType?: "percent" | "value" | null
   otherDiscount?: number
   deposit?: number
   date?: Date
@@ -4009,6 +4012,7 @@ export interface UpdateSalesOrderItemsResponse {
   shippingCost?: number
   deposit?: number
   orderDiscount?: number
+  orderDiscountType?: "percent" | "value" | null
   otherDiscount?: number
   status: "draft" | "official"
   phoneNumber: string
@@ -4081,6 +4085,7 @@ export interface UpdateSalesOrderDateResponse {
   shippingCost?: number
   deposit?: number
   orderDiscount?: number
+  orderDiscountType?: "percent" | "value" | null
   otherDiscount?: number
   status: "draft" | "official"
   phoneNumber: string
@@ -4157,6 +4162,7 @@ export interface UpdateShippingInfoResponse {
   shippingCost?: number
   deposit?: number
   discount?: number
+  orderDiscountType?: "percent" | "value" | null
   status: "draft" | "official"
   phoneNumber: string
   address: string
@@ -4224,6 +4230,7 @@ export interface GetSalesOrderByIdResponse {
   date: string
   total: number
   orderDiscount?: number
+  orderDiscountType?: "percent" | "value" | null
   otherDiscount?: number
   deposit?: number
   tax?: number
@@ -4347,6 +4354,7 @@ export interface SearchSalesOrderResponse {
     date: string
     total: number
     orderDiscount?: number
+    orderDiscountType?: "percent" | "value" | null
     otherDiscount?: number
     deposit?: number
     status: "draft" | "official"
@@ -4419,6 +4427,10 @@ export interface UpdateSalesOrderTaxShippingResponse {
   cost?: number
   date: string
   total: number
+  orderDiscount?: number
+  orderDiscountType?: "percent" | "value" | null
+  otherDiscount?: number
+  deposit?: number
   tax: number
   shippingCost: number
   status: "draft" | "official"
@@ -4460,6 +4472,10 @@ export interface MoveSalesOrderToOfficialResponse {
   cost?: number
   date: string
   total: number
+  orderDiscount?: number
+  orderDiscountType?: "percent" | "value" | null
+  otherDiscount?: number
+  deposit?: number
   tax: number
   shippingCost: number
   receivedDate?: string
@@ -4492,6 +4508,10 @@ export interface GetOrdersByFunnelResponse {
     cost?: number
     date: string
     total: number
+    orderDiscount?: number
+    orderDiscountType?: "percent" | "value" | null
+    otherDiscount?: number
+    deposit?: number
     tax?: number
     shippingCost?: number
     status: "draft" | "official"

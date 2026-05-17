@@ -41,6 +41,10 @@ import { Can } from "../../../components/common/Can"
 import { QuotationModal } from "../../../components/sales/QuotationModal"
 import { UpdateOrderDateModal } from "../../../components/sales/UpdateOrderDateModal"
 import { getSalesShippingRateLabel } from "../../../utils/salesShipping"
+import {
+  calculatePercentFromAmount,
+  formatOrderDiscountPercent
+} from "../../../utils/salesOrderDiscount"
 
 export const Route = createFileRoute("/sales/orders/$orderId")({
   component: RouteComponent
@@ -246,6 +250,18 @@ function RouteComponent() {
     order?.shippingCost
   ])
 
+  const orderDiscountPercent =
+    order?.orderDiscountType === "percent"
+      ? calculatePercentFromAmount(
+          enhancedCalculations.subtotal,
+          enhancedCalculations.orderDiscount
+        )
+      : 0
+  const orderDiscountLabel =
+    order?.orderDiscountType === "percent"
+      ? `Chiết khấu đơn hàng (${formatOrderDiscountPercent(orderDiscountPercent)}%)`
+      : "Chiết khấu đơn hàng"
+
   const itemColumns = useMemo<ColumnDef<ExtendedOrderItem>[]>(
     () => [
       {
@@ -404,6 +420,7 @@ function RouteComponent() {
             note: si.note
           }))}
           currentOrderDiscount={order.orderDiscount}
+          currentOrderDiscountType={order.orderDiscountType}
           currentOtherDiscount={order.otherDiscount}
           currentDeposit={order.deposit}
           onSuccess={() => {
@@ -459,10 +476,12 @@ function RouteComponent() {
           items: JSON.stringify(
             order.items.map((item) => ({
               code: item.code,
-              quantity: item.quantity
+              quantity: item.quantity,
+              note: item.note
             }))
           ),
           orderDiscount: order.orderDiscount?.toString(),
+          orderDiscountType: order.orderDiscountType || undefined,
           otherDiscount: order.otherDiscount?.toString(),
           deposit: order.deposit?.toString()
         }
@@ -971,7 +990,7 @@ function RouteComponent() {
 
                     {enhancedCalculations.orderDiscount > 0 && (
                       <Group justify="space-between">
-                        <Text size="sm">Chiết khấu đơn hàng:</Text>
+                        <Text size="sm">{orderDiscountLabel}:</Text>
                         <Text size="sm" c="orange" fw={500}>
                           -
                           {enhancedCalculations.orderDiscount.toLocaleString(
