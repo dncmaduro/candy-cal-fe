@@ -16,10 +16,11 @@ import { useEffect } from "react"
 import { Helmet } from "react-helmet-async"
 import { Controller, useForm } from "react-hook-form"
 import { useUsers } from "../hooks/useUsers"
-import { useMutation } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useUserStore } from "../store/userStore"
 import { saveToCookies } from "../store/cookies"
 import { CToast } from "../components/common/CToast"
+import { resetSessionCache } from "../utils/authSession"
 
 export const Route = createFileRoute("/")({
   component: RouteComponent
@@ -42,6 +43,7 @@ function RouteComponent() {
   const { login } = useUsers()
   const { setUser, accessToken } = useUserStore()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
   useEffect(() => {
     if (accessToken) {
@@ -53,6 +55,7 @@ function RouteComponent() {
     mutationKey: ["login"],
     mutationFn: login,
     onSuccess: (response) => {
+      resetSessionCache(queryClient)
       setUser(response.data.accessToken)
       saveToCookies("refreshToken", response.data.refreshToken)
       CToast.success({
