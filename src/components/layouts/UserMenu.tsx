@@ -11,7 +11,7 @@ import {
 } from "@tabler/icons-react"
 import { useUserStore } from "../../store/userStore"
 import { useUsers } from "../../hooks/useUsers"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { useMediaQuery } from "@mantine/hooks"
 import {
@@ -28,15 +28,18 @@ import {
   SALES_NAVS,
   ADMIN_NAVS
 } from "../../constants/navs"
+import { resetSessionCache } from "../../utils/authSession"
 
 export const UserMenu = () => {
-  const { clearUser } = useUserStore()
+  const { accessToken, clearUser } = useUserStore()
   const { getMe } = useUsers()
+  const queryClient = useQueryClient()
 
   const { data: meData } = useQuery({
     queryKey: ["getMe"],
     queryFn: () => getMe(),
-    select: (data) => data.data
+    select: (data) => data.data,
+    enabled: !!accessToken
   })
   const isMobile = useMediaQuery("(max-width: 768px)")
 
@@ -239,7 +242,10 @@ export const UserMenu = () => {
           leftSection={<IconPower size={isMobile ? 14 : 18} />}
           color="red"
           fz={isMobile ? "xs" : "sm"}
-          onClick={clearUser}
+          onClick={() => {
+            resetSessionCache(queryClient)
+            clearUser()
+          }}
         >
           Đăng xuất
         </Menu.Item>
