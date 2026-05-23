@@ -94,7 +94,12 @@ export function MonthlyMetrics({
                     <Text size="xs" c="dimmed" fw={500}>
                       Giá trị đơn hàng trung bình
                     </Text>
-                    <ThemeIcon variant="light" size={34} radius={10} color="pink">
+                    <ThemeIcon
+                      variant="light"
+                      size={34}
+                      radius={10}
+                      color="pink"
+                    >
                       <IconTrendingUp size={18} />
                     </ThemeIcon>
                   </Group>
@@ -117,7 +122,12 @@ export function MonthlyMetrics({
                     <Text size="xs" c="dimmed" fw={500}>
                       KPI
                     </Text>
-                    <ThemeIcon variant="light" size={34} radius={10} color="red">
+                    <ThemeIcon
+                      variant="light"
+                      size={34}
+                      radius={10}
+                      color="red"
+                    >
                       <IconTargetArrow size={18} />
                     </ThemeIcon>
                   </Group>
@@ -140,7 +150,7 @@ export function MonthlyMetrics({
         />
       </Card>
 
-      <Card padding="md" style={sectionCardStyle}>
+      {/* <Card padding="md" style={sectionCardStyle}>
         <Group mb="md" gap="xs">
           <IconTrendingUp size={18} />
           <Text fw={600}>Chuyển đổi giai đoạn</Text>
@@ -239,7 +249,7 @@ export function MonthlyMetrics({
             Không có dữ liệu
           </Alert>
         )}
-      </Card>
+      </Card> */}
     </>
   )
 }
