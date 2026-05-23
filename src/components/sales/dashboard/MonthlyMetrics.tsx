@@ -1,24 +1,15 @@
-import { useMemo } from "react"
 import {
   Grid,
   Card,
   Group,
   Text,
-  Alert,
   Skeleton,
   Tooltip,
   Box,
   ThemeIcon,
-  RingProgress,
-  Stack,
-  Badge,
   rem
 } from "@mantine/core"
-import {
-  IconTrendingUp,
-  IconAlertCircle,
-  IconTargetArrow
-} from "@tabler/icons-react"
+import { IconTrendingUp, IconTargetArrow } from "@tabler/icons-react"
 import { TopCustomersChart } from "./TopCustomersChart"
 
 interface MonthlyMetricsData {
@@ -69,16 +60,16 @@ export function MonthlyMetrics({
   topCustomersData,
   topCustomersLoading
 }: MonthlyMetricsProps) {
-  const stagePercentages = useMemo(() => {
-    if (!data?.stageTransitions) return null
-    const total = data.stageTransitions.lead || 1
-    return {
-      lead: 100,
-      contacted: (data.stageTransitions.contacted / total) * 100,
-      customer: (data.stageTransitions.customer / total) * 100,
-      closed: (data.stageTransitions.closed / total) * 100
-    }
-  }, [data?.stageTransitions])
+  // const stagePercentages = useMemo(() => {
+  //   if (!data?.stageTransitions) return null
+  //   const total = data.stageTransitions.lead || 1
+  //   return {
+  //     lead: 100,
+  //     contacted: (data.stageTransitions.contacted / total) * 100,
+  //     customer: (data.stageTransitions.customer / total) * 100,
+  //     closed: (data.stageTransitions.closed / total) * 100
+  //   }
+  // }, [data?.stageTransitions])
 
   return (
     <>
