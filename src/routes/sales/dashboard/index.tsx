@@ -8,7 +8,8 @@ import {
   Alert,
   Flex,
   Switch,
-  Select
+  Select,
+  Tabs
 } from "@mantine/core"
 import { DatePickerInput, MonthPickerInput } from "@mantine/dates"
 import { useQuery } from "@tanstack/react-query"
@@ -109,6 +110,7 @@ function RouteComponent() {
   const handleResetRevenue = () => {
     setStartDate(new Date())
     setEndDate(new Date())
+    setChannel(undefined)
     refetchRevenue()
   }
 
@@ -119,15 +121,9 @@ function RouteComponent() {
     refetchTopCustomers()
   }
 
-  const handleApplyAll = () => {
-    refetchRevenue()
+  const handleApplyMetrics = () => {
     refetchMetrics()
     refetchTopCustomers()
-  }
-
-  const handleResetAll = () => {
-    handleResetRevenue()
-    handleResetMetrics()
   }
 
   const revenue = revenueData?.data
@@ -175,207 +171,274 @@ function RouteComponent() {
             </Button>
           </Flex>
 
-          <Box
-            p={{ base: 14, md: 18 }}
-            mb="md"
-            style={{
-              border: "1px solid #E5E7EB",
-              borderRadius: rem(14),
-              background: "#fff",
-              boxShadow: "0 1px 3px rgba(15, 23, 42, 0.06)"
-            }}
-          >
-            <Text fw={600} fz="md" mb="sm">
-              Bộ lọc báo cáo
-            </Text>
-            <Group align="flex-end" gap={12} wrap="wrap">
-              <Switch
-                label="Xem theo khoảng ngày"
-                checked={isRange}
-                onChange={(e) => setIsRange(e.currentTarget.checked)}
-                styles={{ label: { fontSize: 14, fontWeight: 500 } }}
-              />
+          <Tabs defaultValue="revenue">
+            <Tabs.List mb="md">
+              <Tabs.Tab value="revenue">Theo ngày / khoảng ngày</Tabs.Tab>
+              <Tabs.Tab value="monthly">Theo tháng</Tabs.Tab>
+            </Tabs.List>
 
-              {isRange ? (
-                <DatePickerInput
-                  type="range"
-                  placeholder="Chọn khoảng ngày"
-                  value={[startDate, endDate]}
-                  onChange={([start, end]) => {
-                    setStartDate(start)
-                    setEndDate(end)
-                  }}
-                  valueFormat="DD/MM/YYYY"
-                  clearable
-                  miw={260}
-                  h={40}
-                />
-              ) : (
-                <DatePickerInput
-                  placeholder="Chọn ngày"
-                  value={startDate}
-                  onChange={(value) => {
-                    setStartDate(value)
-                    setEndDate(value)
-                  }}
-                  valueFormat="DD/MM/YYYY"
-                  clearable
-                  miw={180}
-                  h={40}
-                />
+            <Tabs.Panel value="revenue">
+              {revenueError && (
+                <Alert
+                  color="red"
+                  title="Có lỗi xảy ra"
+                  icon={<IconAlertCircle />}
+                  mb="md"
+                  radius="md"
+                >
+                  <Group>
+                    <Text size="sm">
+                      {(revenueError as any)?.message || "Không thể tải dữ liệu"}
+                    </Text>
+                    <Button
+                      size="xs"
+                      leftSection={<IconRefresh size={14} />}
+                      onClick={() => refetchRevenue()}
+                    >
+                      Thử lại
+                    </Button>
+                  </Group>
+                </Alert>
               )}
 
-              <MonthPickerInput
-                placeholder="Chọn tháng"
-                value={selectedMonth}
-                onChange={setSelectedMonth}
-                valueFormat="MM/YYYY"
-                clearable
-                miw={150}
-                h={40}
-              />
-
-              <Select
-                data={channelsData || []}
-                value={channel}
-                onChange={(e) => setChannel(e ?? undefined)}
-                placeholder="Tất cả kênh"
-                clearable
-                miw={180}
-              />
-
-              <Select
-                data={channelsData || []}
-                value={monthlyMetricsChannel}
-                onChange={(e) => setMonthlyMetricsChannel(e ?? undefined)}
-                placeholder="Tất cả kênh"
-                clearable
-                miw={180}
-              />
-
-              <Button h={40} radius={10} onClick={handleApplyAll}>
-                Áp dụng
-              </Button>
-              <Button h={40} radius={10} variant="light" onClick={handleResetAll}>
-                Reset
-              </Button>
-            </Group>
-          </Box>
-
-          {revenueError && (
-            <Alert
-              color="red"
-              title="Có lỗi xảy ra"
-              icon={<IconAlertCircle />}
-              mb="md"
-              radius="md"
-            >
-              <Group>
-                <Text size="sm">
-                  {(revenueError as any)?.message || "Không thể tải dữ liệu"}
+              <Box mb="md">
+                <Text fw={600} fz="md" mb="sm">
+                  Tổng quan doanh số
                 </Text>
-                <Button
-                  size="xs"
-                  leftSection={<IconRefresh size={14} />}
-                  onClick={() => refetchRevenue()}
+                <Box
+                  p={{ base: 14, md: 18 }}
+                  mb="md"
+                  style={{
+                    border: "1px solid #E5E7EB",
+                    borderRadius: rem(14),
+                    background: "#fff",
+                    boxShadow: "0 1px 3px rgba(15, 23, 42, 0.06)"
+                  }}
                 >
-                  Thử lại
-                </Button>
-              </Group>
-            </Alert>
-          )}
+                  <Box
+                    style={{
+                      display: "grid",
+                      gap: 12,
+                      gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))"
+                    }}
+                  >
+                    <Box>
+                      <Text size="sm" fw={500} mb={8}>
+                        Chế độ xem
+                      </Text>
+                      <Box h={40} style={{ display: "flex", alignItems: "center" }}>
+                        <Switch
+                          label="Xem theo khoảng ngày"
+                          checked={isRange}
+                          onChange={(e) => setIsRange(e.currentTarget.checked)}
+                          styles={{ label: { fontSize: 14, fontWeight: 500 } }}
+                        />
+                      </Box>
+                    </Box>
 
-          {metricsError && (
-            <Alert
-              color="red"
-              title="Có lỗi xảy ra"
-              icon={<IconAlertCircle />}
-              mb="md"
-              radius="md"
-            >
-              <Group>
-                <Text size="sm">
-                  {(metricsError as any)?.message || "Không thể tải dữ liệu"}
+                    <Box>
+                      {isRange ? (
+                        <DatePickerInput
+                          type="range"
+                          label="Khoảng ngày"
+                          placeholder="Chọn khoảng ngày"
+                          value={[startDate, endDate]}
+                          onChange={([start, end]) => {
+                            setStartDate(start)
+                            setEndDate(end)
+                          }}
+                          valueFormat="DD/MM/YYYY"
+                          clearable
+                          h={40}
+                        />
+                      ) : (
+                        <DatePickerInput
+                          label="Ngày báo cáo"
+                          placeholder="Chọn ngày"
+                          value={startDate}
+                          onChange={(value) => {
+                            setStartDate(value)
+                            setEndDate(value)
+                          }}
+                          valueFormat="DD/MM/YYYY"
+                          clearable
+                          h={40}
+                        />
+                      )}
+                    </Box>
+
+                    <Box>
+                      <Select
+                        label="Kênh bán hàng"
+                        data={channelsData || []}
+                        value={channel}
+                        onChange={(e) => setChannel(e ?? undefined)}
+                        placeholder="Tất cả kênh"
+                        clearable
+                      />
+                    </Box>
+
+                    <Group align="flex-end" gap={10} wrap="nowrap">
+                      <Button h={40} radius={10} onClick={() => refetchRevenue()}>
+                        Áp dụng
+                      </Button>
+                      <Button
+                        h={40}
+                        radius={10}
+                        variant="light"
+                        onClick={handleResetRevenue}
+                      >
+                        Reset
+                      </Button>
+                    </Group>
+                  </Box>
+                </Box>
+                <RevenueKPICards
+                  isLoading={revenueLoading}
+                  totalRevenue={revenue?.totalRevenue}
+                  totalRevenueBeforeDiscount={revenue?.totalRevenueBeforeDiscount}
+                  totalOrders={revenue?.totalOrders}
+                  totalQuantity={revenue?.totalQuantity}
+                  totalTax={revenue?.totalTax}
+                  totalShippingCost={revenue?.totalShippingCost}
+                  revenueFromNewCustomers={revenue?.revenueFromNewCustomers}
+                  revenueFromReturningCustomers={revenue?.revenueFromReturningCustomers}
+                />
+              </Box>
+
+              <Box mb="md">
+                <Text fw={600} fz="md" mb="sm">
+                  Nhóm phân tích nhanh
                 </Text>
-                <Button
-                  size="xs"
-                  leftSection={<IconRefresh size={14} />}
-                  onClick={() => refetchMetrics()}
+                <Box
+                  style={{
+                    display: "grid",
+                    gap: 16,
+                    gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))"
+                  }}
                 >
-                  Thử lại
-                </Button>
-              </Group>
-            </Alert>
-          )}
+                  <ChannelMetricsChart
+                    isLoading={revenueLoading}
+                    data={revenue?.revenueByChannel}
+                  />
+                  <TopProductsChart
+                    isLoading={revenueLoading}
+                    topItemsByRevenue={revenue?.topItemsByRevenue}
+                    topItemsByQuantity={revenue?.topItemsByQuantity}
+                    otherItemsRevenue={revenue?.otherItemsRevenue}
+                  />
+                  <UserMetricsChart
+                    isLoading={revenueLoading}
+                    data={revenue?.revenueByUser}
+                  />
+                </Box>
+              </Box>
 
-          <Box mb="md">
-            <Text fw={600} fz="md" mb="sm">
-              Tổng quan doanh số
-            </Text>
-            <RevenueKPICards
-              isLoading={revenueLoading}
-              totalRevenue={revenue?.totalRevenue}
-              totalRevenueBeforeDiscount={revenue?.totalRevenueBeforeDiscount}
-              totalOrders={revenue?.totalOrders}
-              totalQuantity={revenue?.totalQuantity}
-              totalTax={revenue?.totalTax}
-              totalShippingCost={revenue?.totalShippingCost}
-              revenueFromNewCustomers={revenue?.revenueFromNewCustomers}
-              revenueFromReturningCustomers={revenue?.revenueFromReturningCustomers}
-            />
-          </Box>
+              <Box mb="sm">
+                <Text fw={600} fz="md" mb="sm">
+                  Nhóm bảng / danh sách chi tiết
+                </Text>
+                <RevenueTables
+                  isLoading={revenueLoading}
+                  items={revenue?.topItemsByRevenue}
+                  channels={revenue?.revenueByChannel}
+                  users={revenue?.revenueByUser}
+                />
+              </Box>
+            </Tabs.Panel>
 
-          <Box mb="md">
-            <Text fw={600} fz="md" mb="sm">
-              Hiệu suất tháng {selectedMonth ? format(selectedMonth, "MM/yyyy") : ""}
-            </Text>
-            <MonthlyMetrics
-              isLoading={metricsLoading}
-              data={metrics}
-              topCustomersData={topCustomers}
-              topCustomersLoading={topCustomersLoading}
-            />
-          </Box>
+            <Tabs.Panel value="monthly">
+              {metricsError && (
+                <Alert
+                  color="red"
+                  title="Có lỗi xảy ra"
+                  icon={<IconAlertCircle />}
+                  mb="md"
+                  radius="md"
+                >
+                  <Group>
+                    <Text size="sm">
+                      {(metricsError as any)?.message || "Không thể tải dữ liệu"}
+                    </Text>
+                    <Button
+                      size="xs"
+                      leftSection={<IconRefresh size={14} />}
+                      onClick={() => refetchMetrics()}
+                    >
+                      Thử lại
+                    </Button>
+                  </Group>
+                </Alert>
+              )}
 
-          <Box mb="md">
-            <Text fw={600} fz="md" mb="sm">
-              Nhóm phân tích nhanh
-            </Text>
-            <Box
-              style={{
-                display: "grid",
-                gap: 16,
-                gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))"
-              }}
-            >
-              <ChannelMetricsChart
-                isLoading={revenueLoading}
-                data={revenue?.revenueByChannel}
-              />
-              <TopProductsChart
-                isLoading={revenueLoading}
-                topItemsByRevenue={revenue?.topItemsByRevenue}
-                topItemsByQuantity={revenue?.topItemsByQuantity}
-                otherItemsRevenue={revenue?.otherItemsRevenue}
-              />
-              <UserMetricsChart
-                isLoading={revenueLoading}
-                data={revenue?.revenueByUser}
-              />
-            </Box>
-          </Box>
+              <Box mb="md">
+                <Text fw={600} fz="md" mb="sm">
+                  Hiệu suất tháng {selectedMonth ? format(selectedMonth, "MM/yyyy") : ""}
+                </Text>
+                <Box
+                  p={{ base: 14, md: 18 }}
+                  mb="md"
+                  style={{
+                    border: "1px solid #E5E7EB",
+                    borderRadius: rem(14),
+                    background: "#fff",
+                    boxShadow: "0 1px 3px rgba(15, 23, 42, 0.06)"
+                  }}
+                >
+                  <Box
+                    style={{
+                      display: "grid",
+                      gap: 12,
+                      gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))"
+                    }}
+                  >
+                    <Box>
+                      <MonthPickerInput
+                        label="Tháng"
+                        placeholder="Chọn tháng"
+                        value={selectedMonth}
+                        onChange={setSelectedMonth}
+                        valueFormat="MM/YYYY"
+                        clearable
+                        h={40}
+                      />
+                    </Box>
 
-          <Box mb="sm">
-            <Text fw={600} fz="md" mb="sm">
-              Nhóm bảng / danh sách chi tiết
-            </Text>
-            <RevenueTables
-              isLoading={revenueLoading}
-              items={revenue?.topItemsByRevenue}
-              channels={revenue?.revenueByChannel}
-              users={revenue?.revenueByUser}
-            />
-          </Box>
+                    <Box>
+                      <Select
+                        label="Kênh theo tháng"
+                        data={channelsData || []}
+                        value={monthlyMetricsChannel}
+                        onChange={(e) => setMonthlyMetricsChannel(e ?? undefined)}
+                        placeholder="Tất cả kênh"
+                        clearable
+                      />
+                    </Box>
+
+                    <Group align="flex-end" gap={10} wrap="nowrap">
+                      <Button h={40} radius={10} onClick={handleApplyMetrics}>
+                        Áp dụng
+                      </Button>
+                      <Button
+                        h={40}
+                        radius={10}
+                        variant="light"
+                        onClick={handleResetMetrics}
+                      >
+                        Reset
+                      </Button>
+                    </Group>
+                  </Box>
+                </Box>
+                <MonthlyMetrics
+                  isLoading={metricsLoading}
+                  data={metrics}
+                  topCustomersData={topCustomers}
+                  topCustomersLoading={topCustomersLoading}
+                />
+              </Box>
+            </Tabs.Panel>
+          </Tabs>
         </Box>
       </Box>
     </SalesLayout>
