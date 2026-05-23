@@ -1,3 +1,4 @@
+import type { ReactNode } from "react"
 import { Alert, Box, Button, Paper, Skeleton, Stack, Text, rem } from "@mantine/core"
 import {
   IconAlertCircle,
@@ -59,13 +60,19 @@ const formatDateLabel = (value: string) => {
   return formatDate(parsed, "dd/MM")
 }
 
-const RangeDashboardSkeleton = () => (
+const RangeDashboardSkeleton = ({
+  showSummaryCards = true
+}: {
+  showSummaryCards?: boolean
+}) => (
   <Stack gap="lg">
-    <Box style={createResponsiveGridStyle(280)}>
-      {Array.from({ length: 5 }).map((_, index) => (
-        <Skeleton key={index} height={154} radius="xl" />
-      ))}
-    </Box>
+    {showSummaryCards ? (
+      <Box style={createResponsiveGridStyle(280)}>
+        {Array.from({ length: 5 }).map((_, index) => (
+          <Skeleton key={index} height={154} radius="xl" />
+        ))}
+      </Box>
+    ) : null}
 
     <Box style={createResponsiveGridStyle(280)}>
       {Array.from({ length: 5 }).map((_, index) => (
@@ -139,6 +146,8 @@ interface DailyAnalyticsDashboardProps {
   data?: RangeMetricsViewModel
   isLoading: boolean
   isError: boolean
+  showSummaryCards?: boolean
+  rangeComparisonTable?: ReactNode
   onRetry: () => void
 }
 
@@ -146,6 +155,8 @@ export const DailyAnalyticsDashboard = ({
   data,
   isLoading,
   isError,
+  showSummaryCards = true,
+  rangeComparisonTable,
   onRetry
 }: DailyAnalyticsDashboardProps) => {
   const summaryTones: Record<ShopeeDashboardSummaryItem["key"], string> = {
@@ -173,7 +184,7 @@ export const DailyAnalyticsDashboard = ({
   }
 
   if (isLoading && !data) {
-    return <RangeDashboardSkeleton />
+    return <RangeDashboardSkeleton showSummaryCards={showSummaryCards} />
   }
 
   if (!data) return null
@@ -192,29 +203,33 @@ export const DailyAnalyticsDashboard = ({
 
   return (
     <Stack gap="lg">
-      <Box style={createResponsiveGridStyle(280)}>
-        {data.summaryItems.map((item) => (
-          <MetricStatCard
-            key={item.key}
-            label={item.label}
-            value={formatSummaryValue(item)}
-            tone={summaryTones[item.key]}
-            icon={summaryIcons[item.key]}
-            trailing={
-              item.key === "revenue" ? (
-                <Stack gap={2} align="flex-end">
-                  <Text size="sm" fw={700} c="#475569">
-                    KPI: {formatCurrency(data.rangeRevenueTarget)}
-                  </Text>
-                  <Text size="sm" fw={700} c="#2563eb">
-                    Đạt: {formatKpiProgress(item.value, data.rangeRevenueTarget)}
-                  </Text>
-                </Stack>
-              ) : undefined
-            }
-          />
-        ))}
-      </Box>
+      {showSummaryCards ? (
+        <Box style={createResponsiveGridStyle(280)}>
+          {data.summaryItems.map((item) => (
+            <MetricStatCard
+              key={item.key}
+              label={item.label}
+              value={formatSummaryValue(item)}
+              tone={summaryTones[item.key]}
+              icon={summaryIcons[item.key]}
+              trailing={
+                item.key === "revenue" ? (
+                  <Stack gap={2} align="flex-end">
+                    <Text size="sm" fw={700} c="#475569">
+                      KPI: {formatCurrency(data.rangeRevenueTarget)}
+                    </Text>
+                    <Text size="sm" fw={700} c="#2563eb">
+                      Đạt: {formatKpiProgress(item.value, data.rangeRevenueTarget)}
+                    </Text>
+                  </Stack>
+                ) : undefined
+              }
+            />
+          ))}
+        </Box>
+      ) : null}
+
+      {rangeComparisonTable}
 
       <Paper
         withBorder

@@ -1,5 +1,4 @@
 import type { ShopeeDashboardSearchState } from "../components/incomes/shopee-dashboard/ShopeePerformanceDashboardPage"
-import type { ShopeeRangePreset } from "../hooks/models"
 import { SHOPEE_ALL_CHANNEL_ID } from "../hooks/shopeeDashboardApi"
 import {
   createDefaultRange,
@@ -42,22 +41,6 @@ const parseDateString = (value: unknown) => {
   return parseDateInputValue(trimmed) ? trimmed : undefined
 }
 
-const parsePreset = (value: unknown): ShopeeRangePreset | undefined => {
-  if (typeof value !== "string") return undefined
-
-  if (
-    value === "last-7-days" ||
-    value === "last-14-days" ||
-    value === "last-30-days" ||
-    value === "this-month" ||
-    value === "last-month"
-  ) {
-    return value
-  }
-
-  return undefined
-}
-
 export const validateShopeeDashboardSearch = (
   search: Record<string, unknown>
 ): ShopeeDashboardSearchState => {
@@ -68,7 +51,6 @@ export const validateShopeeDashboardSearch = (
       : SHOPEE_ALL_CHANNEL_ID
   const orderFrom = parseDateString(search.orderFrom ?? search.fromDate)
   const orderTo = parseDateString(search.orderTo ?? search.toDate)
-  const preset = parsePreset(search.preset)
   const fallbackRange = createDefaultRange()
 
   return {
@@ -80,6 +62,6 @@ export const validateShopeeDashboardSearch = (
     orderFrom:
       mode === "range" ? orderFrom ?? fallbackRange.orderFrom : undefined,
     orderTo: mode === "range" ? orderTo ?? fallbackRange.orderTo : undefined,
-    preset: mode === "range" ? preset ?? "last-7-days" : undefined
+    preset: undefined
   }
 }
