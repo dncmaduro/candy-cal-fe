@@ -1,10 +1,7 @@
 import type { ReactNode } from "react"
 import { Group, Loader, SegmentedControl, Stack, Text } from "@mantine/core"
 import type { ShopeeChannelOption } from "../../../hooks/shopeeDashboardApi"
-import type {
-  ShopeePerformanceTimeMode,
-  ShopeeRangePreset
-} from "../../../hooks/models"
+import type { ShopeePerformanceTimeMode } from "../../../hooks/models"
 import { MonthFilterFields } from "./MonthFilterFields"
 import { DateRangeFilterFields } from "./DateRangeFilterFields"
 import { compactFilterSegmentedStyles } from "../filterStyles"
@@ -18,7 +15,6 @@ interface PerformanceTimeFilterProps {
   hideRangeChannelField?: boolean
   orderFrom?: string
   orderTo?: string
-  preset?: ShopeeRangePreset
   channelOptions: ShopeeChannelOption[]
   monthOptions: ShopeeChannelOption[]
   yearOptions: ShopeeChannelOption[]
@@ -34,7 +30,6 @@ interface PerformanceTimeFilterProps {
     channel: string
     orderFrom: string
     orderTo: string
-    preset?: ShopeeRangePreset
   }) => void
 }
 
@@ -47,7 +42,6 @@ export const PerformanceTimeFilter = ({
   hideRangeChannelField = false,
   orderFrom,
   orderTo,
-  preset,
   channelOptions,
   monthOptions,
   yearOptions,
@@ -116,7 +110,6 @@ export const PerformanceTimeFilter = ({
           hideChannelField={hideRangeChannelField}
           orderFrom={orderFrom}
           orderTo={orderTo}
-          preset={preset}
           channelOptions={channelOptions}
           isChannelsLoading={isChannelsLoading}
           rightSection={filterMeta}
