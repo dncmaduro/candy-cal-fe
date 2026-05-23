@@ -182,6 +182,27 @@ export interface RangeMetricsViewModel {
   isEmpty: boolean
 }
 
+export interface RangeChannelComparisonRowViewModel {
+  channelId: string
+  channelName: string
+  revenue: number
+  liveRevenue: number
+  adsCost: number
+  roas: number
+  totalOrders: number
+  lastSyncedAt: string | null
+}
+
+export interface RangeChannelComparisonViewModel {
+  rows: RangeChannelComparisonRowViewModel[]
+  totals: RangeChannelComparisonRowViewModel
+  shopCount: number
+  orderFrom: string
+  orderTo: string
+  lastSyncedAt: string | null
+  isEmpty: boolean
+}
+
 const adaptMonthlyMetrics = (
   summary: MonthlySummaryResponse,
   kpis: MonthlyKpisResponse
@@ -528,6 +549,20 @@ const adaptMonthlyChannelComparisonRow = (
   }
 }
 
+const adaptRangeChannelComparisonRow = (
+  channel: Pick<LivestreamChannel, "_id" | "name">,
+  summary: RangeSummaryResponse
+): RangeChannelComparisonRowViewModel => ({
+  channelId: channel._id,
+  channelName: channel.name,
+  revenue: normalizeNumber(summary.summary.netRevenue),
+  liveRevenue: normalizeNumber(summary.summary.liveRevenue),
+  adsCost: normalizeNumber(summary.summary.adsCost),
+  roas: normalizeNumber(summary.summary.roas),
+  totalOrders: normalizeNumber(summary.summary.totalOrders),
+  lastSyncedAt: summary.meta.lastSyncedAt
+})
+
 const buildMonthlyComparisonTotals = (
   rows: MonthlyChannelComparisonRowViewModel[]
 ): MonthlyChannelComparisonRowViewModel => {
@@ -605,6 +640,30 @@ const buildMonthlyComparisonTotals = (
     totalOrders,
     adsRevenueRatio: safeDivide(adsCostActual, revenueActual) * 100,
     lastSyncedAt: latestSyncedAt
+  }
+}
+
+const buildRangeComparisonTotals = (
+  rows: RangeChannelComparisonRowViewModel[]
+): RangeChannelComparisonRowViewModel => {
+  const revenue = rows.reduce((total, row) => total + row.revenue, 0)
+  const liveRevenue = rows.reduce((total, row) => total + row.liveRevenue, 0)
+  const adsCost = rows.reduce((total, row) => total + row.adsCost, 0)
+  const totalOrders = rows.reduce((total, row) => total + row.totalOrders, 0)
+  const lastSyncedAt = rows.reduce<string | null>(
+    (latest, row) => resolveLatestSyncedAt(latest, row.lastSyncedAt),
+    null
+  )
+
+  return {
+    channelId: "total",
+    channelName: `Tổng ${rows.length} shop`,
+    revenue,
+    liveRevenue,
+    adsCost,
+    roas: safeDivide(revenue, adsCost),
+    totalOrders,
+    lastSyncedAt
   }
 }
 
@@ -746,6 +805,83 @@ export const useMonthlyChannelComparison = ({
       }
     },
     enabled: enabled && Boolean(accessToken) && channels.length > 0,
+    placeholderData: (previousData) => previousData
+  })
+}
+
+export const useRangeChannelComparison = ({
+  orderFrom,
+  orderTo,
+  channels,
+  enabled = true
+}: {
+  orderFrom?: string
+  orderTo?: string
+  channels: Array<Pick<LivestreamChannel, "_id" | "name">>
+  enabled?: boolean
+}) => {
+  const { accessToken } = useUserStore()
+  const channelKeys = useMemo(
+    () => channels.map((channel) => `${channel._id}:${channel.name}`),
+    [channels]
+  )
+
+  return useQuery({
+    queryKey: [
+      "shopee",
+      "rangeChannelComparison",
+      orderFrom || "",
+      orderTo || "",
+      channelKeys
+    ],
+    queryFn: async (): Promise<RangeChannelComparisonViewModel> => {
+      const rows = await Promise.all(
+        channels.map(async (channel) => {
+          const query = toQueryString({
+            channel: channel._id,
+            orderFrom,
+            orderTo
+          })
+
+          const summaryResponse = await callApi<never, RangeSummaryResponse>({
+            method: "GET",
+            path: `/v1/shopee/analytics/range-summary?${query}`,
+            token: accessToken
+          })
+
+          return adaptRangeChannelComparisonRow(channel, summaryResponse.data)
+        })
+      )
+
+      const sortedRows = [...rows].sort((left, right) => right.revenue - left.revenue)
+      const safeOrderFrom = orderFrom || ""
+      const safeOrderTo = orderTo || ""
+      const totals = buildRangeComparisonTotals(sortedRows)
+      const lastSyncedAt = resolveLatestSyncedAt(totals.lastSyncedAt, null)
+
+      return {
+        rows: sortedRows,
+        totals,
+        shopCount: sortedRows.length,
+        orderFrom: safeOrderFrom,
+        orderTo: safeOrderTo,
+        lastSyncedAt,
+        isEmpty: sortedRows.every(
+          (row) =>
+            row.revenue === 0 &&
+            row.liveRevenue === 0 &&
+            row.adsCost === 0 &&
+            row.roas === 0 &&
+            row.totalOrders === 0
+        )
+      }
+    },
+    enabled:
+      enabled &&
+      Boolean(accessToken) &&
+      Boolean(orderFrom) &&
+      Boolean(orderTo) &&
+      channels.length > 0,
     placeholderData: (previousData) => previousData
   })
 }

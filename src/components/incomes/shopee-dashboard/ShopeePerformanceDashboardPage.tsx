@@ -33,19 +33,20 @@ import {
   type MonthlyChannelComparisonViewModel,
   useMonthlyChannelComparison,
   useMonthlyMetrics,
+  useRangeChannelComparison,
   useRangeMetrics
 } from "../../../hooks/useShopeePerformanceMetrics"
 import { AppLayout } from "../../layouts/AppLayout"
 import { PerformanceTimeFilter } from "./PerformanceTimeFilter"
 import { MonthlyDashboard } from "./MonthlyDashboard"
 import { DailyAnalyticsDashboard } from "./DailyAnalyticsDashboard"
+import { RangeChannelComparisonTable } from "./RangeChannelComparisonTable"
 import { ShopeeDashboardOrdersSection } from "./ShopeeDashboardOrdersSection"
 import { ShopeeRevenueEntryModal } from "./ShopeeRevenueEntryModal"
 import { DeleteShopeeRangeDataModal } from "./DeleteShopeeRangeDataModal"
 import {
   createDefaultRange,
-  getDaysInRange,
-  resolvePresetRange
+  getDaysInRange
 } from "./performanceTimeUtils"
 import type { MonthlyMetricsViewModel } from "../../../hooks/useShopeePerformanceMetrics"
 
@@ -349,9 +350,22 @@ export const ShopeePerformanceDashboardPage = ({
     enabled:
       search.tab === "dashboard" && search.mode === "range" && isRangeReady
   })
+  const rangeComparisonQuery = useRangeChannelComparison({
+    orderFrom: search.orderFrom,
+    orderTo: search.orderTo,
+    channels: channelsQuery.data?.channels ?? [],
+    enabled:
+      search.tab === "dashboard" &&
+      search.mode === "range" &&
+      isRangeReady &&
+      normalizedChannelId === SHOPEE_ALL_CHANNEL_ID &&
+      channelsQuery.isSuccess
+  })
 
   const activeDashboardFetching =
-    search.mode === "month" ? monthlyQuery.isFetching : rangeQuery.isFetching
+    search.mode === "month"
+      ? monthlyQuery.isFetching
+      : rangeQuery.isFetching || rangeComparisonQuery.isFetching
   const lastUpdatedLabel = formatLastUpdatedLabel(
     search.mode === "month"
       ? monthlyDashboardData?.lastSyncedAt
@@ -370,6 +384,7 @@ export const ShopeePerformanceDashboardPage = ({
     }
 
     rangeQuery.refetch()
+    rangeComparisonQuery.refetch()
   }
 
   const handleOpenRevenueEntryModal = () => {
@@ -531,7 +546,6 @@ export const ShopeePerformanceDashboardPage = ({
               hideMonthChannelField
               orderFrom={search.orderFrom}
               orderTo={search.orderTo}
-              preset={search.preset}
               channelOptions={channelOptions}
               monthOptions={monthOptions}
               yearOptions={yearOptions}
@@ -557,16 +571,14 @@ export const ShopeePerformanceDashboardPage = ({
                   return
                 }
 
-                const fallbackRange = search.preset
-                  ? resolvePresetRange(search.preset)
-                  : createDefaultRange()
+                const fallbackRange = createDefaultRange()
 
                 onSearchChange(
                   {
                     mode: "range",
                     orderFrom: fallbackRange.orderFrom,
                     orderTo: fallbackRange.orderTo,
-                    preset: search.preset ?? "last-7-days"
+                    preset: undefined
                   },
                   true
                 )
@@ -576,13 +588,13 @@ export const ShopeePerformanceDashboardPage = ({
               }
               onMonthChange={(month) => onSearchChange({ month }, true)}
               onYearChange={(year) => onSearchChange({ year }, true)}
-              onRangeApply={({ channel, orderFrom, orderTo, preset }) =>
+              onRangeApply={({ channel, orderFrom, orderTo }) =>
                 onSearchChange(
                   {
                     channel,
                     orderFrom,
                     orderTo,
-                    preset
+                    preset: undefined
                   },
                   true
                 )
@@ -629,6 +641,19 @@ export const ShopeePerformanceDashboardPage = ({
                         data={rangeQuery.data}
                         isLoading={rangeQuery.isLoading}
                         isError={rangeQuery.isError}
+                        showSummaryCards={
+                          normalizedChannelId === SHOPEE_ALL_CHANNEL_ID
+                        }
+                        rangeComparisonTable={
+                          normalizedChannelId === SHOPEE_ALL_CHANNEL_ID ? (
+                            <RangeChannelComparisonTable
+                              data={rangeComparisonQuery.data}
+                              isLoading={rangeComparisonQuery.isLoading}
+                              isError={rangeComparisonQuery.isError}
+                              onRetry={handleRetry}
+                            />
+                          ) : undefined
+                        }
                         onRetry={handleRetry}
                       />
                     ) : (

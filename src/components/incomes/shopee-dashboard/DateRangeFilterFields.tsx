@@ -1,15 +1,13 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react"
-import { Alert, Badge, Group, Select, Stack, Text } from "@mantine/core"
+import { Alert, Group, Select, Stack, Text } from "@mantine/core"
 import { DatePickerInput } from "@mantine/dates"
 import { IconAlertCircle } from "@tabler/icons-react"
 import type { ShopeeChannelOption } from "../../../hooks/shopeeDashboardApi"
-import type { ShopeeRangePreset } from "../../../hooks/models"
 import {
   MAX_RANGE_DAYS,
   getDaysInRange,
   isRangeValid,
   parseDateInputValue,
-  resolvePresetRange,
   toDateInputValue
 } from "./performanceTimeUtils"
 import {
@@ -17,23 +15,11 @@ import {
   compactFilterPlainLabelStyles
 } from "../filterStyles"
 
-const PRESET_OPTIONS: Array<{
-  key: ShopeeRangePreset
-  label: string
-}> = [
-  { key: "last-7-days", label: "7 ngày gần nhất" },
-  { key: "last-14-days", label: "14 ngày gần nhất" },
-  { key: "last-30-days", label: "30 ngày gần nhất" },
-  { key: "this-month", label: "Tháng này" },
-  { key: "last-month", label: "Tháng trước" }
-]
-
 interface DateRangeFilterFieldsProps {
   channelId: string
   hideChannelField?: boolean
   orderFrom?: string
   orderTo?: string
-  preset?: ShopeeRangePreset
   channelOptions: ShopeeChannelOption[]
   isChannelsLoading?: boolean
   rightSection?: ReactNode
@@ -41,7 +27,6 @@ interface DateRangeFilterFieldsProps {
     channel: string
     orderFrom: string
     orderTo: string
-    preset?: ShopeeRangePreset
   }) => void
 }
 
@@ -50,7 +35,6 @@ export const DateRangeFilterFields = ({
   hideChannelField = false,
   orderFrom,
   orderTo,
-  preset,
   channelOptions,
   isChannelsLoading = false,
   rightSection,
@@ -62,9 +46,6 @@ export const DateRangeFilterFields = ({
   )
   const [draftTo, setDraftTo] = useState<Date | null>(
     parseDateInputValue(orderTo)
-  )
-  const [draftPreset, setDraftPreset] = useState<ShopeeRangePreset | undefined>(
-    preset
   )
 
   useEffect(() => {
@@ -78,10 +59,6 @@ export const DateRangeFilterFields = ({
   useEffect(() => {
     setDraftTo(parseDateInputValue(orderTo))
   }, [orderTo])
-
-  useEffect(() => {
-    setDraftPreset(preset)
-  }, [preset])
 
   const normalizedFrom = draftFrom ? toDateInputValue(draftFrom) : undefined
   const normalizedTo = draftTo ? toDateInputValue(draftTo) : undefined
@@ -99,27 +76,23 @@ export const DateRangeFilterFields = ({
     const isChanged =
       draftChannel !== channelId ||
       normalizedFrom !== orderFrom ||
-      normalizedTo !== orderTo ||
-      draftPreset !== preset
+      normalizedTo !== orderTo
 
     if (!isChanged) return
 
     onApply({
       channel: draftChannel,
       orderFrom: normalizedFrom,
-      orderTo: normalizedTo,
-      preset: draftPreset
+      orderTo: normalizedTo
     })
   }, [
     canApply,
     channelId,
     draftChannel,
-    draftPreset,
     orderFrom,
     normalizedFrom,
     normalizedTo,
     onApply,
-    preset,
     orderTo
   ])
 
@@ -166,10 +139,7 @@ export const DateRangeFilterFields = ({
             label="Từ ngày"
             placeholder="Chọn từ ngày"
             value={draftFrom}
-            onChange={(value) => {
-              setDraftFrom(value)
-              setDraftPreset(undefined)
-            }}
+            onChange={setDraftFrom}
             valueFormat="DD/MM/YYYY"
             clearable={false}
             w={180}
@@ -183,10 +153,7 @@ export const DateRangeFilterFields = ({
             label="Đến ngày"
             placeholder="Chọn đến ngày"
             value={draftTo}
-            onChange={(value) => {
-              setDraftTo(value)
-              setDraftPreset(undefined)
-            }}
+            onChange={setDraftTo}
             valueFormat="DD/MM/YYYY"
             clearable={false}
             w={180}
@@ -198,36 +165,6 @@ export const DateRangeFilterFields = ({
         </Group>
 
         {rightSection}
-      </Group>
-
-      <Group gap={8} wrap="wrap">
-        {PRESET_OPTIONS.map((option) => {
-          const active = draftPreset === option.key
-
-          return (
-            <Badge
-              key={option.key}
-              component="button"
-              type="button"
-              variant={active ? "filled" : "light"}
-              color={active ? "blue" : "gray"}
-              radius="xl"
-              size="lg"
-              onClick={() => {
-                const next = resolvePresetRange(option.key)
-                setDraftPreset(option.key)
-                setDraftFrom(parseDateInputValue(next.orderFrom))
-                setDraftTo(parseDateInputValue(next.orderTo))
-              }}
-              style={{
-                cursor: "pointer",
-                border: "none"
-              }}
-            >
-              {option.label}
-            </Badge>
-          )
-        })}
       </Group>
 
       {rangeError && (
