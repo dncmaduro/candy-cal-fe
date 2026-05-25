@@ -182,13 +182,22 @@ export interface RangeMetricsViewModel {
   isEmpty: boolean
 }
 
+export interface RangeChannelComparisonMetricViewModel {
+  actual: number
+  target: number | null
+  achievedPercentage: number | null
+  expectedPercentage: number | null
+  expectedValue: number | null
+  format: "currency" | "decimal"
+}
+
 export interface RangeChannelComparisonRowViewModel {
   channelId: string
   channelName: string
-  revenue: number
-  liveRevenue: number
-  adsCost: number
-  roas: number
+  revenue: RangeChannelComparisonMetricViewModel
+  liveRevenue: RangeChannelComparisonMetricViewModel
+  adsCost: RangeChannelComparisonMetricViewModel
+  roas: RangeChannelComparisonMetricViewModel
   totalOrders: number
   lastSyncedAt: string | null
 }
@@ -477,6 +486,34 @@ const buildMonthlyComparisonMetric = ({
   format
 })
 
+const buildRangeComparisonMetric = ({
+  actual,
+  target,
+  format
+}: {
+  actual: number
+  target?: number | null
+  format: "currency" | "decimal"
+}): RangeChannelComparisonMetricViewModel => {
+  const normalizedTarget =
+    typeof target === "number" && Number.isFinite(target)
+      ? normalizeNumber(target)
+      : null
+  const achievedPercentage =
+    normalizedTarget !== null && normalizedTarget > 0
+      ? safeDivide(actual, normalizedTarget) * 100
+      : null
+
+  return {
+    actual: normalizeNumber(actual),
+    target: normalizedTarget,
+    achievedPercentage,
+    expectedPercentage: normalizedTarget !== null && normalizedTarget > 0 ? 100 : null,
+    expectedValue: normalizedTarget,
+    format
+  }
+}
+
 const adaptMonthlyChannelComparisonRow = (
   channel: Pick<LivestreamChannel, "_id" | "name">,
   summary: MonthlySummaryResponse,
@@ -551,14 +588,34 @@ const adaptMonthlyChannelComparisonRow = (
 
 const adaptRangeChannelComparisonRow = (
   channel: Pick<LivestreamChannel, "_id" | "name">,
-  summary: RangeSummaryResponse
+  summary: RangeSummaryResponse,
+  targets: {
+    revenueTarget: number
+    adsCostTarget: number
+    roasTarget: number | null
+  }
 ): RangeChannelComparisonRowViewModel => ({
   channelId: channel._id,
   channelName: channel.name,
-  revenue: normalizeNumber(summary.summary.netRevenue),
-  liveRevenue: normalizeNumber(summary.summary.liveRevenue),
-  adsCost: normalizeNumber(summary.summary.adsCost),
-  roas: normalizeNumber(summary.summary.roas),
+  revenue: buildRangeComparisonMetric({
+    actual: normalizeNumber(summary.summary.netRevenue),
+    target: targets.revenueTarget,
+    format: "currency"
+  }),
+  liveRevenue: buildRangeComparisonMetric({
+    actual: normalizeNumber(summary.summary.liveRevenue),
+    format: "currency"
+  }),
+  adsCost: buildRangeComparisonMetric({
+    actual: normalizeNumber(summary.summary.adsCost),
+    target: targets.adsCostTarget,
+    format: "currency"
+  }),
+  roas: buildRangeComparisonMetric({
+    actual: normalizeNumber(summary.summary.roas),
+    target: targets.roasTarget,
+    format: "decimal"
+  }),
   totalOrders: normalizeNumber(summary.summary.totalOrders),
   lastSyncedAt: summary.meta.lastSyncedAt
 })
@@ -646,9 +703,17 @@ const buildMonthlyComparisonTotals = (
 const buildRangeComparisonTotals = (
   rows: RangeChannelComparisonRowViewModel[]
 ): RangeChannelComparisonRowViewModel => {
-  const revenue = rows.reduce((total, row) => total + row.revenue, 0)
-  const liveRevenue = rows.reduce((total, row) => total + row.liveRevenue, 0)
-  const adsCost = rows.reduce((total, row) => total + row.adsCost, 0)
+  const revenue = rows.reduce((total, row) => total + row.revenue.actual, 0)
+  const revenueTarget = rows.reduce(
+    (total, row) => total + (row.revenue.target ?? 0),
+    0
+  )
+  const liveRevenue = rows.reduce((total, row) => total + row.liveRevenue.actual, 0)
+  const adsCost = rows.reduce((total, row) => total + row.adsCost.actual, 0)
+  const adsCostTarget = rows.reduce(
+    (total, row) => total + (row.adsCost.target ?? 0),
+    0
+  )
   const totalOrders = rows.reduce((total, row) => total + row.totalOrders, 0)
   const lastSyncedAt = rows.reduce<string | null>(
     (latest, row) => resolveLatestSyncedAt(latest, row.lastSyncedAt),
@@ -658,10 +723,25 @@ const buildRangeComparisonTotals = (
   return {
     channelId: "total",
     channelName: `Tổng ${rows.length} shop`,
-    revenue,
-    liveRevenue,
-    adsCost,
-    roas: safeDivide(revenue, adsCost),
+    revenue: buildRangeComparisonMetric({
+      actual: revenue,
+      target: revenueTarget,
+      format: "currency"
+    }),
+    liveRevenue: buildRangeComparisonMetric({
+      actual: liveRevenue,
+      format: "currency"
+    }),
+    adsCost: buildRangeComparisonMetric({
+      actual: adsCost,
+      target: adsCostTarget,
+      format: "currency"
+    }),
+    roas: buildRangeComparisonMetric({
+      actual: safeDivide(revenue, adsCost),
+      target: safeDivide(revenueTarget, adsCostTarget) || null,
+      format: "decimal"
+    }),
     totalOrders,
     lastSyncedAt
   }
@@ -835,25 +915,102 @@ export const useRangeChannelComparison = ({
       channelKeys
     ],
     queryFn: async (): Promise<RangeChannelComparisonViewModel> => {
+      const monthSegments = getRangeMonthSegments(orderFrom, orderTo)
       const rows = await Promise.all(
         channels.map(async (channel) => {
-          const query = toQueryString({
+          const summaryQuery = toQueryString({
             channel: channel._id,
             orderFrom,
             orderTo
           })
 
-          const summaryResponse = await callApi<never, RangeSummaryResponse>({
-            method: "GET",
-            path: `/v1/shopee/analytics/range-summary?${query}`,
-            token: accessToken
-          })
+          const [summaryResponse, ...monthKpiResponses] = await Promise.all([
+            callApi<never, RangeSummaryResponse>({
+              method: "GET",
+              path: `/v1/shopee/analytics/range-summary?${summaryQuery}`,
+              token: accessToken
+            }),
+            ...monthSegments.map((segment) =>
+              callApi<never, GetShopeeMonthKpisResponse>({
+                method: "GET",
+                path: `/v1/shopeemonthkpis?${toQueryString({
+                  page: 1,
+                  limit: 999,
+                  month: segment.month,
+                  year: segment.year,
+                  channel: channel._id
+                })}`,
+                token: accessToken
+              })
+            )
+          ])
 
-          return adaptRangeChannelComparisonRow(channel, summaryResponse.data)
+          const targets = monthSegments.reduce(
+            (acc, segment, index) => {
+              const records = monthKpiResponses[index]?.data.data ?? []
+              const monthlyRevenueTarget = records.reduce(
+                (sum, item) => sum + normalizeNumber(item.revenueKpi),
+                0
+              )
+              const monthlyAdsCostTarget = records.reduce(
+                (sum, item) => sum + normalizeNumber(item.adsCostKpi),
+                0
+              )
+              const monthlyRoasTarget =
+                records.length > 0
+                  ? safeDivide(
+                      records.reduce(
+                        (sum, item) => sum + normalizeNumber(item.revenueKpi),
+                        0
+                      ),
+                      records.reduce(
+                        (sum, item) => sum + normalizeNumber(item.adsCostKpi),
+                        0
+                      )
+                    )
+                  : 0
+              const daysInMonth = getDaysInMonth(
+                new Date(segment.year, segment.month - 1)
+              )
+
+              acc.revenueTarget +=
+                safeDivide(monthlyRevenueTarget, daysInMonth) * segment.days
+              acc.adsCostTarget +=
+                safeDivide(monthlyAdsCostTarget, daysInMonth) * segment.days
+              if (monthlyRoasTarget > 0) {
+                acc.roasTargetNumerator +=
+                  safeDivide(monthlyRevenueTarget, daysInMonth) * segment.days
+                acc.roasTargetDenominator +=
+                  safeDivide(monthlyAdsCostTarget, daysInMonth) * segment.days
+              }
+
+              return acc
+            },
+            {
+              revenueTarget: 0,
+              adsCostTarget: 0,
+              roasTargetNumerator: 0,
+              roasTargetDenominator: 0
+            }
+          )
+
+          return adaptRangeChannelComparisonRow(channel, summaryResponse.data, {
+            revenueTarget: targets.revenueTarget,
+            adsCostTarget: targets.adsCostTarget,
+            roasTarget:
+              targets.roasTargetDenominator > 0
+                ? safeDivide(
+                    targets.roasTargetNumerator,
+                    targets.roasTargetDenominator
+                  )
+                : null
+          })
         })
       )
 
-      const sortedRows = [...rows].sort((left, right) => right.revenue - left.revenue)
+      const sortedRows = [...rows].sort(
+        (left, right) => right.revenue.actual - left.revenue.actual
+      )
       const safeOrderFrom = orderFrom || ""
       const safeOrderTo = orderTo || ""
       const totals = buildRangeComparisonTotals(sortedRows)
@@ -868,10 +1025,10 @@ export const useRangeChannelComparison = ({
         lastSyncedAt,
         isEmpty: sortedRows.every(
           (row) =>
-            row.revenue === 0 &&
-            row.liveRevenue === 0 &&
-            row.adsCost === 0 &&
-            row.roas === 0 &&
+            row.revenue.actual === 0 &&
+            row.liveRevenue.actual === 0 &&
+            row.adsCost.actual === 0 &&
+            row.roas.actual === 0 &&
             row.totalOrders === 0
         )
       }

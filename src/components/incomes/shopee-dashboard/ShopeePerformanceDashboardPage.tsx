@@ -90,8 +90,6 @@ const createYearOptions = (selectedYear: number): ShopeeChannelOption[] => {
   })
 }
 
-const SHOPEE_FILTER_STICKY_TOP = rem(76)
-
 const formatLastUpdatedLabel = (value?: string | null) => {
   if (!value) return undefined
 
@@ -527,9 +525,6 @@ export const ShopeePerformanceDashboardPage = ({
             pb={{ base: 12, md: 16 }}
             px={{ base: 8, md: 28 }}
             style={{
-              position: "sticky",
-              top: SHOPEE_FILTER_STICKY_TOP,
-              zIndex: 10,
               borderRadius: rem(20),
               background: "rgba(255,255,255,0.98)",
               backdropFilter: "blur(10px)",
@@ -641,9 +636,7 @@ export const ShopeePerformanceDashboardPage = ({
                         data={rangeQuery.data}
                         isLoading={rangeQuery.isLoading}
                         isError={rangeQuery.isError}
-                        showSummaryCards={
-                          normalizedChannelId === SHOPEE_ALL_CHANNEL_ID
-                        }
+                        showSummaryCards
                         rangeComparisonTable={
                           normalizedChannelId === SHOPEE_ALL_CHANNEL_ID ? (
                             <RangeChannelComparisonTable

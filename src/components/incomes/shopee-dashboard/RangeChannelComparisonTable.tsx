@@ -3,6 +3,7 @@ import {
   Button,
   Group,
   Paper,
+  Progress,
   ScrollArea,
   Skeleton,
   Stack,
@@ -12,10 +13,11 @@ import {
 import { IconAlertCircle, IconRefresh } from "@tabler/icons-react"
 import { format } from "date-fns"
 import type {
+  RangeChannelComparisonMetricViewModel,
   RangeChannelComparisonRowViewModel,
   RangeChannelComparisonViewModel
 } from "../../../hooks/useShopeePerformanceMetrics"
-import { formatCurrency } from "../analytics/formatters"
+import { formatCurrency, formatPercent } from "../analytics/formatters"
 
 const formatDecimal = (value: number) => {
   return value.toLocaleString("vi-VN", {
@@ -24,11 +26,111 @@ const formatDecimal = (value: number) => {
   })
 }
 
+const toneByKey = {
+  revenue: {
+    progress: "#3b82f6",
+    background: "#dbeafe"
+  },
+  liveRevenue: {
+    progress: "#cbd5e1",
+    background: "#e2e8f0"
+  },
+  adsCost: {
+    progress: "#f97316",
+    background: "#ffedd5"
+  },
+  roas: {
+    progress: "#a855f7",
+    background: "#f3e8ff"
+  }
+} as const
+
+const clampProgress = (value?: number | null) => {
+  if (typeof value !== "number" || !Number.isFinite(value)) return 0
+  return Math.max(0, Math.min(100, value))
+}
+
 const formatDateLabel = (value: string) => {
   const parsed = new Date(value)
   if (Number.isNaN(parsed.getTime())) return value
 
   return format(parsed, "dd/MM/yyyy")
+}
+
+const formatMetricValue = (metric: RangeChannelComparisonMetricViewModel) => {
+  return metric.format === "currency"
+    ? formatCurrency(metric.actual)
+    : formatDecimal(metric.actual)
+}
+
+const formatMetricTarget = (metric: RangeChannelComparisonMetricViewModel) => {
+  if (metric.target === null) return "--"
+
+  return metric.format === "currency"
+    ? formatCurrency(metric.target)
+    : formatDecimal(metric.target)
+}
+
+const formatExpectedValue = (metric: RangeChannelComparisonMetricViewModel) => {
+  if (metric.expectedValue === null) return "--"
+
+  return metric.format === "currency"
+    ? formatCurrency(metric.expectedValue)
+    : formatDecimal(metric.expectedValue)
+}
+
+const MetricTableCell = ({
+  metric,
+  tone
+}: {
+  metric: RangeChannelComparisonMetricViewModel
+  tone: keyof typeof toneByKey
+}) => {
+  const hasKpi =
+    metric.target !== null &&
+    metric.target > 0 &&
+    metric.achievedPercentage !== null &&
+    metric.expectedPercentage !== null &&
+    metric.expectedValue !== null
+
+  return (
+    <Stack gap={6} miw={148}>
+      <Text fw={700} fz="md" c="#0f172a">
+        {formatMetricValue(metric)} / {formatExpectedValue(metric)}
+      </Text>
+      {hasKpi ? (
+        <>
+          <Group justify="space-between" gap={8} mt={12} wrap="nowrap">
+            <Text></Text>
+            <Text size="xs" fw={700} c="#1d2844">
+              Tiến độ: {formatPercent(metric.achievedPercentage ?? undefined)} /{" "}
+              {formatPercent(metric.expectedPercentage ?? undefined)}
+            </Text>
+          </Group>
+          <Progress
+            value={clampProgress(metric.achievedPercentage)}
+            size={5}
+            radius="xl"
+            color={toneByKey[tone].progress}
+            styles={{
+              root: {
+                background: toneByKey[tone].background
+              }
+            }}
+          />
+          <Group justify="space-between" gap={8} wrap="nowrap">
+            <Text size="xs" c="#5e6773" style={{ whiteSpace: "nowrap" }}>
+              KPI khoảng chọn: {formatMetricTarget(metric)}
+            </Text>
+          </Group>
+        </>
+      ) : (
+        <Text size="xs" c="#94a3b8">
+          KPI --
+        </Text>
+      )}
+    </Stack>
+  )
 }
 
 const createTableRow = ({
@@ -45,25 +147,17 @@ const createTableRow = ({
           {row.channelName}
         </Text>
       </Table.Td>
-      <Table.Td miw={156}>
-        <Text fw={700} c="#0f172a">
-          {formatCurrency(row.revenue)}
-        </Text>
+      <Table.Td>
+        <MetricTableCell metric={row.revenue} tone="revenue" />
       </Table.Td>
-      <Table.Td miw={156}>
-        <Text fw={700} c="#0f172a">
-          {formatCurrency(row.liveRevenue)}
-        </Text>
+      <Table.Td>
+        <MetricTableCell metric={row.liveRevenue} tone="liveRevenue" />
       </Table.Td>
-      <Table.Td miw={156}>
-        <Text fw={700} c="#0f172a">
-          {formatCurrency(row.adsCost)}
-        </Text>
+      <Table.Td>
+        <MetricTableCell metric={row.adsCost} tone="adsCost" />
       </Table.Td>
-      <Table.Td miw={120}>
-        <Text fw={700} c="#0f172a">
-          {formatDecimal(row.roas)}
-        </Text>
+      <Table.Td>
+        <MetricTableCell metric={row.roas} tone="roas" />
       </Table.Td>
       <Table.Td miw={112}>
         <Text fw={700} c="#0f172a">
@@ -174,7 +268,7 @@ export const RangeChannelComparisonTable = ({
             withTableBorder
             withColumnBorders
             style={{
-              minWidth: 920,
+              minWidth: 1120,
               borderColor: "#e2e8f0"
             }}
           >
