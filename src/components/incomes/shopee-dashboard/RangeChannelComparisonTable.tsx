@@ -164,6 +164,11 @@ const createTableRow = ({
           {Math.round(row.totalOrders).toLocaleString("vi-VN")} đơn
         </Text>
       </Table.Td>
+      <Table.Td miw={90}>
+        <Text fw={700} c="#0f172a">
+          {formatPercent(row.adsRevenueRatio)}
+        </Text>
+      </Table.Td>
     </Table.Tr>
   )
 }
@@ -268,7 +273,7 @@ export const RangeChannelComparisonTable = ({
             withTableBorder
             withColumnBorders
             style={{
-              minWidth: 1120,
+              minWidth: 1210,
               borderColor: "#e2e8f0"
             }}
           >
@@ -280,6 +285,7 @@ export const RangeChannelComparisonTable = ({
                 <Table.Th miw={156}>Tổng chi phí ads</Table.Th>
                 <Table.Th miw={120}>ROAS</Table.Th>
                 <Table.Th miw={112}>Tổng số đơn hàng</Table.Th>
+                <Table.Th miw={90}>%Ads/DT</Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>

@@ -199,6 +199,7 @@ export interface RangeChannelComparisonRowViewModel {
   adsCost: RangeChannelComparisonMetricViewModel
   roas: RangeChannelComparisonMetricViewModel
   totalOrders: number
+  adsRevenueRatio: number
   lastSyncedAt: string | null
 }
 
@@ -617,6 +618,10 @@ const adaptRangeChannelComparisonRow = (
     format: "decimal"
   }),
   totalOrders: normalizeNumber(summary.summary.totalOrders),
+  adsRevenueRatio: safeDivide(
+    normalizeNumber(summary.summary.adsCost),
+    normalizeNumber(summary.summary.netRevenue)
+  ) * 100,
   lastSyncedAt: summary.meta.lastSyncedAt
 })
 
@@ -743,6 +748,7 @@ const buildRangeComparisonTotals = (
       format: "decimal"
     }),
     totalOrders,
+    adsRevenueRatio: safeDivide(adsCost, revenue) * 100,
     lastSyncedAt
   }
 }
