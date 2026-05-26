@@ -49,8 +49,8 @@ export function HeroKpiCard({
         <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
           <div className="space-y-4">
             <div className="flex flex-wrap items-center gap-3">
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">
-                Insight chính
+              <p className="text-sm font-semibold tracking-[0.18em] text-slate-400 uppercase">
+                Chỉ số chính
               </p>
               <span
                 className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold ring-1 ${tone.badge}`}
@@ -61,7 +61,7 @@ export function HeroKpiCard({
 
             <div>
               <p className="text-sm font-medium text-slate-500">
-                KPI đạt vs tiến độ kỳ vọng
+                KPI đạt so với tiến độ kỳ vọng
               </p>
               <div className="mt-2 flex items-end gap-3">
                 <span className="text-5xl font-semibold tracking-tight text-slate-950 lg:text-6xl">
@@ -91,7 +91,7 @@ export function HeroKpiCard({
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 xl:w-[560px] xl:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 xl:w-[750px] xl:grid-cols-3">
             <MetricPanel
               label="Tiến độ mục tiêu"
               value={formatPercent(expectedPercentage)}
