@@ -29,7 +29,11 @@ import {
   pickModeValue
 } from "./helpers"
 import { RevenueTrendChart } from "./RevenueTrendChart"
-import type { ChannelPerformanceCardData, DetailMetric, DiscountMode } from "./types"
+import type {
+  ChannelPerformanceCardData,
+  DetailMetric,
+  DiscountMode
+} from "./types"
 
 type IncomeSplit = { live: number; shop: number }
 type QuantitySplit = { live: number; shop: number }
@@ -147,10 +151,12 @@ export function MonthlyRevenueDashboard() {
     (totalQuantityData?.totalQuantity as QuantitySplit | undefined) ?? undefined
   const ordersSplit =
     (totalQuantityData?.totalOrders as QuantitySplit | undefined) ?? undefined
-  const totalProducts =
-    quantitySplit ? (quantitySplit.live || 0) + (quantitySplit.shop || 0) : undefined
-  const totalOrders =
-    ordersSplit ? (ordersSplit.live || 0) + (ordersSplit.shop || 0) : undefined
+  const totalProducts = quantitySplit
+    ? (quantitySplit.live || 0) + (quantitySplit.shop || 0)
+    : undefined
+  const totalOrders = ordersSplit
+    ? (ordersSplit.live || 0) + (ordersSplit.shop || 0)
+    : undefined
 
   const liveRevenue = totalIncomeSelected?.live ?? 0
   const shopRevenue = totalIncomeSelected?.shop ?? 0
@@ -159,7 +165,8 @@ export function MonthlyRevenueDashboard() {
   const liveAdsCost = adsModeData?.liveAdsCost ?? 0
   const shopAdsCost = adsModeData?.shopAdsCost ?? 0
   const totalAdsCost = liveAdsCost + shopAdsCost
-  const totalAdsRatio = totalRevenue > 0 ? (totalAdsCost / totalRevenue) * 100 : 0
+  const totalAdsRatio =
+    totalRevenue > 0 ? (totalAdsCost / totalRevenue) * 100 : 0
 
   const liveNetRevenue = liveRevenue - liveAdsCost
   const shopNetRevenue = shopRevenue - shopAdsCost
@@ -167,9 +174,11 @@ export function MonthlyRevenueDashboard() {
 
   const liveGoal = adsData?.kpi?.liveKpi ?? monthGoalData?.liveStreamGoal ?? 0
   const shopGoal = adsData?.kpi?.shopKpi ?? monthGoalData?.shopGoal ?? 0
-  const totalGoal = (monthGoalData?.liveStreamGoal || 0) + (monthGoalData?.shopGoal || 0)
+  const totalGoal =
+    (monthGoalData?.liveStreamGoal || 0) + (monthGoalData?.shopGoal || 0)
 
-  const achievedPercentage = totalGoal > 0 ? (totalRevenue / totalGoal) * 100 : 0
+  const achievedPercentage =
+    totalGoal > 0 ? (totalRevenue / totalGoal) * 100 : 0
   const deltaPercentage = achievedPercentage - expectedPercentage
   const overallStatus = getPerformanceStatus({
     achievedPercentage,
@@ -178,8 +187,10 @@ export function MonthlyRevenueDashboard() {
     hasGoal: totalGoal > 0
   })
 
-  const liveAchievedPercentage = liveGoal > 0 ? (liveRevenue / liveGoal) * 100 : 0
-  const shopAchievedPercentage = shopGoal > 0 ? (shopRevenue / shopGoal) * 100 : 0
+  const liveAchievedPercentage =
+    liveGoal > 0 ? (liveRevenue / liveGoal) * 100 : 0
+  const shopAchievedPercentage =
+    shopGoal > 0 ? (shopRevenue / shopGoal) * 100 : 0
   const liveAdsRatio = liveRevenue > 0 ? (liveAdsCost / liveRevenue) * 100 : 0
   const shopAdsRatio = shopRevenue > 0 ? (shopAdsCost / shopRevenue) * 100 : 0
 
@@ -202,7 +213,7 @@ export function MonthlyRevenueDashboard() {
       {
         key: "shop",
         name: "Sàn",
-        subtitle: "Sàn thương mại",
+        subtitle: "",
         revenue: shopRevenue,
         adsSpend: shopAdsCost,
         netRevenue: shopNetRevenue,
@@ -217,7 +228,7 @@ export function MonthlyRevenueDashboard() {
       {
         key: "live",
         name: "Livestream",
-        subtitle: "Kênh trực tiếp",
+        subtitle: "",
         revenue: liveRevenue,
         adsSpend: liveAdsCost,
         netRevenue: liveNetRevenue,
@@ -278,7 +289,10 @@ export function MonthlyRevenueDashboard() {
       value: formatCurrency(totalAdsCost),
       hint: "Tổng chi phí ads",
       icon: <IconTargetArrow size={22} />,
-      tone: totalAdsCost > totalRevenue * 0.25 ? ("amber" as const) : ("slate" as const)
+      tone:
+        totalAdsCost > totalRevenue * 0.25
+          ? ("amber" as const)
+          : ("slate" as const)
     },
     {
       label: "% ads/doanh thu",
@@ -354,10 +368,7 @@ export function MonthlyRevenueDashboard() {
   )
 
   const isLoading =
-    !monthGoalData &&
-    !totalIncomeData &&
-    !totalQuantityData &&
-    !adsData
+    !monthGoalData && !totalIncomeData && !totalQuantityData && !adsData
 
   const channelOptions = channels.map((channel) => ({
     value: channel._id,
@@ -402,10 +413,7 @@ export function MonthlyRevenueDashboard() {
               showComparison={showComparison}
             />
 
-            <RevenueTrendChart
-              data={trendData}
-              monthLabel={monthLabel}
-            />
+            <RevenueTrendChart data={trendData} monthLabel={monthLabel} />
 
             <DetailMetricsSection
               metrics={detailMetrics}
