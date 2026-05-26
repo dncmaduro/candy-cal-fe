@@ -40,15 +40,12 @@ export function DashboardHeader({
     <div className="rounded-[28px] border border-slate-200 bg-white px-5 py-5 shadow-sm lg:px-6">
       <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
         <div className="space-y-1">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+          <p className="text-xs font-semibold tracking-[0.18em] text-slate-400 uppercase">
             Dashboard doanh thu
           </p>
           <h1 className="text-2xl font-semibold tracking-tight text-slate-950">
             {title}
           </h1>
-          <p className="text-sm text-slate-500">
-            Nhìn nhanh KPI, xu hướng và chênh lệch giữa Livestream và Sàn.
-          </p>
         </div>
 
         <div className="grid gap-3 md:grid-cols-2 xl:flex xl:flex-wrap xl:items-end xl:justify-end">
@@ -84,7 +81,7 @@ export function DashboardHeader({
 
           <div className="flex flex-col gap-1.5">
             <span
-              className="text-[11px] font-semibold uppercase tracking-[0.16em]"
+              className="text-[11px] font-semibold tracking-[0.16em] uppercase"
               style={{ color: filterLabelStyles.color }}
             >
               Chế độ dữ liệu

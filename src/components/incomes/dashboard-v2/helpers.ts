@@ -93,7 +93,7 @@ export const createMonthOptions = (count = 18): SelectOption[] => {
   })
 }
 
-export const pickModeValue = <T,>(
+export const pickModeValue = <T>(
   data: unknown,
   mode: DiscountMode
 ): T | undefined => {
@@ -202,7 +202,8 @@ export const getPerformanceStatus = ({
     return {
       tone: "warning",
       label: "Chưa bắt đầu",
-      description: "Tháng này chưa diễn ra, số liệu hiện tại chỉ dùng để chuẩn bị mục tiêu."
+      description:
+        "Tháng này chưa diễn ra, số liệu hiện tại chỉ dùng để chuẩn bị mục tiêu."
     }
   }
 
@@ -218,7 +219,8 @@ export const getPerformanceStatus = ({
     return {
       tone: "bad",
       label: "Chưa đạt",
-      description: "KPI tháng đã kết thúc nhưng doanh thu vẫn thấp hơn mục tiêu."
+      description:
+        "KPI tháng đã kết thúc nhưng doanh thu vẫn thấp hơn mục tiêu."
     }
   }
 
@@ -228,7 +230,7 @@ export const getPerformanceStatus = ({
     return {
       tone: "good",
       label: "Tốt",
-      description: "Đang vượt nhịp kỳ vọng, có thể giữ tốc độ hiện tại."
+      description: ""
     }
   }
 
@@ -236,14 +238,14 @@ export const getPerformanceStatus = ({
     return {
       tone: "warning",
       label: "Cần chú ý",
-      description: "Đang bám sát mục tiêu nhưng biên an toàn khá mỏng."
+      description: ""
     }
   }
 
   return {
     tone: "bad",
     label: "Chưa đạt",
-    description: "Đang hụt tiến độ rõ rệt và cần xử lý ngay ở kênh yếu."
+    description: ""
   }
 }
 
