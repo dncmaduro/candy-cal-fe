@@ -731,8 +731,9 @@ export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
 
   const order = orderData.data
   const channel = channelData
-  const { customerName, primaryPhone, phoneWithSecondary, fullAddress } =
+  const { customerName, phoneWithSecondary, fullAddress } =
     getOrderContactInfo(order)
+  const salesChannelPhone = channel?.channel.phoneNumber || FALLBACK_TEXT
 
   return (
     <Stack gap="md">
@@ -771,7 +772,7 @@ export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
                 {channel?.channel.address}
               </Text>
               <Text size="xs" fw={500}>
-                Sđt: {primaryPhone}
+                Sđt: {salesChannelPhone}
               </Text>
             </Stack>
           </Group>
