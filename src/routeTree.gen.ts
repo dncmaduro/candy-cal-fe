@@ -24,6 +24,7 @@ import { Route as MktStorageIndexImport } from './routes/mkt-storage/index'
 import { Route as MarketingStorageIndexImport } from './routes/marketing-storage/index'
 import { Route as LivestreamIndexImport } from './routes/livestream/index'
 import { Route as LandingIndexImport } from './routes/landing/index'
+import { Route as HealthIndexImport } from './routes/health/index'
 import { Route as AdminIndexImport } from './routes/admin/index'
 import { Route as AccessDeniedIndexImport } from './routes/access-denied/index'
 import { Route as TiktokshopSkuIndexImport } from './routes/tiktokshop/sku/index'
@@ -72,6 +73,7 @@ import { Route as LandingLandingPageIndexImport } from './routes/landing/landing
 import { Route as AdminUsersIndexImport } from './routes/admin/users/index'
 import { Route as AdminTasksIndexImport } from './routes/admin/tasks/index'
 import { Route as AdminSystemLogsIndexImport } from './routes/admin/system-logs/index'
+import { Route as AdminHealthIndexImport } from './routes/admin/health/index'
 import { Route as TiktokshopIncomesIncomeIdImport } from './routes/tiktokshop/incomes/$incomeId'
 import { Route as SalesOrdersOrderIdImport } from './routes/sales/orders/$orderId'
 import { Route as SalesMessagesConversationIdImport } from './routes/sales/messages/$conversationId'
@@ -159,6 +161,12 @@ const LivestreamIndexRoute = LivestreamIndexImport.update({
 const LandingIndexRoute = LandingIndexImport.update({
   id: '/landing/',
   path: '/landing/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const HealthIndexRoute = HealthIndexImport.update({
+  id: '/health/',
+  path: '/health/',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -465,6 +473,12 @@ const AdminSystemLogsIndexRoute = AdminSystemLogsIndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const AdminHealthIndexRoute = AdminHealthIndexImport.update({
+  id: '/admin/health/',
+  path: '/admin/health/',
+  getParentRoute: () => rootRoute,
+} as any)
+
 const TiktokshopIncomesIncomeIdRoute = TiktokshopIncomesIncomeIdImport.update({
   id: '/tiktokshop/incomes/$incomeId',
   path: '/tiktokshop/incomes/$incomeId',
@@ -559,6 +573,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/health/': {
+      id: '/health/'
+      path: '/health'
+      fullPath: '/health'
+      preLoaderRoute: typeof HealthIndexImport
       parentRoute: typeof rootRoute
     }
     '/landing/': {
@@ -692,6 +713,13 @@ declare module '@tanstack/react-router' {
       path: '/tiktokshop/incomes/$incomeId'
       fullPath: '/tiktokshop/incomes/$incomeId'
       preLoaderRoute: typeof TiktokshopIncomesIncomeIdImport
+      parentRoute: typeof rootRoute
+    }
+    '/admin/health/': {
+      id: '/admin/health/'
+      path: '/admin/health'
+      fullPath: '/admin/health'
+      preLoaderRoute: typeof AdminHealthIndexImport
       parentRoute: typeof rootRoute
     }
     '/admin/system-logs/': {
@@ -1039,6 +1067,7 @@ export interface FileRoutesByFullPath {
   '/test-error': typeof TestErrorRoute
   '/access-denied': typeof AccessDeniedIndexRoute
   '/admin': typeof AdminIndexRoute
+  '/health': typeof HealthIndexRoute
   '/landing': typeof LandingIndexRoute
   '/livestream': typeof LivestreamIndexRoute
   '/marketing-storage': typeof MarketingStorageIndexRoute
@@ -1058,6 +1087,7 @@ export interface FileRoutesByFullPath {
   '/sales/messages/$conversationId': typeof SalesMessagesConversationIdRoute
   '/sales/orders/$orderId': typeof SalesOrdersOrderIdRoute
   '/tiktokshop/incomes/$incomeId': typeof TiktokshopIncomesIncomeIdRoute
+  '/admin/health': typeof AdminHealthIndexRoute
   '/admin/system-logs': typeof AdminSystemLogsIndexRoute
   '/admin/tasks': typeof AdminTasksIndexRoute
   '/admin/users': typeof AdminUsersIndexRoute
@@ -1111,6 +1141,7 @@ export interface FileRoutesByTo {
   '/test-error': typeof TestErrorRoute
   '/access-denied': typeof AccessDeniedIndexRoute
   '/admin': typeof AdminIndexRoute
+  '/health': typeof HealthIndexRoute
   '/landing': typeof LandingIndexRoute
   '/livestream': typeof LivestreamIndexRoute
   '/marketing-storage': typeof MarketingStorageIndexRoute
@@ -1130,6 +1161,7 @@ export interface FileRoutesByTo {
   '/sales/messages/$conversationId': typeof SalesMessagesConversationIdRoute
   '/sales/orders/$orderId': typeof SalesOrdersOrderIdRoute
   '/tiktokshop/incomes/$incomeId': typeof TiktokshopIncomesIncomeIdRoute
+  '/admin/health': typeof AdminHealthIndexRoute
   '/admin/system-logs': typeof AdminSystemLogsIndexRoute
   '/admin/tasks': typeof AdminTasksIndexRoute
   '/admin/users': typeof AdminUsersIndexRoute
@@ -1185,6 +1217,7 @@ export interface FileRoutesById {
   '/test-error': typeof TestErrorRoute
   '/access-denied/': typeof AccessDeniedIndexRoute
   '/admin/': typeof AdminIndexRoute
+  '/health/': typeof HealthIndexRoute
   '/landing/': typeof LandingIndexRoute
   '/livestream/': typeof LivestreamIndexRoute
   '/marketing-storage/': typeof MarketingStorageIndexRoute
@@ -1204,6 +1237,7 @@ export interface FileRoutesById {
   '/sales/messages/$conversationId': typeof SalesMessagesConversationIdRoute
   '/sales/orders/$orderId': typeof SalesOrdersOrderIdRoute
   '/tiktokshop/incomes/$incomeId': typeof TiktokshopIncomesIncomeIdRoute
+  '/admin/health/': typeof AdminHealthIndexRoute
   '/admin/system-logs/': typeof AdminSystemLogsIndexRoute
   '/admin/tasks/': typeof AdminTasksIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
@@ -1260,6 +1294,7 @@ export interface FileRouteTypes {
     | '/test-error'
     | '/access-denied'
     | '/admin'
+    | '/health'
     | '/landing'
     | '/livestream'
     | '/marketing-storage'
@@ -1279,6 +1314,7 @@ export interface FileRouteTypes {
     | '/sales/messages/$conversationId'
     | '/sales/orders/$orderId'
     | '/tiktokshop/incomes/$incomeId'
+    | '/admin/health'
     | '/admin/system-logs'
     | '/admin/tasks'
     | '/admin/users'
@@ -1331,6 +1367,7 @@ export interface FileRouteTypes {
     | '/test-error'
     | '/access-denied'
     | '/admin'
+    | '/health'
     | '/landing'
     | '/livestream'
     | '/marketing-storage'
@@ -1350,6 +1387,7 @@ export interface FileRouteTypes {
     | '/sales/messages/$conversationId'
     | '/sales/orders/$orderId'
     | '/tiktokshop/incomes/$incomeId'
+    | '/admin/health'
     | '/admin/system-logs'
     | '/admin/tasks'
     | '/admin/users'
@@ -1403,6 +1441,7 @@ export interface FileRouteTypes {
     | '/test-error'
     | '/access-denied/'
     | '/admin/'
+    | '/health/'
     | '/landing/'
     | '/livestream/'
     | '/marketing-storage/'
@@ -1422,6 +1461,7 @@ export interface FileRouteTypes {
     | '/sales/messages/$conversationId'
     | '/sales/orders/$orderId'
     | '/tiktokshop/incomes/$incomeId'
+    | '/admin/health/'
     | '/admin/system-logs/'
     | '/admin/tasks/'
     | '/admin/users/'
@@ -1477,6 +1517,7 @@ export interface RootRouteChildren {
   TestErrorRoute: typeof TestErrorRoute
   AccessDeniedIndexRoute: typeof AccessDeniedIndexRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  HealthIndexRoute: typeof HealthIndexRoute
   LandingIndexRoute: typeof LandingIndexRoute
   LivestreamIndexRoute: typeof LivestreamIndexRoute
   MarketingStorageIndexRoute: typeof MarketingStorageIndexRoute
@@ -1495,6 +1536,7 @@ export interface RootRouteChildren {
   SalesMessagesConversationIdRoute: typeof SalesMessagesConversationIdRoute
   SalesOrdersOrderIdRoute: typeof SalesOrdersOrderIdRoute
   TiktokshopIncomesIncomeIdRoute: typeof TiktokshopIncomesIncomeIdRoute
+  AdminHealthIndexRoute: typeof AdminHealthIndexRoute
   AdminSystemLogsIndexRoute: typeof AdminSystemLogsIndexRoute
   AdminTasksIndexRoute: typeof AdminTasksIndexRoute
   AdminUsersIndexRoute: typeof AdminUsersIndexRoute
@@ -1549,6 +1591,7 @@ const rootRouteChildren: RootRouteChildren = {
   TestErrorRoute: TestErrorRoute,
   AccessDeniedIndexRoute: AccessDeniedIndexRoute,
   AdminIndexRoute: AdminIndexRoute,
+  HealthIndexRoute: HealthIndexRoute,
   LandingIndexRoute: LandingIndexRoute,
   LivestreamIndexRoute: LivestreamIndexRoute,
   MarketingStorageIndexRoute: MarketingStorageIndexRoute,
@@ -1567,6 +1610,7 @@ const rootRouteChildren: RootRouteChildren = {
   SalesMessagesConversationIdRoute: SalesMessagesConversationIdRoute,
   SalesOrdersOrderIdRoute: SalesOrdersOrderIdRoute,
   TiktokshopIncomesIncomeIdRoute: TiktokshopIncomesIncomeIdRoute,
+  AdminHealthIndexRoute: AdminHealthIndexRoute,
   AdminSystemLogsIndexRoute: AdminSystemLogsIndexRoute,
   AdminTasksIndexRoute: AdminTasksIndexRoute,
   AdminUsersIndexRoute: AdminUsersIndexRoute,
@@ -1632,6 +1676,7 @@ export const routeTree = rootRoute
         "/test-error",
         "/access-denied/",
         "/admin/",
+        "/health/",
         "/landing/",
         "/livestream/",
         "/marketing-storage/",
@@ -1650,6 +1695,7 @@ export const routeTree = rootRoute
         "/sales/messages/$conversationId",
         "/sales/orders/$orderId",
         "/tiktokshop/incomes/$incomeId",
+        "/admin/health/",
         "/admin/system-logs/",
         "/admin/tasks/",
         "/admin/users/",
@@ -1716,6 +1762,9 @@ export const routeTree = rootRoute
     "/admin/": {
       "filePath": "admin/index.tsx"
     },
+    "/health/": {
+      "filePath": "health/index.tsx"
+    },
     "/landing/": {
       "filePath": "landing/index.tsx"
     },
@@ -1773,6 +1822,9 @@ export const routeTree = rootRoute
     },
     "/tiktokshop/incomes/$incomeId": {
       "filePath": "tiktokshop/incomes/$incomeId.tsx"
+    },
+    "/admin/health/": {
+      "filePath": "admin/health/index.tsx"
     },
     "/admin/system-logs/": {
       "filePath": "admin/system-logs/index.tsx"
