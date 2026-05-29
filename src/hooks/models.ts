@@ -1968,6 +1968,20 @@ export interface SystemLogsOptionsResponse {
   }[]
 }
 
+/** @interface */
+export interface HealthLiveResponse {
+  message: string
+}
+
+/** @interface */
+export interface HealthReadyResponse {
+  provinces: {
+    _id: string
+    code: string
+    name: string
+  }[]
+}
+
 // -------------------- DASHBOARD --------------------
 
 /** @interface */
