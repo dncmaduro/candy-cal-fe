@@ -12,6 +12,12 @@ type AxiosCallApi<D> = {
 
 let latestApiErrorMessage: { message: string; at: number } | null = null
 
+const getApiBaseUrls = (value?: string): string[] =>
+  (value ?? "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean)
+
 const getMessageFromUnknown = (value: unknown): string | undefined => {
   if (typeof value === "string") {
     const trimmed = value.trim()
@@ -88,15 +94,33 @@ export async function callApi<D = unknown, T = unknown>({
   if (token) convertedHeaders["Authorization"] = `Bearer ${token}`
 
   try {
-    const response = await axios<T>({
-      url: (customUrl ?? import.meta.env.VITE_BACKEND_URL) + path,
-      headers: convertedHeaders,
-      data,
-      method,
-      responseType: responseType ?? "json" // ✅ dùng override
-    })
+    const apiBaseUrls = getApiBaseUrls(
+      customUrl ?? import.meta.env.VITE_BACKEND_URL
+    )
 
-    return response
+    if (apiBaseUrls.length === 0) {
+      throw new Error("VITE_BACKEND_URL is not configured")
+    }
+
+    let lastError: unknown
+
+    for (const apiBaseUrl of apiBaseUrls) {
+      try {
+        const response = await axios<T>({
+          url: apiBaseUrl + path,
+          headers: convertedHeaders,
+          data,
+          method,
+          responseType: responseType ?? "json" // ✅ dùng override
+        })
+
+        return response
+      } catch (error) {
+        lastError = error
+      }
+    }
+
+    throw lastError
   } catch (error) {
     const apiMessage = extractApiErrorMessage(error)
 
