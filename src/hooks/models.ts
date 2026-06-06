@@ -4845,6 +4845,25 @@ export interface GetSalesRevenueResponse {
 }
 
 /** @interface */
+export interface GetProvinceSalesStatsRequest {
+  date?: Date
+  startDate?: Date
+  endDate?: Date
+  channel?: string
+}
+
+/** @interface */
+export interface GetProvinceSalesStatsResponse {
+  totalRevenue: number
+  totalOrders: number
+  provinces: {
+    provinceName: string
+    revenue: number
+    orderCount: number
+  }[]
+}
+
+/** @interface */
 export interface GetMonthlyMetricsRequest {
   month: number
   year: number
