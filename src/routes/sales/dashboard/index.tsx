@@ -24,6 +24,7 @@ import { TopProductsChart } from "../../../components/sales/dashboard/TopProduct
 import { UserMetricsChart } from "../../../components/sales/dashboard/UserMetricsChart"
 import { RevenueTables } from "../../../components/sales/dashboard/RevenueTables"
 import { MonthlyMetrics } from "../../../components/sales/dashboard/MonthlyMetrics"
+import { ProvinceSalesAnalytics } from "../../../components/sales/dashboard/ProvinceSalesAnalytics"
 import { modals } from "@mantine/modals"
 import { CreateSalesDailyReportModal } from "../../../components/sales/dashboard/CreateSalesDailyReportModal"
 import { useSalesChannels } from "../../../hooks/useSalesChannels"
@@ -33,8 +34,12 @@ export const Route = createFileRoute("/sales/dashboard/")({
 })
 
 function RouteComponent() {
-  const { getSalesRevenue, getMonthlyMetrics, getMonthlyTopCustomers } =
-    useSalesDashboard()
+  const {
+    getSalesRevenue,
+    getProvinceSalesStats,
+    getMonthlyMetrics,
+    getMonthlyTopCustomers
+  } = useSalesDashboard()
   const { searchSalesChannels } = useSalesChannels()
 
   const [startDate, setStartDate] = useState<Date | null>(new Date())
@@ -61,6 +66,29 @@ function RouteComponent() {
         channel
       }),
     enabled: !!startDate && !!endDate
+  })
+
+  const {
+    data: provinceSalesData,
+    isLoading: provinceSalesLoading,
+    error: provinceSalesError,
+    refetch: refetchProvinceSales
+  } = useQuery({
+    queryKey: ["provinceSalesStats", startDate, endDate, isRange, channel],
+    queryFn: () =>
+      getProvinceSalesStats(
+        isRange
+          ? {
+              startDate: startDate || startOfMonth(new Date()),
+              endDate: endDate || endOfMonth(new Date()),
+              channel
+            }
+          : {
+              date: startDate || new Date(),
+              channel
+            }
+      ),
+    enabled: isRange ? !!startDate && !!endDate : !!startDate
   })
 
   const {
@@ -112,6 +140,12 @@ function RouteComponent() {
     setEndDate(new Date())
     setChannel(undefined)
     refetchRevenue()
+    refetchProvinceSales()
+  }
+
+  const handleApplyRevenue = () => {
+    refetchRevenue()
+    refetchProvinceSales()
   }
 
   const handleResetMetrics = () => {
@@ -127,6 +161,7 @@ function RouteComponent() {
   }
 
   const revenue = revenueData?.data
+  const provinceSales = provinceSalesData?.data
   const metrics = metricsData?.data
   const topCustomers = topCustomersData?.data
 
@@ -194,6 +229,29 @@ function RouteComponent() {
                       size="xs"
                       leftSection={<IconRefresh size={14} />}
                       onClick={() => refetchRevenue()}
+                    >
+                      Thử lại
+                    </Button>
+                  </Group>
+                </Alert>
+              )}
+
+              {provinceSalesError && (
+                <Alert
+                  color="red"
+                  title="Có lỗi xảy ra"
+                  icon={<IconAlertCircle />}
+                  mb="md"
+                  radius="md"
+                >
+                  <Group>
+                    <Text size="sm">
+                      {(provinceSalesError as any)?.message || "Không thể tải dữ liệu"}
+                    </Text>
+                    <Button
+                      size="xs"
+                      leftSection={<IconRefresh size={14} />}
+                      onClick={() => refetchProvinceSales()}
                     >
                       Thử lại
                     </Button>
@@ -279,7 +337,7 @@ function RouteComponent() {
                     </Box>
 
                     <Group align="flex-end" gap={10} wrap="nowrap">
-                      <Button h={40} radius={10} onClick={() => refetchRevenue()}>
+                      <Button h={40} radius={10} onClick={handleApplyRevenue}>
                         Áp dụng
                       </Button>
                       <Button
@@ -303,6 +361,16 @@ function RouteComponent() {
                   totalShippingCost={revenue?.totalShippingCost}
                   revenueFromNewCustomers={revenue?.revenueFromNewCustomers}
                   revenueFromReturningCustomers={revenue?.revenueFromReturningCustomers}
+                />
+              </Box>
+
+              <Box mb="md">
+                <Text fw={600} fz="md" mb="sm">
+                  Doanh số theo tỉnh/thành
+                </Text>
+                <ProvinceSalesAnalytics
+                  isLoading={provinceSalesLoading}
+                  data={provinceSales}
                 />
               </Box>
 
