@@ -1,7 +1,10 @@
 import { useUserStore } from "../store/userStore"
+import { format } from "date-fns"
 import { toQueryString } from "../utils/toQuery"
 import { callApi } from "./axios"
 import {
+  GetProvinceSalesStatsRequest,
+  GetProvinceSalesStatsResponse,
   GetMonthlyMetricsRequest,
   GetMonthlyMetricsResponse,
   GetMonthlyTopCustomersRequest,
@@ -12,6 +15,21 @@ import {
 
 export const useSalesDashboard = () => {
   const { accessToken } = useUserStore()
+
+  const getProvinceSalesStats = async (req: GetProvinceSalesStatsRequest) => {
+    const query = toQueryString({
+      date: req.date ? format(req.date, "yyyy-MM-dd") : undefined,
+      startDate: req.startDate ? format(req.startDate, "yyyy-MM-dd") : undefined,
+      endDate: req.endDate ? format(req.endDate, "yyyy-MM-dd") : undefined,
+      channel: req.channel
+    })
+
+    return callApi<never, GetProvinceSalesStatsResponse>({
+      path: `/v1/salesdashboard/province-stats?${query}`,
+      method: "GET",
+      token: accessToken
+    })
+  }
 
   const getSalesRevenue = async (req: GetSalesRevenueRequest) => {
     const query = toQueryString(req)
@@ -44,6 +62,7 @@ export const useSalesDashboard = () => {
   }
 
   return {
+    getProvinceSalesStats,
     getSalesRevenue,
     getMonthlyMetrics,
     getMonthlyTopCustomers
