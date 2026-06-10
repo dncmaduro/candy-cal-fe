@@ -35,6 +35,8 @@ interface IncomeRow {
   customer: string
   province: string
   shippingProvider: string
+  orderStatus?: string
+  cancelationOrReturnType?: string
   channel: { _id: string; name: string } | null
   products: Array<{
     code: string
@@ -175,6 +177,8 @@ export const Incomes = () => {
           customer: item.customer,
           province: item.province,
           shippingProvider: item.shippingProvider || "-",
+          orderStatus: item.orderStatus,
+          cancelationOrReturnType: item.cancelationOrReturnType,
           channel: item.channel || null,
           products: item.products,
           totalProducts,
@@ -226,6 +230,21 @@ export const Incomes = () => {
             <Text size="xs" c="dimmed">
               {row.original.province}
             </Text>
+          </div>
+        )
+      },
+      {
+        accessorKey: "orderStatus",
+        header: "Trạng thái",
+        size: 140,
+        cell: ({ row }) => (
+          <div>
+            <Text size="sm">{row.original.orderStatus || "-"}</Text>
+            {row.original.cancelationOrReturnType && (
+              <Text size="xs" c="dimmed">
+                {row.original.cancelationOrReturnType}
+              </Text>
+            )}
           </div>
         )
       },

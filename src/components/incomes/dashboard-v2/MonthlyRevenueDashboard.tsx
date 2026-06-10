@@ -14,6 +14,7 @@ import { useIncomes } from "../../../hooks/useIncomes"
 import { useMonthGoals } from "../../../hooks/useMonthGoals"
 import { useLivestreamChannel } from "../../../context/LivestreamChannelContext"
 import { TopCreatorsModal } from "../TopCreatorsModal"
+import { AdsMetricsSheetTable } from "./AdsMetricsSheetTable"
 import { ChannelBreakdown } from "./ChannelBreakdown"
 import { DashboardHeader } from "./DashboardHeader"
 import { DetailMetricsSection } from "./DetailMetricsSection"
@@ -38,8 +39,13 @@ import type {
 type IncomeSplit = { live: number; shop: number }
 type QuantitySplit = { live: number; shop: number }
 type AdsSplit = { liveAdsCost: number; shopAdsCost: number }
+const NEW_ADS_MODEL_START = new Date(2026, 5, 1)
 
-export function MonthlyRevenueDashboard() {
+export function MonthlyRevenueDashboard({
+  adsPresentation = "channel-breakdown"
+}: {
+  adsPresentation?: "channel-breakdown" | "sheet-table"
+}) {
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthValue)
   const [mode, setMode] = useState<DiscountMode>("afterDiscount")
   const [showComparison, setShowComparison] = useState(true)
@@ -63,6 +69,8 @@ export function MonthlyRevenueDashboard() {
     month: "long",
     year: "numeric"
   })
+  const usesNewAdsPresentation =
+    adsPresentation === "sheet-table" && selectedDate >= NEW_ADS_MODEL_START
 
   const { expectedPercentage, phase } = useMemo(
     () => getMonthProgress(selectedDate),
@@ -167,6 +175,8 @@ export function MonthlyRevenueDashboard() {
   const totalAdsCost = liveAdsCost + shopAdsCost
   const totalAdsRatio =
     totalRevenue > 0 ? (totalAdsCost / totalRevenue) * 100 : 0
+  const totalCost = adsData?.totalCost ?? totalAdsCost
+  const costAfterRefund = adsData?.costAfterRefund ?? totalAdsCost
 
   const liveNetRevenue = liveRevenue - liveAdsCost
   const shopNetRevenue = shopRevenue - shopAdsCost
@@ -285,9 +295,9 @@ export function MonthlyRevenueDashboard() {
       tone: "slate" as const
     },
     {
-      label: "Chi ads",
+      label: "Chi ads thực tế",
       value: formatCurrency(totalAdsCost),
-      hint: "Tổng chi phí ads",
+      hint: "Tổng chi phí ads thực tế trong tháng",
       icon: <IconTargetArrow size={22} />,
       tone:
         totalAdsCost > totalRevenue * 0.25
@@ -296,8 +306,10 @@ export function MonthlyRevenueDashboard() {
     },
     {
       label: "% ads/doanh thu",
-      value: formatPercent(totalAdsRatio),
-      hint: "Tỷ lệ chi ads trên tổng doanh thu",
+      value: formatPercent(
+        adsData?.ratios?.adsRatioOnBeforeDiscountRevenue ?? totalAdsRatio
+      ),
+      hint: "Tỷ lệ chi ads trên doanh thu trước chiết khấu",
       icon: <IconChartBar size={22} />,
       tone: totalAdsRatio > 25 ? ("amber" as const) : ("emerald" as const)
     },
@@ -339,26 +351,32 @@ export function MonthlyRevenueDashboard() {
       tone: "slate"
     },
     {
-      label: "Ads Live / mục tiêu",
-      value: `${formatPercent(liveAdsRatio)} / ${formatPercent(
-        monthGoalData?.liveAdsPercentageGoal || 0
-      )}`,
-      hint: "Tỷ lệ thực tế và tỷ lệ mục tiêu của Livestream",
-      tone:
-        liveAdsRatio <= (monthGoalData?.liveAdsPercentageGoal || 0)
-          ? "emerald"
-          : "amber"
+      label: "Tổng chi phí",
+      value: formatCurrency(totalCost),
+      hint: "Chi phí ads thực tế + affiliate",
+      tone: "slate"
     },
     {
-      label: "Ads Sàn / mục tiêu",
-      value: `${formatPercent(shopAdsRatio)} / ${formatPercent(
-        monthGoalData?.shopAdsPercentageGoal || 0
-      )}`,
-      hint: "Tỷ lệ thực tế và tỷ lệ mục tiêu của Sàn",
-      tone:
-        shopAdsRatio <= (monthGoalData?.shopAdsPercentageGoal || 0)
-          ? "emerald"
-          : "amber"
+      label: "Sau trừ hoàn huỷ",
+      value: formatCurrency(costAfterRefund),
+      hint: "Tổng chi phí sau khi trừ AFF hoàn/hủy",
+      tone: "slate"
+    },
+    {
+      label: "% Tổng chi phí / DT trước CK",
+      value: formatPercent(
+        adsData?.ratios?.totalCostRatioOnBeforeDiscountRevenue || 0
+      ),
+      hint: "Tỷ lệ tổng chi phí trên doanh thu trước chiết khấu",
+      tone: "amber"
+    },
+    {
+      label: "% Sau HH / DT trước CK",
+      value: formatPercent(
+        adsData?.ratios?.costAfterRefundRatioOnBeforeDiscountRevenue || 0
+      ),
+      hint: "Tỷ lệ chi phí sau hoàn/hủy trên doanh thu trước chiết khấu",
+      tone: "amber"
     }
   ]
 
@@ -408,10 +426,14 @@ export function MonthlyRevenueDashboard() {
               summaryMetrics={summaryMetrics}
             />
 
-            <ChannelBreakdown
-              channels={channelsData}
-              showComparison={showComparison}
-            />
+            {usesNewAdsPresentation ? (
+              <AdsMetricsSheetTable data={adsData} monthLabel={monthLabel} />
+            ) : (
+              <ChannelBreakdown
+                channels={channelsData}
+                showComparison={showComparison}
+              />
+            )}
 
             <RevenueTrendChart data={trendData} monthLabel={monthLabel} />
 

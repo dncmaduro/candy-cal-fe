@@ -3,6 +3,7 @@ import {
   Button,
   Divider,
   Group,
+  SegmentedControl,
   Stack,
   Text,
   Paper,
@@ -39,6 +40,7 @@ interface Props {
 export const InsertIncomeModalV2 = ({ refetch }: Props) => {
   const { insertIncomeAndUpdateSource } = useIncomes()
   const { searchLivestreamChannels } = useLivestreamChannels()
+  const [updateMode, setUpdateMode] = useState<"full" | "status-only">("full")
   const [date, setDate] = useState<Date | null>(null)
   const [channel, setChannel] = useState<string | null>(null)
   const [files, setFiles] = useState<Record<keyof typeof LABELS, FileState>>({
@@ -63,13 +65,16 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
         req
       }: {
         files: File[]
-        req: { date: Date; channel: string }
+        req: { date: Date; channel: string; updateMode?: "full" | "status-only" }
       }) => insertIncomeAndUpdateSource(fileList, req),
       onSuccess: () => {
         setFiles((prev) => ({
           ...prev,
           totalIncome: { ...prev.totalIncome, status: "success" },
-          sourceSplit: { ...prev.sourceSplit, status: "success" }
+          sourceSplit: {
+            ...prev.sourceSplit,
+            status: updateMode === "status-only" ? prev.sourceSplit.status : "success"
+          }
         }))
         CToast.success({ title: "Đã gửi files thành công" })
         modals.closeAll()
@@ -88,13 +93,15 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
     })
 
   const handleInsertIncomes = async () => {
-    if (
-      !date ||
-      !channel ||
-      !files.totalIncome.file ||
-      !files.sourceSplit.file
-    ) {
-      CToast.error({ title: "Vui lòng chọn ngày, kênh và đủ 2 file" })
+    const missingSourceSplit = updateMode === "full" && !files.sourceSplit.file
+
+    if (!date || !channel || !files.totalIncome.file || missingSourceSplit) {
+      CToast.error({
+        title:
+          updateMode === "status-only"
+            ? "Vui lòng chọn ngày, kênh và file tổng đơn"
+            : "Vui lòng chọn ngày, kênh và đủ 2 file"
+      })
       return
     }
 
@@ -105,8 +112,11 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
     }))
 
     await insertAndUpdate({
-      files: [files.totalIncome.file, files.sourceSplit.file],
-      req: { date, channel }
+      files:
+        updateMode === "status-only"
+          ? [files.totalIncome.file]
+          : [files.totalIncome.file, files.sourceSplit.file!],
+      req: { date, channel, updateMode }
     })
   }
 
@@ -114,7 +124,7 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
     !date ||
     !channel ||
     !files.totalIncome.file ||
-    !files.sourceSplit.file ||
+    (updateMode === "full" && !files.sourceSplit.file) ||
     insertingIncomes
 
   const disableDropzone = insertingIncomes
@@ -189,11 +199,20 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
       </Text>
       <Alert title="Lưu ý" color="yellow" variant="light">
         <Text size="sm">
-          Sau khi tải file lên, hệ thống sẽ chạy ngầm việc thêm doanh thu, vui
-          lòng chờ thông báo của hệ thống và kiểm tra. Trong thời gian đó, bạn
-          vẫn có thể đóng cửa sổ này và làm việc khác.
+          {updateMode === "status-only"
+            ? "Chế độ này chỉ cập nhật trạng thái hoàn/hủy từ file tổng đơn, không xóa và import lại doanh thu."
+            : "Sau khi tải file lên, hệ thống sẽ chạy ngầm việc thêm doanh thu, vui lòng chờ thông báo của hệ thống và kiểm tra. Trong thời gian đó, bạn vẫn có thể đóng cửa sổ này và làm việc khác."}
         </Text>
       </Alert>
+
+      <SegmentedControl
+        value={updateMode}
+        onChange={(value) => setUpdateMode(value as "full" | "status-only")}
+        data={[
+          { label: "Import đầy đủ", value: "full" },
+          { label: "Chỉ cập nhật status", value: "status-only" }
+        ]}
+      />
 
       <Group align="flex-end" gap={12} w={"100%"}>
         <DatePickerInput
@@ -229,8 +248,12 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
 
       <Stack align="start" justify="center" gap="sm">
         {renderDropzone("totalIncome")}
-        <Divider orientation="vertical" />
-        {renderDropzone("sourceSplit")}
+        {updateMode === "full" && (
+          <>
+            <Divider orientation="vertical" />
+            {renderDropzone("sourceSplit")}
+          </>
+        )}
       </Stack>
 
       <Group justify="end" mt="md">
