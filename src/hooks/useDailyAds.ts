@@ -4,8 +4,10 @@ import { callApi } from "./axios"
 import {
   CreateDailyAdsRequest,
   CreateSimpleDailyAdsRequest,
+  DailyAdsMetricsResponse,
   GetPreviousDailyAdsBefore4pmRequest,
-  GetPreviousDailyAdsBefore4pmResponse
+  GetPreviousDailyAdsBefore4pmResponse,
+  UpsertDailyAdsMetricsRequest
 } from "./models"
 
 export const useDailyAds = () => {
@@ -86,10 +88,33 @@ export const useDailyAds = () => {
     })
   }
 
+  const upsertDailyAdsMetrics = async (req: UpsertDailyAdsMetricsRequest) => {
+    return callApi<UpsertDailyAdsMetricsRequest, { success: boolean; data: DailyAdsMetricsResponse }>({
+      path: `/v1/dailyads/metrics`,
+      method: "POST",
+      data: req,
+      token: accessToken
+    })
+  }
+
+  const getDailyAdsMetrics = async (req: {
+    date: Date
+    channelId: string
+  }) => {
+    const query = toQueryString(req)
+    return callApi<never, DailyAdsMetricsResponse>({
+      path: `/v1/dailyads/metrics?${query}`,
+      method: "GET",
+      token: accessToken
+    })
+  }
+
   return {
     createDailyAds,
     createDailyAdsWithSavedAdsCost,
     getPreviousDailyAds,
-    createSimpleDailyAds
+    createSimpleDailyAds,
+    upsertDailyAdsMetrics,
+    getDailyAdsMetrics
   }
 }

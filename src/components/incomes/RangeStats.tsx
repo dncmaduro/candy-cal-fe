@@ -50,6 +50,7 @@ import {
 } from "./filterStyles"
 
 type DiscountMode = "beforeDiscount" | "afterDiscount"
+const NEW_ADS_MODEL_START = new Date(2026, 5, 1)
 
 type RangeSelectorProps = {
   startDate: Date | null
@@ -262,6 +263,17 @@ export const RangeStats = () => {
       elapsedDays: rangeReferenceDate.getDate()
     }
   }, [range, rangeGoalMonth, rangeGoalYear, rangeReferenceDate])
+  const usesNewAdsDisplay = useMemo(() => {
+    if (!startDate) return false
+
+    return (
+      new Date(
+        startDate.getFullYear(),
+        startDate.getMonth(),
+        startDate.getDate()
+      ) >= NEW_ADS_MODEL_START
+    )
+  }, [startDate])
 
   const { data, isLoading, error } = useQuery({
     queryKey: [
@@ -364,8 +376,10 @@ export const RangeStats = () => {
   const totalAdsCost =
     current?.ads?.totalAdsCost ??
     (current?.ads?.liveAdsCost ?? 0) + (current?.ads?.shopAdsCost ?? 0)
+  const adsMetrics = current?.ads?.metrics
   const totalAdsToRevenuePct =
-    totalRevenue > 0 ? (totalAdsCost / totalRevenue) * 100 : 0
+    adsMetrics?.ratios?.adsRatioOnBeforeDiscountRevenue ??
+    (totalRevenue > 0 ? (totalAdsCost / totalRevenue) * 100 : 0)
   const orderMetrics = getRangeStatsOrderMetrics(data)
   const liveOrders = orderMetrics.live
   const shopOrders = orderMetrics.shop
@@ -476,6 +490,89 @@ export const RangeStats = () => {
           ]
         : [],
     [changes, current]
+  )
+  const compactAdsMetrics = useMemo(
+    () => [
+      {
+        label: "Chi phí ads thực tế",
+        value: formatCurrency(totalAdsCost),
+        icon: <IconChartBar size={20} />,
+        tone: "orange",
+        trailing: (
+          <TrendBadge
+            value={changes?.ads?.totalAdsCostPct}
+            positiveMeaning="bad"
+            variant="light"
+          />
+        )
+      },
+      {
+        label: "Chi phí ads thực tế + aff",
+        value: formatCurrency(adsMetrics?.totalCost ?? totalAdsCost),
+        icon: <IconDiscount2 size={20} />,
+        tone: "slate",
+        trailing: (
+          <TrendBadge
+            value={changes?.ads?.totalCostPct}
+            positiveMeaning="bad"
+            variant="light"
+          />
+        )
+      },
+      {
+        label: "Chi phí ads thực tế / DT",
+        value: formatPercent(
+          adsMetrics?.ratios.adsRatioOnBeforeDiscountRevenue ??
+            totalAdsToRevenuePct,
+          2,
+          "truncate"
+        ),
+        icon: <IconPercentage size={20} />,
+        tone: "amber",
+        trailing: (
+          <TrendBadge
+            value={changes?.ads?.adsRatioOnBeforeDiscountRevenueDiff}
+            positiveMeaning="bad"
+            variant="light"
+          />
+        )
+      },
+      {
+        label: "Chi phí ads + aff / DT",
+        value: formatPercent(
+          adsMetrics?.ratios.totalCostRatioOnBeforeDiscountRevenue ?? 0,
+          2,
+          "truncate"
+        ),
+        icon: <IconPercentage size={20} />,
+        tone: "amber",
+        trailing: (
+          <TrendBadge
+            value={changes?.ads?.totalCostRatioOnBeforeDiscountRevenueDiff}
+            positiveMeaning="bad"
+            variant="light"
+          />
+        )
+      },
+      {
+        label: "Chi phí sau HH / DT",
+        value: formatPercent(
+          adsMetrics?.ratios.costAfterRefundRatioOnBeforeDiscountRevenue ?? 0,
+          2,
+          "truncate"
+        ),
+        icon: <IconReceipt2 size={20} />,
+        tone: "amber",
+        trailing: (
+          <TrendBadge
+            value={changes?.ads?.costAfterRefundRatioOnBeforeDiscountRevenueDiff}
+            positiveMeaning="bad"
+            variant="light"
+          />
+        )
+      }
+    ],
+    [adsMetrics, changes?.ads, totalAdsCost, totalAdsToRevenuePct]
   )
 
   const productsRevenue = useMemo(() => {
@@ -629,31 +726,93 @@ export const RangeStats = () => {
                           isLoading={isLoadingRangeMonthProgress}
                         />
 
-                        <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
-                          <MetricStatCard
-                            label="Tổng CP ads trong khoảng"
-                            value={formatCurrency(totalAdsCost)}
-                            icon={<IconChartBar size={20} />}
-                            tone="orange"
-                            trailing={
-                              <TrendBadge
-                                value={changes?.ads?.totalAdsCostPct}
-                                positiveMeaning="bad"
-                                variant="light"
+                        {usesNewAdsDisplay ? (
+                          <SimpleGrid
+                            cols={{ base: 1, md: 2, xl: 5 }}
+                            spacing="md"
+                          >
+                            {compactAdsMetrics.map((metric) => (
+                              <MetricStatCard
+                                key={metric.label}
+                                label={metric.label}
+                                value={metric.value}
+                                icon={metric.icon}
+                                tone={metric.tone}
+                                trailing={metric.trailing}
                               />
-                            }
-                          />
-                          <MetricStatCard
-                            label="% Ads / doanh thu"
-                            value={formatPercent(
-                              totalAdsToRevenuePct,
-                              2,
-                              "truncate"
+                            ))}
+                          </SimpleGrid>
+                        ) : (
+                          <>
+                            <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
+                              <MetricStatCard
+                                label="Chi phí ads thực tế"
+                                value={formatCurrency(totalAdsCost)}
+                                icon={<IconChartBar size={20} />}
+                                tone="orange"
+                                trailing={
+                                  <TrendBadge
+                                    value={changes?.ads?.totalAdsCostPct}
+                                    positiveMeaning="bad"
+                                    variant="light"
+                                  />
+                                }
+                              />
+                              <MetricStatCard
+                                label="% Ads / doanh thu"
+                                value={formatPercent(
+                                  totalAdsToRevenuePct,
+                                  2,
+                                  "truncate"
+                                )}
+                                icon={<IconPercentage size={20} />}
+                                tone="amber"
+                              />
+                            </SimpleGrid>
+
+                            {adsMetrics && adsMetrics.recordsCount > 0 && (
+                              <SimpleGrid cols={{ base: 1, md: 3 }} spacing="md">
+                                <MetricStatCard
+                                  label="Tổng chi phí"
+                                  value={formatCurrency(adsMetrics.totalCost)}
+                                  icon={<IconDiscount2 size={20} />}
+                                  tone="slate"
+                                  trailing={
+                                    <TrendBadge
+                                      value={changes?.ads?.totalCostPct}
+                                      positiveMeaning="bad"
+                                      variant="light"
+                                    />
+                                  }
+                                />
+                                <MetricStatCard
+                                  label="Sau trừ hoàn huỷ"
+                                  value={formatCurrency(adsMetrics.costAfterRefund)}
+                                  icon={<IconReceipt2 size={20} />}
+                                  tone="slate"
+                                  trailing={
+                                    <TrendBadge
+                                      value={changes?.ads?.costAfterRefundPct}
+                                      positiveMeaning="bad"
+                                      variant="light"
+                                    />
+                                  }
+                                />
+                                <MetricStatCard
+                                  label="% Tổng chi phí / DT trước CK"
+                                  value={formatPercent(
+                                    adsMetrics.ratios
+                                      .totalCostRatioOnBeforeDiscountRevenue,
+                                    2,
+                                    "truncate"
+                                  )}
+                                  icon={<IconPercentage size={20} />}
+                                  tone="amber"
+                                />
+                              </SimpleGrid>
                             )}
-                            icon={<IconPercentage size={20} />}
-                            tone="amber"
-                          />
-                        </SimpleGrid>
+                          </>
+                        )}
                       </Stack>
                     }
                   />
@@ -669,6 +828,7 @@ export const RangeStats = () => {
                         incomeGoal={rangeLiveGoal}
                         goalLabel={rangeGoalLabel}
                         adsCost={current.ads.liveAdsCost}
+                        showAdsStats={!usesNewAdsDisplay}
                         adsCostChangePct={changes?.ads?.liveAdsCostPct}
                         adsSharePctDiff={
                           changes?.ads?.liveAdsToLiveIncomePctDiff
@@ -686,6 +846,7 @@ export const RangeStats = () => {
                         incomeGoal={rangeShopGoal}
                         goalLabel={rangeGoalLabel}
                         adsCost={current.ads.shopAdsCost}
+                        showAdsStats={!usesNewAdsDisplay}
                         adsCostChangePct={changes?.ads?.shopAdsCostPct}
                         adsSharePctDiff={
                           changes?.ads?.shopAdsToShopIncomePctDiff
