@@ -19,6 +19,7 @@ type Props = {
   incomeGoal?: number
   goalLabel?: string
   adsCost: number
+  showAdsStats?: boolean
   ordersCount?: number
   ordersChangePct?: number
   adsCostChangePct?: number
@@ -37,6 +38,7 @@ export const LiveAndVideoStats = ({
   incomeGoal,
   goalLabel = "KPI ngày",
   adsCost,
+  showAdsStats = true,
   ordersCount,
   ordersChangePct,
   adsCostChangePct,
@@ -103,38 +105,45 @@ export const LiveAndVideoStats = ({
         )}
       </Group>
 
-      <SimpleGrid cols={{ base: 1, md: 3 }} spacing="sm">
-        <Paper
-          radius="lg"
-          p="md"
-          style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}
-        >
-          <Group justify="space-between" align="flex-start">
-            <Stack gap={4}>
-              <Text fz="xs" fw={700} c="dimmed" tt="uppercase">
-                Chi phí ads
-              </Text>
-              <Text fw={700}>{formatCurrency(adsCost)}</Text>
-            </Stack>
-            <TrendBadge value={adsCostChangePct} positiveMeaning="bad" />
-          </Group>
-        </Paper>
+      <SimpleGrid
+        cols={{ base: 1, md: showAdsStats ? 3 : 1 }}
+        spacing="sm"
+      >
+        {showAdsStats && (
+          <>
+            <Paper
+              radius="lg"
+              p="md"
+              style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}
+            >
+              <Group justify="space-between" align="flex-start">
+                <Stack gap={4}>
+                  <Text fz="xs" fw={700} c="dimmed" tt="uppercase">
+                    Chi phí ads
+                  </Text>
+                  <Text fw={700}>{formatCurrency(adsCost)}</Text>
+                </Stack>
+                <TrendBadge value={adsCostChangePct} positiveMeaning="bad" />
+              </Group>
+            </Paper>
 
-        <Paper
-          radius="lg"
-          p="md"
-          style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}
-        >
-          <Group justify="space-between" align="flex-start">
-            <Stack gap={4}>
-              <Text fz="xs" fw={700} c="dimmed" tt="uppercase">
-                Ads / doanh thu
-              </Text>
-              <Text fw={700}>{formatPercent(adsShare)}</Text>
-            </Stack>
-            <TrendBadge value={adsSharePctDiff} positiveMeaning="bad" />
-          </Group>
-        </Paper>
+            <Paper
+              radius="lg"
+              p="md"
+              style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}
+            >
+              <Group justify="space-between" align="flex-start">
+                <Stack gap={4}>
+                  <Text fz="xs" fw={700} c="dimmed" tt="uppercase">
+                    Ads / doanh thu
+                  </Text>
+                  <Text fw={700}>{formatPercent(adsShare)}</Text>
+                </Stack>
+                <TrendBadge value={adsSharePctDiff} positiveMeaning="bad" />
+              </Group>
+            </Paper>
+          </>
+        )}
 
         <Paper
           radius="lg"

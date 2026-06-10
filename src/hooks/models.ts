@@ -1042,6 +1042,10 @@ export interface GetIncomesByDateRangeResponse {
     customer: string
     province: string
     shippingProvider: string
+    orderStatus?: string
+    orderSubstatus?: string
+    cancelationOrReturnType?: string
+    orderRefundAmount?: number
     channel?: {
       _id: string
       name: string
@@ -1653,6 +1657,27 @@ export interface GetRangeStatsResponse {
         liveAdsToLiveIncome: number
         shopAdsToShopIncome: number
       }
+      metrics: {
+        roiProtect: number
+        fullRefundGmv: number
+        tinRefundAmount: number
+        adsTax: number
+        gmvAds: number
+        affiliateCost: number
+        affiliateRefundAmount: number
+        incomeBeforeDiscount: number
+        incomeAfterDiscount: number
+        actualAdsCost: number
+        totalCost: number
+        costAfterRefund: number
+        ratios: {
+          adsRatioOnBeforeDiscountRevenue: number
+          totalCostRatioOnBeforeDiscountRevenue: number
+          costAfterRefundRatioOnBeforeDiscountRevenue: number
+          affiliateRatioOnBeforeDiscountRevenue: number
+        }
+        recordsCount: number
+      }
     }
     discounts: {
       totalPlatformDiscount: number
@@ -1720,6 +1745,12 @@ export interface GetRangeStatsResponse {
       shopAdsCostPct: number
       liveAdsToLiveIncomePctDiff: number
       shopAdsToShopIncomePctDiff: number
+      actualAdsCostPct: number
+      totalCostPct: number
+      costAfterRefundPct: number
+      adsRatioOnBeforeDiscountRevenueDiff: number
+      totalCostRatioOnBeforeDiscountRevenueDiff: number
+      costAfterRefundRatioOnBeforeDiscountRevenueDiff: number
     }
     discounts: {
       totalPlatformDiscountPct: number
@@ -2010,6 +2041,9 @@ export interface GetAdsCostSplitByMonthRequest {
 export interface GetAdsCostSplitByMonthResponse {
   liveAdsCost: number
   shopAdsCost: number
+  actualAdsCost: number
+  totalCost: number
+  costAfterRefund: number
   kpi: {
     liveKpi: number
     shopKpi: number
@@ -2017,6 +2051,24 @@ export interface GetAdsCostSplitByMonthResponse {
     shopKpiPercentage: number
   }
   percentages: { liveAdsToLiveIncome: number; shopAdsToShopIncome: number }
+  ratios: {
+    adsRatioOnBeforeDiscountRevenue: number
+    totalCostRatioOnBeforeDiscountRevenue: number
+    costAfterRefundRatioOnBeforeDiscountRevenue: number
+    affiliateRatioOnBeforeDiscountRevenue: number
+  }
+  rawMetrics: {
+    roiProtect: number
+    fullRefundGmv: number
+    tinRefundAmount: number
+    adsTax: number
+    gmvAds: number
+    affiliateCost: number
+    affiliateRefundAmount: number
+    incomeBeforeDiscount: number
+    incomeAfterDiscount: number
+    recordsCount: number
+  }
   totalIncome: { live: number; shop: number }
 }
 
@@ -2034,6 +2086,43 @@ export interface CreateSimpleDailyAdsRequest {
   shopAdsCost: number
   currency: "vnd" | "usd"
   channel: string
+}
+
+/** @interface */
+export interface UpsertDailyAdsMetricsRequest {
+  date: Date
+  channelId: string
+  roiProtect?: number
+  fullRefundGmv?: number
+  tinRefundAmount?: number
+  adsTax?: number
+  gmvAds?: number
+  affiliateCost?: number
+  affiliateRefundAmount?: number
+}
+
+/** @interface */
+export interface DailyAdsMetricsResponse {
+  _id: string
+  date: string
+  channel: string
+  roiProtect: number
+  fullRefundGmv: number
+  tinRefundAmount: number
+  adsTax: number
+  gmvAds: number
+  affiliateCost: number
+  affiliateRefundAmount: number
+  incomeBeforeDiscount: number
+  incomeAfterDiscount: number
+  actualAdsCost: number
+  totalCost: number
+  costAfterRefund: number
+  adsRatioOnBeforeDiscountRevenue: number
+  totalCostRatioOnBeforeDiscountRevenue: number
+  costAfterRefundRatioOnBeforeDiscountRevenue: number
+  affiliateRatioOnBeforeDiscountRevenue: number
+  updatedAt: string
 }
 
 /** @interface */
@@ -2072,6 +2161,7 @@ export interface GetPreviousDailyAdsBefore4pmResponse {
 export interface InsertIncomeAndUpdateSourceRequest {
   date: Date
   channel: string
+  updateMode?: "full" | "status-only"
 }
 
 /** @interface */
