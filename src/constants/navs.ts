@@ -29,6 +29,16 @@ export const SHOPEE_ROLES = ["admin", "shopee-emp", "system-emp"]
 export const SHOPEE_EDITOR_ROLES = ["admin", "shopee-emp"]
 export const KHO_VAN_ROLES = ["admin", "accounting-emp", "system-emp"]
 export const KHO_VAN_EDITOR_ROLES = ["admin", "accounting-emp"]
+export const SALES_VIEW_ROLES = [
+  "admin",
+  "system-emp",
+  "sales-leader",
+  "sales-emp",
+  "sales-accounting",
+  "facebook-ads-emp"
+]
+export const SALES_REVENUE_REPORT_ROLES = ["admin", "sales-emp"]
+export const SALES_ADS_COST_REPORT_ROLES = ["admin", "facebook-ads-emp"]
 
 /** @constant */
 export const NAVS = [
@@ -238,49 +248,49 @@ export const SALES_NAVS = [
   {
     to: `${SALES_NAVS_URL}/funnel`,
     label: "Funnel khách",
-    roles: ["admin", "sales-emp", "system-emp"],
+    roles: SALES_VIEW_ROLES,
     icon: "IconChartFunnel"
   },
   {
     to: `${SALES_NAVS_URL}/tasks`,
     label: "Công việc",
-    roles: ["admin", "sales-leader", "system-emp"],
+    roles: SALES_VIEW_ROLES,
     icon: "IconChecklist"
   },
   {
     to: `${SALES_NAVS_URL}/orders`,
     label: "Đơn hàng",
-    roles: ["admin", "sales-emp", "system-emp", "sales-accounting"],
+    roles: SALES_VIEW_ROLES,
     icon: "IconClipboardList"
   },
   {
     to: `${SALES_NAVS_URL}/channels`,
     label: "Kênh bán hàng",
-    roles: ["admin", "sales-emp", "system-emp"],
+    roles: SALES_VIEW_ROLES,
     icon: "IconAt"
   },
   {
     to: `${SALES_NAVS_URL}/items`,
     label: "Mặt hàng",
-    roles: ["admin", "sales-emp", "system-emp"],
+    roles: SALES_VIEW_ROLES,
     icon: "IconPackage"
   },
   {
     to: `${SALES_NAVS_URL}/dashboard`,
     label: "Chỉ số",
-    roles: ["admin", "sales-leader", "system-emp", "sales-accounting"],
+    roles: SALES_VIEW_ROLES,
     icon: "IconChartBar"
   },
   {
     to: `${SALES_NAVS_URL}/daily-reports`,
     label: "Báo cáo hàng ngày",
-    roles: ["admin", "sales-leader", "sales-emp", "system-emp"],
+    roles: SALES_VIEW_ROLES,
     icon: "IconReportAnalytics"
   },
   {
     to: `${SALES_NAVS_URL}/customer-ranks`,
     label: "Hạng khách hàng",
-    roles: ["admin", "sales-emp", "system-emp"],
+    roles: SALES_VIEW_ROLES,
     icon: "IconDeviceTabletStar"
   }
 ]

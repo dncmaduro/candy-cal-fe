@@ -5362,22 +5362,14 @@ export interface GetRevenueForDateResponse {
 export interface CreateSalesDailyReportRequest {
   date: Date
   channel: string
-  adsCost: number
   dateKpi: number
-  revenue: number
-  newFunnelRevenue: {
-    ads: number
-    other: number
-  }
-  returningFunnelRevenue: number
-  newOrder: number
-  returningOrder: number
-  accumulatedRevenue: number
-  accumulatedAdsCost: number
-  accumulatedNewFunnelRevenue: {
-    ads: number
-    other: number
-  }
+}
+
+/** @interface */
+export interface UpdateSalesDailyReportAdsCostRequest {
+  date: Date
+  channel: string
+  adsCost: number
 }
 
 /** @interface */
