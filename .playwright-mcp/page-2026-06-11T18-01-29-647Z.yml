@@ -1,0 +1,45 @@
+- generic [ref=e1]:
+  - main [ref=e4]:
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - img [ref=e9]
+        - paragraph [ref=e13]: Đăng nhập vào CandyCal
+        - paragraph [ref=e14]: Hệ thống quản lý nội bộ Marketing FMCG
+      - generic [ref=e16]:
+        - generic [ref=e17]:
+          - generic [ref=e18]: Tên người dùng *
+          - generic [ref=e19]:
+            - generic:
+              - img
+            - textbox "Tên người dùng" [active] [ref=e20]:
+              - /placeholder: Nhập tên tài khoản
+        - generic [ref=e21]:
+          - generic [ref=e22]: Mật khẩu *
+          - generic [ref=e23]:
+            - generic:
+              - img
+            - textbox "Mật khẩu" [ref=e25]:
+              - /placeholder: Nhập mật khẩu
+            - button [ref=e27] [cursor=pointer]:
+              - img [ref=e29]
+        - generic [ref=e32]:
+          - generic [ref=e33]:
+            - checkbox "Ghi nhớ đăng nhập" [ref=e34]
+            - img
+          - generic [ref=e36]: Ghi nhớ đăng nhập
+        - button "Đăng nhập" [ref=e37] [cursor=pointer]:
+          - generic [ref=e39]: Đăng nhập
+      - paragraph [ref=e40]: © 2026 CandyCal. All rights reserved.
+  - generic [ref=e42]:
+    - alert [ref=e43]:
+      - generic [ref=e44]:
+        - generic [ref=e45]: Vui lòng đăng nhập lại!
+        - generic [ref=e46]: Invalid refresh token
+      - button [ref=e47] [cursor=pointer]:
+        - img [ref=e48]
+    - alert [ref=e50]:
+      - generic [ref=e51]:
+        - generic [ref=e52]: Vui lòng đăng nhập lại!
+        - generic [ref=e53]: Invalid refresh token
+      - button [ref=e54] [cursor=pointer]:
+        - img [ref=e55]

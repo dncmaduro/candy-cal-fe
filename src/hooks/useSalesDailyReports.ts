@@ -22,7 +22,8 @@ import {
   GetMonthKpisResponse,
   GetMonthKpisRequest,
   GetMonthKpiDetailRequest,
-  GetMonthKpiDetailResponse
+  GetMonthKpiDetailResponse,
+  UpdateSalesDailyReportAdsCostRequest
 } from "./models"
 
 export const useSalesDailyReports = () => {
@@ -44,6 +45,20 @@ export const useSalesDailyReports = () => {
       CreateSalesDailyReportResponse
     >({
       path: `/v1/salesdailyreports`,
+      method: "POST",
+      data: req,
+      token: accessToken
+    })
+  }
+
+  const updateSalesDailyReportAdsCost = async (
+    req: UpdateSalesDailyReportAdsCostRequest
+  ) => {
+    return callApi<
+      UpdateSalesDailyReportAdsCostRequest,
+      CreateSalesDailyReportResponse
+    >({
+      path: `/v1/salesdailyreports/ads-cost`,
       method: "POST",
       data: req,
       token: accessToken
@@ -141,6 +156,7 @@ export const useSalesDailyReports = () => {
   return {
     getRevenueForDate,
     createSalesDailyReport,
+    updateSalesDailyReportAdsCost,
     deleteSalesDailyReport,
     getSalesDailyReportsByMonth,
     getSalesDailyReportDetail,

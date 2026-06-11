@@ -179,6 +179,9 @@ function RouteComponent() {
   const isSaleLeader = useMemo(() => {
     return me?.roles?.includes("sales-leader") ?? false
   }, [me])
+  const isFacebookAdsEmp = useMemo(() => {
+    return me?.roles?.includes("facebook-ads-emp") ?? false
+  }, [me])
 
   const columns: ColumnDef<TaskItem>[] = [
     {
@@ -283,7 +286,7 @@ function RouteComponent() {
         const item = row.original
         console.log(item)
         const isAssignee = item.assigneeId && item.assigneeId.id === me?._id
-        const canManage = isAdmin || isSaleLeader || isAssignee
+        const canManage = !isFacebookAdsEmp && (isAdmin || isSaleLeader || isAssignee)
 
         if (!canManage) {
           return null

@@ -23,9 +23,17 @@ import { useSalesChannels } from "../../../hooks/useSalesChannels"
 import { CToast } from "../../common/CToast"
 import { modals } from "@mantine/modals"
 import { CDataTable } from "../../common/CDataTable"
-import { CreateSalesDailyReportModal } from "./CreateSalesDailyReportModal"
+import {
+  CreateSalesAdsCostDailyReportModal,
+  CreateSalesRevenueDailyReportModal
+} from "./CreateSalesDailyReportModal"
 import { DailyReportByText } from "./DailyReportByText"
 import { useNavigate, useSearch } from "@tanstack/react-router"
+import { Can } from "../../common/Can"
+import {
+  SALES_ADS_COST_REPORT_ROLES,
+  SALES_REVENUE_REPORT_ROLES
+} from "../../../constants/navs"
 
 type DailyReportItem = {
   _id: string
@@ -315,19 +323,21 @@ export const SalesDailyReports = () => {
                 <IconMessage size={16} />
               </ActionIcon>
             </Tooltip>
-            <Tooltip label="Xóa báo cáo" withArrow>
-              <ActionIcon
-                variant="light"
-                color="red"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handleDeleteReport(item._id, item.date)
-                }}
-              >
-                <IconTrash size={16} />
-              </ActionIcon>
-            </Tooltip>
+            <Can roles={["admin", "sales-leader", "sales-emp", "system-emp"]}>
+              <Tooltip label="Xóa báo cáo" withArrow>
+                <ActionIcon
+                  variant="light"
+                  color="red"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleDeleteReport(item._id, item.date)
+                  }}
+                >
+                  <IconTrash size={16} />
+                </ActionIcon>
+              </Tooltip>
+            </Can>
           </Group>
         )
       },
@@ -335,11 +345,20 @@ export const SalesDailyReports = () => {
     }
   ]
 
-  const createSalesDailyReport = () => {
+  const openRevenueReportModal = () => {
     modals.open({
-      id: "create-sales-daily-report",
-      title: <b>Tạo báo cáo hàng ngày</b>,
-      children: <CreateSalesDailyReportModal />,
+      id: "create-sales-revenue-report",
+      title: <b>Tạo báo cáo doanh thu ngày</b>,
+      children: <CreateSalesRevenueDailyReportModal />,
+      size: 960
+    })
+  }
+
+  const openAdsCostReportModal = () => {
+    modals.open({
+      id: "create-sales-ads-cost-report",
+      title: <b>Tạo báo cáo chi phí ads ngày</b>,
+      children: <CreateSalesAdsCostDailyReportModal />,
       size: 960
     })
   }
@@ -472,13 +491,26 @@ export const SalesDailyReports = () => {
             </>
           }
           extraActions={
-            <Button
-              color="yellow"
-              leftSection={<IconReportAnalytics size={16} />}
-              onClick={() => createSalesDailyReport()}
-            >
-              Tạo báo cáo hàng ngày
-            </Button>
+            <Group gap="xs">
+              <Can roles={SALES_REVENUE_REPORT_ROLES}>
+                <Button
+                  color="yellow"
+                  leftSection={<IconReportAnalytics size={16} />}
+                  onClick={openRevenueReportModal}
+                >
+                  Báo cáo doanh thu
+                </Button>
+              </Can>
+              <Can roles={SALES_ADS_COST_REPORT_ROLES}>
+                <Button
+                  color="orange"
+                  leftSection={<IconReportAnalytics size={16} />}
+                  onClick={openAdsCostReportModal}
+                >
+                  Báo cáo chi phí ads
+                </Button>
+              </Can>
+            </Group>
           }
         />
       </Box>

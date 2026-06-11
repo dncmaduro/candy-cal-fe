@@ -962,18 +962,20 @@ function RouteComponent() {
                   pageSizeOptions={[10, 20, 50]}
                   initialPageSize={10}
                   extraActions={
-                    <Group>
-                      <Button
-                        onClick={handleSyncItems}
-                        color="indigo"
-                        leftSection={<IconRefresh size={16} />}
-                        loading={isSyncing}
-                        disabled={isSyncing}
-                        variant="light"
-                      >
-                        Đồng bộ sản phẩm
-                      </Button>
-                    </Group>
+                    <Can roles={["sales-leader", "sales-emp"]}>
+                      <Group>
+                        <Button
+                          onClick={handleSyncItems}
+                          color="indigo"
+                          leftSection={<IconRefresh size={16} />}
+                          loading={isSyncing}
+                          disabled={isSyncing}
+                          variant="light"
+                        >
+                          Đồng bộ sản phẩm
+                        </Button>
+                      </Group>
+                    </Can>
                   }
                 />
                 {/* Enhanced Summary Section */}

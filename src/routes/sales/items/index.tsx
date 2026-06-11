@@ -336,21 +336,21 @@ function RouteComponent() {
       cell: ({ row }) => {
         const item = row.original
         return (
-          <Can roles={["admin", "sales-emp"]}>
-            <Group gap="xs">
-              <Tooltip label="Xem chi tiết" withArrow>
-                <ActionIcon
-                  variant="light"
-                  color="teal"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    navigate({ to: `/sales/items/${item._id}` })
-                  }}
-                >
-                  <IconEye size={16} />
-                </ActionIcon>
-              </Tooltip>
+          <Group gap="xs">
+            <Tooltip label="Xem chi tiết" withArrow>
+              <ActionIcon
+                variant="light"
+                color="teal"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  navigate({ to: `/sales/items/${item._id}` })
+                }}
+              >
+                <IconEye size={16} />
+              </ActionIcon>
+            </Tooltip>
+            <Can roles={["admin", "sales-emp"]}>
               <Tooltip label="Chỉnh sửa" withArrow>
                 <ActionIcon
                   variant="light"
@@ -378,8 +378,8 @@ function RouteComponent() {
                   <IconTrash size={16} />
                 </ActionIcon>
               </Tooltip>
-            </Group>
-          </Can>
+            </Can>
+          </Group>
         )
       }
     }
@@ -410,30 +410,32 @@ function RouteComponent() {
                 Đồng bộ và quản lý danh sách sản phẩm
               </Text>
             </div>
-            <Group gap="sm">
-              <Button
-                leftSection={<IconUpload size={16} />}
-                onClick={() => {
-                  modals.open({
-                    title: <b>Đồng bộ từ file</b>,
-                    children: (
-                      <UploadSalesItemsModal
-                        onSuccess={() => {
-                          modals.closeAll()
-                          refetch()
-                        }}
-                      />
-                    ),
-                    size: "md"
-                  })
-                }}
-                size="sm"
-                radius="md"
-                variant="light"
-              >
-                Đồng bộ từ file
-              </Button>
-            </Group>
+            <Can roles={["admin", "sales-leader", "sales-emp"]}>
+              <Group gap="sm">
+                <Button
+                  leftSection={<IconUpload size={16} />}
+                  onClick={() => {
+                    modals.open({
+                      title: <b>Đồng bộ từ file</b>,
+                      children: (
+                        <UploadSalesItemsModal
+                          onSuccess={() => {
+                            modals.closeAll()
+                            refetch()
+                          }}
+                        />
+                      ),
+                      size: "md"
+                    })
+                  }}
+                  size="sm"
+                  radius="md"
+                  variant="light"
+                >
+                  Đồng bộ từ file
+                </Button>
+              </Group>
+            </Can>
           </Group>
         </Box>
 

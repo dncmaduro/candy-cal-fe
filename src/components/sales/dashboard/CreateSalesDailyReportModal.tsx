@@ -21,7 +21,6 @@ import { useMutation, useQuery } from "@tanstack/react-query"
 import { CToast } from "../../common/CToast"
 import { modals } from "@mantine/modals"
 import { useForm, Controller } from "react-hook-form"
-import { CreateSalesDailyReportRequest } from "../../../hooks/models"
 import { useSalesChannels } from "../../../hooks/useSalesChannels"
 import { useEffect, useMemo } from "react"
 import { getDaysInMonth } from "date-fns"
@@ -172,14 +171,79 @@ const MetricCard = ({
 // Main component
 // ────────────────────────────────────────────────────────────
 
-export const CreateSalesDailyReportModal = () => {
-  const { createSalesDailyReport, getRevenueForDate, getSalesMonthKpi } =
-    useSalesDailyReports()
+type SalesDailyReportModalMode = "revenue" | "ads-cost"
+
+type SalesDailyReportFormValues = {
+  date: Date
+  channel: string
+  adsCost: number
+  dateKpi: number
+  revenue: number
+  newFunnelRevenue: {
+    ads: number
+    other: number
+  }
+  returningFunnelRevenue: number
+  newOrder: number
+  returningOrder: number
+  accumulatedRevenue: number
+  accumulatedAdsCost: number
+  accumulatedNewFunnelRevenue: {
+    ads: number
+    other: number
+  }
+}
+
+const MODAL_COPY: Record<
+  SalesDailyReportModalMode,
+  {
+    title: string
+    description: string
+    manualDescription: string
+    submitLabel: string
+    successToast: string
+    errorToast: string
+  }
+> = {
+  revenue: {
+    title: "Báo cáo doanh thu ngày",
+    description:
+      "Chọn ngày và nhập KPI ngày. Các số liệu doanh thu sẽ được tự động lấy từ hệ thống.",
+    manualDescription:
+      "Nhập KPI ngày. Các trường khác được tính tự động từ hệ thống.",
+    submitLabel: "Lưu báo cáo doanh thu",
+    successToast: "Tạo báo cáo doanh thu thành công",
+    errorToast: "Tạo báo cáo doanh thu thất bại"
+  },
+  "ads-cost": {
+    title: "Báo cáo chi phí ads ngày",
+    description:
+      "Chọn ngày và nhập chi phí ads. Các số liệu doanh thu sẽ được tự động lấy từ hệ thống.",
+    manualDescription:
+      "Nhập chi phí quảng cáo. Các trường khác được tính tự động từ hệ thống.",
+    submitLabel: "Lưu chi phí ads",
+    successToast: "Cập nhật chi phí ads thành công",
+    errorToast: "Cập nhật chi phí ads thất bại"
+  }
+}
+
+export const CreateSalesDailyReportModal = ({
+  mode = "revenue"
+}: {
+  mode?: SalesDailyReportModalMode
+}) => {
+  const {
+    createSalesDailyReport,
+    updateSalesDailyReportAdsCost,
+    getRevenueForDate,
+    getSalesMonthKpi
+  } = useSalesDailyReports()
   const { getMyChannel, searchSalesChannels } = useSalesChannels()
   const { getMe } = useUsers()
+  const copy = MODAL_COPY[mode]
 
   const { control, handleSubmit, watch, setValue } =
-    useForm<CreateSalesDailyReportRequest>({
+    useForm<SalesDailyReportFormValues>({
       defaultValues: {
         date: new Date(new Date().setHours(0, 0, 0, 0)),
         channel: "",
@@ -245,7 +309,7 @@ export const CreateSalesDailyReportModal = () => {
       getRevenueForDate({
         date:
           selectedDate instanceof Date
-            ? new Date(selectedDate.setHours(0, 0, 0, 0))
+            ? new Date(new Date(selectedDate).setHours(0, 0, 0, 0))
             : new Date(new Date().setHours(0, 0, 0, 0)),
         channelId: channelId
       }),
@@ -266,9 +330,23 @@ export const CreateSalesDailyReportModal = () => {
   })
 
   const { mutate: create, isPending: isCreating } = useMutation({
-    mutationFn: createSalesDailyReport,
+    mutationFn: async (values: SalesDailyReportFormValues) => {
+      if (mode === "ads-cost") {
+        return updateSalesDailyReportAdsCost({
+          date: new Date(values.date),
+          channel: values.channel,
+          adsCost: values.adsCost
+        })
+      }
+
+      return createSalesDailyReport({
+        date: new Date(values.date),
+        channel: values.channel,
+        dateKpi: values.dateKpi
+      })
+    },
     onSuccess: (response) => {
-      CToast.success({ title: "Tạo báo cáo hàng ngày thành công" })
+      CToast.success({ title: copy.successToast })
       modals.closeAll()
       modals.open({
         id: "create-sales-daily-report",
@@ -278,7 +356,7 @@ export const CreateSalesDailyReportModal = () => {
       })
     },
     onError: () => {
-      CToast.error({ title: "Tạo báo cáo hàng ngày thất bại" })
+      CToast.error({ title: copy.errorToast })
     }
   })
 
@@ -378,13 +456,13 @@ export const CreateSalesDailyReportModal = () => {
     return ((projectedAdsCost / projectedNewFunnelRevenueAds) * 100).toFixed(2)
   }, [projectedAdsCost, projectedNewFunnelRevenueAds])
 
-  const onSubmit = (values: CreateSalesDailyReportRequest) => {
+  const onSubmit = (values: SalesDailyReportFormValues) => {
     create(values)
   }
 
   return (
     <Box component="section">
-      {!hasChannel && (
+      {!isAdmin && !hasChannel && (
         <Alert color="yellow" title="Lưu ý" icon={<IconAlertCircle />} mb="md">
           Tài khoản của bạn không phụ trách kênh sỉ lẻ nào, vui lòng kiểm tra
           lại
@@ -398,11 +476,10 @@ export const CreateSalesDailyReportModal = () => {
             <Group justify="space-between" align="flex-start">
               <Box>
                 <Text fw={600} size="lg">
-                  Báo cáo doanh thu ngày
+                  {copy.title}
                 </Text>
                 <Text size="sm" c="dimmed" mt={4}>
-                  Chọn ngày và nhập KPI, chi phí. Các số liệu doanh thu sẽ được
-                  tự động lấy từ hệ thống.
+                  {copy.description}
                 </Text>
                 <Group gap="xl" mt="md" wrap="wrap">
                   <SummaryStat
@@ -481,50 +558,53 @@ export const CreateSalesDailyReportModal = () => {
           <SectionCard
             id="manual-input-section"
             title="Thông tin cần nhập"
-            description="Nhập chi phí quảng cáo và KPI ngày. Các trường khác được tính tự động từ hệ thống."
+            description={copy.manualDescription}
             badgeLabel="Bắt buộc"
             badgeColor="orange"
             bg="orange.0"
           >
             <Grid gutter="md">
-              <Grid.Col span={{ base: 12, sm: 6 }}>
-                <Controller
-                  name="adsCost"
-                  control={control}
-                  render={({ field }) => (
-                    <NumberInput
-                      {...field}
-                      label="Chi phí quảng cáo"
-                      placeholder="Nhập chi phí ads"
-                      thousandSeparator=","
-                      required
-                      leftSection={<Text size="sm">đ</Text>}
-                      styles={{
-                        input: { fontWeight: 500 }
-                      }}
-                    />
-                  )}
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, sm: 6 }}>
-                <Controller
-                  name="dateKpi"
-                  control={control}
-                  render={({ field }) => (
-                    <NumberInput
-                      {...field}
-                      label="KPI ngày"
-                      placeholder="Tự động từ KPI tháng"
-                      thousandSeparator=","
-                      readOnly
-                      leftSection={<Text size="sm">đ</Text>}
-                      styles={{
-                        input: { fontWeight: 500 }
-                      }}
-                    />
-                  )}
-                />
-              </Grid.Col>
+              {mode === "ads-cost" ? (
+                <Grid.Col span={{ base: 12, sm: 6 }}>
+                  <Controller
+                    name="adsCost"
+                    control={control}
+                    render={({ field }) => (
+                      <NumberInput
+                        {...field}
+                        label="Chi phí quảng cáo"
+                        placeholder="Nhập chi phí ads"
+                        thousandSeparator=","
+                        required
+                        leftSection={<Text size="sm">đ</Text>}
+                        styles={{
+                          input: { fontWeight: 500 }
+                        }}
+                      />
+                    )}
+                  />
+                </Grid.Col>
+              ) : (
+                <Grid.Col span={{ base: 12, sm: 6 }}>
+                  <Controller
+                    name="dateKpi"
+                    control={control}
+                    render={({ field }) => (
+                      <NumberInput
+                        {...field}
+                        label="KPI ngày"
+                        placeholder="Tự động từ KPI tháng"
+                        thousandSeparator=","
+                        required
+                        leftSection={<Text size="sm">đ</Text>}
+                        styles={{
+                          input: { fontWeight: 500 }
+                        }}
+                      />
+                    )}
+                  />
+                </Grid.Col>
+              )}
             </Grid>
           </SectionCard>
 
@@ -1000,7 +1080,7 @@ export const CreateSalesDailyReportModal = () => {
                   leftSection={<IconDeviceFloppy size={16} />}
                   loading={isCreating}
                 >
-                  Lưu báo cáo
+                  {copy.submitLabel}
                 </Button>
               </Group>
             </>
@@ -1010,3 +1090,11 @@ export const CreateSalesDailyReportModal = () => {
     </Box>
   )
 }
+
+export const CreateSalesRevenueDailyReportModal = () => (
+  <CreateSalesDailyReportModal mode="revenue" />
+)
+
+export const CreateSalesAdsCostDailyReportModal = () => (
+  <CreateSalesDailyReportModal mode="ads-cost" />
+)

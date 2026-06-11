@@ -452,16 +452,27 @@ function RouteComponent() {
       {
         accessorKey: "salesFunnelId.name",
         header: "Khách hàng",
+        meta: {
+          headerClassName: "w-[220px] max-w-[220px]",
+          cellClassName: "w-[220px] max-w-[220px]"
+        },
         cell: ({ row }) => {
           const funnelId = row.original.salesFunnelId?._id
 
           return (
-            <div>
-              <Flex gap={4} align={"center"}>
+            <Box style={{ maxWidth: rem(220) }}>
+              <Flex gap={4} align="center" wrap="nowrap">
                 <Text
                   fw={500}
                   size="sm"
-                  style={funnelId ? { cursor: "pointer" } : undefined}
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    cursor: funnelId ? "pointer" : undefined
+                  }}
                   onClick={(e) => {
                     e.stopPropagation()
                     handleOpenFunnelDetail(funnelId)
@@ -477,10 +488,18 @@ function RouteComponent() {
                   {row.original.returning ? "Khách cũ" : "Khách mới"}
                 </Badge>
               </Flex>
-              <Text size="xs" c="dimmed">
+              <Text
+                size="xs"
+                c="dimmed"
+                style={{
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap"
+                }}
+              >
                 {row.original.salesFunnelId.phoneNumber}
               </Text>
-            </div>
+            </Box>
           )
         }
       },
@@ -594,21 +613,20 @@ function RouteComponent() {
         id: "actions",
         header: "Thao tác",
         cell: ({ row }) => (
-          <Can roles={["admin", "sales-leader", "sales-emp"]}>
-            <Group gap="xs">
-              <ActionIcon
-                variant="light"
-                color="blue"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  console.log("click")
-                  navigate({ to: `/sales/orders/${row.original._id}` })
-                }}
-                title="Xem chi tiết"
-              >
-                <IconEye size={16} />
-              </ActionIcon>
+          <Group gap="xs">
+            <ActionIcon
+              variant="light"
+              color="blue"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation()
+                navigate({ to: `/sales/orders/${row.original._id}` })
+              }}
+              title="Xem chi tiết"
+            >
+              <IconEye size={16} />
+            </ActionIcon>
+            <Can roles={["admin", "sales-leader", "sales-emp"]}>
               <ActionIcon
                 variant="light"
                 color="indigo"
@@ -634,8 +652,8 @@ function RouteComponent() {
               >
                 <IconTrash size={16} />
               </ActionIcon>
-            </Group>
-          </Can>
+            </Can>
+          </Group>
         ),
         enableSorting: false
       }
