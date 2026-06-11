@@ -1,40 +1,34 @@
-import { useEffect, useMemo, useState } from "react"
+import { useState } from "react"
 import {
-  Alert,
-  Badge,
   Button,
-  CloseButton,
-  Divider,
   Group,
-  Loader,
-  NumberInput,
-  Paper,
-  SegmentedControl,
-  Select,
-  SimpleGrid,
   Stack,
   Text,
-  Tooltip
+  Paper,
+  CloseButton,
+  Loader,
+  Tooltip,
+  Alert,
+  SimpleGrid,
+  Badge,
+  SegmentedControl,
+  Select,
+  NumberInput,
+  Divider
 } from "@mantine/core"
-import { DatePickerInput } from "@mantine/dates"
 import { Dropzone, type FileWithPath } from "@mantine/dropzone"
-import { modals } from "@mantine/modals"
-import {
-  IconCheck,
-  IconEdit,
-  IconFileUpload,
-  IconX
-} from "@tabler/icons-react"
+import { DatePickerInput } from "@mantine/dates"
+import { IconCheck, IconX, IconFileUpload, IconEdit } from "@tabler/icons-react"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { CToast } from "../common/CToast"
 import type {
   CreateDailyAdsRequest,
   CreateSimpleDailyAdsRequest,
-  DailyAdsMetricsResponse,
   GetPreviousDailyAdsBefore4pmResponse
 } from "../../hooks/models"
 import { useDailyAds } from "../../hooks/useDailyAds"
 import { useLivestreamChannels } from "../../hooks/useLivestreamChannels"
+import { modals } from "@mantine/modals"
 
 type FileStatus = "pending" | "uploading" | "success" | "error"
 type FileState = {
@@ -49,35 +43,24 @@ const ADS_FILE_LABELS = {
   yesterdayShopAdsCostFile: "Hôm qua Shop Ads (cả ngày)",
   todayLiveAdsCostFileBefore4pm: "Hôm nay Live Ads (trước 4pm)",
   todayShopAdsCostFileBefore4pm: "Hôm nay Shop Ads (trước 4pm)"
-} as const
-
-const NEW_ADS_MODEL_START = new Date(2026, 5, 1)
+}
 
 interface Props {
   refetch?: () => void
 }
 
-const isOnOrAfterNewAdsModelStart = (value: Date | null) =>
-  !!value &&
-  new Date(value.getFullYear(), value.getMonth(), value.getDate()) >=
-    NEW_ADS_MODEL_START
-
 export const DailyAdsModal = ({ refetch }: Props) => {
   const {
     createDailyAds,
     createDailyAdsWithSavedAdsCost,
-    createSimpleDailyAds,
-    getDailyAdsMetrics,
     getPreviousDailyAds,
-    upsertDailyAdsMetrics
+    createSimpleDailyAds
   } = useDailyAds()
   const { searchLivestreamChannels } = useLivestreamChannels()
-
-  const [legacyMode, setLegacyMode] = useState<"file" | "manual">("file")
+  const [mode, setMode] = useState<"file" | "manual">("file")
   const [currency, setCurrency] = useState<"vnd" | "usd">("vnd")
   const [date, setDate] = useState<Date | null>(null)
   const [channel, setChannel] = useState<string | null>(null)
-
   const [liveAdsCost, setLiveAdsCost] = useState<number>(0)
   const [shopAdsCost, setShopAdsCost] = useState<number>(0)
   const [previousAdsData, setPreviousAdsData] =
@@ -93,16 +76,6 @@ export const DailyAdsModal = ({ refetch }: Props) => {
     todayLiveAdsCostFileBefore4pm: { file: null, status: "pending" },
     todayShopAdsCostFileBefore4pm: { file: null, status: "pending" }
   })
-
-  const [roiProtect, setRoiProtect] = useState<number>(0)
-  const [fullRefundGmv, setFullRefundGmv] = useState<number>(0)
-  const [tinRefundAmount, setTinRefundAmount] = useState<number>(0)
-  const [adsTax, setAdsTax] = useState<number>(0)
-  const [gmvAds, setGmvAds] = useState<number>(0)
-  const [affiliateCost, setAffiliateCost] = useState<number>(0)
-  const [affiliateRefundAmount, setAffiliateRefundAmount] = useState<number>(0)
-
-  const usesNewAdsModel = isOnOrAfterNewAdsModelStart(date)
 
   const { data: channelsData } = useQuery({
     queryKey: ["searchLivestreamChannels"],
@@ -164,64 +137,6 @@ export const DailyAdsModal = ({ refetch }: Props) => {
       }
     })
 
-  const { mutateAsync: saveMetrics, isPending: submittingMetrics } =
-    useMutation({
-      mutationFn: async (req: {
-        date: Date
-        channelId: string
-        roiProtect: number
-        fullRefundGmv: number
-        tinRefundAmount: number
-        adsTax: number
-        gmvAds: number
-        affiliateCost: number
-        affiliateRefundAmount: number
-      }) => upsertDailyAdsMetrics(req),
-      onSuccess: (response) => {
-        const data = response.data.data
-        CToast.success({
-          title: `Đã lưu chỉ số ads. Ads thực tế: ${data.actualAdsCost.toLocaleString("vi-VN")} VNĐ`
-        })
-        modals.closeAll()
-        refetch?.()
-      },
-      onError: () => {
-        CToast.error({ title: "Có lỗi xảy ra khi lưu chỉ số ads" })
-      }
-    })
-
-  const { data: existingMetrics } = useQuery({
-    queryKey: ["daily-ads-metrics", date?.toISOString(), channel],
-    queryFn: async () => {
-      if (!date || !channel || !usesNewAdsModel) return null
-      const response = await getDailyAdsMetrics({ date, channelId: channel })
-      return response.data as DailyAdsMetricsResponse
-    },
-    enabled: !!date && !!channel && usesNewAdsModel,
-    retry: false
-  })
-
-  useEffect(() => {
-    if (!usesNewAdsModel || !existingMetrics) {
-      setRoiProtect(0)
-      setFullRefundGmv(0)
-      setTinRefundAmount(0)
-      setAdsTax(0)
-      setGmvAds(0)
-      setAffiliateCost(0)
-      setAffiliateRefundAmount(0)
-      return
-    }
-
-    setRoiProtect(existingMetrics.roiProtect || 0)
-    setFullRefundGmv(existingMetrics.fullRefundGmv || 0)
-    setTinRefundAmount(existingMetrics.tinRefundAmount || 0)
-    setAdsTax(existingMetrics.adsTax || 0)
-    setGmvAds(existingMetrics.gmvAds || 0)
-    setAffiliateCost(existingMetrics.affiliateCost || 0)
-    setAffiliateRefundAmount(existingMetrics.affiliateRefundAmount || 0)
-  }, [existingMetrics, usesNewAdsModel])
-
   const { mutate: fetchPreviousAds } = useMutation({
     mutationFn: async (selectedDate: Date) => {
       const response = await getPreviousDailyAds({ date: selectedDate })
@@ -238,13 +153,6 @@ export const DailyAdsModal = ({ refetch }: Props) => {
       setPreviousAdsStatus("rejected")
     }
   })
-
-  const isSubmitting =
-    submittingAds || submittingSimpleAds || submittingMetrics
-
-  const modelLabel = usesNewAdsModel
-    ? "Biểu mẫu chỉ số ads mới áp dụng từ 01/06/2026."
-    : "Ngày trước 01/06/2026 nên đang dùng biểu mẫu ads kiểu cũ."
 
   const handleFetchPreviousAds = () => {
     if (!date) {
@@ -275,36 +183,7 @@ export const DailyAdsModal = ({ refetch }: Props) => {
       return
     }
 
-    if (usesNewAdsModel) {
-      const values = [
-        roiProtect,
-        fullRefundGmv,
-        tinRefundAmount,
-        adsTax,
-        gmvAds,
-        affiliateCost,
-        affiliateRefundAmount
-      ]
-      if (values.some((value) => value < 0)) {
-        CToast.error({ title: "Chỉ số ads không được âm" })
-        return
-      }
-
-      await saveMetrics({
-        date,
-        channelId: channel,
-        roiProtect,
-        fullRefundGmv,
-        tinRefundAmount,
-        adsTax,
-        gmvAds,
-        affiliateCost,
-        affiliateRefundAmount
-      })
-      return
-    }
-
-    if (legacyMode === "manual") {
+    if (mode === "manual") {
       if (liveAdsCost < 0 || shopAdsCost < 0) {
         CToast.error({ title: "Chi phí quảng cáo không được âm" })
         return
@@ -326,8 +205,7 @@ export const DailyAdsModal = ({ refetch }: Props) => {
         "yesterdayShopAdsCostFile",
         "todayLiveAdsCostFileBefore4pm",
         "todayShopAdsCostFileBefore4pm"
-      ] as const
-
+      ]
       const allRequiredFilesUploaded = requiredFiles.every(
         (key) => adsFiles[key].file !== null
       )
@@ -339,8 +217,12 @@ export const DailyAdsModal = ({ refetch }: Props) => {
         return
       }
 
+      const fileList = requiredFiles
+        .map((key) => adsFiles[key].file!)
+        .filter(Boolean)
+
       await createAdsWithSaved({
-        files: requiredFiles.map((key) => adsFiles[key].file!).filter(Boolean),
+        files: fileList,
         req: { date, channel, currency }
       })
       return
@@ -355,10 +237,12 @@ export const DailyAdsModal = ({ refetch }: Props) => {
       return
     }
 
+    const fileList = Object.keys(ADS_FILE_LABELS)
+      .map((key) => adsFiles[key].file!)
+      .filter(Boolean)
+
     await createAds({
-      files: Object.keys(ADS_FILE_LABELS)
-        .map((key) => adsFiles[key].file!)
-        .filter(Boolean),
+      files: fileList,
       req: { date, channel, currency }
     })
   }
@@ -531,35 +415,45 @@ export const DailyAdsModal = ({ refetch }: Props) => {
     return null
   }
 
-  const legacyFilesReady =
-    previousAdsStatus === "accepted"
-      ? [
-          "yesterdayLiveAdsCostFile",
-          "yesterdayShopAdsCostFile",
-          "todayLiveAdsCostFileBefore4pm",
-          "todayShopAdsCostFileBefore4pm"
-        ].every((key) => adsFiles[key].file !== null)
-      : Object.values(adsFiles).every((fileState) => fileState.file !== null)
-
-  const canSubmitLegacy =
-    legacyMode === "manual" ? true : legacyFilesReady
-
-  const modeExplanation = useMemo(() => {
-    if (!date) {
-      return "Chọn ngày để hệ thống xác định dùng biểu mẫu ads cũ hay mới."
-    }
-
-    return modelLabel
-  }, [date, modelLabel])
-
   return (
     <Stack gap="md" p="sm">
       <Text size="xl" fw={700}>
         Thêm chi phí quảng cáo
       </Text>
 
-      <Alert color={usesNewAdsModel ? "teal" : "blue"} variant="light">
-        <Text size="sm">{modeExplanation}</Text>
+      <SegmentedControl
+        value={mode}
+        onChange={(value) => setMode(value as "file" | "manual")}
+        data={[
+          {
+            label: (
+              <Group gap="xs" justify="center">
+                <IconEdit size={16} />
+                <span>Nhập số</span>
+              </Group>
+            ),
+            value: "manual"
+          },
+          {
+            label: (
+              <Group gap="xs" justify="center">
+                <IconFileUpload size={16} />
+                <span>Upload file</span>
+              </Group>
+            ),
+            value: "file"
+          }
+        ]}
+        size="md"
+        fullWidth
+      />
+
+      <Alert title="Lưu ý" color="blue" variant="light">
+        <Text size="sm">
+          {mode === "file"
+            ? "Tải lên 6 file chi phí quảng cáo cho ngày đã chọn. Sau khi tải lên, hệ thống sẽ xử lý và cập nhật dữ liệu."
+            : "Nhập trực tiếp chi phí quảng cáo Live và Shop cho ngày đã chọn."}
+        </Text>
       </Alert>
 
       <Group align="flex-end" gap="md">
@@ -572,7 +466,7 @@ export const DailyAdsModal = ({ refetch }: Props) => {
           maxDate={new Date()}
           withAsterisk
           className="flex-1"
-          disabled={isSubmitting}
+          disabled={submittingAds || submittingSimpleAds}
         />
 
         <Select
@@ -590,213 +484,90 @@ export const DailyAdsModal = ({ refetch }: Props) => {
           searchable
           withAsterisk
           className="flex-1"
-          disabled={isSubmitting}
+          disabled={submittingAds || submittingSimpleAds}
         />
 
-        {!usesNewAdsModel && (
-          <Select
-            label="Tiền tệ"
-            size="md"
-            value={currency}
-            onChange={(value) => setCurrency(value as "vnd" | "usd")}
-            data={[
-              { value: "vnd", label: "VNĐ" },
-              { value: "usd", label: "USD" }
-            ]}
-            className="flex-1"
-            w={120}
-            withAsterisk
-            disabled={isSubmitting}
-          />
-        )}
+        <Select
+          label="Tiền tệ"
+          size="md"
+          value={currency}
+          onChange={(value) => setCurrency(value as "vnd" | "usd")}
+          data={[
+            { value: "vnd", label: "VNĐ" },
+            { value: "usd", label: "USD" }
+          ]}
+          className="flex-1"
+          w={120}
+          withAsterisk
+          disabled={submittingAds || submittingSimpleAds}
+        />
       </Group>
 
-      {usesNewAdsModel ? (
+      {mode === "manual" ? (
         <>
-          <Divider label="Chỉ số ads đầu vào" labelPosition="center" />
+          <Divider label="Chi phí quảng cáo" labelPosition="center" />
           <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
             <NumberInput
-              label="ROI Protect"
-              value={roiProtect}
-              onChange={(value) => setRoiProtect(Number(value) || 0)}
+              label="Live Ads Cost"
+              placeholder="Nhập chi phí Live Ads"
+              value={liveAdsCost}
+              onChange={(value) => setLiveAdsCost(Number(value) || 0)}
               min={0}
               size="md"
               thousandSeparator=","
-              disabled={submittingMetrics}
+              suffix={currency === "vnd" ? " VNĐ" : " USD"}
+              withAsterisk
+              disabled={submittingSimpleAds}
             />
             <NumberInput
-              label="GMV hoàn 100%"
-              value={fullRefundGmv}
-              onChange={(value) => setFullRefundGmv(Number(value) || 0)}
+              label="Shop Ads Cost"
+              placeholder="Nhập chi phí Shop Ads"
+              value={shopAdsCost}
+              onChange={(value) => setShopAdsCost(Number(value) || 0)}
               min={0}
               size="md"
               thousandSeparator=","
-              disabled={submittingMetrics}
-            />
-            <NumberInput
-              label="Tiền tín hoàn về"
-              value={tinRefundAmount}
-              onChange={(value) => setTinRefundAmount(Number(value) || 0)}
-              min={0}
-              size="md"
-              thousandSeparator=","
-              disabled={submittingMetrics}
-            />
-            <NumberInput
-              label="TQLQC / khấu trừ ads"
-              value={adsTax}
-              onChange={(value) => setAdsTax(Number(value) || 0)}
-              min={0}
-              size="md"
-              thousandSeparator=","
-              disabled={submittingMetrics}
-            />
-            <NumberInput
-              label="GMV Ads"
-              value={gmvAds}
-              onChange={(value) => setGmvAds(Number(value) || 0)}
-              min={0}
-              size="md"
-              thousandSeparator=","
-              disabled={submittingMetrics}
-            />
-            <NumberInput
-              label="Chi phí affiliate"
-              value={affiliateCost}
-              onChange={(value) => setAffiliateCost(Number(value) || 0)}
-              min={0}
-              size="md"
-              thousandSeparator=","
-              disabled={submittingMetrics}
-            />
-            <NumberInput
-              label="AFF - Hoàn huỷ"
-              value={affiliateRefundAmount}
-              onChange={(value) => setAffiliateRefundAmount(Number(value) || 0)}
-              min={0}
-              size="md"
-              thousandSeparator=","
-              disabled={submittingMetrics}
+              suffix={currency === "vnd" ? " VNĐ" : " USD"}
+              withAsterisk
+              disabled={submittingSimpleAds}
             />
           </SimpleGrid>
-
-          {existingMetrics && (
-            <Alert color="green" variant="light" title="Snapshot hiện có">
-              <Text size="sm">
-                Ads thực tế:{" "}
-                {existingMetrics.actualAdsCost.toLocaleString("vi-VN")} VNĐ.
-                Tổng chi phí:{" "}
-                {existingMetrics.totalCost.toLocaleString("vi-VN")} VNĐ. Sau
-                hoàn/hủy:{" "}
-                {existingMetrics.costAfterRefund.toLocaleString("vi-VN")} VNĐ.
-              </Text>
-            </Alert>
-          )}
         </>
       ) : (
         <>
-          <SegmentedControl
-            value={legacyMode}
-            onChange={(value) => setLegacyMode(value as "file" | "manual")}
-            data={[
-              {
-                label: (
-                  <Group gap="xs" justify="center">
-                    <IconEdit size={16} />
-                    <span>Nhập số</span>
-                  </Group>
-                ),
-                value: "manual"
-              },
-              {
-                label: (
-                  <Group gap="xs" justify="center">
-                    <IconFileUpload size={16} />
-                    <span>Upload file</span>
-                  </Group>
-                ),
-                value: "file"
-              }
-            ]}
-            size="md"
-            fullWidth
-          />
+          <Button
+            variant="outline"
+            color="blue"
+            onClick={handleFetchPreviousAds}
+            loading={previousAdsStatus === "loading"}
+            disabled={
+              !date || previousAdsStatus === "accepted" || submittingAds
+            }
+            leftSection={<IconCheck size={16} />}
+          >
+            Lấy dữ liệu ads trước 4 giờ chiều hôm trước
+          </Button>
 
-          <Alert title="Lưu ý" color="blue" variant="light">
-            <Text size="sm">
-              {legacyMode === "file"
-                ? "Tải lên 6 file chi phí quảng cáo cho ngày đã chọn. Sau khi tải lên, hệ thống sẽ xử lý và cập nhật dữ liệu."
-                : "Nhập trực tiếp chi phí quảng cáo Live và Shop cho ngày đã chọn."}
-            </Text>
-          </Alert>
+          <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
+            {renderPreviousAdsSection()}
+            {Object.entries(ADS_FILE_LABELS)
+              .filter(([key]) => {
+                const isFirstTwoFiles =
+                  key === "yesterdayLiveAdsCostFileBefore4pm" ||
+                  key === "yesterdayShopAdsCostFileBefore4pm"
 
-          {legacyMode === "manual" ? (
-            <>
-              <Divider label="Chi phí quảng cáo" labelPosition="center" />
-              <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
-                <NumberInput
-                  label="Live Ads Cost"
-                  placeholder="Nhập chi phí Live Ads"
-                  value={liveAdsCost}
-                  onChange={(value) => setLiveAdsCost(Number(value) || 0)}
-                  min={0}
-                  size="md"
-                  thousandSeparator=","
-                  suffix={currency === "vnd" ? " VNĐ" : " USD"}
-                  withAsterisk
-                  disabled={submittingSimpleAds}
-                />
-                <NumberInput
-                  label="Shop Ads Cost"
-                  placeholder="Nhập chi phí Shop Ads"
-                  value={shopAdsCost}
-                  onChange={(value) => setShopAdsCost(Number(value) || 0)}
-                  min={0}
-                  size="md"
-                  thousandSeparator=","
-                  suffix={currency === "vnd" ? " VNĐ" : " USD"}
-                  withAsterisk
-                  disabled={submittingSimpleAds}
-                />
-              </SimpleGrid>
-            </>
-          ) : (
-            <>
-              <Button
-                variant="outline"
-                color="blue"
-                onClick={handleFetchPreviousAds}
-                loading={previousAdsStatus === "loading"}
-                disabled={
-                  !date || previousAdsStatus === "accepted" || submittingAds
+                if (isFirstTwoFiles && previousAdsStatus !== "idle") {
+                  return false
                 }
-                leftSection={<IconCheck size={16} />}
-              >
-                Lấy dữ liệu ads trước 4 giờ chiều hôm trước
-              </Button>
 
-              <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
-                {renderPreviousAdsSection()}
-                {Object.entries(ADS_FILE_LABELS)
-                  .filter(([key]) => {
-                    const isFirstTwoFiles =
-                      key === "yesterdayLiveAdsCostFileBefore4pm" ||
-                      key === "yesterdayShopAdsCostFileBefore4pm"
+                if (isFirstTwoFiles && previousAdsData) {
+                  return false
+                }
 
-                    if (isFirstTwoFiles && previousAdsStatus !== "idle") {
-                      return false
-                    }
-
-                    if (isFirstTwoFiles && previousAdsData) {
-                      return false
-                    }
-
-                    return true
-                  })
-                  .map(([key, label]) => renderAdsDropzone(key, label))}
-              </SimpleGrid>
-            </>
-          )}
+                return true
+              })
+              .map(([key, label]) => renderAdsDropzone(key, label))}
+          </SimpleGrid>
         </>
       )}
 
@@ -806,23 +577,33 @@ export const DailyAdsModal = ({ refetch }: Props) => {
           onClick={() => modals.closeAll()}
           size="md"
           radius="xl"
-          disabled={isSubmitting}
+          disabled={submittingAds || submittingSimpleAds}
         >
           Huỷ
         </Button>
         <Button
           onClick={handleSubmitAdsCost}
-          loading={isSubmitting}
+          loading={submittingAds || submittingSimpleAds}
           disabled={
             !date ||
             !channel ||
-            (!usesNewAdsModel && !canSubmitLegacy) ||
-            isSubmitting
+            (mode === "manual"
+              ? false
+              : previousAdsStatus === "accepted"
+                ? ![
+                    "yesterdayLiveAdsCostFile",
+                    "yesterdayShopAdsCostFile",
+                    "todayLiveAdsCostFileBefore4pm",
+                    "todayShopAdsCostFileBefore4pm"
+                  ].every((key) => adsFiles[key].file !== null)
+                : !Object.values(adsFiles).every((fileState) => fileState.file !== null)) ||
+            submittingAds ||
+            submittingSimpleAds
           }
           size="md"
           radius="xl"
         >
-          {usesNewAdsModel ? "Lưu chỉ số ads" : "Thêm chi phí quảng cáo"}
+          Thêm chi phí quảng cáo
         </Button>
       </Group>
     </Stack>
