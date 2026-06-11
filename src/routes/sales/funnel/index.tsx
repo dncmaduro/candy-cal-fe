@@ -481,6 +481,9 @@ function RouteComponent() {
   const isSalesEmp = useMemo(() => {
     return me?.roles?.includes("sales-emp") ?? false
   }, [me])
+  const isFacebookAdsEmp = useMemo(() => {
+    return me?.roles?.includes("facebook-ads-emp") ?? false
+  }, [me])
 
   // Determine filter visibility based on roles
   const showUserFilter = isAdmin || isSystemEmp
@@ -623,7 +626,7 @@ function RouteComponent() {
         const item = row.original
         const isResponsibleUser = item.user?._id === me?._id
 
-        if (!isAdmin && !isSalesLeader && !isResponsibleUser) {
+        if (isFacebookAdsEmp || (!isAdmin && !isSalesLeader && !isResponsibleUser)) {
           return null
         }
 

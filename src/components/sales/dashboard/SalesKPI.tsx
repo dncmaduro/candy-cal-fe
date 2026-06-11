@@ -17,6 +17,7 @@ import { IconPlus, IconEdit } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
 import { useNavigate, useSearch } from "@tanstack/react-router"
 import { SalesKPIModal } from "./SalesKPIModal"
+import { Can } from "../../common/Can"
 
 interface KpiData {
   _id: string
@@ -139,18 +140,20 @@ export const SalesKPI = () => {
       id: "actions",
       header: "",
       cell: ({ row }) => (
-        <Tooltip label="Chỉnh sửa">
-          <ActionIcon
-            variant="light"
-            color="blue"
-            onClick={(e) => {
-              e.stopPropagation()
-              openKPIModal(row.original)
-            }}
-          >
-            <IconEdit size={16} />
-          </ActionIcon>
-        </Tooltip>
+        <Can roles={["admin", "sales-leader", "sales-emp", "system-emp"]}>
+          <Tooltip label="Chỉnh sửa">
+            <ActionIcon
+              variant="light"
+              color="blue"
+              onClick={(e) => {
+                e.stopPropagation()
+                openKPIModal(row.original)
+              }}
+            >
+              <IconEdit size={16} />
+            </ActionIcon>
+          </Tooltip>
+        </Can>
       ),
       size: 60
     }
@@ -272,12 +275,14 @@ export const SalesKPI = () => {
             </>
           }
           extraActions={
-            <Button
-              leftSection={<IconPlus size={16} />}
-              onClick={() => openKPIModal()}
-            >
-              Tạo KPI
-            </Button>
+            <Can roles={["admin", "sales-leader", "sales-emp", "system-emp"]}>
+              <Button
+                leftSection={<IconPlus size={16} />}
+                onClick={() => openKPIModal()}
+              >
+                Tạo KPI
+              </Button>
+            </Can>
           }
         />
       </Box>

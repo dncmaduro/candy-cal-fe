@@ -3,7 +3,7 @@ import { SalesLayout } from "../../../components/layouts/SalesLayout"
 import { Tabs } from "@mantine/core"
 import { Helmet } from "react-helmet-async"
 import { useAuthGuard } from "../../../hooks/useAuthGuard"
-import { SALES_NAVS_URL } from "../../../constants/navs"
+import { SALES_NAVS_URL, SALES_VIEW_ROLES } from "../../../constants/navs"
 import { SalesDailyReports } from "../../../components/sales/dashboard/SalesDailyReports"
 import { SalesKPI } from "../../../components/sales/dashboard/SalesKPI"
 
@@ -54,7 +54,7 @@ export const Route = createFileRoute("/sales/daily-reports/")({
 })
 
 function RouteComponent() {
-  useAuthGuard(["admin", "sales-leader", "sales-emp", "system-emp"])
+  useAuthGuard(SALES_VIEW_ROLES)
   const search = Route.useSearch()
   const { tab } = search
   const navigate = useNavigate()

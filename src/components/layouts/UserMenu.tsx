@@ -20,14 +20,15 @@ import {
   TIKTOKSHOP_NAVS,
   TIKTOKSHOP_NAVS_URL,
   TIKTOKSHOP_ROLES,
-  SHOPEE_NAVS,
-  SHOPEE_NAVS_URL,
-  SHOPEE_ROLES,
-  KHO_VAN_ROLES,
-  LIVESTREAM_NAVS,
-  SALES_NAVS,
-  ADMIN_NAVS
-} from "../../constants/navs"
+    SHOPEE_NAVS,
+    SHOPEE_NAVS_URL,
+    SHOPEE_ROLES,
+    KHO_VAN_ROLES,
+    LIVESTREAM_NAVS,
+    SALES_NAVS,
+    SALES_VIEW_ROLES,
+    ADMIN_NAVS
+  } from "../../constants/navs"
 import { resetSessionCache } from "../../utils/authSession"
 
 export const UserMenu = () => {
@@ -55,6 +56,7 @@ export const UserMenu = () => {
     "livestream-ast": "Trợ live",
     "sales-leader": "Leader sales",
     "sales-emp": "Nhân viên sales",
+    "facebook-ads-emp": "Nhân viên Facebook Ads",
     "livestream-accounting": "Kế toán livestream",
     "sales-accounting": "Kế toán sales"
   }
@@ -127,13 +129,7 @@ export const UserMenu = () => {
       to: "/sales",
       label: "Sales",
       icon: <IconShoppingBag size={isMobile ? 14 : 18} />,
-      roles: [
-        "admin",
-        "system-emp",
-        "sales-leader",
-        "sales-emp",
-        "sales-accounting"
-      ]
+      roles: SALES_VIEW_ROLES
     },
     {
       to: "/admin",

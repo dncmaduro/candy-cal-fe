@@ -26,8 +26,16 @@ import { RevenueTables } from "../../../components/sales/dashboard/RevenueTables
 import { MonthlyMetrics } from "../../../components/sales/dashboard/MonthlyMetrics"
 import { ProvinceSalesAnalytics } from "../../../components/sales/dashboard/ProvinceSalesAnalytics"
 import { modals } from "@mantine/modals"
-import { CreateSalesDailyReportModal } from "../../../components/sales/dashboard/CreateSalesDailyReportModal"
+import {
+  CreateSalesAdsCostDailyReportModal,
+  CreateSalesRevenueDailyReportModal
+} from "../../../components/sales/dashboard/CreateSalesDailyReportModal"
 import { useSalesChannels } from "../../../hooks/useSalesChannels"
+import { Can } from "../../../components/common/Can"
+import {
+  SALES_ADS_COST_REPORT_ROLES,
+  SALES_REVENUE_REPORT_ROLES
+} from "../../../constants/navs"
 
 export const Route = createFileRoute("/sales/dashboard/")({
   component: RouteComponent
@@ -165,11 +173,20 @@ function RouteComponent() {
   const metrics = metricsData?.data
   const topCustomers = topCustomersData?.data
 
-  const createSalesDailyReport = () => {
+  const openRevenueReportModal = () => {
     modals.open({
-      id: "create-sales-daily-report",
-      title: <b>Tạo báo cáo hàng ngày</b>,
-      children: <CreateSalesDailyReportModal />,
+      id: "create-sales-revenue-report",
+      title: <b>Tạo báo cáo doanh thu ngày</b>,
+      children: <CreateSalesRevenueDailyReportModal />,
+      size: 960
+    })
+  }
+
+  const openAdsCostReportModal = () => {
+    modals.open({
+      id: "create-sales-ads-cost-report",
+      title: <b>Tạo báo cáo chi phí ads ngày</b>,
+      children: <CreateSalesAdsCostDailyReportModal />,
       size: 960
     })
   }
@@ -194,16 +211,32 @@ function RouteComponent() {
                 Phân tích và theo dõi hiệu suất bán hàng
               </Text>
             </Box>
-            <Button
-              color="yellow"
-              h={42}
-              radius={12}
-              px="md"
-              leftSection={<IconReportAnalytics size={16} />}
-              onClick={() => createSalesDailyReport()}
-            >
-              Tạo báo cáo hàng ngày
-            </Button>
+            <Group gap="sm">
+              <Can roles={SALES_REVENUE_REPORT_ROLES}>
+                <Button
+                  color="yellow"
+                  h={42}
+                  radius={12}
+                  px="md"
+                  leftSection={<IconReportAnalytics size={16} />}
+                  onClick={openRevenueReportModal}
+                >
+                  Báo cáo doanh thu
+                </Button>
+              </Can>
+              <Can roles={SALES_ADS_COST_REPORT_ROLES}>
+                <Button
+                  color="orange"
+                  h={42}
+                  radius={12}
+                  px="md"
+                  leftSection={<IconReportAnalytics size={16} />}
+                  onClick={openAdsCostReportModal}
+                >
+                  Báo cáo chi phí ads
+                </Button>
+              </Can>
+            </Group>
           </Flex>
 
           <Tabs defaultValue="revenue">

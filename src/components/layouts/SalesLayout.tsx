@@ -12,9 +12,11 @@ import { Notifications } from "./Notifications"
 import { Sidebar } from "./Sidebar"
 import { useUIStore } from "../../store/uiStore"
 import { MyTasksPopover } from "../tasks/MyTasksPopover.tsx"
-import { SALES_NAVS } from "../../constants/navs.ts"
+import { SALES_NAVS, SALES_VIEW_ROLES } from "../../constants/navs.ts"
+import { useAuthGuard } from "../../hooks/useAuthGuard.ts"
 
 export const SalesLayout = ({ children }: { children: ReactNode }) => {
+  useAuthGuard(SALES_VIEW_ROLES)
   const { accessToken, setUser, clearUser } = useUserStore()
   const { checkToken, getNewToken, getMe } = useUsers()
   const navigate = useNavigate()
