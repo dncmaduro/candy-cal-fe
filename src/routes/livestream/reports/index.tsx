@@ -7,6 +7,7 @@ import { useUsers } from "../../../hooks/useUsers"
 import { useQuery } from "@tanstack/react-query"
 import {
   Box,
+  Badge,
   Button,
   Flex,
   Loader,
@@ -20,7 +21,8 @@ import {
   NumberFormatter,
   Progress,
   SegmentedControl,
-  Tabs
+  Tabs,
+  Tooltip
 } from "@mantine/core"
 import { DatePickerInput, MonthPickerInput } from "@mantine/dates"
 import { useState, useMemo, useEffect } from "react"
@@ -44,6 +46,38 @@ type SearchParams = {
   startDate?: string
   endDate?: string
   month?: string
+}
+
+const getLivestreamPointMeta = (point: number) => {
+  if (point >= 95) {
+    return {
+      label: "Xuất sắc",
+      description: "Phiên live hiệu quả cao, nên nhân rộng",
+      color: "lime"
+    } as const
+  }
+
+  if (point >= 80) {
+    return {
+      label: "Tốt",
+      description: "Phiên ổn định, có thể tiếp tục duy trì",
+      color: "teal"
+    } as const
+  }
+
+  if (point >= 60) {
+    return {
+      label: "Trung bình",
+      description: "Cần tối ưu thêm nội dung/host/ads",
+      color: "yellow"
+    } as const
+  }
+
+  return {
+    label: "Kém",
+    description: "Cần review lại toàn bộ phiên live",
+    color: "red"
+  } as const
 }
 
 export const Route = createFileRoute("/livestream/reports/")({
@@ -344,6 +378,7 @@ function RouteComponent() {
     comments: number
     snapshotKpi: number
     orders: number
+    point: number
     snapshots: SnapshotRow[]
     _dateGroupIndex?: number
   }
@@ -393,11 +428,13 @@ function RouteComponent() {
           comments: 0,
           snapshotKpi: 0,
           orders: 0,
+          point: livestream.point || 0,
           snapshots: []
         })
       }
 
       const day = dayMap.get(dateStr)!
+      day.point = livestream.point || day.point || 0
 
       hostSnapshots.forEach((snapshot) => {
         if (assigneeId && snapshot.assignee?._id !== assigneeId) {
@@ -831,6 +868,44 @@ function RouteComponent() {
                 decimalScale={1}
               />
             </Text>
+          )
+        }
+      },
+      {
+        accessorKey: "point",
+        header: "Đánh giá",
+        enableSorting: false,
+        cell: ({ row }) => {
+          const point = row.original.point || 0
+          const meta = getLivestreamPointMeta(point)
+
+          return (
+            <Group gap={8} wrap="nowrap">
+              <Text size="sm" fw={700} c="black">
+                <NumberFormatter value={point} decimalScale={0} />
+              </Text>
+              <Tooltip
+                label={meta.description}
+                withArrow
+                multiline
+                maw={260}
+                transitionProps={{ duration: 150 }}
+              >
+                <Badge
+                  color={meta.color}
+                  variant="light"
+                  radius="sm"
+                  styles={{
+                    root: {
+                      textTransform: "none",
+                      cursor: "help"
+                    }
+                  }}
+                >
+                  {meta.label}
+                </Badge>
+              </Tooltip>
+            </Group>
           )
         }
       }
