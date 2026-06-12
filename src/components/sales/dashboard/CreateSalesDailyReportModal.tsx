@@ -296,11 +296,11 @@ export const CreateSalesDailyReportModal = ({
   const { data: allChannelsData } = useQuery({
     queryKey: ["salesChannels", "all"],
     queryFn: () => searchSalesChannels({ page: 1, limit: 999 }),
-    enabled: meData?.data.roles.includes("admin")
+    enabled: !!meData?.data
   })
 
-  const isAdmin = meData?.data.roles.includes("admin")
   const hasChannel = !!channelData?.channel
+  const availableChannels = allChannelsData?.data.data || []
 
   // Get revenue for selected date
   const { data: revenueData, isLoading: revenueLoading } = useQuery({
@@ -462,7 +462,7 @@ export const CreateSalesDailyReportModal = ({
 
   return (
     <Box component="section">
-      {!isAdmin && !hasChannel && (
+      {!hasChannel && availableChannels.length === 0 && (
         <Alert color="yellow" title="Lưu ý" icon={<IconAlertCircle />} mb="md">
           Tài khoản của bạn không phụ trách kênh sỉ lẻ nào, vui lòng kiểm tra
           lại
@@ -519,29 +519,25 @@ export const CreateSalesDailyReportModal = ({
                     />
                   )}
                 />
-                {isAdmin && (
-                  <Controller
-                    name="channel"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        {...field}
-                        label="Kênh"
-                        placeholder="Chọn kênh"
-                        data={
-                          allChannelsData?.data.data.map((ch) => ({
-                            value: ch._id,
-                            label: ch.channelName
-                          })) || []
-                        }
-                        searchable
-                        clearable
-                        size="sm"
-                        withAsterisk
-                      />
-                    )}
-                  />
-                )}
+                <Controller
+                  name="channel"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      label="Kênh"
+                      placeholder="Chọn kênh"
+                      data={availableChannels.map((ch) => ({
+                        value: ch._id,
+                        label: ch.channelName
+                      }))}
+                      searchable
+                      clearable
+                      size="sm"
+                      withAsterisk
+                    />
+                  )}
+                />
               </Stack>
             </Group>
           </Paper>

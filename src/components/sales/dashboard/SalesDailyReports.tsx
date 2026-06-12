@@ -123,9 +123,13 @@ export const SalesDailyReports = () => {
   const isSalesEmp = useMemo(() => {
     return me?.roles?.includes("sales-emp") ?? false
   }, [me])
+  const isFacebookAdsEmp = useMemo(() => {
+    return me?.roles?.includes("facebook-ads-emp") ?? false
+  }, [me])
 
   // Check if user can see channel filter
-  const showChannelFilter = isAdmin || isSalesLeader || isSystemEmp
+  const showChannelFilter =
+    isAdmin || isSalesLeader || isSystemEmp || isFacebookAdsEmp
 
   // Auto-apply channel for sales-emp
   useEffect(() => {
@@ -149,6 +153,7 @@ export const SalesDailyReports = () => {
     }
   }, [
     isSalesEmp,
+    isFacebookAdsEmp,
     isAdmin,
     isSalesLeader,
     isSystemEmp,
