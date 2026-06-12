@@ -486,8 +486,9 @@ function RouteComponent() {
   }, [me])
 
   // Determine filter visibility based on roles
-  const showUserFilter = isAdmin || isSystemEmp
-  const showChannelFilter = isAdmin || isSystemEmp || isSalesLeader
+  const showUserFilter = isAdmin || isSystemEmp || isFacebookAdsEmp
+  const showChannelFilter =
+    isAdmin || isSystemEmp || isSalesLeader || isFacebookAdsEmp
 
   // Auto-apply user filter for sales-emp
   useEffect(() => {
