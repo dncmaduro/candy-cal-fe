@@ -2516,6 +2516,7 @@ export interface GetLivestreamByDateRangeResponse {
     totalOrders: number
     totalIncome: number
     ads: number
+    point: number
     fixed: boolean
     dateKpi?: number
   }[]
