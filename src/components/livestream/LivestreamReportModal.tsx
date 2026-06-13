@@ -1,4 +1,5 @@
 import {
+  Box,
   Stack,
   TextInput,
   Textarea,
@@ -64,6 +65,7 @@ const formatTimeRange = (
 
 export const openLivestreamReportModal = ({
   snapshot,
+  livestreamDate,
   onSubmit,
   isSubmitting,
   forceEdit = false,
@@ -72,6 +74,7 @@ export const openLivestreamReportModal = ({
   isDeleting
 }: {
   snapshot: LivestreamSnapshot
+  livestreamDate?: string | Date
   onSubmit: (data: LivestreamReportFormValues) => void
   isSubmitting?: boolean
   forceEdit?: boolean
@@ -103,12 +106,26 @@ export const openLivestreamReportModal = ({
         }),
       select: (res) => {
         const items = res.data.data || []
-        console.log(items)
         const exact = items.find((u) => u._id === altAssigneeId)
         return exact?.name || items[0]?.name
       },
       enabled: !!altAssigneeId
     })
+
+    const isPreviousMonthLivestream = (() => {
+      if (!livestreamDate) return false
+      const date = new Date(livestreamDate)
+      if (Number.isNaN(date.getTime())) return false
+
+      const now = new Date()
+      const startOfCurrentMonth = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        1
+      )
+
+      return date.getTime() < startOfCurrentMonth.getTime()
+    })()
 
     const altAssigneeLabel = (() => {
       const alt = snapshot.altAssignee
@@ -152,160 +169,179 @@ export const openLivestreamReportModal = ({
         onSubmit={form.onSubmit((values) => {
           onSubmit(values)
         })}
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          maxHeight: "calc(100vh - 12rem)",
+          overflow: "hidden"
+        }}
       >
-        <Stack gap="md">
-          <Stack gap="xs">
-            <TextInput
-              label="Ca livestream"
-              value={formatTimeRange(
-                snapshot.period.startTime,
-                snapshot.period.endTime
-              )}
-              readOnly
-              disabled
-            />
-
-            {snapshot.assignee && (
+        <Box style={{ flex: 1, overflowY: "auto", paddingRight: 4 }}>
+          <Stack gap="md">
+            <Stack gap="xs">
               <TextInput
-                label="Nhân viên"
-                value={snapshot.assignee.name}
+                label="Ca livestream"
+                value={formatTimeRange(
+                  snapshot.period.startTime,
+                  snapshot.period.endTime
+                )}
                 readOnly
                 disabled
               />
-            )}
 
-            {(snapshot.altAssignee ||
-              snapshot.altNote ||
-              snapshot.altOtherAssignee) && (
-              <Stack gap="xs" mt={4}>
-                <Text size="xs" fw={600} c="dimmed">
-                  Thông tin thay thế
-                </Text>
-                {snapshot.altAssignee && (
-                  <TextInput
-                    label="Nhân viên thay thế"
-                    value={altAssigneeLabel || ""}
-                    readOnly
-                    disabled
-                  />
-                )}
-                {!!snapshot.altOtherAssignee &&
-                  snapshot.altAssignee === "other" && (
+              {snapshot.assignee && (
+                <TextInput
+                  label="Nhân viên"
+                  value={snapshot.assignee.name}
+                  readOnly
+                  disabled
+                />
+              )}
+
+              {(snapshot.altAssignee ||
+                snapshot.altNote ||
+                snapshot.altOtherAssignee) && (
+                <Stack gap="xs" mt={4}>
+                  <Text size="xs" fw={600} c="dimmed">
+                    Thông tin thay thế
+                  </Text>
+                  {snapshot.altAssignee && (
                     <TextInput
-                      label="Nhân viên khác"
-                      value={snapshot.altOtherAssignee}
+                      label="Nhân viên thay thế"
+                      value={altAssigneeLabel || ""}
                       readOnly
                       disabled
                     />
                   )}
-                {!!snapshot.altNote && (
-                  <Textarea
-                    label="Ghi chú"
-                    value={snapshot.altNote}
-                    readOnly
-                    disabled
-                    rows={2}
-                  />
-                )}
-              </Stack>
-            )}
+                  {!!snapshot.altOtherAssignee &&
+                    snapshot.altAssignee === "other" && (
+                      <TextInput
+                        label="Nhân viên khác"
+                        value={snapshot.altOtherAssignee}
+                        readOnly
+                        disabled
+                      />
+                    )}
+                  {!!snapshot.altNote && (
+                    <Textarea
+                      label="Ghi chú"
+                      value={snapshot.altNote}
+                      readOnly
+                      disabled
+                      rows={2}
+                    />
+                  )}
+                </Stack>
+              )}
+            </Stack>
+
+            <Group>
+              <NumberInput
+                label="Doanh thu"
+                placeholder="Nhập doanh thu"
+                min={0}
+                thousandSeparator=","
+                suffix=" VNĐ"
+                readOnly={hasData || isPreviousMonthLivestream}
+                className="grow"
+                {...form.getInputProps("income")}
+              />
+              <NumberInput
+                label="Doanh thu thực"
+                readOnly
+                thousandSeparator=","
+                suffix=" VNĐ"
+                className="grow"
+                {...form.getInputProps("realIncome")}
+              />
+            </Group>
+
+            <Group>
+              <NumberInput
+                label="Chi phí quảng cáo"
+                placeholder="Nhập chi phí quảng cáo"
+                min={0}
+                thousandSeparator=","
+                suffix=" VNĐ"
+                readOnly={hasData || isPreviousMonthLivestream}
+                className="grow"
+                {...form.getInputProps("adsCost")}
+              />
+              <NumberInput
+                label="Số đơn hàng"
+                placeholder="Nhập số đơn hàng"
+                min={0}
+                readOnly={hasData || isPreviousMonthLivestream}
+                className="grow"
+                {...form.getInputProps("orders")}
+              />
+            </Group>
+
+            <NumberInput
+              label="Tỷ lệ click (%)"
+              placeholder="Nhập tỷ lệ click"
+              min={0}
+              max={100}
+              decimalScale={2}
+              suffix="%"
+              readOnly={hasData || isPreviousMonthLivestream}
+              {...form.getInputProps("clickRate")}
+            />
+
+            <NumberInput
+              label="Thời gian xem trung bình (giây)"
+              placeholder="Nhập thời gian xem trung bình"
+              min={0}
+              decimalScale={2}
+              suffix=" giây"
+              readOnly={hasData || isPreviousMonthLivestream}
+              {...form.getInputProps("avgViewingDuration")}
+            />
+
+            <NumberInput
+              label="Số bình luận"
+              placeholder="Nhập số bình luận"
+              min={0}
+              readOnly={hasData || isPreviousMonthLivestream}
+              {...form.getInputProps("comments")}
+            />
+
+            <Textarea
+              label="Ghi chú đơn hàng"
+              placeholder="Nhập ghi chú về đơn hàng"
+              rows={3}
+              readOnly={hasData || isPreviousMonthLivestream}
+              {...form.getInputProps("ordersNote")}
+            />
+
+            <Textarea
+              label="Đánh giá"
+              placeholder="Nhập đánh giá"
+              rows={3}
+              readOnly={hasData || isPreviousMonthLivestream}
+              {...form.getInputProps("rating")}
+            />
           </Stack>
+        </Box>
 
-          <Group>
-            <NumberInput
-              label="Doanh thu"
-              placeholder="Nhập doanh thu"
-              min={0}
-              thousandSeparator=","
-              suffix=" VNĐ"
-              readOnly={hasData}
-              className="grow"
-              {...form.getInputProps("income")}
-            />
-            <NumberInput
-              label="Doanh thu thực"
-              readOnly
-              thousandSeparator=","
-              suffix=" VNĐ"
-              className="grow"
-              {...form.getInputProps("realIncome")}
-            />
-          </Group>
-
-          <Group>
-            <NumberInput
-              label="Chi phí quảng cáo"
-              placeholder="Nhập chi phí quảng cáo"
-              min={0}
-              thousandSeparator=","
-              suffix=" VNĐ"
-              readOnly={hasData}
-              className="grow"
-              {...form.getInputProps("adsCost")}
-            />
-            <NumberInput
-              label="Số đơn hàng"
-              placeholder="Nhập số đơn hàng"
-              min={0}
-              readOnly={hasData}
-              className="grow"
-              {...form.getInputProps("orders")}
-            />
-          </Group>
-
-          <NumberInput
-            label="Tỷ lệ click (%)"
-            placeholder="Nhập tỷ lệ click"
-            min={0}
-            max={100}
-            decimalScale={2}
-            suffix="%"
-            readOnly={hasData}
-            {...form.getInputProps("clickRate")}
-          />
-
-          <NumberInput
-            label="Thời gian xem trung bình (giây)"
-            placeholder="Nhập thời gian xem trung bình"
-            min={0}
-            decimalScale={2}
-            suffix=" giây"
-            readOnly={hasData}
-            {...form.getInputProps("avgViewingDuration")}
-          />
-
-          <NumberInput
-            label="Số bình luận"
-            placeholder="Nhập số bình luận"
-            min={0}
-            readOnly={hasData}
-            {...form.getInputProps("comments")}
-          />
-
-          <Textarea
-            label="Ghi chú đơn hàng"
-            placeholder="Nhập ghi chú về đơn hàng"
-            rows={3}
-            readOnly={hasData}
-            {...form.getInputProps("ordersNote")}
-          />
-
-          <Textarea
-            label="Đánh giá"
-            placeholder="Nhập đánh giá"
-            rows={3}
-            readOnly={hasData}
-            {...form.getInputProps("rating")}
-          />
-
-          {!hasData ? (
-            <Group justify="space-between" mt="md">
+        {!hasData ? (
+          <Box
+            pt="md"
+            mt="md"
+            style={{
+              borderTop: "1px solid var(--mantine-color-gray-3)",
+              background: "var(--mantine-color-body)"
+            }}
+          >
+            <Group justify="flex-end">
               {canDelete && onDelete ? (
                 <Button
                   color="red"
                   variant="light"
                   loading={!!isDeleting}
-                  disabled={!!isSubmitting || !!isDeleting}
+                  disabled={
+                    !!isSubmitting || !!isDeleting || isPreviousMonthLivestream
+                  }
                   onClick={() => {
                     modals.openConfirmModal({
                       title: <b>Xóa snapshot</b>,
@@ -333,16 +369,32 @@ export const openLivestreamReportModal = ({
               >
                 Hủy
               </Button>
-              <Button type="submit" loading={isSubmitting}>
+              <Button
+                type="submit"
+                loading={isSubmitting}
+                disabled={!!isSubmitting || isPreviousMonthLivestream}
+              >
                 Lưu báo cáo
               </Button>
             </Group>
-          ) : (
-            <Group justify="space-between" mt="md">
+          </Box>
+        ) : (
+          <Box
+            pt="md"
+            mt="md"
+            style={{
+              borderTop: "1px solid var(--mantine-color-gray-3)",
+              background: "var(--mantine-color-body)"
+            }}
+          >
+            <Group justify="flex-end">
               {canDelete && onDelete ? (
                 <Button
                   color="red"
                   variant="light"
+                  disabled={
+                    !!isSubmitting || !!isDeleting || isPreviousMonthLivestream
+                  }
                   loading={!!isDeleting}
                   onClick={() => {
                     modals.openConfirmModal({
@@ -366,10 +418,12 @@ export const openLivestreamReportModal = ({
               )}
               <Button
                 variant="light"
+                disabled={!!isSubmitting || isPreviousMonthLivestream}
                 onClick={() => {
                   modals.closeAll()
                   openLivestreamReportModal({
                     snapshot,
+                    livestreamDate,
                     onSubmit,
                     isSubmitting,
                     forceEdit: true,
@@ -383,8 +437,8 @@ export const openLivestreamReportModal = ({
               </Button>
               <Button onClick={() => modals.closeAll()}>Đóng</Button>
             </Group>
-          )}
-        </Stack>
+          </Box>
+        )}
       </form>
     )
   }
