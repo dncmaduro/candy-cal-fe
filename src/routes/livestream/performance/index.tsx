@@ -230,9 +230,13 @@ function RouteComponent() {
     const isAdminOrLeader =
       !!me?.roles?.includes("admin") ||
       !!me?.roles?.includes("livestream-leader")
+    const livestreamDate = livestreamData?.find(
+      (item) => item._id === livestreamId
+    )?.date
 
     openLivestreamReportModal({
       snapshot,
+      livestreamDate,
       isSubmitting: isReporting,
       canDelete: isAdminOrLeader,
       isDeleting: isDeletingSnapshot,

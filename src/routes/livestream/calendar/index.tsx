@@ -414,12 +414,14 @@ function RouteComponent() {
         color: "red"
       })
     }
-    })
+  })
 
   const { mutate: deleteSnapshotMutation, isPending: isDeletingSnapshot } =
     useMutation({
-      mutationFn: async (payload: { livestreamId: string; snapshotId: string }) =>
-        deleteSnapshot(payload),
+      mutationFn: async (payload: {
+        livestreamId: string
+        snapshotId: string
+      }) => deleteSnapshot(payload),
       onSuccess: () => {
         notifications.show({
           title: "Đã xóa snapshot",
@@ -444,14 +446,21 @@ function RouteComponent() {
   // Handle opening report modal
   const handleOpenReport = (livestreamId: string, snapshot: any) => {
     const isAdminOrLeader =
-      !!me?.roles?.includes("admin") || !!me?.roles?.includes("livestream-leader")
+      !!me?.roles?.includes("admin") ||
+      !!me?.roles?.includes("livestream-leader")
+
+    const livestreamDate = livestreamData?.find(
+      (item) => item._id === livestreamId
+    )?.date
 
     openLivestreamReportModal({
       snapshot,
+      livestreamDate,
       isSubmitting: isReporting,
       canDelete: isAdminOrLeader,
       isDeleting: isDeletingSnapshot,
-      onDelete: () => deleteSnapshotMutation({ livestreamId, snapshotId: snapshot._id }),
+      onDelete: () =>
+        deleteSnapshotMutation({ livestreamId, snapshotId: snapshot._id }),
       onSubmit: (reportData) => {
         reportLivestreamMutation({
           livestreamId,
