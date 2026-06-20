@@ -8,8 +8,18 @@ import { IconCopy, IconCheck } from "@tabler/icons-react"
 import { useState } from "react"
 import { CToast } from "../../common/CToast"
 
+type DailyReportByTextReport = Omit<CreateSalesDailyReportResponse, "channel"> & {
+  channel:
+    | string
+    | {
+        _id: string
+        channelName: string
+        phoneNumber?: string
+      }
+}
+
 interface DailyReportByTextProps {
-  report: CreateSalesDailyReportResponse
+  report: DailyReportByTextReport
 }
 
 interface CopyableBlockProps {
@@ -25,7 +35,7 @@ const CopyableBlock = ({ text }: CopyableBlockProps) => {
       setCopied(true)
       CToast.success({ title: "Đã sao chép nội dung" })
       setTimeout(() => setCopied(false), 2000)
-    } catch (error) {
+    } catch {
       CToast.error({ title: "Không thể sao chép" })
     }
   }
@@ -78,19 +88,24 @@ const CopyableBlock = ({ text }: CopyableBlockProps) => {
 export const DailyReportByText = ({ report }: DailyReportByTextProps) => {
   const { getSalesChannelDetail } = useSalesChannels()
   const { getSalesMonthKpi } = useSalesDailyReports()
+  const channelId =
+    typeof report.channel === "string" ? report.channel : report.channel._id
+  const fallbackChannelName =
+    typeof report.channel === "string" ? undefined : report.channel.channelName
 
   const { data: channelData } = useQuery({
-    queryKey: ["salesChannelDetail", report.channel],
-    queryFn: () => getSalesChannelDetail(report.channel),
-    select: (data) => data.data
+    queryKey: ["salesChannelDetail", channelId],
+    queryFn: () => getSalesChannelDetail(channelId),
+    select: (data) => data.data,
+    enabled: !!channelId
   })
 
   const { data: kpiData } = useQuery({
-    queryKey: ["getSalesMonthKpi", report.date, report.channel],
+    queryKey: ["getSalesMonthKpi", report.date, channelId],
     queryFn: () =>
       getSalesMonthKpi({
         date: new Date(report.date),
-        channelId: report.channel
+        channelId
       }),
     select: (data) => data.data.kpi ?? 1
   })
@@ -98,7 +113,7 @@ export const DailyReportByText = ({ report }: DailyReportByTextProps) => {
   const dateLabel = format(report.date, "dd/MM/yyyy")
   const monthLabel = format(report.date, "MM/yyyy")
 
-  const text = `Báo cáo doanh số sỉ lẻ kênh ${channelData?.channelName} ngày ${dateLabel}
+  const text = `Báo cáo doanh số sỉ lẻ kênh ${channelData?.channelName || fallbackChannelName || "N/A"} ngày ${dateLabel}
   
 1. Doanh số ngày ${dateLabel}: ${report.revenue.toLocaleString("vi-VN")}đ / KPI ngày ${report.dateKpi.toLocaleString("vi-VN")}đ (${((report.revenue / report.dateKpi) * 100).toFixed(2)}%)
    • Doanh số khách mới: ${(report.newFunnelRevenue.ads + report.newFunnelRevenue.other).toLocaleString("vi-VN")}đ (${report.newOrder} đơn)

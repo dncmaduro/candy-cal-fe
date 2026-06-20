@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import {
   Box,
   rem,
@@ -38,10 +38,15 @@ import {
 } from "../../../constants/navs"
 
 export const Route = createFileRoute("/sales/dashboard/")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    tab: search.tab === "monthly" ? "monthly" : "revenue"
+  }),
   component: RouteComponent
 })
 
 function RouteComponent() {
+  const navigate = useNavigate()
+  const search = Route.useSearch()
   const {
     getSalesRevenue,
     getProvinceSalesStats,
@@ -172,6 +177,14 @@ function RouteComponent() {
   const provinceSales = provinceSalesData?.data
   const metrics = metricsData?.data
   const topCustomers = topCustomersData?.data
+  const activeTab = search.tab
+  const getErrorMessage = (error: unknown) => {
+    if (error instanceof Error && error.message) {
+      return error.message
+    }
+
+    return "Không thể tải dữ liệu"
+  }
 
   const openRevenueReportModal = () => {
     modals.open({
@@ -239,7 +252,19 @@ function RouteComponent() {
             </Group>
           </Flex>
 
-          <Tabs defaultValue="revenue">
+          <Tabs
+            value={activeTab}
+            onChange={(value) => {
+              navigate({
+                to: "/sales/dashboard",
+                search: {
+                  ...search,
+                  tab: value === "monthly" ? "monthly" : "revenue"
+                },
+                replace: true
+              })
+            }}
+          >
             <Tabs.List mb="md">
               <Tabs.Tab value="revenue">Theo ngày / khoảng ngày</Tabs.Tab>
               <Tabs.Tab value="monthly">Theo tháng</Tabs.Tab>
@@ -256,7 +281,7 @@ function RouteComponent() {
                 >
                   <Group>
                     <Text size="sm">
-                      {(revenueError as any)?.message || "Không thể tải dữ liệu"}
+                      {getErrorMessage(revenueError)}
                     </Text>
                     <Button
                       size="xs"
@@ -279,7 +304,7 @@ function RouteComponent() {
                 >
                   <Group>
                     <Text size="sm">
-                      {(provinceSalesError as any)?.message || "Không thể tải dữ liệu"}
+                      {getErrorMessage(provinceSalesError)}
                     </Text>
                     <Button
                       size="xs"
@@ -388,6 +413,7 @@ function RouteComponent() {
                   isLoading={revenueLoading}
                   totalRevenue={revenue?.totalRevenue}
                   totalRevenueBeforeDiscount={revenue?.totalRevenueBeforeDiscount}
+                  totalAdsCost={revenue?.totalAdsCost}
                   totalOrders={revenue?.totalOrders}
                   totalQuantity={revenue?.totalQuantity}
                   totalTax={revenue?.totalTax}
@@ -459,7 +485,7 @@ function RouteComponent() {
                 >
                   <Group>
                     <Text size="sm">
-                      {(metricsError as any)?.message || "Không thể tải dữ liệu"}
+                      {getErrorMessage(metricsError)}
                     </Text>
                     <Button
                       size="xs"

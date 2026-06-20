@@ -11,6 +11,7 @@ interface RevenueKPICardsProps {
   isLoading: boolean
   totalRevenue?: number
   totalRevenueBeforeDiscount?: number
+  totalAdsCost?: number
   totalOrders?: number
   totalQuantity?: number
   totalTax?: number
@@ -21,7 +22,7 @@ interface RevenueKPICardsProps {
 
 type KpiItem = {
   label: string
-  value: string | number | undefined
+  value: React.ReactNode
   icon: React.ReactNode
   iconColor: string
 }
@@ -37,6 +38,7 @@ export function RevenueKPICards({
   isLoading,
   totalRevenue,
   totalRevenueBeforeDiscount,
+  totalAdsCost,
   totalOrders,
   totalQuantity,
   totalTax,
@@ -44,18 +46,29 @@ export function RevenueKPICards({
   revenueFromNewCustomers,
   revenueFromReturningCustomers
 }: RevenueKPICardsProps) {
+  const displayedTotalRevenue = totalRevenueBeforeDiscount ?? totalRevenue ?? 0
+  const adsCostPct =
+    displayedTotalRevenue > 0 ? ((totalAdsCost ?? 0) / displayedTotalRevenue) * 100 : 0
+
   const items: KpiItem[] = [
     {
       label: "Tổng doanh thu",
-      value: `${(totalRevenue ?? 0).toLocaleString("vi-VN")}đ`,
+      value: `${displayedTotalRevenue.toLocaleString("vi-VN")}đ`,
       icon: <IconCash size={18} />,
       iconColor: "blue"
     },
     {
-      label: "DT trước chiết khấu",
-      value: `${(totalRevenueBeforeDiscount ?? 0).toLocaleString("vi-VN")}đ`,
+      label: "Tổng chi phí ads",
+      value: (
+        <>
+          {(totalAdsCost ?? 0).toLocaleString("vi-VN")}đ{" "}
+          <Text component="span" size="md" c="dimmed" fw={500}>
+            ({adsCostPct.toFixed(2)}%)
+          </Text>
+        </>
+      ),
       icon: <IconCash size={18} />,
-      iconColor: "indigo"
+      iconColor: "grape"
     },
     {
       label: "Tổng thuế",
