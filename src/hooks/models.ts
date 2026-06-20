@@ -4896,6 +4896,7 @@ export interface GetSalesRevenueRequest {
 export interface GetSalesRevenueResponse {
   totalRevenue: number
   totalRevenueBeforeDiscount: number
+  totalAdsCost: number
   totalOrders: number
   totalQuantity: number
   totalTax: number
@@ -5417,7 +5418,13 @@ export interface GetSalesDailyReportsByMonthResponse {
   data: {
     _id: string
     date: string
-    channel: string
+    channel:
+      | string
+      | {
+          _id: string
+          channelName: string
+          phoneNumber?: string
+        }
     adsCost: number
     dateKpi: number
     revenue: number
