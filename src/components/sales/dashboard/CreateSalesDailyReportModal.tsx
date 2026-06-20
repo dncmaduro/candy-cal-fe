@@ -173,6 +173,32 @@ const MetricCard = ({
 
 type SalesDailyReportModalMode = "revenue" | "ads-cost"
 
+export type EditableSalesDailyReport = {
+  date: string
+  channel:
+    | string
+    | {
+        _id: string
+        channelName: string
+      }
+  adsCost: number
+  dateKpi: number
+  revenue: number
+  newFunnelRevenue: {
+    ads: number
+    other: number
+  }
+  returningFunnelRevenue: number
+  newOrder: number
+  returningOrder: number
+  accumulatedRevenue: number
+  accumulatedAdsCost: number
+  accumulatedNewFunnelRevenue: {
+    ads: number
+    other: number
+  }
+}
+
 type SalesDailyReportFormValues = {
   date: Date
   channel: string
@@ -228,9 +254,13 @@ const MODAL_COPY: Record<
 }
 
 export const CreateSalesDailyReportModal = ({
-  mode = "revenue"
+  mode = "revenue",
+  initialReport,
+  onUpdated
 }: {
   mode?: SalesDailyReportModalMode
+  initialReport?: EditableSalesDailyReport
+  onUpdated?: () => void
 }) => {
   const {
     createSalesDailyReport,
@@ -240,28 +270,50 @@ export const CreateSalesDailyReportModal = ({
   } = useSalesDailyReports()
   const { getMyChannel, searchSalesChannels } = useSalesChannels()
   const { getMe } = useUsers()
-  const copy = MODAL_COPY[mode]
+  const isEditingAdsCost = mode === "ads-cost" && !!initialReport
+  const initialChannelId =
+    typeof initialReport?.channel === "string"
+      ? initialReport.channel
+      : initialReport?.channel._id || ""
+  const initialChannelName =
+    typeof initialReport?.channel === "object"
+      ? initialReport.channel.channelName
+      : undefined
+  const copy = isEditingAdsCost
+    ? {
+        ...MODAL_COPY["ads-cost"],
+        title: "Sửa báo cáo chi phí ads",
+        description:
+          "Thông tin được lấy trực tiếp từ báo cáo đã lưu. Chỉ chi phí quảng cáo được phép chỉnh sửa.",
+        manualDescription: "Cập nhật chi phí quảng cáo của báo cáo này.",
+        submitLabel: "Lưu thay đổi",
+        successToast: "Sửa chi phí ads thành công",
+        errorToast: "Sửa chi phí ads thất bại"
+      }
+    : MODAL_COPY[mode]
 
   const { control, handleSubmit, watch, setValue } =
     useForm<SalesDailyReportFormValues>({
       defaultValues: {
-        date: new Date(new Date().setHours(0, 0, 0, 0)),
-        channel: "",
-        adsCost: 0,
-        dateKpi: 0,
-        revenue: 0,
+        date: initialReport
+          ? new Date(initialReport.date)
+          : new Date(new Date().setHours(0, 0, 0, 0)),
+        channel: initialChannelId,
+        adsCost: initialReport?.adsCost ?? 0,
+        dateKpi: initialReport?.dateKpi ?? 0,
+        revenue: initialReport?.revenue ?? 0,
         newFunnelRevenue: {
-          ads: 0,
-          other: 0
+          ads: initialReport?.newFunnelRevenue?.ads ?? 0,
+          other: initialReport?.newFunnelRevenue?.other ?? 0
         },
-        returningFunnelRevenue: 0,
-        newOrder: 0,
-        returningOrder: 0,
-        accumulatedRevenue: 0,
-        accumulatedAdsCost: 0,
+        returningFunnelRevenue: initialReport?.returningFunnelRevenue ?? 0,
+        newOrder: initialReport?.newOrder ?? 0,
+        returningOrder: initialReport?.returningOrder ?? 0,
+        accumulatedRevenue: initialReport?.accumulatedRevenue ?? 0,
+        accumulatedAdsCost: initialReport?.accumulatedAdsCost ?? 0,
         accumulatedNewFunnelRevenue: {
-          ads: 0,
-          other: 0
+          ads: initialReport?.accumulatedNewFunnelRevenue?.ads ?? 0,
+          other: initialReport?.accumulatedNewFunnelRevenue?.other ?? 0
         }
       }
     })
@@ -314,7 +366,7 @@ export const CreateSalesDailyReportModal = ({
         channelId: channelId
       }),
     select: (data) => data.data,
-    enabled: !!selectedDate && !!channelId
+    enabled: !isEditingAdsCost && !!selectedDate && !!channelId
   })
 
   // Get month KPI
@@ -326,7 +378,7 @@ export const CreateSalesDailyReportModal = ({
         channelId: channelId
       }),
     select: (data) => data.data,
-    enabled: !!selectedDate && !!channelId
+    enabled: !isEditingAdsCost && !!selectedDate && !!channelId
   })
 
   const { mutate: create, isPending: isCreating } = useMutation({
@@ -348,6 +400,10 @@ export const CreateSalesDailyReportModal = ({
     onSuccess: (response) => {
       CToast.success({ title: copy.successToast })
       modals.closeAll()
+      if (isEditingAdsCost) {
+        onUpdated?.()
+        return
+      }
       modals.open({
         id: "create-sales-daily-report",
         title: <b>Tin nhắn báo cáo</b>,
@@ -362,14 +418,14 @@ export const CreateSalesDailyReportModal = ({
 
   // Auto fill channel when data is loaded (only if not admin or channel is empty)
   useEffect(() => {
-    if (channelData?.channel?._id && !channelId) {
+    if (!isEditingAdsCost && channelData?.channel?._id && !channelId) {
       setValue("channel", channelData.channel._id)
     }
-  }, [channelData, setValue, channelId])
+  }, [channelData, setValue, channelId, isEditingAdsCost])
 
   // Auto fill revenue data when loaded
   useEffect(() => {
-    if (revenueData) {
+    if (!isEditingAdsCost && revenueData) {
       setValue("revenue", revenueData.revenue || 0)
       setValue("newFunnelRevenue.ads", revenueData.newFunnelRevenue?.ads || 0)
       setValue(
@@ -393,11 +449,11 @@ export const CreateSalesDailyReportModal = ({
         revenueData.accumulatedNewFunnelRevenue?.other || 0
       )
     }
-  }, [revenueData, setValue])
+  }, [revenueData, setValue, isEditingAdsCost])
 
   // Auto-fill KPI ngày = KPI tháng / số ngày trong tháng của ngày báo cáo
   useEffect(() => {
-    if (!(selectedDate instanceof Date)) return
+    if (isEditingAdsCost || !(selectedDate instanceof Date)) return
 
     const monthKpi = kpiData?.kpi ?? 0
     if (monthKpi <= 0) {
@@ -408,9 +464,10 @@ export const CreateSalesDailyReportModal = ({
     const daysInMonth = getDaysInMonth(selectedDate)
     const dailyKpi = Math.round(monthKpi / daysInMonth)
     setValue("dateKpi", dailyKpi)
-  }, [selectedDate, kpiData?.kpi, setValue])
+  }, [selectedDate, kpiData?.kpi, setValue, isEditingAdsCost])
 
-  const isLoading = channelLoading || revenueLoading || kpiLoading
+  const isLoading =
+    !isEditingAdsCost && (channelLoading || revenueLoading || kpiLoading)
 
   // Calculate KPI percentage
   const kpiPercentage = useMemo(() => {
@@ -462,7 +519,7 @@ export const CreateSalesDailyReportModal = ({
 
   return (
     <Box component="section">
-      {!hasChannel && availableChannels.length === 0 && (
+      {!isEditingAdsCost && !hasChannel && availableChannels.length === 0 && (
         <Alert color="yellow" title="Lưu ý" icon={<IconAlertCircle />} mb="md">
           Tài khoản của bạn không phụ trách kênh sỉ lẻ nào, vui lòng kiểm tra
           lại
@@ -484,7 +541,11 @@ export const CreateSalesDailyReportModal = ({
                 <Group gap="xl" mt="md" wrap="wrap">
                   <SummaryStat
                     label="Kênh phụ trách"
-                    value={channelData?.channel?.channelName || "Chưa được gán"}
+                    value={
+                      initialChannelName ||
+                      channelData?.channel?.channelName ||
+                      "Chưa được gán"
+                    }
                     isLoading={isLoading}
                   />
                   {kpiData?.kpi && (
@@ -516,6 +577,7 @@ export const CreateSalesDailyReportModal = ({
                       required
                       size="sm"
                       withAsterisk
+                      disabled={isEditingAdsCost}
                     />
                   )}
                 />
@@ -535,6 +597,7 @@ export const CreateSalesDailyReportModal = ({
                       clearable
                       size="sm"
                       withAsterisk
+                      disabled={isEditingAdsCost}
                     />
                   )}
                 />
@@ -572,6 +635,7 @@ export const CreateSalesDailyReportModal = ({
                         placeholder="Nhập chi phí ads"
                         thousandSeparator=","
                         required
+                        min={0}
                         leftSection={<Text size="sm">đ</Text>}
                         styles={{
                           input: { fontWeight: 500 }
@@ -1093,4 +1157,18 @@ export const CreateSalesRevenueDailyReportModal = () => (
 
 export const CreateSalesAdsCostDailyReportModal = () => (
   <CreateSalesDailyReportModal mode="ads-cost" />
+)
+
+export const EditSalesAdsCostDailyReportModal = ({
+  report,
+  onUpdated
+}: {
+  report: EditableSalesDailyReport
+  onUpdated?: () => void
+}) => (
+  <CreateSalesDailyReportModal
+    mode="ads-cost"
+    initialReport={report}
+    onUpdated={onUpdated}
+  />
 )
