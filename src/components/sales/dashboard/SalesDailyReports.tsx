@@ -15,7 +15,8 @@ import {
 import {
   IconTrash,
   IconReportAnalytics,
-  IconMessage
+  IconMessage,
+  IconEdit
 } from "@tabler/icons-react"
 import { useUsers } from "../../../hooks/useUsers"
 import { useSalesDailyReports } from "../../../hooks/useSalesDailyReports"
@@ -25,7 +26,8 @@ import { modals } from "@mantine/modals"
 import { CDataTable } from "../../common/CDataTable"
 import {
   CreateSalesAdsCostDailyReportModal,
-  CreateSalesRevenueDailyReportModal
+  CreateSalesRevenueDailyReportModal,
+  EditSalesAdsCostDailyReportModal
 } from "./CreateSalesDailyReportModal"
 import { DailyReportByText } from "./DailyReportByText"
 import { useNavigate, useSearch } from "@tanstack/react-router"
@@ -292,6 +294,20 @@ export const SalesDailyReports = () => {
     })
   }
 
+  const openEditAdsCostModal = (report: DailyReportItem) => {
+    modals.open({
+      id: `edit-sales-ads-cost-report-${report._id}`,
+      title: <b>Sửa báo cáo chi phí ads</b>,
+      children: (
+        <EditSalesAdsCostDailyReportModal
+          report={report}
+          onUpdated={() => void refetch()}
+        />
+      ),
+      size: 960
+    })
+  }
+
   const columns: ColumnDef<DailyReportItem>[] = [
     {
       accessorKey: "date",
@@ -399,6 +415,21 @@ export const SalesDailyReports = () => {
                 <IconMessage size={16} />
               </ActionIcon>
             </Tooltip>
+            <Can roles={SALES_ADS_COST_REPORT_ROLES}>
+              <Tooltip label="Sửa chi phí quảng cáo" withArrow>
+                <ActionIcon
+                  variant="light"
+                  color="orange"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    openEditAdsCostModal(item)
+                  }}
+                >
+                  <IconEdit size={16} />
+                </ActionIcon>
+              </Tooltip>
+            </Can>
             <Can roles={["admin", "sales-leader", "sales-emp", "system-emp"]}>
               <Tooltip label="Xóa báo cáo" withArrow>
                 <ActionIcon
