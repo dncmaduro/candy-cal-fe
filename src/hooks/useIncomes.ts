@@ -29,6 +29,17 @@ import {
   GetTotalCountIncomeByMonthResponse
 } from "./models"
 
+type IncomeImportMode = "full" | "status-only" | "affiliate-only"
+
+type IncomeImportRequest = Omit<
+  InsertIncomeAndUpdateSourceRequest,
+  "updateMode"
+> & {
+  updateMode?: IncomeImportMode
+  chunkIndex?: number
+  chunkCount?: number
+}
+
 export const useIncomes = () => {
   const { accessToken } = useUserStore()
 
@@ -190,11 +201,10 @@ export const useIncomes = () => {
 
   const insertIncomeAndUpdateSource = async (
     files: File[],
-    req: InsertIncomeAndUpdateSourceRequest
+    req: IncomeImportRequest
   ) => {
     const formData = new FormData()
-    formData.append("files", files[0])
-    formData.append("files", files[1])
+    files.forEach((file) => formData.append("files", file))
 
     Object.entries(req).forEach(([key, value]) => {
       if (typeof value !== "undefined" && value !== null)

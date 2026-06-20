@@ -21,6 +21,7 @@ import { useIncomes } from "../../hooks/useIncomes"
 import { useLivestreamChannels } from "../../hooks/useLivestreamChannels"
 import { CToast } from "../common/CToast"
 import { modals } from "@mantine/modals"
+import { splitAffiliateWorkbook } from "../../utils/splitAffiliateWorkbook"
 
 type FileStatus = "pending" | "uploading" | "success" | "error"
 type FileState = {
@@ -43,6 +44,10 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
   const [updateMode, setUpdateMode] = useState<"full" | "status-only">("full")
   const [date, setDate] = useState<Date | null>(null)
   const [channel, setChannel] = useState<string | null>(null)
+  const [chunkProgress, setChunkProgress] = useState<{
+    current: number
+    total: number
+  } | null>(null)
   const [files, setFiles] = useState<Record<keyof typeof LABELS, FileState>>({
     totalIncome: { file: null, status: "pending" },
     sourceSplit: { file: null, status: "pending" }
@@ -65,15 +70,46 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
         req
       }: {
         files: File[]
-        req: { date: Date; channel: string; updateMode?: "full" | "status-only" }
-      }) => insertIncomeAndUpdateSource(fileList, req),
+        req: {
+          date: Date
+          channel: string
+          updateMode?: "full" | "status-only"
+        }
+      }) => {
+        if (req.updateMode === "status-only") {
+          return insertIncomeAndUpdateSource(fileList, req)
+        }
+
+        const [totalIncomeFile, affiliateFile] = fileList
+        const affiliateChunks = await splitAffiliateWorkbook(affiliateFile)
+
+        for (let index = 0; index < affiliateChunks.length; index++) {
+          setChunkProgress({
+            current: index + 1,
+            total: affiliateChunks.length
+          })
+
+          await insertIncomeAndUpdateSource(
+            index === 0
+              ? [totalIncomeFile, affiliateChunks[index]]
+              : [affiliateChunks[index]],
+            {
+              ...req,
+              updateMode: index === 0 ? "full" : "affiliate-only",
+              chunkIndex: index,
+              chunkCount: affiliateChunks.length
+            }
+          )
+        }
+      },
       onSuccess: () => {
         setFiles((prev) => ({
           ...prev,
           totalIncome: { ...prev.totalIncome, status: "success" },
           sourceSplit: {
             ...prev.sourceSplit,
-            status: updateMode === "status-only" ? prev.sourceSplit.status : "success"
+            status:
+              updateMode === "status-only" ? prev.sourceSplit.status : "success"
           }
         }))
         CToast.success({ title: "Đã gửi files thành công" })
@@ -88,6 +124,7 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
         CToast.error({ title: "Gửi files thất bại" })
       },
       onSettled: () => {
+        setChunkProgress(null)
         refetch()
       }
     })
@@ -264,7 +301,11 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
           size="md"
           radius="xl"
         >
-          {insertingIncomes ? "Đang gửi..." : "Gửi files"}
+          {insertingIncomes && chunkProgress
+            ? `Đang xử lý phần ${chunkProgress.current}/${chunkProgress.total}`
+            : insertingIncomes
+              ? "Đang chuẩn bị..."
+              : "Gửi files"}
         </Button>
       </Group>
     </Stack>
