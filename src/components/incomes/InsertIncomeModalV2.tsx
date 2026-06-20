@@ -8,25 +8,21 @@ import {
   Text,
   Paper,
   CloseButton,
-  Loader,
   Tooltip,
   Alert,
   Select
 } from "@mantine/core"
 import { Dropzone, FileWithPath } from "@mantine/dropzone"
 import { DatePickerInput } from "@mantine/dates"
-import { IconCheck, IconX } from "@tabler/icons-react"
-import { useMutation, useQuery } from "@tanstack/react-query"
-import { useIncomes } from "../../hooks/useIncomes"
+import { useQuery } from "@tanstack/react-query"
 import { useLivestreamChannels } from "../../hooks/useLivestreamChannels"
 import { CToast } from "../common/CToast"
 import { modals } from "@mantine/modals"
-import { splitAffiliateWorkbook } from "../../utils/splitAffiliateWorkbook"
+import { startIncomeImportTask } from "../../services/incomeImportTask"
+import { useIncomeImportTaskStore } from "../../store/incomeImportTaskStore"
 
-type FileStatus = "pending" | "uploading" | "success" | "error"
 type FileState = {
   file: FileWithPath | null
-  status: FileStatus
 }
 
 const LABELS = {
@@ -39,18 +35,14 @@ interface Props {
 }
 
 export const InsertIncomeModalV2 = ({ refetch }: Props) => {
-  const { insertIncomeAndUpdateSource } = useIncomes()
   const { searchLivestreamChannels } = useLivestreamChannels()
+  const activeTask = useIncomeImportTaskStore((state) => state.task)
   const [updateMode, setUpdateMode] = useState<"full" | "status-only">("full")
   const [date, setDate] = useState<Date | null>(null)
   const [channel, setChannel] = useState<string | null>(null)
-  const [chunkProgress, setChunkProgress] = useState<{
-    current: number
-    total: number
-  } | null>(null)
   const [files, setFiles] = useState<Record<keyof typeof LABELS, FileState>>({
-    totalIncome: { file: null, status: "pending" },
-    sourceSplit: { file: null, status: "pending" }
+    totalIncome: { file: null },
+    sourceSplit: { file: null }
   })
 
   const { data: channelsData } = useQuery({
@@ -63,73 +55,10 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
     select: (data) => data.data
   })
 
-  const { mutateAsync: insertAndUpdate, isPending: insertingIncomes } =
-    useMutation({
-      mutationFn: async ({
-        files: fileList,
-        req
-      }: {
-        files: File[]
-        req: {
-          date: Date
-          channel: string
-          updateMode?: "full" | "status-only"
-        }
-      }) => {
-        if (req.updateMode === "status-only") {
-          return insertIncomeAndUpdateSource(fileList, req)
-        }
+  const taskRunning =
+    activeTask?.status === "preparing" || activeTask?.status === "uploading"
 
-        const [totalIncomeFile, affiliateFile] = fileList
-        const affiliateChunks = await splitAffiliateWorkbook(affiliateFile)
-
-        for (let index = 0; index < affiliateChunks.length; index++) {
-          setChunkProgress({
-            current: index + 1,
-            total: affiliateChunks.length
-          })
-
-          await insertIncomeAndUpdateSource(
-            index === 0
-              ? [totalIncomeFile, affiliateChunks[index]]
-              : [affiliateChunks[index]],
-            {
-              ...req,
-              updateMode: index === 0 ? "full" : "affiliate-only",
-              chunkIndex: index,
-              chunkCount: affiliateChunks.length
-            }
-          )
-        }
-      },
-      onSuccess: () => {
-        setFiles((prev) => ({
-          ...prev,
-          totalIncome: { ...prev.totalIncome, status: "success" },
-          sourceSplit: {
-            ...prev.sourceSplit,
-            status:
-              updateMode === "status-only" ? prev.sourceSplit.status : "success"
-          }
-        }))
-        CToast.success({ title: "Đã gửi files thành công" })
-        modals.closeAll()
-      },
-      onError: () => {
-        setFiles((prev) => ({
-          ...prev,
-          totalIncome: { ...prev.totalIncome, status: "error" },
-          sourceSplit: { ...prev.sourceSplit, status: "error" }
-        }))
-        CToast.error({ title: "Gửi files thất bại" })
-      },
-      onSettled: () => {
-        setChunkProgress(null)
-        refetch()
-      }
-    })
-
-  const handleInsertIncomes = async () => {
+  const handleInsertIncomes = () => {
     const missingSourceSplit = updateMode === "full" && !files.sourceSplit.file
 
     if (!date || !channel || !files.totalIncome.file || missingSourceSplit) {
@@ -142,19 +71,22 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
       return
     }
 
-    setFiles((prev) => ({
-      ...prev,
-      totalIncome: { ...prev.totalIncome, status: "uploading" },
-      sourceSplit: { ...prev.sourceSplit, status: "uploading" }
-    }))
-
-    await insertAndUpdate({
-      files:
-        updateMode === "status-only"
-          ? [files.totalIncome.file]
-          : [files.totalIncome.file, files.sourceSplit.file!],
-      req: { date, channel, updateMode }
+    const started = startIncomeImportTask({
+      totalIncomeFile: files.totalIncome.file,
+      affiliateFile: files.sourceSplit.file || undefined,
+      date,
+      channel,
+      updateMode,
+      onComplete: refetch
     })
+
+    if (!started) {
+      CToast.error({ title: "Một tác vụ import khác đang chạy" })
+      return
+    }
+
+    modals.closeAll()
+    CToast.success({ title: "Đã bắt đầu xử lý các file" })
   }
 
   const disabledInsertIncomes =
@@ -162,23 +94,16 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
     !channel ||
     !files.totalIncome.file ||
     (updateMode === "full" && !files.sourceSplit.file) ||
-    insertingIncomes
+    taskRunning
 
-  const disableDropzone = insertingIncomes
+  const disableDropzone = taskRunning
 
   const handleRemove = (key: keyof typeof LABELS) => {
-    setFiles((prev) => ({ ...prev, [key]: { file: null, status: "pending" } }))
-  }
-
-  const getStatusIcon = (status: FileStatus) => {
-    if (status === "uploading") return <Loader size={16} />
-    if (status === "success") return <IconCheck color="green" size={18} />
-    if (status === "error") return <IconX color="red" size={18} />
-    return null
+    setFiles((prev) => ({ ...prev, [key]: { file: null } }))
   }
 
   const renderDropzone = (key: keyof typeof LABELS) => {
-    const { file, status } = files[key]
+    const { file } = files[key]
     return (
       <Paper p="md" w={"100%"} radius="lg" shadow="sm" withBorder>
         <Stack gap={6}>
@@ -187,7 +112,7 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
             onDrop={(filesArr) =>
               setFiles((prev) => ({
                 ...prev,
-                [key]: { file: filesArr[0], status: "pending" }
+                [key]: { file: filesArr[0] }
               }))
             }
             maxFiles={1}
@@ -203,16 +128,13 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
                   </Text>
                 </Tooltip>
                 <Group gap={0}>
-                  {getStatusIcon(status)}
-                  {status === "pending" && (
-                    <CloseButton
-                      ml={6}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleRemove(key)
-                      }}
-                    />
-                  )}
+                  <CloseButton
+                    ml={6}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleRemove(key)
+                    }}
+                  />
                 </Group>
               </Group>
             ) : (
@@ -246,8 +168,8 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
         value={updateMode}
         onChange={(value) => setUpdateMode(value as "full" | "status-only")}
         data={[
-          { label: "Import đầy đủ", value: "full" },
-          { label: "Chỉ cập nhật status", value: "status-only" }
+          { label: "Cập nhật doanh thu", value: "full" },
+          { label: "Chỉ cập nhật trạng thái đơn hàng", value: "status-only" }
         ]}
       />
 
@@ -261,25 +183,28 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
           maxDate={new Date()}
           withAsterisk
           className="flex-1"
-          disabled={insertingIncomes}
+          valueFormat="DD/MM/YYYY"
+          disabled={taskRunning}
         />
 
         <Select
-          label="Chọn kênh livestream"
+          label="Chọn kênh Tiktokshop"
           size="md"
           placeholder="Chọn kênh"
           value={channel}
           onChange={setChannel}
           data={
-            channelsData?.data.map((ch) => ({
-              value: ch._id,
-              label: ch.name
-            })) || []
+            channelsData?.data
+              .filter((ch) => ch.platform === "tiktokshop")
+              .map((ch) => ({
+                value: ch._id,
+                label: ch.name
+              })) || []
           }
           searchable
           withAsterisk
           className="flex-1"
-          disabled={insertingIncomes}
+          disabled={taskRunning}
         />
       </Group>
 
@@ -297,15 +222,10 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
         <Button
           onClick={handleInsertIncomes}
           disabled={disabledInsertIncomes}
-          loading={insertingIncomes}
           size="md"
           radius="xl"
         >
-          {insertingIncomes && chunkProgress
-            ? `Đang xử lý phần ${chunkProgress.current}/${chunkProgress.total}`
-            : insertingIncomes
-              ? "Đang chuẩn bị..."
-              : "Gửi files"}
+          Bắt đầu xử lý các file
         </Button>
       </Group>
     </Stack>
