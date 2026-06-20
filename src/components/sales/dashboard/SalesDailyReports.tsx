@@ -38,7 +38,13 @@ import {
 type DailyReportItem = {
   _id: string
   date: string
-  channel: string
+  channel:
+    | string
+    | {
+        _id: string
+        channelName: string
+        phoneNumber?: string
+      }
   adsCost: number
   dateKpi: number
   revenue: number
@@ -97,19 +103,6 @@ export const SalesDailyReports = () => {
     select: (data) => data.data
   })
 
-  // Get daily reports
-  const { data, refetch, isLoading } = useQuery({
-    queryKey: ["salesDailyReports", month, year, channelId, showDeleted],
-    queryFn: () =>
-      getSalesDailyReportsByMonth({
-        month: Number(month),
-        year: Number(year),
-        channelId: channelId,
-        deleted: showDeleted
-      })
-    // enabled: !!month && !!year && !!channelId
-  })
-
   const me = meData?.data
   const isAdmin = useMemo(() => {
     return me?.roles?.includes("admin") ?? false
@@ -130,14 +123,13 @@ export const SalesDailyReports = () => {
   // Check if user can see channel filter
   const showChannelFilter =
     isAdmin || isSalesLeader || isSystemEmp || isFacebookAdsEmp
+  const shouldUseMyChannel =
+    isSalesEmp && !isAdmin && !isSalesLeader && !isSystemEmp
 
   // Auto-apply channel for sales-emp
   useEffect(() => {
     if (
-      isSalesEmp &&
-      !isAdmin &&
-      !isSalesLeader &&
-      !isSystemEmp &&
+      shouldUseMyChannel &&
       myChannelData?.channel?._id &&
       channelId !== myChannelData.channel._id
     ) {
@@ -152,11 +144,7 @@ export const SalesDailyReports = () => {
       })
     }
   }, [
-    isSalesEmp,
-    isFacebookAdsEmp,
-    isAdmin,
-    isSalesLeader,
-    isSystemEmp,
+    shouldUseMyChannel,
     myChannelData,
     channelId,
     search,
@@ -174,11 +162,89 @@ export const SalesDailyReports = () => {
     label: String(currentDate.getFullYear() - i)
   }))
 
-  const channelOptions =
-    channelsData?.data.map((channel) => ({
-      value: channel._id,
-      label: channel.channelName
-    })) || []
+  const channelOptions = useMemo(
+    () =>
+      channelsData?.data.map((channel) => ({
+        value: channel._id,
+        label: channel.channelName
+      })) || [],
+    [channelsData?.data]
+  )
+  const channelNameById = useMemo(
+    () =>
+      Object.fromEntries(
+        channelOptions.map((channel) => [channel.value, channel.label])
+      ),
+    [channelOptions]
+  )
+  const getChannelDisplayName = (
+    channel: DailyReportItem["channel"] | null | undefined
+  ) => {
+    if (!channel) return "--"
+
+    if (typeof channel === "string") {
+      return channelNameById[channel] || channel
+    }
+
+    return (
+      channel.channelName ||
+      channelNameById[channel._id] ||
+      channel._id ||
+      "--"
+    )
+  }
+  const firstChannelId = channelOptions[0]?.value
+  const effectiveChannelId = shouldUseMyChannel
+    ? myChannelData?.channel?._id || channelId
+    : channelId || firstChannelId || ""
+  const isReportQueryReady = shouldUseMyChannel
+    ? !!effectiveChannelId
+    : !showChannelFilter || !!effectiveChannelId || channelsData !== undefined
+
+  useEffect(() => {
+    if (
+      showChannelFilter &&
+      !shouldUseMyChannel &&
+      !channelId &&
+      firstChannelId
+    ) {
+      navigate({
+        to: "/sales/daily-reports",
+        search: {
+          ...search,
+          reportsChannelId: firstChannelId,
+          reportsPage: 1
+        },
+        replace: true
+      })
+    }
+  }, [
+    showChannelFilter,
+    shouldUseMyChannel,
+    channelId,
+    firstChannelId,
+    search,
+    navigate
+  ])
+
+  // Get daily reports
+  const { data, refetch, isLoading } = useQuery({
+    queryKey: [
+      "salesDailyReports",
+      month,
+      year,
+      effectiveChannelId,
+      showDeleted
+    ],
+    queryFn: () =>
+      getSalesDailyReportsByMonth({
+        month: Number(month),
+        year: Number(year),
+        channelId: effectiveChannelId,
+        deleted: showDeleted
+      }),
+    enabled: isReportQueryReady
+  })
 
   // Paginate data locally
   const allReports = useMemo(() => data?.data.data ?? [], [data])
@@ -235,6 +301,11 @@ export const SalesDailyReports = () => {
           {format(new Date(row.original.date), "dd/MM/yyyy")}
         </span>
       )
+    },
+    {
+      accessorKey: "channel",
+      header: "Kênh",
+      cell: ({ row }) => <span>{getChannelDisplayName(row.original.channel)}</span>
     },
     {
       accessorKey: "revenue",
@@ -468,20 +539,22 @@ export const SalesDailyReports = () => {
                   label="Kênh"
                   placeholder="Chọn kênh"
                   data={channelOptions}
-                  value={channelId || null}
+                  value={effectiveChannelId || null}
+                  clearable={false}
+                  allowDeselect={false}
                   onChange={(value) => {
+                    if (!value) return
                     navigate({
                       to: "/sales/daily-reports",
                       search: {
                         ...search,
-                        reportsChannelId: value || undefined,
+                        reportsChannelId: value,
                         reportsPage: 1
                       },
                       replace: true
                     })
                   }}
                   searchable
-                  clearable
                 />
               )}
               {/* <Switch
