@@ -14,7 +14,7 @@ import { useIncomes } from "../../../hooks/useIncomes"
 import { useMonthGoals } from "../../../hooks/useMonthGoals"
 import { useLivestreamChannel } from "../../../context/LivestreamChannelContext"
 import { TopCreatorsModal } from "../TopCreatorsModal"
-import { AdsMetricsSheetTable } from "./AdsMetricsSheetTable"
+import { AdsMetricsSummaryCard } from "../AdsMetricsSummaryCard"
 import { ChannelBreakdown } from "./ChannelBreakdown"
 import { DashboardHeader } from "./DashboardHeader"
 import { DetailMetricsSection } from "./DetailMetricsSection"
@@ -39,12 +39,13 @@ import type {
 type IncomeSplit = { live: number; shop: number }
 type QuantitySplit = { live: number; shop: number }
 type AdsSplit = { liveAdsCost: number; shopAdsCost: number }
-const NEW_ADS_MODEL_START = new Date(2026, 5, 1)
 
 export function MonthlyRevenueDashboard({
-  adsPresentation = "channel-breakdown"
+  adsPresentation = "channel-breakdown",
+  preferDailyAdsMetricsSummary = false
 }: {
   adsPresentation?: "channel-breakdown" | "sheet-table"
+  preferDailyAdsMetricsSummary?: boolean
 }) {
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthValue)
   const [mode, setMode] = useState<DiscountMode>("afterDiscount")
@@ -69,8 +70,7 @@ export function MonthlyRevenueDashboard({
     month: "long",
     year: "numeric"
   })
-  const usesNewAdsPresentation =
-    adsPresentation === "sheet-table" && selectedDate >= NEW_ADS_MODEL_START
+  const usesNewAdsPresentation = adsPresentation === "sheet-table"
 
   const { expectedPercentage, phase } = useMemo(
     () => getMonthProgress(selectedDate),
@@ -172,7 +172,9 @@ export function MonthlyRevenueDashboard({
 
   const liveAdsCost = adsModeData?.liveAdsCost ?? 0
   const shopAdsCost = adsModeData?.shopAdsCost ?? 0
-  const totalAdsCost = liveAdsCost + shopAdsCost
+  const totalAdsCost = adsData?.totalAdsCost ?? liveAdsCost + shopAdsCost
+  const showDailyAdsMetricsSummary =
+    preferDailyAdsMetricsSummary && Boolean(adsData?.hasDailyAdsMetrics)
   const totalAdsRatio =
     totalRevenue > 0 ? (totalAdsCost / totalRevenue) * 100 : 0
   const totalCost = adsData?.totalCost ?? totalAdsCost
@@ -356,12 +358,31 @@ export function MonthlyRevenueDashboard({
       hint: "Chi phí ads thực tế + affiliate",
       tone: "slate"
     },
-    {
-      label: "Sau trừ hoàn huỷ",
-      value: formatCurrency(costAfterRefund),
-      hint: "Tổng chi phí sau khi trừ AFF hoàn/hủy",
-      tone: "slate"
-    },
+    ...(showDailyAdsMetricsSummary
+      ? [
+          {
+            label: "Tỉ lệ hoàn hủy",
+            value: formatPercent(adsData?.rawMetrics?.refundCancelRate || 0),
+            hint: "Tỉ lệ hoàn/hủy đang lưu trong DailyAdsMetrics",
+            tone: "amber" as const
+          },
+          {
+            label: "% Sau HH / DT trước CK",
+            value: formatPercent(
+              adsData?.ratios?.costAfterRefundRatioOnBeforeDiscountRevenue || 0
+            ),
+            hint: "Tỷ lệ chi phí trên doanh thu sau khi trừ hoàn/hủy",
+            tone: "emerald" as const
+          }
+        ]
+      : [
+          {
+            label: "Sau trừ hoàn huỷ",
+            value: formatCurrency(costAfterRefund),
+            hint: "Tổng chi phí sau khi trừ AFF hoàn/hủy",
+            tone: "slate" as const
+          }
+        ]),
     {
       label: "% Tổng chi phí / DT trước CK",
       value: formatPercent(
@@ -426,8 +447,44 @@ export function MonthlyRevenueDashboard({
               summaryMetrics={summaryMetrics}
             />
 
-            {usesNewAdsPresentation ? (
-              <AdsMetricsSheetTable data={adsData} monthLabel={monthLabel} />
+            {showDailyAdsMetricsSummary ? (
+              <AdsMetricsSummaryCard
+                title="Tổng chỉ số ads trong tháng"
+                subtitle="Khi tháng có DailyAdsMetrics, phần so sánh ads theo Live/Sàn được ẩn và thay bằng card tổng hợp này."
+                data={{
+                  totalAdsCost,
+                  actualAdsCost: adsData?.actualAdsCost ?? 0,
+                  totalCost: adsData?.totalCost ?? 0,
+                  ratios: {
+                    adsRatioOnBeforeDiscountRevenue:
+                      adsData?.ratios?.adsRatioOnBeforeDiscountRevenue ?? 0,
+                    totalCostRatioOnBeforeDiscountRevenue:
+                      adsData?.ratios?.totalCostRatioOnBeforeDiscountRevenue ?? 0,
+                    costAfterRefundRatioOnBeforeDiscountRevenue:
+                      adsData?.ratios?.costAfterRefundRatioOnBeforeDiscountRevenue ??
+                      0
+                  },
+                  rawMetrics: {
+                    roiProtect: adsData?.rawMetrics?.roiProtect ?? 0,
+                    tinRefundAmount: adsData?.rawMetrics?.tinRefundAmount ?? 0,
+                    gmvAds: adsData?.rawMetrics?.gmvAds ?? 0,
+                    affiliateCost: adsData?.rawMetrics?.affiliateCost ?? 0,
+                    affiliateRefundAmount:
+                      adsData?.rawMetrics?.affiliateRefundAmount ?? 0,
+                    totalRevenue: adsData?.rawMetrics?.totalRevenue ?? 0,
+                    adjustedRevenue: adsData?.rawMetrics?.adjustedRevenue ?? 0,
+                    refundCancelRate:
+                      adsData?.rawMetrics?.refundCancelRate ?? 0
+                  },
+                  adsSourceMode: adsData?.adsSourceMode,
+                  metricsDaysCount: adsData?.metricsDaysCount
+                }}
+              />
+            ) : usesNewAdsPresentation ? (
+              <ChannelBreakdown
+                channels={channelsData}
+                showComparison={showComparison}
+              />
             ) : (
               <ChannelBreakdown
                 channels={channelsData}

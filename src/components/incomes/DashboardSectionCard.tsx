@@ -22,15 +22,14 @@ export const DashboardSectionCard = ({
   return (
     <Paper
       withBorder
-      radius="xl"
+      radius={26}
       p="lg"
       className="bg-white transition-all"
       style={{
         height: "100%",
-        borderColor: "#dbe4f0",
-        boxShadow: "0 12px 34px rgba(15, 23, 42, 0.05)",
-        background:
-          "linear-gradient(180deg, rgba(248,250,252,0.86) 0%, rgba(255,255,255,1) 100%)"
+        borderColor: "#e2e8f0",
+        boxShadow: "0 1px 2px rgba(15, 23, 42, 0.04)",
+        background: "#ffffff"
       }}
     >
       <Group justify="space-between" align="flex-start" mb="md" gap="sm">
