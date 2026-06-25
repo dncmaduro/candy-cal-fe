@@ -1,4 +1,12 @@
-import { Alert, Group, Progress, SimpleGrid, Skeleton, Stack, Text } from "@mantine/core"
+import {
+  Alert,
+  Group,
+  Progress,
+  SimpleGrid,
+  Skeleton,
+  Stack,
+  Text
+} from "@mantine/core"
 import {
   IconCurrentLocation,
   IconFlag3,
@@ -40,15 +48,6 @@ export const DailyKpiSummary = ({
     return (
       <Stack gap="md">
         <Stack gap={2}>
-          <Text
-            fz="xs"
-            fw={700}
-            tt="uppercase"
-            c="dimmed"
-            style={{ letterSpacing: "0.16em" }}
-          >
-            KPI theo khoảng
-          </Text>
           <Text fw={700} fz="xl">
             Tốc độ đạt KPI
           </Text>
@@ -76,15 +75,6 @@ export const DailyKpiSummary = ({
     <Stack gap="md">
       <Group justify="space-between" align="flex-end">
         <Stack gap={2}>
-          <Text
-            fz="xs"
-            fw={700}
-            tt="uppercase"
-            c="dimmed"
-            style={{ letterSpacing: "0.16em" }}
-          >
-            KPI theo khoảng
-          </Text>
           <Text fw={700} fz="xl">
             Tốc độ đạt KPI
           </Text>
@@ -104,13 +94,24 @@ export const DailyKpiSummary = ({
 
       {!hasGoal && (
         <Alert color="yellow" variant="light" radius="lg">
-          Chưa có KPI cho khoảng đang lọc. Doanh thu vẫn được hiển thị nhưng chưa
-          thể tính % đạt và độ lệch kỳ vọng.
+          Chưa có KPI cho khoảng đang lọc. Doanh thu vẫn được hiển thị nhưng
+          chưa thể tính % đạt và độ lệch kỳ vọng.
         </Alert>
       )}
 
       {hasGoal && (
-        <Progress radius="xl" size="lg" value={progressValue} color={progressValue >= 100 ? "teal" : progressValue >= expectedPct ? "blue" : "orange"} />
+        <Progress
+          radius="xl"
+          size="lg"
+          value={progressValue}
+          color={
+            progressValue >= 100
+              ? "teal"
+              : progressValue >= expectedPct
+                ? "blue"
+                : "orange"
+          }
+        />
       )}
 
       <SimpleGrid cols={summaryCols} spacing="md" verticalSpacing="md">

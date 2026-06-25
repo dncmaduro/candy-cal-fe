@@ -1,5 +1,5 @@
 import { ReactNode } from "react"
-import { Box, Flex, Text, Group } from "@mantine/core"
+import { Box, Flex, Text, Group, Paper, Stack } from "@mantine/core"
 
 interface CDashboardLayoutProps {
   /** Icon component for the header */
@@ -22,38 +22,39 @@ export const CDashboardLayout = ({
   content
 }: CDashboardLayoutProps) => {
   return (
-    <Box
-      mt={40}
-      mx="auto"
-      px={{ base: 8, md: 0 }}
-      w="100%"
-      style={{
-        background: "rgba(255,255,255,0.98)",
-        borderRadius: 28,
-        boxShadow: "0 18px 48px rgba(15, 23, 42, 0.06)",
-        border: "1px solid #dbe4f0"
-      }}
-    >
-      <Box
+    <Stack mt={24} gap="lg" w="100%">
+      <Paper
+        withBorder
+        radius={28}
+        p={{ base: "md", md: "lg" }}
         style={{
-          background:
-            "linear-gradient(180deg, rgba(248,250,252,0.98) 0%, rgba(241,245,249,0.88) 100%)",
-          borderRadius: "28px 28px 0 0",
-          borderBottom: "1px solid #dbe4f0"
+          borderColor: "#e2e8f0",
+          background: "#ffffff",
+          boxShadow: "0 1px 2px rgba(15, 23, 42, 0.04)"
         }}
       >
         <Flex
-          align="center"
+          align="flex-start"
           justify="space-between"
-          pt={12}
-          pb={8}
-          px={{ base: 16, md: 32 }}
           direction={{ base: "column", sm: "row" }}
-          gap={20}
+          gap={16}
         >
           <Box>
-            <Flex align="center" gap="sm" mb={8}>
-              {icon}
+            <Flex align="center" gap="sm" mb={10}>
+              <Box
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 16,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: "#eff6ff",
+                  border: "1px solid #bfdbfe"
+                }}
+              >
+                {icon}
+              </Box>
               <Text
                 fw={800}
                 fz="1.5rem"
@@ -85,11 +86,9 @@ export const CDashboardLayout = ({
             </Group>
           )}
         </Flex>
-      </Box>
+      </Paper>
 
-      <Box pt={20} pb={40} px={{ base: 16, md: 32 }} w="100%">
-        {content}
-      </Box>
-    </Box>
+      <Box w="100%">{content}</Box>
+    </Stack>
   )
 }

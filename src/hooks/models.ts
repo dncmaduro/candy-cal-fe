@@ -1653,18 +1653,24 @@ export interface GetRangeStatsResponse {
       totalAdsCost: number
       liveAdsCost: number
       shopAdsCost: number
+      hasDailyAdsMetrics: boolean
+      adsSourceMode: "legacy" | "metrics" | "mixed"
+      metricsDaysCount: number
       percentages: {
         liveAdsToLiveIncome: number
         shopAdsToShopIncome: number
       }
       metrics: {
         roiProtect: number
+        refundCancelRate: number
         fullRefundGmv: number
         tinRefundAmount: number
         adsTax: number
         gmvAds: number
         affiliateCost: number
         affiliateRefundAmount: number
+        totalRevenue: number
+        adjustedRevenue: number
         incomeBeforeDiscount: number
         incomeAfterDiscount: number
         actualAdsCost: number
@@ -2039,8 +2045,12 @@ export interface GetAdsCostSplitByMonthRequest {
 
 /** @interface */
 export interface GetAdsCostSplitByMonthResponse {
+  totalAdsCost: number
   liveAdsCost: number
   shopAdsCost: number
+  hasDailyAdsMetrics: boolean
+  adsSourceMode: "legacy" | "metrics" | "mixed"
+  metricsDaysCount: number
   actualAdsCost: number
   totalCost: number
   costAfterRefund: number
@@ -2059,15 +2069,21 @@ export interface GetAdsCostSplitByMonthResponse {
   }
   rawMetrics: {
     roiProtect: number
+    refundCancelRate: number
     fullRefundGmv: number
     tinRefundAmount: number
     adsTax: number
     gmvAds: number
     affiliateCost: number
     affiliateRefundAmount: number
+    totalRevenue: number
+    adjustedRevenue: number
     incomeBeforeDiscount: number
     incomeAfterDiscount: number
     recordsCount: number
+    hasDailyAdsMetrics: boolean
+    adsSourceMode: "legacy" | "metrics" | "mixed"
+    metricsDaysCount: number
   }
   totalIncome: { live: number; shop: number }
 }
@@ -2092,13 +2108,12 @@ export interface CreateSimpleDailyAdsRequest {
 export interface UpsertDailyAdsMetricsRequest {
   date: Date
   channelId: string
-  roiProtect?: number
-  fullRefundGmv?: number
-  tinRefundAmount?: number
-  adsTax?: number
-  gmvAds?: number
-  affiliateCost?: number
-  affiliateRefundAmount?: number
+  roiProtect: number
+  tinRefundAmount: number
+  gmvAds: number
+  affiliateCost: number
+  totalRevenue: number
+  refundCancelRate: number
 }
 
 /** @interface */
@@ -2107,12 +2122,15 @@ export interface DailyAdsMetricsResponse {
   date: string
   channel: string
   roiProtect: number
+  refundCancelRate: number
   fullRefundGmv: number
   tinRefundAmount: number
   adsTax: number
   gmvAds: number
   affiliateCost: number
   affiliateRefundAmount: number
+  totalRevenue: number
+  adjustedRevenue: number
   incomeBeforeDiscount: number
   incomeAfterDiscount: number
   actualAdsCost: number
@@ -2123,6 +2141,12 @@ export interface DailyAdsMetricsResponse {
   costAfterRefundRatioOnBeforeDiscountRevenue: number
   affiliateRatioOnBeforeDiscountRevenue: number
   updatedAt: string
+}
+
+/** @interface */
+export interface DeleteDailyAdsMetricsRequest {
+  date: Date
+  channelId: string
 }
 
 /** @interface */

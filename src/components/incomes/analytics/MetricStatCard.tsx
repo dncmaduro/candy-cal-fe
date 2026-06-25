@@ -68,16 +68,16 @@ export const MetricStatCard = ({
   return (
     <Paper
       withBorder
-      radius={24}
+      radius={22}
       p="lg"
       style={{
         height: "100%",
-        borderColor: "#dbe4f0",
-        boxShadow: "0 12px 34px rgba(15, 23, 42, 0.05)",
+        borderColor: "#e2e8f0",
+        boxShadow: "0 1px 2px rgba(15, 23, 42, 0.04)",
         background: "#ffffff"
       }}
     >
-      <Group justify="space-between" align="flex-start" wrap="nowrap" mb={18}>
+      <Group justify="space-between" align="flex-start" wrap="nowrap" mb={16}>
         <Text
           fz="sm"
           fw={500}
@@ -89,9 +89,9 @@ export const MetricStatCard = ({
           <Box
             style={{
               flexShrink: 0,
-              width: 46,
-              height: 46,
-              borderRadius: 16,
+              width: 42,
+              height: 42,
+              borderRadius: 14,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -107,7 +107,7 @@ export const MetricStatCard = ({
       <Group justify="space-between" align="flex-end" wrap="wrap" gap="sm">
         <Text
           fw={700}
-          fz="2.15rem"
+          fz="2rem"
           lh={1.05}
           c="#0f172a"
           style={{
