@@ -89,7 +89,10 @@ export const useDailyAds = () => {
   }
 
   const upsertDailyAdsMetrics = async (req: UpsertDailyAdsMetricsRequest) => {
-    return callApi<UpsertDailyAdsMetricsRequest, { success: boolean; data: DailyAdsMetricsResponse }>({
+    return callApi<
+      UpsertDailyAdsMetricsRequest,
+      { success: boolean; data: DailyAdsMetricsResponse }
+    >({
       path: `/v1/dailyads/metrics`,
       method: "POST",
       data: req,
@@ -97,14 +100,20 @@ export const useDailyAds = () => {
     })
   }
 
-  const getDailyAdsMetrics = async (req: {
-    date: Date
-    channelId: string
-  }) => {
+  const getDailyAdsMetrics = async (req: { date: Date; channelId: string }) => {
     const query = toQueryString(req)
     return callApi<never, DailyAdsMetricsResponse>({
       path: `/v1/dailyads/metrics?${query}`,
       method: "GET",
+      token: accessToken
+    })
+  }
+
+  const deleteAdsMetrics = async (req: { date: Date; channelId: string }) => {
+    return callApi<{ date: Date; channelId: string }, { success: boolean }>({
+      path: `/v1/dailyads/metrics/delete`,
+      method: "DELETE",
+      data: req,
       token: accessToken
     })
   }
@@ -115,6 +124,7 @@ export const useDailyAds = () => {
     getPreviousDailyAds,
     createSimpleDailyAds,
     upsertDailyAdsMetrics,
-    getDailyAdsMetrics
+    getDailyAdsMetrics,
+    deleteAdsMetrics
   }
 }

@@ -20,6 +20,7 @@ import { Helmet } from "react-helmet-async"
 import { MonthGoals } from "../../../components/incomes/MonthGoals"
 import { PackingRules } from "../../../components/incomes/PackingRules"
 import { RangeStats } from "../../../components/incomes/RangeStats"
+import { DailyAdsMetricsManager } from "../../../components/incomes/DailyAdsMetricsManager"
 import { useLivestreamChannels } from "../../../hooks/useLivestreamChannels"
 import { LivestreamChannelProvider } from "../../../context/LivestreamChannelContext"
 import { ShopeeDashboard } from "../../../components/incomes/ShopeeDashboard"
@@ -79,6 +80,11 @@ export function StorageIncomesPage({
     channel ?? null
   )
   const hasSinglePlatform = allowedPlatforms?.length === 1
+  const shouldShowDailyAdsMetricsTab = Boolean(
+    allowedPlatforms?.some((platform) =>
+      ["tiktokshop", "tiktok"].includes(platform)
+    )
+  )
   const channelHeaderTitle = hasSinglePlatform
     ? allowedPlatforms[0] === "shopee"
       ? "Các shop Shopee"
@@ -94,6 +100,14 @@ export function StorageIncomesPage({
       label: "Chỉ số ngày/tuần/tháng",
       value: "daily-stats"
     },
+    ...(shouldShowDailyAdsMetricsTab
+      ? [
+          {
+            label: "Chỉ số ads",
+            value: "ads-metrics"
+          }
+        ]
+      : []),
     {
       label: "Báo cáo doanh số",
       value: "incomes"
@@ -215,59 +229,61 @@ export function StorageIncomesPage({
             </Box>
           ) : (
             <Stack gap="md" mt={16}>
-              {tab !== "dashboard" && tab !== "daily-stats" && (
-                <Paper
-                  shadow="sm"
-                  p="lg"
-                  radius="md"
-                  withBorder
-                  style={{
-                    background:
-                      "linear-gradient(135deg, #8592cbff 0%, #cba3f2ff 100%)",
-                    borderColor: "#96a1d1ff"
-                  }}
-                >
-                  <Group gap="sm" mb="md">
-                    <ThemeIcon
-                      size="lg"
-                      radius="md"
-                      variant="white"
-                      color="grape"
-                    >
-                      <IconBrandYoutube size={20} />
-                    </ThemeIcon>
-                    <Box>
-                      <Text size="sm" fw={700} c="white" opacity={0.9}>
-                        {channelHeaderTitle}
-                      </Text>
-                      <Text size="xs" c="white" opacity={0.7}>
-                        Chọn kênh để xem thống kê
-                      </Text>
-                    </Box>
-                  </Group>
-                  <SegmentedControl
-                    value={selectedChannelId ?? ""}
-                    onChange={handleChannelChange}
-                    data={channels.map((ch) => ({
-                      label: ch.name,
-                      value: ch._id
-                    }))}
-                    fullWidth
-                    size="md"
-                    color="violet.4"
-                    styles={{
-                      root: {
-                        background: "rgba(255, 255, 255, 0.95)",
-                        padding: "4px"
-                      },
-                      label: {
-                        padding: "10px 20px",
-                        fontWeight: 600
-                      }
+              {tab !== "dashboard" &&
+                tab !== "daily-stats" &&
+                tab !== "ads-metrics" && (
+                  <Paper
+                    shadow="sm"
+                    p="lg"
+                    radius="md"
+                    withBorder
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #8592cbff 0%, #cba3f2ff 100%)",
+                      borderColor: "#96a1d1ff"
                     }}
-                  />
-                </Paper>
-              )}
+                  >
+                    <Group gap="sm" mb="md">
+                      <ThemeIcon
+                        size="lg"
+                        radius="md"
+                        variant="white"
+                        color="grape"
+                      >
+                        <IconBrandYoutube size={20} />
+                      </ThemeIcon>
+                      <Box>
+                        <Text size="sm" fw={700} c="white" opacity={0.9}>
+                          {channelHeaderTitle}
+                        </Text>
+                        <Text size="xs" c="white" opacity={0.7}>
+                          Chọn kênh để xem thống kê
+                        </Text>
+                      </Box>
+                    </Group>
+                    <SegmentedControl
+                      value={selectedChannelId ?? ""}
+                      onChange={handleChannelChange}
+                      data={channels.map((ch) => ({
+                        label: ch.name,
+                        value: ch._id
+                      }))}
+                      fullWidth
+                      size="md"
+                      color="violet.4"
+                      styles={{
+                        root: {
+                          background: "rgba(255, 255, 255, 0.95)",
+                          padding: "4px"
+                        },
+                        label: {
+                          padding: "10px 20px",
+                          fontWeight: 600
+                        }
+                      }}
+                    />
+                  </Paper>
+                )}
 
               {/* Tabs */}
               <Tabs
@@ -294,6 +310,10 @@ export function StorageIncomesPage({
 
                   <Tabs.Panel value="daily-stats">
                     <RangeStats />
+                  </Tabs.Panel>
+
+                  <Tabs.Panel value="ads-metrics">
+                    <DailyAdsMetricsManager />
                   </Tabs.Panel>
 
                   <Tabs.Panel value="incomes">

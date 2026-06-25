@@ -42,6 +42,8 @@ import { MetricStatCard } from "./analytics/MetricStatCard"
 import { TrendBadge } from "./analytics/TrendBadge"
 import { formatCurrency, formatPercent } from "./analytics/formatters"
 import { getRangeStatsOrderMetrics } from "./rangeStatsOrders"
+import { AdsMetricsSummaryCard } from "./AdsMetricsSummaryCard"
+import { getPerformanceStatus } from "./dashboard-v2/helpers"
 import {
   filterDropdownStyles,
   filterInputStyles,
@@ -365,6 +367,7 @@ export const RangeStats = () => {
     current?.ads?.totalAdsCost ??
     (current?.ads?.liveAdsCost ?? 0) + (current?.ads?.shopAdsCost ?? 0)
   const adsMetrics = current?.ads?.metrics
+  const hasDailyAdsMetrics = Boolean(current?.ads?.hasDailyAdsMetrics)
   const totalAdsToRevenuePct =
     adsMetrics?.ratios?.adsRatioOnBeforeDiscountRevenue ??
     (totalRevenue > 0 ? (totalAdsCost / totalRevenue) * 100 : 0)
@@ -426,6 +429,19 @@ export const RangeStats = () => {
       ? (rangeMonthProgressRevenue / rangeMonthProgress.elapsedDays) *
         daysInRangeGoalMonth
       : undefined
+  const today = useMemo(() => {
+    const date = new Date()
+    date.setHours(0, 0, 0, 0)
+    return date
+  }, [])
+  const rangePhase =
+    endDate && endDate.getTime() < today.getTime() ? "past" : "current"
+  const overallPerformanceStatus = getPerformanceStatus({
+    achievedPercentage: rangeGoalPct ?? 0,
+    expectedPercentage: rangeProgressPercentage,
+    phase: rangePhase,
+    hasGoal: typeof rangeGoalTotal === "number" && rangeGoalTotal > 0
+  })
 
   const discountMetrics = useMemo(
     () =>
@@ -605,7 +621,7 @@ export const RangeStats = () => {
               ) : current ? (
                 <>
                   <RevenueOverviewCard
-                    title="Tổng doanh thu trong khoảng"
+                    title="Tổng doanh thu"
                     rangeLabel={range?.label || "Khoảng đang chọn"}
                     totalRevenue={totalRevenue}
                     changePct={changes?.[mode]?.totalIncomePct}
@@ -656,111 +672,193 @@ export const RangeStats = () => {
                           />
                         </SimpleGrid>
 
-                        {adsMetrics && adsMetrics.recordsCount > 0 && (
-                          <SimpleGrid cols={{ base: 1, md: 3 }} spacing="md">
-                            <MetricStatCard
-                              label="Tổng chi phí"
-                              value={formatCurrency(adsMetrics.totalCost)}
-                              icon={<IconDiscount2 size={20} />}
-                              tone="slate"
-                              trailing={
-                                <TrendBadge
-                                  value={changes?.ads?.totalCostPct}
-                                  positiveMeaning="bad"
-                                  variant="light"
-                                />
-                              }
+                        {adsMetrics &&
+                          adsMetrics.recordsCount > 0 &&
+                          (hasDailyAdsMetrics ? (
+                            <AdsMetricsSummaryCard
+                              title="Tổng chỉ số ads trong khoảng"
+                              subtitle="Đã chuyển sang hiển thị tổng ads theo DailyAdsMetrics. Phần ads của Live và Sàn bên dưới được ẩn tạm."
+                              data={{
+                                totalAdsCost,
+                                actualAdsCost: adsMetrics.actualAdsCost,
+                                totalCost: adsMetrics.totalCost,
+                                ratios: adsMetrics.ratios,
+                                rawMetrics: {
+                                  roiProtect: adsMetrics.roiProtect,
+                                  tinRefundAmount: adsMetrics.tinRefundAmount,
+                                  gmvAds: adsMetrics.gmvAds,
+                                  affiliateCost: adsMetrics.affiliateCost,
+                                  affiliateRefundAmount:
+                                    adsMetrics.affiliateRefundAmount,
+                                  totalRevenue: adsMetrics.totalRevenue,
+                                  adjustedRevenue: adsMetrics.adjustedRevenue,
+                                  refundCancelRate: adsMetrics.refundCancelRate
+                                },
+                                adsSourceMode: current.ads.adsSourceMode,
+                                metricsDaysCount: current.ads.metricsDaysCount
+                              }}
                             />
-                            <MetricStatCard
-                              label="Sau trừ hoàn huỷ"
-                              value={formatCurrency(adsMetrics.costAfterRefund)}
-                              icon={<IconReceipt2 size={20} />}
-                              tone="slate"
-                              trailing={
-                                <TrendBadge
-                                  value={changes?.ads?.costAfterRefundPct}
-                                  positiveMeaning="bad"
-                                  variant="light"
-                                />
-                              }
-                            />
-                            <MetricStatCard
-                              label="% Tổng chi phí / DT trước CK"
-                              value={formatPercent(
-                                adsMetrics.ratios
-                                  .totalCostRatioOnBeforeDiscountRevenue,
-                                2,
-                                "truncate"
-                              )}
-                              icon={<IconPercentage size={20} />}
-                              tone="amber"
-                            />
-                          </SimpleGrid>
-                        )}
+                          ) : (
+                            <SimpleGrid cols={{ base: 1, md: 3 }} spacing="md">
+                              <MetricStatCard
+                                label="Tổng chi phí"
+                                value={formatCurrency(adsMetrics.totalCost)}
+                                icon={<IconDiscount2 size={20} />}
+                                tone="slate"
+                                trailing={
+                                  <TrendBadge
+                                    value={changes?.ads?.totalCostPct}
+                                    positiveMeaning="bad"
+                                    variant="light"
+                                  />
+                                }
+                              />
+                              <MetricStatCard
+                                label="Sau trừ hoàn huỷ"
+                                value={formatCurrency(
+                                  adsMetrics.costAfterRefund
+                                )}
+                                icon={<IconReceipt2 size={20} />}
+                                tone="slate"
+                                trailing={
+                                  <TrendBadge
+                                    value={changes?.ads?.costAfterRefundPct}
+                                    positiveMeaning="bad"
+                                    variant="light"
+                                  />
+                                }
+                              />
+                              <MetricStatCard
+                                label="% Tổng chi phí / DT trước CK"
+                                value={formatPercent(
+                                  adsMetrics.ratios
+                                    .totalCostRatioOnBeforeDiscountRevenue,
+                                  2,
+                                  "truncate"
+                                )}
+                                icon={<IconPercentage size={20} />}
+                                tone="amber"
+                              />
+                            </SimpleGrid>
+                          ))}
                       </Stack>
                     }
+                    statusTone={overallPerformanceStatus.tone}
+                    statusLabel={overallPerformanceStatus.label}
+                    achievedPct={rangeGoalPct}
+                    expectedPct={rangeProgressPercentage}
+                    deltaPct={deltaVsRangeExpectation}
+                    goalValue={rangeGoalTotal}
                   />
 
-                  <Grid gutter="md">
-                    <Grid.Col span={{ base: 12, xl: 5 }}>
-                      <LiveAndVideoStats
-                        title="Livestream"
-                        income={current[mode].liveIncome}
-                        ordersCount={liveOrders}
-                        ordersChangePct={liveOrdersPct}
-                        incomePct={rangeLivePct}
-                        incomeGoal={rangeLiveGoal}
-                        goalLabel={rangeGoalLabel}
-                        adsCost={current.ads.liveAdsCost}
-                        adsCostChangePct={changes?.ads?.liveAdsCostPct}
-                        adsSharePctDiff={
-                          changes?.ads?.liveAdsToLiveIncomePctDiff
-                        }
-                        flex={1}
-                      />
-                    </Grid.Col>
-                    <Grid.Col span={{ base: 12, xl: 7 }}>
-                      <LiveAndVideoStats
-                        title="Doanh thu Sàn"
-                        income={shopIncome}
-                        ordersCount={shopOrders}
-                        ordersChangePct={shopOrdersPct}
-                        incomePct={rangeShopPct}
-                        incomeGoal={rangeShopGoal}
-                        goalLabel={rangeGoalLabel}
-                        adsCost={current.ads.shopAdsCost}
-                        adsCostChangePct={changes?.ads?.shopAdsCostPct}
-                        adsSharePctDiff={
-                          changes?.ads?.shopAdsToShopIncomePctDiff
-                        }
-                        ownVideoIncome={current[mode].ownVideoIncome}
-                        otherVideoIncome={current[mode].otherVideoIncome}
-                        otherIncome={current[mode].otherIncome}
-                        flex={1}
-                      />
-                    </Grid.Col>
-                  </Grid>
+                  <Stack gap="md">
+                    <Stack gap={2}>
+                      <Text
+                        fz="xs"
+                        fw={700}
+                        c="dimmed"
+                        tt="uppercase"
+                        style={{ letterSpacing: "0.16em" }}
+                      >
+                        So sánh theo cụm doanh thu
+                      </Text>
+                      <Text fw={700} fz="xl">
+                        Livestream vs Doanh thu sàn
+                      </Text>
+                    </Stack>
 
-                  <Grid gutter="md">
-                    {current[mode].sources && (
+                    <Grid gutter="md">
                       <Grid.Col span={{ base: 12, xl: 5 }}>
-                        <SourcesStats
-                          sources={current[mode].sources}
-                          changes={changes?.[mode]?.sources}
+                        <LiveAndVideoStats
+                          title="Livestream"
+                          income={current[mode].liveIncome}
+                          ordersCount={liveOrders}
+                          ordersChangePct={liveOrdersPct}
+                          incomePct={rangeLivePct}
+                          incomeGoal={rangeLiveGoal}
+                          goalLabel={rangeGoalLabel}
+                          adsCost={current.ads.liveAdsCost}
+                          hideAdsMetrics={hasDailyAdsMetrics}
+                          adsCostChangePct={changes?.ads?.liveAdsCostPct}
+                          expectedPct={rangeProgressPercentage}
+                          deltaPct={
+                            typeof rangeLivePct === "number"
+                              ? rangeLivePct - rangeProgressPercentage
+                              : undefined
+                          }
+                          adsSharePctDiff={
+                            changes?.ads?.liveAdsToLiveIncomePctDiff
+                          }
+                          flex={1}
                         />
                       </Grid.Col>
-                    )}
+                      <Grid.Col span={{ base: 12, xl: 7 }}>
+                        <LiveAndVideoStats
+                          title="Doanh thu Sàn"
+                          income={shopIncome}
+                          ordersCount={shopOrders}
+                          ordersChangePct={shopOrdersPct}
+                          incomePct={rangeShopPct}
+                          incomeGoal={rangeShopGoal}
+                          goalLabel={rangeGoalLabel}
+                          adsCost={current.ads.shopAdsCost}
+                          hideAdsMetrics={hasDailyAdsMetrics}
+                          adsCostChangePct={changes?.ads?.shopAdsCostPct}
+                          expectedPct={rangeProgressPercentage}
+                          deltaPct={
+                            typeof rangeShopPct === "number"
+                              ? rangeShopPct - rangeProgressPercentage
+                              : undefined
+                          }
+                          adsSharePctDiff={
+                            changes?.ads?.shopAdsToShopIncomePctDiff
+                          }
+                          ownVideoIncome={current[mode].ownVideoIncome}
+                          otherVideoIncome={current[mode].otherVideoIncome}
+                          otherIncome={current[mode].otherIncome}
+                          flex={1}
+                        />
+                      </Grid.Col>
+                    </Grid>
+                  </Stack>
 
-                    {current.productsQuantity &&
-                      Object.keys(current.productsQuantity).length > 0 && (
-                        <Grid.Col span={{ base: 12, xl: 7 }}>
-                          <ProductsQuantityStats
-                            productsQuantity={current.productsQuantity}
-                            productsRevenue={productsRevenue}
+                  <Stack gap="md">
+                    <Stack gap={2}>
+                      <Text
+                        fz="xs"
+                        fw={700}
+                        c="dimmed"
+                        tt="uppercase"
+                        style={{ letterSpacing: "0.16em" }}
+                      >
+                        Cấu trúc doanh thu
+                      </Text>
+                      <Text fw={700} fz="xl">
+                        Nguồn tạo doanh thu và sản phẩm
+                      </Text>
+                    </Stack>
+
+                    <Grid gutter="md">
+                      {current[mode].sources && (
+                        <Grid.Col span={{ base: 12, xl: 5 }}>
+                          <SourcesStats
+                            sources={current[mode].sources}
+                            changes={changes?.[mode]?.sources}
                           />
                         </Grid.Col>
                       )}
-                  </Grid>
+
+                      {current.productsQuantity &&
+                        Object.keys(current.productsQuantity).length > 0 && (
+                          <Grid.Col span={{ base: 12, xl: 7 }}>
+                            <ProductsQuantityStats
+                              productsQuantity={current.productsQuantity}
+                              productsRevenue={productsRevenue}
+                            />
+                          </Grid.Col>
+                        )}
+                    </Grid>
+                  </Stack>
 
                   {(((current as any).boxes &&
                     (current as any).boxes.length > 0) ||
