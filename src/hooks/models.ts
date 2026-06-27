@@ -3432,6 +3432,7 @@ export interface GetLivestreamSalaryDetailResponse {
 export interface CreateSalesChannelRequest {
   channelName: string
   assignedTo?: string
+  assignedTos?: string[]
   phoneNumber: string
   address: string
   avatarUrl: string
@@ -3453,6 +3454,7 @@ export interface CreateSalesChannelResponse {
 export interface UpdateSalesChannelRequest {
   channelName?: string
   assignedTo?: string
+  assignedTos?: string[]
   phoneNumber?: string
   address?: string
   avatarUrl?: string
@@ -3488,11 +3490,16 @@ export interface SearchSalesChannelResponse {
     _id: string
     channelName: string
     phoneNumber: string
-    assignedTo: {
+    assignedTo?: {
       _id: string
       name: string
       username: string
-    }
+    } | null
+    assignedTos?: {
+      _id: string
+      name: string
+      username: string
+    }[]
     address: string
     avatarUrl: string
     createdAt: string
@@ -3512,11 +3519,16 @@ export interface GetSalesChannelDetailResponse {
   _id: string
   channelName: string
   phoneNumber: string
-  assignedTo: {
+  assignedTo?: {
     _id: string
     name: string
     username: string
-  }
+  } | null
+  assignedTos?: {
+    _id: string
+    name: string
+    username: string
+  }[]
   address: string
   avatarUrl: string
   createdAt: string
@@ -3530,11 +3542,16 @@ export interface GetMyChannelResponse {
     _id: string
     channelName: string
     phoneNumber: string
-    assignedTo: {
+    assignedTo?: {
       _id: string
       name: string
       username: string
-    }
+    } | null
+    assignedTos?: {
+      _id: string
+      name: string
+      username: string
+    }[]
     address: string
     avatarUrl: string
     createdAt: string
