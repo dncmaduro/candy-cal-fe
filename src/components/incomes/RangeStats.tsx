@@ -42,7 +42,6 @@ import { MetricStatCard } from "./analytics/MetricStatCard"
 import { TrendBadge } from "./analytics/TrendBadge"
 import { formatCurrency, formatPercent } from "./analytics/formatters"
 import { getRangeStatsOrderMetrics } from "./rangeStatsOrders"
-import { AdsMetricsSummaryCard } from "./AdsMetricsSummaryCard"
 import { getPerformanceStatus } from "./dashboard-v2/helpers"
 import {
   filterDropdownStyles,
@@ -366,10 +365,8 @@ export const RangeStats = () => {
   const totalAdsCost =
     current?.ads?.totalAdsCost ??
     (current?.ads?.liveAdsCost ?? 0) + (current?.ads?.shopAdsCost ?? 0)
-  const adsMetrics = current?.ads?.metrics
-  const hasDailyAdsMetrics = Boolean(current?.ads?.hasDailyAdsMetrics)
   const totalAdsToRevenuePct =
-    adsMetrics?.ratios?.adsRatioOnBeforeDiscountRevenue ??
+    current?.ads?.metrics?.ratios?.adsRatioOnBeforeDiscountRevenue ??
     (totalRevenue > 0 ? (totalAdsCost / totalRevenue) * 100 : 0)
   const orderMetrics = getRangeStatsOrderMetrics(data)
   const liveOrders = orderMetrics.live
@@ -672,75 +669,6 @@ export const RangeStats = () => {
                           />
                         </SimpleGrid>
 
-                        {adsMetrics &&
-                          adsMetrics.recordsCount > 0 &&
-                          (hasDailyAdsMetrics ? (
-                            <AdsMetricsSummaryCard
-                              title="Tổng chỉ số ads trong khoảng"
-                              subtitle="Đã chuyển sang hiển thị tổng ads theo DailyAdsMetrics. Phần ads của Live và Sàn bên dưới được ẩn tạm."
-                              data={{
-                                totalAdsCost,
-                                actualAdsCost: adsMetrics.actualAdsCost,
-                                totalCost: adsMetrics.totalCost,
-                                ratios: adsMetrics.ratios,
-                                rawMetrics: {
-                                  roiProtect: adsMetrics.roiProtect,
-                                  tinRefundAmount: adsMetrics.tinRefundAmount,
-                                  gmvAds: adsMetrics.gmvAds,
-                                  affiliateCost: adsMetrics.affiliateCost,
-                                  affiliateRefundAmount:
-                                    adsMetrics.affiliateRefundAmount,
-                                  totalRevenue: adsMetrics.totalRevenue,
-                                  adjustedRevenue: adsMetrics.adjustedRevenue,
-                                  refundCancelRate: adsMetrics.refundCancelRate
-                                },
-                                adsSourceMode: current.ads.adsSourceMode,
-                                metricsDaysCount: current.ads.metricsDaysCount
-                              }}
-                            />
-                          ) : (
-                            <SimpleGrid cols={{ base: 1, md: 3 }} spacing="md">
-                              <MetricStatCard
-                                label="Tổng chi phí"
-                                value={formatCurrency(adsMetrics.totalCost)}
-                                icon={<IconDiscount2 size={20} />}
-                                tone="slate"
-                                trailing={
-                                  <TrendBadge
-                                    value={changes?.ads?.totalCostPct}
-                                    positiveMeaning="bad"
-                                    variant="light"
-                                  />
-                                }
-                              />
-                              <MetricStatCard
-                                label="Sau trừ hoàn huỷ"
-                                value={formatCurrency(
-                                  adsMetrics.costAfterRefund
-                                )}
-                                icon={<IconReceipt2 size={20} />}
-                                tone="slate"
-                                trailing={
-                                  <TrendBadge
-                                    value={changes?.ads?.costAfterRefundPct}
-                                    positiveMeaning="bad"
-                                    variant="light"
-                                  />
-                                }
-                              />
-                              <MetricStatCard
-                                label="% Tổng chi phí / DT trước CK"
-                                value={formatPercent(
-                                  adsMetrics.ratios
-                                    .totalCostRatioOnBeforeDiscountRevenue,
-                                  2,
-                                  "truncate"
-                                )}
-                                icon={<IconPercentage size={20} />}
-                                tone="amber"
-                              />
-                            </SimpleGrid>
-                          ))}
                       </Stack>
                     }
                     statusTone={overallPerformanceStatus.tone}
@@ -778,7 +706,7 @@ export const RangeStats = () => {
                           incomeGoal={rangeLiveGoal}
                           goalLabel={rangeGoalLabel}
                           adsCost={current.ads.liveAdsCost}
-                          hideAdsMetrics={hasDailyAdsMetrics}
+                          hideAdsMetrics={false}
                           adsCostChangePct={changes?.ads?.liveAdsCostPct}
                           expectedPct={rangeProgressPercentage}
                           deltaPct={
@@ -802,7 +730,7 @@ export const RangeStats = () => {
                           incomeGoal={rangeShopGoal}
                           goalLabel={rangeGoalLabel}
                           adsCost={current.ads.shopAdsCost}
-                          hideAdsMetrics={hasDailyAdsMetrics}
+                          hideAdsMetrics={false}
                           adsCostChangePct={changes?.ads?.shopAdsCostPct}
                           expectedPct={rangeProgressPercentage}
                           deltaPct={
