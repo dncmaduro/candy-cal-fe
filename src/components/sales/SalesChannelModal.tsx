@@ -1,6 +1,6 @@
 import { useForm, Controller } from "react-hook-form"
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { Button, Stack, TextInput, Select } from "@mantine/core"
+import { Button, MultiSelect, Select, Stack, TextInput } from "@mantine/core"
 import { modals } from "@mantine/modals"
 import { CToast } from "../common/CToast"
 import { useSalesChannels } from "../../hooks/useSalesChannels"
@@ -40,16 +40,22 @@ export const SalesChannelModal = ({ channel, refetch }: Props) => {
     register,
     handleSubmit,
     control,
+    watch,
     formState: { errors }
   } = useForm<FormData>({
     defaultValues: {
       channelName: channel?.channelName || "",
       assignedTo: channel?.assignedTo?._id || "",
+      assignedTos:
+        channel?.assignedTos?.map((user) => user._id) ||
+        (channel?.assignedTo?._id ? [channel.assignedTo._id] : []),
       phoneNumber: channel?.phoneNumber || "",
       address: channel?.address || "",
       avatarUrl: channel?.avatarUrl || ""
     }
   })
+
+  const assignedTo = watch("assignedTo")
 
   const { mutate: create, isPending: creating } = useMutation({
     mutationFn: createSalesChannel,
@@ -76,10 +82,24 @@ export const SalesChannelModal = ({ channel, refetch }: Props) => {
   })
 
   const onSubmit = (values: FormData) => {
+    const normalizedAssignedTos = Array.from(
+      new Set(
+        [values.assignedTo, ...(values.assignedTos || [])].filter(
+          (value): value is string => Boolean(value)
+        )
+      )
+    )
+
+    const payload: FormData = {
+      ...values,
+      assignedTo: values.assignedTo || undefined,
+      assignedTos: normalizedAssignedTos
+    }
+
     if (isEdit) {
-      update(values)
+      update(payload)
     } else {
-      create(values)
+      create(payload)
     }
   }
 
@@ -102,14 +122,39 @@ export const SalesChannelModal = ({ channel, refetch }: Props) => {
           control={control}
           render={({ field }) => (
             <Select
-              label="Nhân viên phụ trách"
-              placeholder="Chọn nhân viên phụ trách kênh"
+              label="Người phụ trách chính"
+              placeholder="Chọn người phụ trách chính"
               data={userOptions}
               value={field.value || ""}
               onChange={(value) => field.onChange(value || "")}
               searchable
               clearable
               size="md"
+            />
+          )}
+        />
+
+        <Controller
+          name="assignedTos"
+          control={control}
+          render={({ field }) => (
+            <MultiSelect
+              label="Danh sách phụ trách"
+              placeholder="Chọn một hoặc nhiều người phụ trách"
+              data={userOptions.filter((option) => option.value)}
+              value={field.value || []}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              name={field.name}
+              ref={field.ref}
+              searchable
+              clearable
+              size="md"
+              description={
+                assignedTo
+                  ? "Người phụ trách chính sẽ tự được thêm vào danh sách này."
+                  : undefined
+              }
             />
           )}
         />

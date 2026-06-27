@@ -18,6 +18,7 @@ import { modals } from "@mantine/modals"
 import { InsertIncomeModalV2 } from "./InsertIncomeModalV2"
 import { IconDownload, IconPlus, IconX } from "@tabler/icons-react"
 import { DeleteIncomeModal } from "./DeleteIncomeModal"
+import { DailyAdsModal } from "./DailyAdsModal"
 import { ExportXlsxIncomesRequest } from "../../hooks/models"
 import { CToast } from "../common/CToast"
 import { Can } from "../common/Can"
@@ -532,7 +533,7 @@ export const Incomes = () => {
               >
                 Xuất Excel
               </Button>
-              {/* <Can roles={["admin", "accounting-emp"]}>
+              <Can roles={["admin", "accounting-emp", "tiktokshop-emp"]}>
                 <Button
                   onClick={() =>
                     modals.open({
@@ -549,7 +550,7 @@ export const Incomes = () => {
                 >
                   Thêm chi phí ads
                 </Button>
-              </Can> */}
+              </Can>
               <Can roles={["admin", "accounting-emp"]}>
                 <Button
                   leftSection={<IconX size={16} />}

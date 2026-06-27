@@ -2,7 +2,15 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { SalesLayout } from "../../../components/layouts/SalesLayout"
 import { useSalesChannels } from "../../../hooks/useSalesChannels"
 import { useQuery, useMutation } from "@tanstack/react-query"
-import { Box, Button, rem, Text, ActionIcon, Image } from "@mantine/core"
+import {
+  ActionIcon,
+  Box,
+  Button,
+  Image,
+  Stack,
+  Text,
+  rem
+} from "@mantine/core"
 import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
 import { Can } from "../../../components/common/Can"
@@ -14,6 +22,14 @@ import { ColumnDef } from "@tanstack/react-table"
 import { format } from "date-fns"
 
 type SalesChannel = SearchSalesChannelResponse["data"][0]
+
+const getAssignedUsers = (channel: SalesChannel) => {
+  const users = [channel.assignedTo, ...(channel.assignedTos || [])].filter(
+    Boolean
+  ) as NonNullable<SalesChannel["assignedTo"]>[]
+
+  return Array.from(new Map(users.map((user) => [user._id, user])).values())
+}
 
 export const Route = createFileRoute("/sales/channels/")({
   validateSearch: (search: Record<string, unknown>) => {
@@ -107,11 +123,25 @@ function RouteComponent() {
       )
     },
     {
-      accessorKey: "assignedTo",
-      header: "Nhân viên phụ trách",
-      cell: ({ row }) => (
-        <Text size="sm">{row.original.assignedTo?.name || "Chưa có"}</Text>
-      )
+      accessorKey: "assignedTos",
+      header: "Người phụ trách",
+      cell: ({ row }) => {
+        const assignedUsers = getAssignedUsers(row.original)
+
+        if (assignedUsers.length === 0) {
+          return <Text size="sm">Chưa có</Text>
+        }
+
+        return (
+          <Stack gap={4}>
+            {assignedUsers.map((user) => (
+              <Text key={user._id} size="sm">
+                {user.name || user.username}
+              </Text>
+            ))}
+          </Stack>
+        )
+      }
     },
     {
       accessorKey: "phoneNumber",
