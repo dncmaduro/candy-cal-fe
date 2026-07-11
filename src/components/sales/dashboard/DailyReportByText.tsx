@@ -121,8 +121,6 @@ export const DailyReportByText = ({ report }: DailyReportByTextProps) => {
 
 2. Lũy kế doanh số tháng ${monthLabel}: ${(report.accumulatedRevenue + report.revenue).toLocaleString("vi-VN")}đ / KPI: ${kpiData?.toLocaleString("vi-VN")}đ (${(((report.accumulatedRevenue + report.revenue) / (kpiData ?? 1)) * 100).toFixed(2)}%)
 
-3. Lũy kế chi phí ads tháng ${monthLabel}: ${(report.accumulatedAdsCost + report.adsCost).toLocaleString("vi-VN")}đ / DT Khách mới: ${(report.accumulatedNewFunnelRevenue.ads + report.newFunnelRevenue.ads).toLocaleString("vi-VN")}đ
-   • CAC: ${(((report.accumulatedAdsCost + report.adsCost) / (report.accumulatedNewFunnelRevenue.ads + report.newFunnelRevenue.ads)) * 100).toFixed(2)}%
 `
 
   return (

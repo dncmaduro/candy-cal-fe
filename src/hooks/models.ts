@@ -3795,6 +3795,8 @@ export interface GetFunnelByIdResponse {
   }
   hasBuyed: boolean
   cost?: number
+  totalRevenue?: number
+  monthlyRevenue?: number
   stage: "lead" | "contacted" | "customer" | "closed"
   funnelSource: "ads" | "seeding" | "referral"
   fromSystem?: boolean
@@ -4635,6 +4637,8 @@ export interface TransitionSalesOrderStatusResponse {
 export interface GetOrdersByFunnelRequest {
   page: number
   limit: number
+  startDate?: string
+  endDate?: string
 }
 
 /** @interface */
@@ -4675,6 +4679,12 @@ export interface GetOrdersByFunnelResponse {
   }[]
   total: number
   daysSinceLastPurchase: number | null
+  totalRevenue: number
+  topProducts: {
+    code: string
+    name: string
+    quantity: number
+  }[]
 }
 
 // -------------------- META SERVICES --------------------
@@ -5394,7 +5404,6 @@ export interface GetRevenueForDateResponse {
   newOrder: number
   returningOrder: number
   accumulatedRevenue: number
-  accumulatedAdsCost: number
   accumulatedNewFunnelRevenue: {
     ads: number
     other: number
@@ -5409,18 +5418,10 @@ export interface CreateSalesDailyReportRequest {
 }
 
 /** @interface */
-export interface UpdateSalesDailyReportAdsCostRequest {
-  date: Date
-  channel: string
-  adsCost: number
-}
-
-/** @interface */
 export interface CreateSalesDailyReportResponse {
   _id: string
   date: string
   channel: string
-  adsCost: number
   dateKpi: number
   revenue: number
   newFunnelRevenue: {
@@ -5431,7 +5432,6 @@ export interface CreateSalesDailyReportResponse {
   newOrder: number
   returningOrder: number
   accumulatedRevenue: number
-  accumulatedAdsCost: number
   accumulatedNewFunnelRevenue: {
     ads: number
     other: number
@@ -5466,7 +5466,6 @@ export interface GetSalesDailyReportsByMonthResponse {
           channelName: string
           phoneNumber?: string
         }
-    adsCost: number
     dateKpi: number
     revenue: number
     newFunnelRevenue: {
@@ -5477,7 +5476,6 @@ export interface GetSalesDailyReportsByMonthResponse {
     newOrder: number
     returningOrder: number
     accumulatedRevenue: number
-    accumulatedAdsCost: number
     accumulatedNewFunnelRevenue: {
       ads: number
       other: number
@@ -5503,7 +5501,6 @@ export interface GetSalesDailyReportDetailResponse {
     channelName: string
     phoneNumber: string
   }
-  adsCost: number
   dateKpi: number
   revenue: number
   newFunnelRevenue: {
@@ -5514,7 +5511,6 @@ export interface GetSalesDailyReportDetailResponse {
   newOrder: number
   returningOrder: number
   accumulatedRevenue: number
-  accumulatedAdsCost: number
   accumulatedNewFunnelRevenue: {
     ads: number
     other: number
@@ -5522,6 +5518,30 @@ export interface GetSalesDailyReportDetailResponse {
   createdAt: string
   updatedAt: string
   deletedAt?: string
+}
+
+/** @interface */
+export interface UpsertSalesDailyAdsRequest {
+  date: Date
+  adsCost: number
+}
+
+/** @interface */
+export interface SalesDailyAdsItem {
+  date: string
+  adsCost: number
+}
+
+/** @interface */
+export interface GetSalesDailyAdsByMonthRequest {
+  month: number
+  year: number
+}
+
+/** @interface */
+export interface GetSalesDailyAdsByMonthResponse {
+  data: SalesDailyAdsItem[]
+  total: number
 }
 
 /** @interface */

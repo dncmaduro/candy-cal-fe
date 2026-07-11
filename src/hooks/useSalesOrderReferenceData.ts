@@ -10,7 +10,7 @@ type UseSalesOrderReferenceDataParams = {
 export const useSalesOrderReferenceData = ({
   enabled = true
 }: UseSalesOrderReferenceDataParams = {}) => {
-  const { searchFunnel, getFunnelByUser } = useSalesFunnel()
+  const { searchFunnel } = useSalesFunnel()
   const { searchSalesChannels, getMyChannel } = useSalesChannels()
   const { getMe } = useUsers()
 
@@ -52,23 +52,12 @@ export const useSalesOrderReferenceData = ({
   })
 
   const { data: funnelData } = useQuery({
-    queryKey: ["salesFunnel", canSeeAllFunnels ? "all" : me?._id],
-    queryFn: async () => {
-      if (canSeeAllFunnels) {
-        return await searchFunnel({
-          page: 1,
-          limit: 999
-        })
-      }
-
-      if (me?._id) {
-        return await getFunnelByUser(me._id, {
-          limit: 999
-        })
-      }
-
-      return undefined
-    },
+    queryKey: ["salesFunnel", "all"],
+    queryFn: () =>
+      searchFunnel({
+        page: 1,
+        limit: 999
+      }),
     enabled: enabled && !!me,
     staleTime: 100000,
     refetchOnWindowFocus: false

@@ -93,7 +93,7 @@ function RouteComponent() {
   })
 
   // Fetch top customers
-  const { data: topCustomersData } = useQuery({
+  const { data: topCustomersData, isLoading: isLoadingTopCustomers } = useQuery({
     queryKey: [
       "salesItemTopCustomers",
       itemId,
@@ -531,21 +531,15 @@ function RouteComponent() {
                   )}
                 </Group>
                 <Divider mb="md" />
-                {customerData.length === 0 ? (
-                  <Box py="xl">
-                    <Text c="dimmed" ta="center">
-                      Chưa có dữ liệu khách hàng
-                    </Text>
-                  </Box>
-                ) : (
-                  <CDataTable
-                    columns={customerColumns}
-                    data={customerData}
-                    enableGlobalFilter={false}
-                    pageSizeOptions={[10, 20, 50]}
-                    initialPageSize={10}
-                  />
-                )}
+                <CDataTable
+                  columns={customerColumns}
+                  data={customerData}
+                  enableGlobalFilter={false}
+                  pageSizeOptions={[10, 20, 50]}
+                  initialPageSize={10}
+                  isLoading={isLoadingTopCustomers}
+                  loadingText="Đang tải khách hàng..."
+                />
               </Paper>
             </Grid.Col>
           </Grid>

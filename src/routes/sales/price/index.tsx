@@ -44,7 +44,7 @@ function RouteComponent() {
   const limit = search.limit
   const searchText = search.searchText ?? ""
 
-  const { data: priceItemsData, refetch } = useQuery({
+  const { data: priceItemsData, refetch, isLoading: isLoadingPriceItems } = useQuery({
     queryKey: ["getSalesPriceItems", page, limit],
     queryFn: () =>
       getSalesPriceItems({
@@ -54,7 +54,7 @@ function RouteComponent() {
     select: (data) => data.data
   })
 
-  const { data: storageItemsData } = useQuery({
+  const { data: storageItemsData, isLoading: isLoadingStorageItems } = useQuery({
     queryKey: ["searchStorageItems"],
     queryFn: () =>
       searchStorageItems({
@@ -270,6 +270,8 @@ function RouteComponent() {
             }
             initialPageSize={limit}
             pageSizeOptions={[10, 20, 50, 100]}
+            isLoading={isLoadingPriceItems || isLoadingStorageItems}
+            loadingText="Đang tải báo giá..."
             extraActions={
               <Can roles={["admin", "sales-leader", "sales-emp"]}>
                 <Button
