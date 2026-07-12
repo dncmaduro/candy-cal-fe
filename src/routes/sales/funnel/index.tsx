@@ -237,7 +237,7 @@ function RouteComponent() {
   })
 
   // Load funnel data with filters
-  const { data, refetch } = useQuery({
+  const { data, refetch, isLoading } = useQuery({
     queryKey: [
       "salesFunnel",
       page,
@@ -783,6 +783,8 @@ function RouteComponent() {
                 }
               })
             }
+            isLoading={isLoading}
+            loadingText="Đang tải danh sách khách hàng..."
             initialPageSize={limit}
             pageSizeOptions={[10, 20, 50, 100]}
             sortBy={sortBy}

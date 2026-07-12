@@ -1,628 +1,182 @@
 import { useEffect, useMemo, useState } from "react"
-import { useQuery, useMutation } from "@tanstack/react-query"
-import { format } from "date-fns"
+import { useMutation, useQuery } from "@tanstack/react-query"
+import { useNavigate, useSearch } from "@tanstack/react-router"
 import { ColumnDef } from "@tanstack/react-table"
+import { format } from "date-fns"
 import {
-  Box,
-  rem,
-  Button,
-  Select,
-  Text,
   ActionIcon,
-  Tooltip,
-  Group
+  Box,
+  Button,
+  Group,
+  rem,
+  Select,
+  Tabs,
+  Text,
+  Tooltip
 } from "@mantine/core"
-import {
-  IconTrash,
-  IconReportAnalytics,
-  IconMessage,
-  IconEdit
-} from "@tabler/icons-react"
-import { useUsers } from "../../../hooks/useUsers"
-import { useSalesDailyReports } from "../../../hooks/useSalesDailyReports"
+import { IconEdit, IconMessage, IconReportAnalytics, IconTrash } from "@tabler/icons-react"
 import { useSalesChannels } from "../../../hooks/useSalesChannels"
+import { GetSalesDailyReportsByMonthResponse, SalesDailyAdsItem } from "../../../hooks/models"
+import { useSalesDailyAds } from "../../../hooks/useSalesDailyAds"
+import { useSalesDailyReports } from "../../../hooks/useSalesDailyReports"
+import { useUsers } from "../../../hooks/useUsers"
+import { SALES_ADS_COST_REPORT_ROLES, SALES_REVENUE_REPORT_ROLES } from "../../../constants/navs"
+import { Can } from "../../common/Can"
+import { CDataTable } from "../../common/CDataTable"
 import { CToast } from "../../common/CToast"
 import { modals } from "@mantine/modals"
-import { CDataTable } from "../../common/CDataTable"
-import {
-  CreateSalesAdsCostDailyReportModal,
-  CreateSalesRevenueDailyReportModal,
-  EditSalesAdsCostDailyReportModal
-} from "./CreateSalesDailyReportModal"
+import { CreateSalesRevenueDailyReportModal } from "./CreateSalesDailyReportModal"
 import { DailyReportByText } from "./DailyReportByText"
-import { useNavigate, useSearch } from "@tanstack/react-router"
-import { Can } from "../../common/Can"
-import {
-  SALES_ADS_COST_REPORT_ROLES,
-  SALES_REVENUE_REPORT_ROLES
-} from "../../../constants/navs"
+import { SalesDailyAdsModal } from "./SalesDailyAdsModal"
 
-type DailyReportItem = {
-  _id: string
-  date: string
-  channel:
-    | string
-    | {
-        _id: string
-        channelName: string
-        phoneNumber?: string
-      }
-  adsCost: number
-  dateKpi: number
-  revenue: number
-  newFunnelRevenue: {
-    ads: number
-    other: number
-  }
-  returningFunnelRevenue: number
-  newOrder: number
-  returningOrder: number
-  accumulatedRevenue: number
-  accumulatedAdsCost: number
-  accumulatedNewFunnelRevenue: {
-    ads: number
-    other: number
-  }
-  createdAt: string
-  updatedAt: string
-  deletedAt?: string
-}
+type DailyReportItem = GetSalesDailyReportsByMonthResponse["data"][number]
+
+const dateOptions = (currentDate: Date) => ({
+  month: Array.from({ length: 12 }, (_, index) => ({ value: String(index + 1), label: `Tháng ${index + 1}` })),
+  year: Array.from({ length: 5 }, (_, index) => ({ value: String(currentDate.getFullYear() - index), label: String(currentDate.getFullYear() - index) }))
+})
 
 export const SalesDailyReports = () => {
-  const { getSalesDailyReportsByMonth, deleteSalesDailyReport } =
-    useSalesDailyReports()
+  const { getSalesDailyReportsByMonth, deleteSalesDailyReport } = useSalesDailyReports()
+  const { getSalesDailyAdsByMonth } = useSalesDailyAds()
   const { getMyChannel, searchSalesChannels } = useSalesChannels()
   const { getMe } = useUsers()
   const navigate = useNavigate()
   const search = useSearch({ from: "/sales/daily-reports/" })
-
   const currentDate = new Date()
   const month = search.reportsMonth || String(currentDate.getMonth() + 1)
   const year = search.reportsYear || String(currentDate.getFullYear())
   const channelId = search.reportsChannelId || ""
+  const [activeTab, setActiveTab] = useState<string | null>("revenue")
   const [showDeleted] = useState(false)
   const page = search.reportsPage || 1
   const limit = search.reportsLimit || 10
 
-  // Get user info
-  const { data: meData } = useQuery({
-    queryKey: ["me"],
-    queryFn: getMe
-  })
-
-  // Get my channel for sales-emp
+  const { data: meData } = useQuery({ queryKey: ["me"], queryFn: getMe })
   const { data: myChannelData } = useQuery({
     queryKey: ["getMyChannel"],
     queryFn: getMyChannel,
     select: (data) => data.data,
     enabled: !!meData?.data
   })
-
-  // Get all channels for filter
   const { data: channelsData } = useQuery({
     queryKey: ["salesChannels", "all"],
     queryFn: () => searchSalesChannels({ page: 1, limit: 999 }),
     select: (data) => data.data
   })
 
-  const me = meData?.data
-  const isAdmin = useMemo(() => {
-    return me?.roles?.includes("admin") ?? false
-  }, [me])
-  const isSalesLeader = useMemo(() => {
-    return me?.roles?.includes("sales-leader") ?? false
-  }, [me])
-  const isSystemEmp = useMemo(() => {
-    return me?.roles?.includes("system-emp") ?? false
-  }, [me])
-  const isSalesEmp = useMemo(() => {
-    return me?.roles?.includes("sales-emp") ?? false
-  }, [me])
-  const isFacebookAdsEmp = useMemo(() => {
-    return me?.roles?.includes("facebook-ads-emp") ?? false
-  }, [me])
-
-  // Check if user can see channel filter
-  const showChannelFilter =
-    isAdmin || isSalesLeader || isSystemEmp || isFacebookAdsEmp
-  const shouldUseMyChannel =
-    isSalesEmp && !isAdmin && !isSalesLeader && !isSystemEmp
-
-  // Auto-apply channel for sales-emp
-  useEffect(() => {
-    if (
-      shouldUseMyChannel &&
-      myChannelData?.channel?._id &&
-      channelId !== myChannelData.channel._id
-    ) {
-      navigate({
-        to: "/sales/daily-reports",
-        search: {
-          ...search,
-          reportsChannelId: myChannelData.channel._id,
-          reportsPage: 1
-        },
-        replace: true
-      })
-    }
-  }, [
-    shouldUseMyChannel,
-    myChannelData,
-    channelId,
-    search,
-    navigate
-  ])
-
-  // Prepare options
-  const monthOptions = Array.from({ length: 12 }, (_, i) => ({
-    value: String(i + 1),
-    label: `Tháng ${i + 1}`
-  }))
-
-  const yearOptions = Array.from({ length: 5 }, (_, i) => ({
-    value: String(currentDate.getFullYear() - i),
-    label: String(currentDate.getFullYear() - i)
-  }))
-
-  const channelOptions = useMemo(
-    () =>
-      channelsData?.data.map((channel) => ({
-        value: channel._id,
-        label: channel.channelName
-      })) || [],
-    [channelsData?.data]
-  )
-  const channelNameById = useMemo(
-    () =>
-      Object.fromEntries(
-        channelOptions.map((channel) => [channel.value, channel.label])
-      ),
-    [channelOptions]
-  )
-  const getChannelDisplayName = (
-    channel: DailyReportItem["channel"] | null | undefined
-  ) => {
-    if (!channel) return "--"
-
-    if (typeof channel === "string") {
-      return channelNameById[channel] || channel
-    }
-
-    return (
-      channel.channelName ||
-      channelNameById[channel._id] ||
-      channel._id ||
-      "--"
-    )
-  }
-  const firstChannelId = channelOptions[0]?.value
+  const roles = meData?.data?.roles ?? []
+  const showChannelFilter = ["admin", "sales-leader", "system-emp", "facebook-ads-emp"].some((role) => roles.includes(role))
+  const shouldUseMyChannel = roles.includes("sales-emp") && !["admin", "sales-leader", "system-emp"].some((role) => roles.includes(role))
+  const channelOptions = useMemo(() => channelsData?.data.map((item) => ({ value: item._id, label: item.channelName })) ?? [], [channelsData])
   const effectiveChannelId = shouldUseMyChannel
     ? myChannelData?.channel?._id || channelId
-    : channelId || firstChannelId || ""
-  const isReportQueryReady = shouldUseMyChannel
-    ? !!effectiveChannelId
-    : !showChannelFilter || !!effectiveChannelId || channelsData !== undefined
+    : channelId || channelOptions[0]?.value || ""
+  const reportQueryReady = shouldUseMyChannel ? !!effectiveChannelId : !showChannelFilter || !!effectiveChannelId || channelsData !== undefined
 
   useEffect(() => {
-    if (
-      showChannelFilter &&
-      !shouldUseMyChannel &&
-      !channelId &&
-      firstChannelId
-    ) {
-      navigate({
-        to: "/sales/daily-reports",
-        search: {
-          ...search,
-          reportsChannelId: firstChannelId,
-          reportsPage: 1
-        },
-        replace: true
-      })
+    const assignedChannelId = myChannelData?.channel?._id
+    if (shouldUseMyChannel && assignedChannelId && channelId !== assignedChannelId) {
+      navigate({ to: "/sales/daily-reports", search: { ...search, reportsChannelId: assignedChannelId, reportsPage: 1 }, replace: true })
     }
-  }, [
-    showChannelFilter,
-    shouldUseMyChannel,
-    channelId,
-    firstChannelId,
-    search,
-    navigate
-  ])
+  }, [shouldUseMyChannel, myChannelData?.channel?._id, channelId, navigate, search])
 
-  // Get daily reports
-  const { data, refetch, isLoading } = useQuery({
-    queryKey: [
-      "salesDailyReports",
-      month,
-      year,
-      effectiveChannelId,
-      showDeleted
-    ],
-    queryFn: () =>
-      getSalesDailyReportsByMonth({
-        month: Number(month),
-        year: Number(year),
-        channelId: effectiveChannelId,
-        deleted: showDeleted
-      }),
-    enabled: isReportQueryReady
+  useEffect(() => {
+    if (showChannelFilter && !shouldUseMyChannel && !channelId && channelOptions[0]?.value) {
+      navigate({ to: "/sales/daily-reports", search: { ...search, reportsChannelId: channelOptions[0].value, reportsPage: 1 }, replace: true })
+    }
+  }, [showChannelFilter, shouldUseMyChannel, channelId, channelOptions, navigate, search])
+
+  const { data: reportsData, isLoading: reportsLoading, refetch: refetchReports } = useQuery({
+    queryKey: ["salesDailyReports", month, year, effectiveChannelId, showDeleted],
+    queryFn: () => getSalesDailyReportsByMonth({ month: Number(month), year: Number(year), channelId: effectiveChannelId, deleted: showDeleted }),
+    enabled: reportQueryReady
+  })
+  const { data: adsData, isLoading: adsLoading, refetch: refetchAds } = useQuery({
+    queryKey: ["salesDailyAds", month, year],
+    queryFn: () => getSalesDailyAdsByMonth({ month: Number(month), year: Number(year) })
   })
 
-  // Paginate data locally
-  const allReports = useMemo(() => data?.data.data ?? [], [data])
-  const paginatedReports = useMemo(() => {
-    const startIndex = (page - 1) * limit
-    const endIndex = startIndex + limit
-    return allReports.slice(startIndex, endIndex)
-  }, [allReports, page, limit])
+  const reports = reportsData?.data.data ?? []
+  const ads = adsData?.data.data ?? []
+  const paginatedReports = reports.slice((page - 1) * limit, page * limit)
+  const paginatedAds = ads.slice((page - 1) * limit, page * limit)
+  const updateSearch = (updates: Record<string, string | number | undefined>) => {
+    navigate({ to: "/sales/daily-reports", search: { ...search, ...updates }, replace: true })
+  }
 
-  const totalPages = Math.ceil(allReports.length / limit)
-
-  // Delete mutation
   const { mutate: deleteReport } = useMutation({
     mutationFn: deleteSalesDailyReport,
-    onSuccess: () => {
-      CToast.success({ title: "Xóa báo cáo thành công" })
-      refetch()
-    },
-    onError: () => {
-      CToast.error({ title: "Xóa báo cáo thất bại" })
-    }
+    onSuccess: () => { CToast.success({ title: "Xóa báo cáo thành công" }); void refetchReports() },
+    onError: () => CToast.error({ title: "Xóa báo cáo thất bại" })
   })
 
-  const handleDeleteReport = (reportId: string, reportDate: string) => {
-    modals.openConfirmModal({
-      title: <b>Xác nhận xóa báo cáo</b>,
-      children: (
-        <Text size="sm">
-          Bạn có chắc chắn muốn xóa báo cáo ngày{" "}
-          <b>{format(new Date(reportDate), "dd/MM/yyyy")}</b>?
+  const openAdsModal = (initialAds?: SalesDailyAdsItem) => {
+    modals.open({
+      id: initialAds ? `edit-sales-daily-ads-${initialAds.date}` : "create-sales-daily-ads",
+      title: <b>{initialAds ? "Sửa báo cáo chi phí ads" : "Báo cáo chi phí ads"}</b>,
+      children: <SalesDailyAdsModal initialAds={initialAds} onSaved={() => void refetchAds()} />,
+      size: "sm"
+    })
+  }
+  const openRevenueModal = () => modals.open({
+    id: "create-sales-revenue-report",
+    title: (
+      <Box>
+        <Text fw={600}>Tạo báo cáo doanh thu ngày</Text>
+        <Text size="xs" c="dimmed">
+          Kiểm tra dữ liệu tự động và nhập KPI ngày trước khi lưu
         </Text>
-      ),
-      labels: { confirm: "Xóa", cancel: "Hủy" },
-      confirmProps: { color: "red" },
-      onConfirm: () => deleteReport({ id: reportId })
-    })
-  }
+      </Box>
+    ),
+    children: <CreateSalesRevenueDailyReportModal />,
+    size: 1080,
+    styles: { body: { padding: 0 } }
+  })
 
-  const openMessageModal = (report: DailyReportItem) => {
-    modals.open({
-      id: "daily-report-message",
-      title: <b>Tin nhắn báo cáo</b>,
-      children: <DailyReportByText report={report} />,
-      size: "lg"
-    })
-  }
-
-  const openEditAdsCostModal = (report: DailyReportItem) => {
-    modals.open({
-      id: `edit-sales-ads-cost-report-${report._id}`,
-      title: <b>Sửa báo cáo chi phí ads</b>,
-      children: (
-        <EditSalesAdsCostDailyReportModal
-          report={report}
-          onUpdated={() => void refetch()}
-        />
-      ),
-      size: 960
-    })
-  }
-
-  const columns: ColumnDef<DailyReportItem>[] = [
+  const reportColumns: ColumnDef<DailyReportItem>[] = [
+    { accessorKey: "date", header: "Ngày", cell: ({ row }) => <Text fw={600}>{format(new Date(row.original.date), "dd/MM/yyyy")}</Text> },
+    { accessorKey: "channel", header: "Kênh", cell: ({ row }) => <Text>{typeof row.original.channel === "string" ? channelOptions.find((item) => item.value === row.original.channel)?.label || row.original.channel : row.original.channel.channelName}</Text> },
+    { accessorKey: "revenue", header: "Doanh thu", cell: ({ row }) => <Text c="blue" fw={600}>{row.original.revenue.toLocaleString("vi-VN")}đ</Text> },
+    { accessorKey: "newFunnelRevenue", header: "DT khách mới", cell: ({ row }) => <Text>{(row.original.newFunnelRevenue.ads + row.original.newFunnelRevenue.other).toLocaleString("vi-VN")}đ</Text> },
+    { accessorKey: "returningFunnelRevenue", header: "DT khách quay lại", cell: ({ row }) => <Text>{row.original.returningFunnelRevenue.toLocaleString("vi-VN")}đ</Text> },
+    { accessorKey: "dateKpi", header: "KPI ngày", cell: ({ row }) => <Text>{row.original.dateKpi.toLocaleString("vi-VN")}đ</Text> },
     {
-      accessorKey: "date",
-      header: "Ngày",
-      cell: ({ row }) => (
-        <span style={{ fontWeight: 600 }}>
-          {format(new Date(row.original.date), "dd/MM/yyyy")}
-        </span>
-      )
-    },
-    {
-      accessorKey: "channel",
-      header: "Kênh",
-      cell: ({ row }) => <span>{getChannelDisplayName(row.original.channel)}</span>
-    },
-    {
-      accessorKey: "revenue",
-      header: "Doanh thu",
-      cell: ({ row }) => (
-        <span style={{ color: "#228be6", fontWeight: 600 }}>
-          {row.original.revenue.toLocaleString("vi-VN")}đ
-        </span>
-      )
-    },
-    {
-      accessorKey: "newFunnelRevenue",
-      header: "DT khách mới",
-      cell: ({ row }) => {
-        const total =
-          row.original.newFunnelRevenue.ads +
-          row.original.newFunnelRevenue.other
-        return (
-          <Box>
-            <Text size="sm" fw={500}>
-              {total.toLocaleString("vi-VN")}đ
-            </Text>
-            <Group gap={4}>
-              <Text size="xs" c="dimmed">
-                Ads: {row.original.newFunnelRevenue.ads.toLocaleString("vi-VN")}
-                đ
-              </Text>
-              <Text size="xs" c="dimmed">
-                • Khác:{" "}
-                {row.original.newFunnelRevenue.other.toLocaleString("vi-VN")}đ
-              </Text>
-            </Group>
-          </Box>
-        )
-      }
-    },
-    {
-      accessorKey: "returningFunnelRevenue",
-      header: "DT khách quay lại",
-      cell: ({ row }) => (
-        <span>
-          {row.original.returningFunnelRevenue.toLocaleString("vi-VN")}đ
-        </span>
-      )
-    },
-    {
-      accessorKey: "adsCost",
-      header: "Chi phí quảng cáo",
-      cell: ({ row }) => (
-        <span style={{ color: "#fa5252", fontWeight: 500 }}>
-          {row.original.adsCost.toLocaleString("vi-VN")}đ
-        </span>
-      )
-    },
-    {
-      accessorKey: "dateKpi",
-      header: "KPI ngày",
-      cell: ({ row }) => (
-        <span style={{ fontWeight: 500 }}>
-          {row.original.dateKpi.toLocaleString("vi-VN")}đ
-        </span>
-      )
-    },
-    {
-      accessorKey: "createdAt",
-      header: "Ngày tạo",
-      cell: ({ row }) => (
-        <span style={{ fontSize: "0.875rem", color: "#868e96" }}>
-          {format(new Date(row.original.createdAt), "dd/MM/yyyy HH:mm")}
-        </span>
-      )
-    },
-    {
-      id: "actions",
-      header: "Thao tác",
-      cell: ({ row }) => {
-        const item = row.original
-
-        return (
-          <Group gap="xs">
-            <Tooltip label="Xem tin nhắn báo cáo" withArrow>
-              <ActionIcon
-                variant="light"
-                color="blue"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  openMessageModal(item)
-                }}
-              >
-                <IconMessage size={16} />
-              </ActionIcon>
-            </Tooltip>
-            <Can roles={SALES_ADS_COST_REPORT_ROLES}>
-              <Tooltip label="Sửa chi phí quảng cáo" withArrow>
-                <ActionIcon
-                  variant="light"
-                  color="orange"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    openEditAdsCostModal(item)
-                  }}
-                >
-                  <IconEdit size={16} />
-                </ActionIcon>
-              </Tooltip>
-            </Can>
-            <Can roles={["admin", "sales-leader", "sales-emp", "system-emp"]}>
-              <Tooltip label="Xóa báo cáo" withArrow>
-                <ActionIcon
-                  variant="light"
-                  color="red"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handleDeleteReport(item._id, item.date)
-                  }}
-                >
-                  <IconTrash size={16} />
-                </ActionIcon>
-              </Tooltip>
-            </Can>
-          </Group>
-        )
-      },
-      enableSorting: false
+      id: "actions", header: "Thao tác", enableSorting: false,
+      cell: ({ row }) => <Group gap="xs">
+        <Tooltip label="Xem tin nhắn báo cáo" withArrow><ActionIcon variant="light" color="blue" onClick={(event) => { event.stopPropagation(); modals.open({ id: "daily-report-message", title: <b>Tin nhắn báo cáo</b>, children: <DailyReportByText report={row.original} />, size: "lg" }) }}><IconMessage size={16} /></ActionIcon></Tooltip>
+        <Can roles={["admin", "sales-leader", "sales-emp", "system-emp"]}><Tooltip label="Xóa báo cáo" withArrow><ActionIcon variant="light" color="red" onClick={(event) => { event.stopPropagation(); modals.openConfirmModal({ title: <b>Xác nhận xóa báo cáo</b>, children: <Text size="sm">Bạn có chắc chắn muốn xóa báo cáo ngày <b>{format(new Date(row.original.date), "dd/MM/yyyy")}</b>?</Text>, labels: { confirm: "Xóa", cancel: "Hủy" }, confirmProps: { color: "red" }, onConfirm: () => deleteReport({ id: row.original._id }) }) }}><IconTrash size={16} /></ActionIcon></Tooltip></Can>
+      </Group>
     }
   ]
+  const adsColumns: ColumnDef<SalesDailyAdsItem>[] = [
+    { accessorKey: "date", header: "Ngày", cell: ({ row }) => <Text fw={600}>{format(new Date(row.original.date), "dd/MM/yyyy")}</Text> },
+    { accessorKey: "adsCost", header: "Chi phí ads", cell: ({ row }) => <Text c="orange" fw={600}>{row.original.adsCost.toLocaleString("vi-VN")}đ</Text> },
+    { id: "actions", header: "Thao tác", enableSorting: false, cell: ({ row }) => <Can roles={SALES_ADS_COST_REPORT_ROLES}><Tooltip label="Sửa chi phí ads" withArrow><ActionIcon variant="light" color="orange" onClick={() => openAdsModal(row.original)}><IconEdit size={16} /></ActionIcon></Tooltip></Can> }
+  ]
+  const filters = (withChannel: boolean) => <>
+    <Select label="Tháng" data={dateOptions(currentDate).month} value={month} onChange={(value) => updateSearch({ reportsMonth: value || String(currentDate.getMonth() + 1), reportsPage: 1 })} />
+    <Select label="Năm" data={dateOptions(currentDate).year} value={year} onChange={(value) => updateSearch({ reportsYear: value || String(currentDate.getFullYear()), reportsPage: 1 })} />
+    {withChannel && showChannelFilter && <Select label="Kênh" data={channelOptions} value={effectiveChannelId || null} clearable={false} allowDeselect={false} searchable onChange={(value) => value && updateSearch({ reportsChannelId: value, reportsPage: 1 })} />}
+  </>
+  const paginationProps = (total: number) => ({
+    page,
+    totalPages: Math.max(1, Math.ceil(total / limit)),
+    onPageChange: (newPage: number) => updateSearch({ reportsPage: newPage }),
+    onPageSizeChange: (newLimit: number) => updateSearch({ reportsLimit: newLimit, reportsPage: 1 }),
+    initialPageSize: limit,
+    pageSizeOptions: [10, 20, 50, 100] as number[],
+    hideSearch: true
+  })
 
-  const openRevenueReportModal = () => {
-    modals.open({
-      id: "create-sales-revenue-report",
-      title: <b>Tạo báo cáo doanh thu ngày</b>,
-      children: <CreateSalesRevenueDailyReportModal />,
-      size: 960
-    })
-  }
-
-  const openAdsCostReportModal = () => {
-    modals.open({
-      id: "create-sales-ads-cost-report",
-      title: <b>Tạo báo cáo chi phí ads ngày</b>,
-      children: <CreateSalesAdsCostDailyReportModal />,
-      size: 960
-    })
-  }
   return (
-    <Box
-      mt={40}
-      mx="auto"
-      px={{ base: 8, md: 0 }}
-      w="100%"
-      style={{
-        background: "rgba(255,255,255,0.97)",
-        borderRadius: rem(20),
-        boxShadow: "0 4px 32px 0 rgba(60,80,180,0.07)",
-        border: "1px solid #ececec"
-      }}
-    >
-      <Box pt={32} pb={16} px={{ base: 8, md: 28 }}>
-        <Text fw={700} fz="xl" mb={2}>
-          Báo cáo hàng ngày
-        </Text>
-        <Text c="dimmed" fz="sm">
-          Theo dõi và quản lý các báo cáo hàng ngày của kênh bán hàng
-        </Text>
-      </Box>
-
-      {/* Table */}
-      <Box px={{ base: 4, md: 28 }} pb={20}>
-        <CDataTable
-          columns={columns}
-          data={paginatedReports}
-          page={page}
-          totalPages={totalPages}
-          onPageChange={(newPage) => {
-            navigate({
-              to: "/sales/daily-reports",
-              search: {
-                ...search,
-                reportsPage: newPage
-              },
-              replace: true
-            })
-          }}
-          onPageSizeChange={(newLimit: number) => {
-            navigate({
-              to: "/sales/daily-reports",
-              search: {
-                ...search,
-                reportsLimit: newLimit,
-                reportsPage: 1
-              },
-              replace: true
-            })
-          }}
-          initialPageSize={limit}
-          pageSizeOptions={[10, 20, 50, 100]}
-          isLoading={isLoading}
-          hideSearch
-          onRowClick={(row) => {
-            navigate({
-              to: "/sales/dashboard/$dailyReportId",
-              params: { dailyReportId: row.original._id }
-            })
-          }}
-          extraFilters={
-            <>
-              <Select
-                label="Tháng"
-                placeholder="Chọn tháng"
-                data={monthOptions}
-                value={month}
-                onChange={(value) => {
-                  navigate({
-                    to: "/sales/daily-reports",
-                    search: {
-                      ...search,
-                      reportsMonth: value || String(currentDate.getMonth() + 1),
-                      reportsPage: 1
-                    },
-                    replace: true
-                  })
-                }}
-              />
-              <Select
-                label="Năm"
-                placeholder="Chọn năm"
-                data={yearOptions}
-                value={year}
-                onChange={(value) => {
-                  navigate({
-                    to: "/sales/daily-reports",
-                    search: {
-                      ...search,
-                      reportsYear: value || String(currentDate.getFullYear()),
-                      reportsPage: 1
-                    },
-                    replace: true
-                  })
-                }}
-              />
-              {showChannelFilter && (
-                <Select
-                  label="Kênh"
-                  placeholder="Chọn kênh"
-                  data={channelOptions}
-                  value={effectiveChannelId || null}
-                  clearable={false}
-                  allowDeselect={false}
-                  onChange={(value) => {
-                    if (!value) return
-                    navigate({
-                      to: "/sales/daily-reports",
-                      search: {
-                        ...search,
-                        reportsChannelId: value,
-                        reportsPage: 1
-                      },
-                      replace: true
-                    })
-                  }}
-                  searchable
-                />
-              )}
-              {/* <Switch
-                label="Hiển thị đã xoá"
-                checked={showDeleted}
-                onChange={(event) => {
-                  setShowDeleted(event.currentTarget.checked)
-                  setPage(1)
-                }}
-                mt="xl"
-              /> */}
-            </>
-          }
-          extraActions={
-            <Group gap="xs">
-              <Can roles={SALES_REVENUE_REPORT_ROLES}>
-                <Button
-                  color="yellow"
-                  leftSection={<IconReportAnalytics size={16} />}
-                  onClick={openRevenueReportModal}
-                >
-                  Báo cáo doanh thu
-                </Button>
-              </Can>
-              <Can roles={SALES_ADS_COST_REPORT_ROLES}>
-                <Button
-                  color="orange"
-                  leftSection={<IconReportAnalytics size={16} />}
-                  onClick={openAdsCostReportModal}
-                >
-                  Báo cáo chi phí ads
-                </Button>
-              </Can>
-            </Group>
-          }
-        />
-      </Box>
+    <Box mt={40} mx="auto" px={{ base: 8, md: 0 }} w="100%" style={{ background: "rgba(255,255,255,0.97)", borderRadius: rem(20), boxShadow: "0 4px 32px 0 rgba(60,80,180,0.07)", border: "1px solid #ececec" }}>
+      <Box pt={32} pb={16} px={{ base: 8, md: 28 }}><Text fw={700} fz="xl">Báo cáo hàng ngày</Text><Text c="dimmed" fz="sm">Theo dõi báo cáo doanh thu theo kênh và chi phí ads toàn Sales</Text></Box>
+      <Tabs value={activeTab} onChange={setActiveTab} px={{ base: 4, md: 28 }} pb={20}>
+        <Tabs.List mb="md"><Tabs.Tab value="revenue">Báo cáo doanh thu</Tabs.Tab><Tabs.Tab value="ads">Chi phí ads</Tabs.Tab></Tabs.List>
+        <Tabs.Panel value="revenue"><CDataTable columns={reportColumns} data={paginatedReports} isLoading={reportsLoading} {...paginationProps(reports.length)} extraFilters={filters(true)} extraActions={<Can roles={SALES_REVENUE_REPORT_ROLES}><Button color="yellow" leftSection={<IconReportAnalytics size={16} />} onClick={openRevenueModal}>Báo cáo doanh thu</Button></Can>} onRowClick={(row) => navigate({ to: "/sales/dashboard/$dailyReportId", params: { dailyReportId: row.original._id } })} /></Tabs.Panel>
+        <Tabs.Panel value="ads"><CDataTable columns={adsColumns} data={paginatedAds} isLoading={adsLoading} {...paginationProps(ads.length)} extraFilters={filters(false)} extraActions={<Can roles={SALES_ADS_COST_REPORT_ROLES}><Button color="orange" leftSection={<IconReportAnalytics size={16} />} onClick={() => openAdsModal()}>Báo cáo chi phí ads</Button></Can>} /></Tabs.Panel>
+      </Tabs>
     </Box>
   )
 }

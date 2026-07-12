@@ -26,10 +26,8 @@ import { RevenueTables } from "../../../components/sales/dashboard/RevenueTables
 import { MonthlyMetrics } from "../../../components/sales/dashboard/MonthlyMetrics"
 import { ProvinceSalesAnalytics } from "../../../components/sales/dashboard/ProvinceSalesAnalytics"
 import { modals } from "@mantine/modals"
-import {
-  CreateSalesAdsCostDailyReportModal,
-  CreateSalesRevenueDailyReportModal
-} from "../../../components/sales/dashboard/CreateSalesDailyReportModal"
+import { CreateSalesRevenueDailyReportModal } from "../../../components/sales/dashboard/CreateSalesDailyReportModal"
+import { SalesDailyAdsModal } from "../../../components/sales/dashboard/SalesDailyAdsModal"
 import { useSalesChannels } from "../../../hooks/useSalesChannels"
 import { Can } from "../../../components/common/Can"
 import {
@@ -189,9 +187,17 @@ function RouteComponent() {
   const openRevenueReportModal = () => {
     modals.open({
       id: "create-sales-revenue-report",
-      title: <b>Tạo báo cáo doanh thu ngày</b>,
+      title: (
+        <Box>
+          <Text fw={600}>Tạo báo cáo doanh thu ngày</Text>
+          <Text size="xs" c="dimmed">
+            Kiểm tra dữ liệu tự động và nhập KPI ngày trước khi lưu
+          </Text>
+        </Box>
+      ),
       children: <CreateSalesRevenueDailyReportModal />,
-      size: 960
+      size: 1080,
+      styles: { body: { padding: 0 } }
     })
   }
 
@@ -199,8 +205,8 @@ function RouteComponent() {
     modals.open({
       id: "create-sales-ads-cost-report",
       title: <b>Tạo báo cáo chi phí ads ngày</b>,
-      children: <CreateSalesAdsCostDailyReportModal />,
-      size: 960
+      children: <SalesDailyAdsModal onSaved={() => void refetchRevenue()} />,
+      size: "sm"
     })
   }
 
@@ -392,6 +398,11 @@ function RouteComponent() {
                         placeholder="Tất cả kênh"
                         clearable
                       />
+                      {channel && (
+                        <Text size="xs" c="dimmed" mt={4}>
+                          Chi phí ads hiển thị bên dưới là toàn Sales, không phân bổ theo kênh.
+                        </Text>
+                      )}
                     </Box>
 
                     <Group align="flex-end" gap={10} wrap="nowrap">

@@ -25,8 +25,7 @@ import {
   IconClock,
   IconTargetArrow,
   IconTrendingUp,
-  IconCoin,
-  IconBroadcast
+  IconCoin
 } from "@tabler/icons-react"
 import { SalesLayout } from "../../../components/layouts/SalesLayout"
 import { useSalesDailyReports } from "../../../hooks/useSalesDailyReports"
@@ -240,11 +239,6 @@ function RouteComponent() {
     totalStructureRevenue > 0
       ? ((report?.returningFunnelRevenue ?? 0) / totalStructureRevenue) * 100
       : 0
-  const adsCostRatio =
-    report?.revenue && report.revenue > 0
-      ? ((report.adsCost ?? 0) / report.revenue) * 100
-      : 0
-
   return (
     <SalesLayout>
       <Box
@@ -505,52 +499,6 @@ function RouteComponent() {
                       </SectionCard>
                     </Grid.Col>
 
-                    <Grid.Col span={{ base: 12, md: 6 }}>
-                      <SectionCard title="Chi phí ads">
-                        <Stack
-                          align="center"
-                          justify="center"
-                          mih={320}
-                          gap="md"
-                        >
-                          <ThemeIcon
-                            size={92}
-                            radius="xl"
-                            variant="light"
-                            style={{
-                              background: "rgba(148, 163, 184, 0.10)",
-                              color: "#94A3B8"
-                            }}
-                          >
-                            <IconBroadcast size={42} />
-                          </ThemeIcon>
-
-                          <Text
-                            fw={800}
-                            fz={{ base: 28, md: 40 }}
-                            lh={1}
-                            c="#0F172A"
-                          >
-                            {formatCurrency(report.adsCost)}
-                          </Text>
-
-                          {report.adsCost > 0 ? (
-                            <Stack gap={6} align="center">
-                              <Text size="md" c="#6B7280" ta="center">
-                                Chiếm {adsCostRatio.toFixed(2)}% doanh số ngày
-                              </Text>
-                              <Text size="sm" c="dimmed" ta="center">
-                                So với doanh số {formatCurrency(report.revenue)}
-                              </Text>
-                            </Stack>
-                          ) : (
-                            <Text size="md" c="#6B7280" ta="center">
-                              Chưa phát sinh chi phí ads
-                            </Text>
-                          )}
-                        </Stack>
-                      </SectionCard>
-                    </Grid.Col>
                   </Grid>
                 </Stack>
               </Tabs.Panel>
@@ -562,7 +510,6 @@ function RouteComponent() {
                       _id: report._id,
                       date: report.date,
                       channel: report.channel._id,
-                      adsCost: report.adsCost,
                       dateKpi: report.dateKpi,
                       revenue: report.revenue,
                       newFunnelRevenue: report.newFunnelRevenue,
@@ -570,7 +517,6 @@ function RouteComponent() {
                       newOrder: report.newOrder,
                       returningOrder: report.returningOrder,
                       accumulatedRevenue: report.accumulatedRevenue,
-                      accumulatedAdsCost: report.accumulatedAdsCost,
                       accumulatedNewFunnelRevenue:
                         report.accumulatedNewFunnelRevenue,
                       createdAt: report.createdAt,
