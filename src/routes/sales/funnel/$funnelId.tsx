@@ -936,7 +936,6 @@ function RouteComponent() {
                   <CDataTable
                     columns={orderColumns}
                     data={orderHistoryData}
-                    variant="compact"
                     enableGlobalFilter={false}
                     pageSizeOptions={[10, 20, 50]}
                     initialPageSize={ordersLimit}
