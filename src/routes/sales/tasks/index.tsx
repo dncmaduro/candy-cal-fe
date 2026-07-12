@@ -95,7 +95,7 @@ function RouteComponent() {
   })
 
   // Load tasks data with filters
-  const { data, refetch } = useQuery({
+  const { data, refetch, isLoading } = useQuery({
     queryKey: [
       "salesTasks",
       page,
@@ -378,6 +378,8 @@ function RouteComponent() {
             }
             initialPageSize={limit}
             pageSizeOptions={[10, 20, 50, 100]}
+            isLoading={isLoading}
+            loadingText="Đang tải công việc..."
             extraFilters={
               <>
                 <Select

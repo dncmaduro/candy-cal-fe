@@ -14,8 +14,10 @@ import {
   Tooltip,
   Pagination,
   Button,
-  Skeleton
+  Skeleton,
+  SimpleGrid
 } from "@mantine/core"
+import { DatePickerInput } from "@mantine/dates"
 import { useQuery, useMutation } from "@tanstack/react-query"
 import { format } from "date-fns"
 import {
@@ -29,11 +31,14 @@ import {
   IconPhone,
   IconMessage,
   IconDots,
-  IconTrash
+  IconTrash,
+  IconChevronDown,
+  IconChevronUp,
+  IconClipboardCheck
 } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
 import { notifications } from "@mantine/notifications"
-import { useMemo, useEffect, useState } from "react"
+import { useMemo, useEffect, useState, type ReactNode } from "react"
 import { ColumnDef } from "@tanstack/react-table"
 import { SalesLayout } from "../../../components/layouts/SalesLayout"
 import { useSalesFunnel } from "../../../hooks/useSalesFunnel"
@@ -84,6 +89,36 @@ const LoadingField = ({
   </div>
 )
 
+const detailCardStyle = {
+  border: "1px solid var(--mantine-color-gray-3)",
+  borderRadius: rem(12),
+  boxShadow: "0 1px 2px rgba(16, 24, 40, 0.03)"
+}
+
+const infoCellStyle = {
+  minWidth: 0,
+  padding: rem(12),
+  borderRadius: rem(10),
+  background: "var(--mantine-color-gray-0)"
+}
+
+function DetailField({
+  label,
+  children
+}: {
+  label: string
+  children: ReactNode
+}) {
+  return (
+    <Box style={infoCellStyle}>
+      <Text size="xs" c="dimmed" fw={500} mb={4}>
+        {label}
+      </Text>
+      <Box style={{ minWidth: 0 }}>{children}</Box>
+    </Box>
+  )
+}
+
 function RouteComponent() {
   const { funnelId } = Route.useParams()
   const navigate = useNavigate()
@@ -96,6 +131,10 @@ function RouteComponent() {
   const [activitiesDrawerOpen, setActivitiesDrawerOpen] = useState(false)
   const [activitiesPage, setActivitiesPage] = useState(1)
   const activitiesLimit = 5
+  const [orderStartDate, setOrderStartDate] = useState<Date | null>(null)
+  const [orderEndDate, setOrderEndDate] = useState<Date | null>(null)
+  const [ordersPage, setOrdersPage] = useState(1)
+  const [ordersLimit, setOrdersLimit] = useState(10)
 
   // Check permission first
   const { data: permissionData, isLoading: isCheckingPermission } = useQuery({
@@ -126,8 +165,23 @@ function RouteComponent() {
 
   // Fetch order history
   const { data: ordersData, isLoading: isLoadingOrders } = useQuery({
-    queryKey: ["funnelOrders", funnelId],
-    queryFn: () => getOrdersByFunnel(funnelId, { page: 1, limit: 100 }),
+    queryKey: [
+      "funnelOrders",
+      funnelId,
+      ordersPage,
+      ordersLimit,
+      orderStartDate?.toISOString() ?? null,
+      orderEndDate?.toISOString() ?? null
+    ],
+    queryFn: () =>
+      getOrdersByFunnel(funnelId, {
+        page: ordersPage,
+        limit: ordersLimit,
+        startDate: orderStartDate
+          ? format(orderStartDate, "yyyy-MM-dd")
+          : undefined,
+        endDate: orderEndDate ? format(orderEndDate, "yyyy-MM-dd") : undefined
+      }),
     enabled: !!funnelId && hasPermission
   })
 
@@ -165,13 +219,40 @@ function RouteComponent() {
     status: "draft" | "confirmed" | "official"
     shippingCode?: string
     itemCount: number
-    discount?: number
-    tax?: number
-    shippingCost?: number
+    items: {
+      code: string
+      name: string
+      price: number
+      quantity: number
+    }[]
   }
 
   const orderColumns = useMemo<ColumnDef<OrderHistoryItem>[]>(
     () => [
+      {
+        id: "expander",
+        header: "",
+        enableSorting: false,
+        cell: ({ row }) => (
+          <ActionIcon
+            variant="subtle"
+            color="gray"
+            aria-label={
+              row.getIsExpanded() ? "Thu gọn đơn hàng" : "Mở rộng đơn hàng"
+            }
+            onClick={(event) => {
+              event.stopPropagation()
+              row.toggleExpanded()
+            }}
+          >
+            {row.getIsExpanded() ? (
+              <IconChevronUp size={18} />
+            ) : (
+              <IconChevronDown size={18} />
+            )}
+          </ActionIcon>
+        )
+      },
       {
         accessorKey: "date",
         header: "Ngày đặt hàng",
@@ -239,8 +320,6 @@ function RouteComponent() {
     [navigate]
   )
 
-  const daysSinceLastPurchase = ordersData?.data.daysSinceLastPurchase
-
   const orderHistoryData = useMemo<OrderHistoryItem[]>(() => {
     if (!ordersData?.data?.data) return []
     return ordersData.data.data.map((order) => ({
@@ -253,11 +332,11 @@ function RouteComponent() {
         (sum: number, item) => sum + item.quantity,
         0
       ),
-      discount: order.tax,
-      tax: order.tax,
-      shippingCost: order.shippingCost
+      items: order.items
     }))
   }, [ordersData])
+
+  const orderStatistics = ordersData?.data
 
   const handleUpdateInfo = () => {
     if (!funnel) return
@@ -429,39 +508,47 @@ function RouteComponent() {
   return (
     <SalesLayout>
       <Box
-        mt={40}
+        maw={1360}
+        mt={24}
         mx="auto"
-        px={{ base: 8, md: 0 }}
+        px={{ base: "sm", md: "lg" }}
+        pb="xl"
         w="100%"
-        style={{
-          background: "rgba(255,255,255,0.97)",
-          borderRadius: rem(20),
-          boxShadow: "0 4px 32px 0 rgba(60,80,180,0.07)",
-          border: "1px solid #ececec"
-        }}
       >
         {/* Header Section */}
-        <Box pt={32} pb={16} px={{ base: 8, md: 28 }}>
-          <Group justify="space-between" mb="lg">
-            <Group>
+        <Group justify="space-between" align="center" mb="md" wrap="wrap">
+          <Group gap="sm">
+            <Tooltip label="Quay lại" withArrow>
               <ActionIcon
                 variant="subtle"
+                size="lg"
                 onClick={goBackToFunnelList}
+                aria-label="Quay lại danh sách funnel"
               >
                 <IconArrowLeft size={20} />
               </ActionIcon>
-              <div>
-                <Title order={2} c={funnel.deletedAt ? "red" : undefined}>
-                  Chi tiết Funnel
-                  {funnel.deletedAt && " (Đã xóa)"}
-                </Title>
-                <Text c="dimmed" size="sm">
-                  Thông tin chi tiết của khách hàng
-                </Text>
-              </div>
-            </Group>
-            {canPerformActions && (
-              <Group>
+            </Tooltip>
+            <Box>
+              <Title order={2} c={funnel.deletedAt ? "red" : undefined}>
+                Chi tiết Funnel{funnel.deletedAt && " (Đã xóa)"}
+              </Title>
+              <Text size="sm" c="dimmed">
+                Mã funnel: {funnel._id}
+              </Text>
+            </Box>
+          </Group>
+          {canPerformActions && (
+            <Group gap="xs" wrap="wrap">
+              {!funnel.deletedAt && (
+                <Button
+                  variant="light"
+                  leftSection={<IconEdit size={17} />}
+                  onClick={handleUpdateInfo}
+                >
+                  Cập nhật
+                </Button>
+              )}
+              <Group gap={6}>
                 {funnel.stage === "lead" && !funnel.deletedAt && (
                   <Tooltip label="Chuyển sang Đã liên hệ" withArrow>
                     <ActionIcon
@@ -476,16 +563,6 @@ function RouteComponent() {
                 )}
                 {!funnel.deletedAt && (
                   <>
-                    <Tooltip label="Cập nhật thông tin" withArrow>
-                      <ActionIcon
-                        variant="light"
-                        color="indigo"
-                        size="lg"
-                        onClick={handleUpdateInfo}
-                      >
-                        <IconEdit size={20} />
-                      </ActionIcon>
-                    </Tooltip>
                     <Tooltip label="Cập nhật giai đoạn" withArrow>
                       <ActionIcon
                         variant="light"
@@ -508,189 +585,181 @@ function RouteComponent() {
                     </Tooltip>
                   </>
                 )}
-                {(isAdmin || me?.roles?.includes("sales-leader")) && (
-                  <Tooltip label="Xóa funnel" withArrow>
-                    <Button
-                      variant="light"
-                      color="red"
-                      leftSection={<IconTrash size={18} />}
-                      onClick={confirmDelete}
-                      loading={isDeleting}
-                    >
-                      Xóa
-                    </Button>
-                  </Tooltip>
-                )}
               </Group>
-            )}
-          </Group>
-        </Box>
+              {(isAdmin || me?.roles?.includes("sales-leader")) && (
+                <Button
+                  variant="light"
+                  color="red"
+                  leftSection={<IconTrash size={17} />}
+                  onClick={confirmDelete}
+                  loading={isDeleting}
+                >
+                  Xóa
+                </Button>
+              )}
+            </Group>
+          )}
+        </Group>
 
-        {/* Content */}
-        <Box px={{ base: 8, md: 28 }} pb={32}>
-          <Grid>
+        <Stack gap="lg">
+          <Grid gutter="lg">
             <Grid.Col span={{ base: 12, md: 6 }}>
-              <Paper p="lg" withBorder>
-                <Title order={4} mb="md">
+              <Paper p="lg" withBorder style={detailCardStyle}>
+                <Title order={4} mb="lg">
                   Thông tin cơ bản
                 </Title>
-                <Divider mb="md" />
-                <Stack gap="md">
-                  <div>
-                    <Text size="sm" c="dimmed" mb={4}>
-                      Tên khách hàng
-                    </Text>
-                    <Text fw={500}>{funnel.name}</Text>
-                  </div>
-                  <div>
-                    <Text size="sm" c="dimmed" mb={4}>
-                      Số điện thoại chính
-                    </Text>
-                    <Text>{funnel.phoneNumber || "N/A"}</Text>
-                  </div>
+                <Grid gutter="sm">
+                  <Grid.Col span={{ base: 12, sm: 6 }}>
+                    <DetailField label="Tên khách hàng">
+                      <Text fw={600}>{funnel.name}</Text>
+                    </DetailField>
+                  </Grid.Col>
+                  <Grid.Col span={{ base: 12, sm: 6 }}>
+                    <DetailField label="Số điện thoại chính">
+                      <Text fw={600}>{funnel.phoneNumber || "N/A"}</Text>
+                    </DetailField>
+                  </Grid.Col>
                   {funnel.secondaryPhoneNumbers &&
                     funnel.secondaryPhoneNumbers.length > 0 && (
-                      <div>
-                        <Text size="sm" c="dimmed" mb={4}>
-                          Số điện thoại phụ
-                        </Text>
-                        <Stack gap={4}>
-                          {funnel.secondaryPhoneNumbers.map((phone, idx) => (
-                            <Text key={idx}>{phone}</Text>
-                          ))}
-                        </Stack>
-                      </div>
+                      <Grid.Col span={{ base: 12, sm: 6 }}>
+                        <DetailField label="Số điện thoại phụ">
+                          <Stack gap={4}>
+                            {funnel.secondaryPhoneNumbers.map((phone, idx) => (
+                              <Text key={idx} size="sm">
+                                {phone}
+                              </Text>
+                            ))}
+                          </Stack>
+                        </DetailField>
+                      </Grid.Col>
                     )}
-                  <div>
-                    <Text size="sm" c="dimmed" mb={4}>
-                      Địa chỉ
-                    </Text>
-                    <Text>{funnel.address || "N/A"}</Text>
-                  </div>
-                  <div>
-                    <Text size="sm" c="dimmed" mb={4}>
-                      Tỉnh/Thành phố
-                    </Text>
-                    <Text>{funnel.province?.name || "N/A"}</Text>
-                  </div>
-                  <div>
-                    <Text size="sm" c="dimmed" mb={4}>
-                      Nguồn khách
-                    </Text>
-                    <Text>{mapFunnelSource[funnel.funnelSource] || "N/A"}</Text>
-                  </div>
-                </Stack>
+                  <Grid.Col span={{ base: 12, sm: 6 }}>
+                    <DetailField label="Tỉnh/Thành phố">
+                      <Text>{funnel.province?.name || "N/A"}</Text>
+                    </DetailField>
+                  </Grid.Col>
+                  <Grid.Col span={12}>
+                    <DetailField label="Địa chỉ">
+                      <Text style={{ overflowWrap: "anywhere" }}>
+                        {funnel.address || "N/A"}
+                      </Text>
+                    </DetailField>
+                  </Grid.Col>
+                  <Grid.Col span={{ base: 12, sm: 6 }}>
+                    <DetailField label="Nguồn khách">
+                      <Text>
+                        {mapFunnelSource[funnel.funnelSource] || "N/A"}
+                      </Text>
+                    </DetailField>
+                  </Grid.Col>
+                </Grid>
               </Paper>
             </Grid.Col>
 
             <Grid.Col span={{ base: 12, md: 6 }}>
-              <Paper p="lg" withBorder>
-                <Title order={4} mb="md">
+              <Paper p="lg" withBorder style={detailCardStyle}>
+                <Title order={4} mb="lg">
                   Thông tin bán hàng
                 </Title>
-                <Divider mb="md" />
-                <Stack gap="md">
-                  <div>
-                    <Text size="sm" c="dimmed" mb={4}>
-                      Giai đoạn
-                    </Text>
-                    <Badge color={STAGE_BADGE_COLOR[funnel.stage]} size="lg">
-                      {STAGE_LABEL[funnel.stage]}
-                    </Badge>
-                  </div>
-                  <div>
-                    <Text size="sm" c="dimmed" mb={4}>
-                      Kênh
-                    </Text>
-                    <Text>{funnel.channel?.channelName || "N/A"}</Text>
-                  </div>
-                  <div>
-                    <Text size="sm" c="dimmed" mb={4}>
-                      Nhân viên phụ trách
-                    </Text>
-                    <Text>{funnel.user?.name || "N/A"}</Text>
-                  </div>
-                  <div>
-                    <Text size="sm" c="dimmed" mb={4}>
-                      Đã mua hàng
-                    </Text>
-                    <Badge color={funnel.hasBuyed ? "green" : "gray"}>
-                      {funnel.hasBuyed ? "Có" : "Chưa"}
-                    </Badge>
-                  </div>
-                  <div>
-                    <Text size="sm" c="dimmed" mb={4}>
-                      Khách hàng cũ
-                    </Text>
-                    <Badge color={funnel.fromSystem ? "green" : "gray"}>
-                      {funnel.fromSystem ? "Khách hàng cũ" : "Khách hàng mới"}
-                    </Badge>
-                  </div>
-                  <div>
-                    <Text size="sm" c="dimmed" mb={4}>
-                      Chi phí marketing
-                    </Text>
-                    <Text fw={500}>
-                      {funnel.cost
-                        ? `${funnel.cost.toLocaleString("vi-VN")}đ`
-                        : "N/A"}
-                    </Text>
-                  </div>
-                  <div>
-                    <Text size="sm" c="dimmed" mb={4}>
-                      Ngày tạo
-                    </Text>
-                    <Text>
-                      {format(new Date(funnel.createdAt), "dd/MM/yyyy HH:mm")}
-                    </Text>
-                  </div>
-                  <div>
-                    <Text size="sm" c="dimmed" mb={4}>
-                      Cập nhật lần cuối
-                    </Text>
-                    <Text>
-                      {format(new Date(funnel.updatedAt), "dd/MM/yyyy HH:mm")}
-                    </Text>
-                  </div>
+                <Grid gutter="sm">
+                  <Grid.Col span={{ base: 12, sm: 6 }}>
+                    <DetailField label="Giai đoạn">
+                      <Badge color={STAGE_BADGE_COLOR[funnel.stage]} size="lg">
+                        {STAGE_LABEL[funnel.stage]}
+                      </Badge>
+                    </DetailField>
+                  </Grid.Col>
+                  <Grid.Col span={{ base: 12, sm: 6 }}>
+                    <DetailField label="Kênh">
+                      <Text fw={500}>
+                        {funnel.channel?.channelName || "N/A"}
+                      </Text>
+                    </DetailField>
+                  </Grid.Col>
+                  <Grid.Col span={{ base: 12, sm: 6 }}>
+                    <DetailField label="Nhân viên phụ trách">
+                      <Text fw={500}>{funnel.user?.name || "N/A"}</Text>
+                    </DetailField>
+                  </Grid.Col>
+                  <Grid.Col span={{ base: 12, sm: 6 }}>
+                    <DetailField label="Loại khách hàng">
+                      <Badge color={funnel.fromSystem ? "green" : "gray"}>
+                        {funnel.fromSystem ? "Khách hàng cũ" : "Khách hàng mới"}
+                      </Badge>
+                    </DetailField>
+                  </Grid.Col>
+                  <Grid.Col span={12}>
+                    <SimpleGrid cols={{ base: 1, xs: 2 }} spacing="sm">
+                      <Box
+                        p="md"
+                        style={{
+                          borderRadius: rem(10),
+                          background: "var(--mantine-color-green-0)"
+                        }}
+                      >
+                        <Text size="xs" c="green.8" fw={500} mb={4}>
+                          Doanh thu tháng này
+                        </Text>
+                        <Text fw={700} size="xl" c="green.8">
+                          {(funnel.monthlyRevenue || 0).toLocaleString("vi-VN")}
+                          đ
+                        </Text>
+                      </Box>
+                      <Box
+                        p="md"
+                        style={{
+                          borderRadius: rem(10),
+                          background: "var(--mantine-color-teal-0)"
+                        }}
+                      >
+                        <Text size="xs" c="teal.8" fw={500} mb={4}>
+                          Tổng doanh thu
+                        </Text>
+                        <Text fw={700} size="xl" c="teal.8">
+                          {(funnel.totalRevenue || 0).toLocaleString("vi-VN")}đ
+                        </Text>
+                      </Box>
+                    </SimpleGrid>
+                  </Grid.Col>
                   {funnel.deletedAt && (
-                    <div>
-                      <Text size="sm" c="dimmed" mb={4}>
-                        Đã xóa lúc
-                      </Text>
-                      <Text c="red" fw={500}>
-                        {format(new Date(funnel.deletedAt), "dd/MM/yyyy HH:mm")}
-                      </Text>
-                    </div>
+                    <Grid.Col span={{ base: 12, sm: 6 }}>
+                      <DetailField label="Đã xóa lúc">
+                        <Text c="red" fw={500}>
+                          {format(
+                            new Date(funnel.deletedAt),
+                            "dd/MM/yyyy HH:mm"
+                          )}
+                        </Text>
+                      </DetailField>
+                    </Grid.Col>
                   )}
-                </Stack>
+                </Grid>
               </Paper>
             </Grid.Col>
 
             {/* Activities History */}
             <Grid.Col span={12}>
-              <Paper p="lg" withBorder>
-                <Group justify="space-between" mb="md">
+              <Paper p="lg" withBorder style={detailCardStyle}>
+                <Group justify="space-between" mb="lg" wrap="wrap">
                   <Title order={4}>Hoạt động chăm sóc</Title>
-                  <Group>
-                    {activitiesData?.data?.data && (
-                      <Badge size="lg" variant="light" color="blue">
-                        {Array.isArray(activitiesData.data.data)
+                  <Group gap="sm">
+                    <Badge size="lg" variant="light" color="blue">
+                      {activitiesData?.data?.total ??
+                        (Array.isArray(activitiesData?.data?.data)
                           ? activitiesData.data.data.length
-                          : 0}{" "}
-                        hoạt động
-                      </Badge>
-                    )}
-                    <ActionIcon
-                      variant="filled"
+                          : 0)}{" "}
+                      hoạt động
+                    </Badge>
+                    <Button
+                      leftSection={<IconPlus size={17} />}
+                      size="sm"
                       color="blue"
-                      size="lg"
                       onClick={() => setActivitiesDrawerOpen(true)}
                     >
-                      <IconPlus size={18} />
-                    </ActionIcon>
+                      Thêm hoạt động
+                    </Button>
                   </Group>
                 </Group>
-                <Divider mb="md" />
                 {isLoadingActivities ? (
                   <Stack gap="xs">
                     <Skeleton height={12} width="100%" radius="xl" />
@@ -700,22 +769,34 @@ function RouteComponent() {
                 ) : !activitiesData?.data?.data ||
                   (Array.isArray(activitiesData.data.data) &&
                     activitiesData.data.data.length === 0) ? (
-                  <Box py="xl">
-                    <Text c="dimmed" ta="center">
-                      Chưa có hoạt động chăm sóc nào
-                    </Text>
+                  <Box py="md">
+                    <Stack align="center" gap="xs">
+                      <Box
+                        p="sm"
+                        style={{
+                          borderRadius: rem(999),
+                          background: "var(--mantine-color-blue-0)"
+                        }}
+                      >
+                        <IconClipboardCheck
+                          size={22}
+                          color="var(--mantine-color-blue-6)"
+                        />
+                      </Box>
+                      <Text fw={500}>Chưa có hoạt động chăm sóc nào</Text>
+                    </Stack>
                   </Box>
                 ) : (
-                  <Stack gap="md">
+                  <Stack gap="sm">
                     {Array.isArray(activitiesData.data.data) &&
                       activitiesData.data.data.map((activity: any) => (
                         <Box
                           key={activity._id}
-                          p="md"
+                          p="sm"
                           style={{
-                            border: "1px solid #e9ecef",
-                            borderRadius: "8px",
-                            backgroundColor: "#f8f9fa"
+                            border: "1px solid var(--mantine-color-gray-3)",
+                            borderRadius: rem(10),
+                            backgroundColor: "var(--mantine-color-gray-0)"
                           }}
                         >
                           <Group justify="space-between" mb="xs">
@@ -752,8 +833,8 @@ function RouteComponent() {
                       ))}
                   </Stack>
                 )}
-                {activitiesData?.data?.total &&
-                  activitiesData.data.total > activitiesLimit && (
+                {activitiesData &&
+                  (activitiesData?.data?.total ?? 0) > activitiesLimit && (
                     <Group justify="center" mt="lg">
                       <Pagination
                         total={Math.ceil(
@@ -770,23 +851,75 @@ function RouteComponent() {
 
             {/* Order History */}
             <Grid.Col span={12}>
-              <Paper p="lg" withBorder>
-                <Group justify="space-between" mb="md">
+              <Paper p="lg" withBorder style={detailCardStyle}>
+                <Group justify="space-between" mb="lg">
                   <Title order={4}>Lịch sử mua hàng</Title>
-                  <Group>
-                    <Text>
-                      {daysSinceLastPurchase
-                        ? `Phát sinh đơn cuối từ: ${daysSinceLastPurchase} ngày trước`
-                        : "Chưa có đơn hàng nào"}
-                    </Text>
-                    {orderHistoryData.length > 0 && (
-                      <Badge size="lg" variant="light" color="blue">
-                        {orderHistoryData.length} đơn hàng
-                      </Badge>
-                    )}
-                  </Group>
                 </Group>
-                <Divider mb="md" />
+                <Group align="end" mb="lg" gap="sm" wrap="wrap">
+                  <DatePickerInput
+                    label="Từ ngày"
+                    placeholder="Từ ngày"
+                    value={orderStartDate}
+                    onChange={(value) => {
+                      setOrderStartDate(value)
+                      setOrdersPage(1)
+                    }}
+                    clearable
+                    valueFormat="DD/MM/YYYY"
+                    w={{ base: "100%", sm: 180 }}
+                  />
+                  <DatePickerInput
+                    label="Đến ngày"
+                    placeholder="Đến ngày"
+                    value={orderEndDate}
+                    onChange={(value) => {
+                      setOrderEndDate(value)
+                      setOrdersPage(1)
+                    }}
+                    clearable
+                    valueFormat="DD/MM/YYYY"
+                    w={{ base: "100%", sm: 180 }}
+                  />
+                </Group>
+                <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="sm" mb="lg">
+                  <Paper withBorder p="md" style={{ borderRadius: rem(10) }}>
+                    <Text size="xs" c="dimmed">
+                      Tổng doanh thu
+                    </Text>
+                    <Text fw={700} size="xl" c="green.7">
+                      {(orderStatistics?.totalRevenue || 0).toLocaleString(
+                        "vi-VN"
+                      )}
+                      đ
+                    </Text>
+                  </Paper>
+                  <Paper withBorder p="md" style={{ borderRadius: rem(10) }}>
+                    <Text size="xs" c="dimmed">
+                      Tổng số đơn hàng
+                    </Text>
+                    <Text fw={700} size="xl">
+                      {orderStatistics?.total || 0}
+                    </Text>
+                  </Paper>
+                  <Paper withBorder p="md" style={{ borderRadius: rem(10) }}>
+                    <Text size="xs" c="dimmed" mb={4}>
+                      Top 3 mặt hàng
+                    </Text>
+                    <Stack gap={2}>
+                      {orderStatistics?.topProducts?.length ? (
+                        orderStatistics.topProducts.map((product, index) => (
+                          <Text key={product.code} size="sm" lineClamp={1}>
+                            {index + 1}. {product.name} × {product.quantity}
+                          </Text>
+                        ))
+                      ) : (
+                        <Text size="sm" c="dimmed">
+                          —
+                        </Text>
+                      )}
+                    </Stack>
+                  </Paper>
+                </SimpleGrid>
                 {isLoadingOrders ? (
                   <Stack gap="xs">
                     <Skeleton height={12} width="100%" radius="xl" />
@@ -803,15 +936,53 @@ function RouteComponent() {
                   <CDataTable
                     columns={orderColumns}
                     data={orderHistoryData}
+                    variant="compact"
                     enableGlobalFilter={false}
                     pageSizeOptions={[10, 20, 50]}
-                    initialPageSize={10}
+                    initialPageSize={ordersLimit}
+                    page={ordersPage}
+                    totalPages={Math.max(
+                      1,
+                      Math.ceil((orderStatistics?.total || 0) / ordersLimit)
+                    )}
+                    onPageChange={setOrdersPage}
+                    onPageSizeChange={(pageSize) => {
+                      setOrdersLimit(pageSize)
+                      setOrdersPage(1)
+                    }}
+                    enableExpanding
+                    renderRowSubComponent={({ row }) => (
+                      <Box p="sm" bg="gray.0">
+                        <Stack gap="xs">
+                          {row.original.items.map((item) => (
+                            <Group
+                              key={item.code}
+                              justify="space-between"
+                              gap="sm"
+                            >
+                              <Group gap={6}>
+                                <Text size="sm">{item.name}</Text>
+                                <Text size="sm" c="dimmed">
+                                  × {item.quantity}
+                                </Text>
+                              </Group>
+                              <Text size="sm" fw={500}>
+                                {(item.price * item.quantity).toLocaleString(
+                                  "vi-VN"
+                                )}
+                                đ
+                              </Text>
+                            </Group>
+                          ))}
+                        </Stack>
+                      </Box>
+                    )}
                   />
                 )}
               </Paper>
             </Grid.Col>
           </Grid>
-        </Box>
+        </Stack>
       </Box>
 
       {/* Activities Drawer */}

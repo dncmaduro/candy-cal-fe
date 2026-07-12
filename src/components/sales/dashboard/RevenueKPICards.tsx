@@ -58,7 +58,7 @@ export function RevenueKPICards({
       iconColor: "blue"
     },
     {
-      label: "Tổng chi phí ads",
+      label: "Tổng chi phí ads (toàn Sales)",
       value: (
         <>
           {(totalAdsCost ?? 0).toLocaleString("vi-VN")}đ{" "}

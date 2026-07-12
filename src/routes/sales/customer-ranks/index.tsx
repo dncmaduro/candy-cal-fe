@@ -34,7 +34,7 @@ function RouteComponent() {
   const { getSalesCustomerRanks, deleteSalesCustomerRank } =
     useSalesCustomerRanks()
 
-  const { data: ranksData, refetch } = useQuery({
+  const { data: ranksData, refetch, isLoading } = useQuery({
     queryKey: ["salesCustomerRanks"],
     queryFn: () =>
       getSalesCustomerRanks({
@@ -172,6 +172,8 @@ function RouteComponent() {
             enableGlobalFilter={false}
             pageSizeOptions={[10, 20, 50]}
             initialPageSize={10}
+            isLoading={isLoading}
+            loadingText="Đang tải hạng khách hàng..."
           />
         </Box>
       </Box>
