@@ -66,8 +66,8 @@ export const SalesDailyReports = () => {
   })
 
   const roles = meData?.data?.roles ?? []
-  const showChannelFilter = ["admin", "sales-leader", "system-emp", "facebook-ads-emp"].some((role) => roles.includes(role))
-  const shouldUseMyChannel = roles.includes("sales-emp") && !["admin", "sales-leader", "system-emp"].some((role) => roles.includes(role))
+  const showChannelFilter = ["admin", "sales-hunter", "system-emp", "facebook-ads-emp"].some((role) => roles.includes(role))
+  const shouldUseMyChannel = roles.includes("sales-emp") && !["admin", "sales-hunter", "system-emp"].some((role) => roles.includes(role))
   const channelOptions = useMemo(() => channelsData?.data.map((item) => ({ value: item._id, label: item.channelName })) ?? [], [channelsData])
   const effectiveChannelId = shouldUseMyChannel
     ? myChannelData?.channel?._id || channelId
@@ -145,7 +145,7 @@ export const SalesDailyReports = () => {
       id: "actions", header: "Thao tác", enableSorting: false,
       cell: ({ row }) => <Group gap="xs">
         <Tooltip label="Xem tin nhắn báo cáo" withArrow><ActionIcon variant="light" color="blue" onClick={(event) => { event.stopPropagation(); modals.open({ id: "daily-report-message", title: <b>Tin nhắn báo cáo</b>, children: <DailyReportByText report={row.original} />, size: "lg" }) }}><IconMessage size={16} /></ActionIcon></Tooltip>
-        <Can roles={["admin", "sales-leader", "sales-emp", "system-emp"]}><Tooltip label="Xóa báo cáo" withArrow><ActionIcon variant="light" color="red" onClick={(event) => { event.stopPropagation(); modals.openConfirmModal({ title: <b>Xác nhận xóa báo cáo</b>, children: <Text size="sm">Bạn có chắc chắn muốn xóa báo cáo ngày <b>{format(new Date(row.original.date), "dd/MM/yyyy")}</b>?</Text>, labels: { confirm: "Xóa", cancel: "Hủy" }, confirmProps: { color: "red" }, onConfirm: () => deleteReport({ id: row.original._id }) }) }}><IconTrash size={16} /></ActionIcon></Tooltip></Can>
+        <Can roles={["admin", "sales-hunter", "sales-emp", "system-emp"]}><Tooltip label="Xóa báo cáo" withArrow><ActionIcon variant="light" color="red" onClick={(event) => { event.stopPropagation(); modals.openConfirmModal({ title: <b>Xác nhận xóa báo cáo</b>, children: <Text size="sm">Bạn có chắc chắn muốn xóa báo cáo ngày <b>{format(new Date(row.original.date), "dd/MM/yyyy")}</b>?</Text>, labels: { confirm: "Xóa", cancel: "Hủy" }, confirmProps: { color: "red" }, onConfirm: () => deleteReport({ id: row.original._id }) }) }}><IconTrash size={16} /></ActionIcon></Tooltip></Can>
       </Group>
     }
   ]

@@ -410,7 +410,7 @@ function RouteComponent() {
                 Đồng bộ và quản lý danh sách sản phẩm
               </Text>
             </div>
-            <Can roles={["admin", "sales-leader", "sales-emp"]}>
+            <Can roles={["admin", "sales-hunter", "sales-emp"]}>
               <Group gap="sm">
                 <Button
                   leftSection={<IconUpload size={16} />}
@@ -552,7 +552,7 @@ function RouteComponent() {
                     Xuất XLSX
                   </Button>
                 </Can>
-                <Can roles={["admin", "sales-leader", "sales-emp"]}>
+                <Can roles={["admin", "sales-hunter", "sales-emp"]}>
                   <Group gap="xs">
                     <Button
                       leftSection={<IconUpload size={16} />}

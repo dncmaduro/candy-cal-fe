@@ -36,6 +36,7 @@ import { Route as SalesTasksIndexImport } from './routes/sales/tasks/index'
 import { Route as SalesPriceIndexImport } from './routes/sales/price/index'
 import { Route as SalesOrdersIndexImport } from './routes/sales/orders/index'
 import { Route as SalesMessagesIndexImport } from './routes/sales/messages/index'
+import { Route as SalesLeadsIndexImport } from './routes/sales/leads/index'
 import { Route as SalesItemsIndexImport } from './routes/sales/items/index'
 import { Route as SalesFunnelIndexImport } from './routes/sales/funnel/index'
 import { Route as SalesDashboardIndexImport } from './routes/sales/dashboard/index'
@@ -233,6 +234,12 @@ const SalesOrdersIndexRoute = SalesOrdersIndexImport.update({
 const SalesMessagesIndexRoute = SalesMessagesIndexImport.update({
   id: '/sales/messages/',
   path: '/sales/messages/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const SalesLeadsIndexRoute = SalesLeadsIndexImport.update({
+  id: '/sales/leads/',
+  path: '/sales/leads/',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -981,6 +988,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SalesItemsIndexImport
       parentRoute: typeof rootRoute
     }
+    '/sales/leads/': {
+      id: '/sales/leads/'
+      path: '/sales/leads'
+      fullPath: '/sales/leads'
+      preLoaderRoute: typeof SalesLeadsIndexImport
+      parentRoute: typeof rootRoute
+    }
     '/sales/messages/': {
       id: '/sales/messages/'
       path: '/sales/messages'
@@ -1125,6 +1139,7 @@ export interface FileRoutesByFullPath {
   '/sales/dashboard': typeof SalesDashboardIndexRoute
   '/sales/funnel': typeof SalesFunnelIndexRoute
   '/sales/items': typeof SalesItemsIndexRoute
+  '/sales/leads': typeof SalesLeadsIndexRoute
   '/sales/messages': typeof SalesMessagesIndexRoute
   '/sales/orders': typeof SalesOrdersIndexRoute
   '/sales/price': typeof SalesPriceIndexRoute
@@ -1199,6 +1214,7 @@ export interface FileRoutesByTo {
   '/sales/dashboard': typeof SalesDashboardIndexRoute
   '/sales/funnel': typeof SalesFunnelIndexRoute
   '/sales/items': typeof SalesItemsIndexRoute
+  '/sales/leads': typeof SalesLeadsIndexRoute
   '/sales/messages': typeof SalesMessagesIndexRoute
   '/sales/orders': typeof SalesOrdersIndexRoute
   '/sales/price': typeof SalesPriceIndexRoute
@@ -1275,6 +1291,7 @@ export interface FileRoutesById {
   '/sales/dashboard/': typeof SalesDashboardIndexRoute
   '/sales/funnel/': typeof SalesFunnelIndexRoute
   '/sales/items/': typeof SalesItemsIndexRoute
+  '/sales/leads/': typeof SalesLeadsIndexRoute
   '/sales/messages/': typeof SalesMessagesIndexRoute
   '/sales/orders/': typeof SalesOrdersIndexRoute
   '/sales/price/': typeof SalesPriceIndexRoute
@@ -1352,6 +1369,7 @@ export interface FileRouteTypes {
     | '/sales/dashboard'
     | '/sales/funnel'
     | '/sales/items'
+    | '/sales/leads'
     | '/sales/messages'
     | '/sales/orders'
     | '/sales/price'
@@ -1425,6 +1443,7 @@ export interface FileRouteTypes {
     | '/sales/dashboard'
     | '/sales/funnel'
     | '/sales/items'
+    | '/sales/leads'
     | '/sales/messages'
     | '/sales/orders'
     | '/sales/price'
@@ -1499,6 +1518,7 @@ export interface FileRouteTypes {
     | '/sales/dashboard/'
     | '/sales/funnel/'
     | '/sales/items/'
+    | '/sales/leads/'
     | '/sales/messages/'
     | '/sales/orders/'
     | '/sales/price/'
@@ -1574,6 +1594,7 @@ export interface RootRouteChildren {
   SalesDashboardIndexRoute: typeof SalesDashboardIndexRoute
   SalesFunnelIndexRoute: typeof SalesFunnelIndexRoute
   SalesItemsIndexRoute: typeof SalesItemsIndexRoute
+  SalesLeadsIndexRoute: typeof SalesLeadsIndexRoute
   SalesMessagesIndexRoute: typeof SalesMessagesIndexRoute
   SalesOrdersIndexRoute: typeof SalesOrdersIndexRoute
   SalesPriceIndexRoute: typeof SalesPriceIndexRoute
@@ -1650,6 +1671,7 @@ const rootRouteChildren: RootRouteChildren = {
   SalesDashboardIndexRoute: SalesDashboardIndexRoute,
   SalesFunnelIndexRoute: SalesFunnelIndexRoute,
   SalesItemsIndexRoute: SalesItemsIndexRoute,
+  SalesLeadsIndexRoute: SalesLeadsIndexRoute,
   SalesMessagesIndexRoute: SalesMessagesIndexRoute,
   SalesOrdersIndexRoute: SalesOrdersIndexRoute,
   SalesPriceIndexRoute: SalesPriceIndexRoute,
@@ -1733,6 +1755,7 @@ export const routeTree = rootRoute
         "/sales/dashboard/",
         "/sales/funnel/",
         "/sales/items/",
+        "/sales/leads/",
         "/sales/messages/",
         "/sales/orders/",
         "/sales/price/",
@@ -1936,6 +1959,9 @@ export const routeTree = rootRoute
     },
     "/sales/items/": {
       "filePath": "sales/items/index.tsx"
+    },
+    "/sales/leads/": {
+      "filePath": "sales/leads/index.tsx"
     },
     "/sales/messages/": {
       "filePath": "sales/messages/index.tsx"

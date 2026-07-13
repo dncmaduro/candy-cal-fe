@@ -626,7 +626,7 @@ function RouteComponent() {
             >
               <IconEye size={16} />
             </ActionIcon>
-            <Can roles={["admin", "sales-leader", "sales-emp"]}>
+            <Can roles={["admin", "sales-hunter", "sales-emp"]}>
               <ActionIcon
                 variant="light"
                 color="indigo"
@@ -1335,7 +1335,7 @@ function RouteComponent() {
                     Xuất Excel kế toán
                   </Button>
                 )}
-                <Can roles={["admin", "sales-leader", "sales-emp"]}>
+                <Can roles={["admin", "sales-hunter", "sales-emp"]}>
                   <Button
                     onClick={handleUploadOrders}
                     leftSection={<IconFileUpload size={16} />}

@@ -62,7 +62,9 @@ function RouteComponent() {
   }
   if (
     roles.includes("sales-emp") ||
-    roles.includes("sales-leader") ||
+    roles.includes("sales-hunter") ||
+    roles.includes("sales-cs") ||
+    roles.includes("sales-hunter") ||
     roles.includes("facebook-ads-emp")
   ) {
     return <Navigate to="/sales/funnel" />

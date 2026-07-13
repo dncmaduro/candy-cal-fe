@@ -26,7 +26,7 @@ export const useSalesOrderReferenceData = ({
 
   const isAdmin = me?.roles.includes("admin")
   const isSystemEmp = me?.roles.includes("system-emp")
-  const isSalesLeader = me?.roles.includes("sales-leader")
+  const isSalesLeader = me?.roles.includes("sales-hunter")
   const isSalesEmp = me?.roles.includes("sales-emp")
   const isAccountingEmp =
     me?.roles.includes("accounting-emp") ||

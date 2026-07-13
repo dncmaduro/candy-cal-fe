@@ -437,7 +437,7 @@ function RouteComponent() {
     return me?.roles?.includes("admin") ?? false
   }, [me])
   const isSalesLeader = useMemo(() => {
-    return me?.roles?.includes("sales-leader") ?? false
+    return me?.roles?.includes("sales-hunter") ?? false
   }, [me])
   const isFacebookAdsEmp = useMemo(() => {
     return me?.roles?.includes("facebook-ads-emp") ?? false
@@ -574,7 +574,7 @@ function RouteComponent() {
                 <IconHistory size={16} />
               </ActionIcon>
             </Tooltip>
-            {(isAdmin || me?.roles?.includes("sales-leader")) && (
+            {(isAdmin || me?.roles?.includes("sales-hunter")) && (
               <Tooltip label="Tạo task" withArrow>
                 <ActionIcon
                   variant="light"
@@ -908,7 +908,7 @@ function RouteComponent() {
               </>
             }
             extraActions={
-              <Can roles={["admin", "sales-leader", "sales-emp"]}>
+              <Can roles={["admin", "sales-hunter", "sales-emp"]}>
                 <Group gap="xs">
                   <Button
                     onClick={handleUploadFunnels}

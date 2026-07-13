@@ -49,6 +49,8 @@ const ROLE_LABELS: Record<string, string> = {
   "livestream-accounting": "Kế toán livestream",
   "sales-leader": "Leader sales",
   "sales-emp": "Nhân viên sales",
+  "sales-hunter": "Sales hunter",
+  "sales-cs": "Sales CS",
   "sales-accounting": "Kế toán sales"
 }
 
@@ -65,6 +67,8 @@ const ROLE_COLORS: Record<string, string> = {
   "livestream-accounting": "teal",
   "sales-leader": "lime",
   "sales-emp": "green",
+  "sales-hunter": "orange",
+  "sales-cs": "teal",
   "sales-accounting": "blue"
 }
 

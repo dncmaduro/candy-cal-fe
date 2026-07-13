@@ -47,6 +47,13 @@ export const Sidebar = ({
         {navs
           ?.filter((n) => {
             if (!meData || (n as any).deprecated) return false
+            const excludedRoles = (n as any).excludedRoles as string[] | undefined
+            if (
+              !meData.roles.includes("admin") &&
+              excludedRoles?.some((role) => meData.roles.includes(role))
+            ) {
+              return false
+            }
             return meData.roles.some((role: string) =>
               [...n.roles, "admin"].includes(role)
             )

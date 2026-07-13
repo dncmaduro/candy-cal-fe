@@ -644,7 +644,7 @@ function RouteComponent() {
                 </Text>
               </div>
             </Group>
-            <Can roles={["sales-leader", "sales-emp"]}>
+            <Can roles={["sales-hunter", "sales-emp"]}>
               <Group>
                 <Button
                   color="gray"
@@ -962,7 +962,7 @@ function RouteComponent() {
                   pageSizeOptions={[10, 20, 50]}
                   initialPageSize={10}
                   extraActions={
-                    <Can roles={["sales-leader", "sales-emp"]}>
+                    <Can roles={["sales-hunter", "sales-emp"]}>
                       <Group>
                         <Button
                           onClick={handleSyncItems}

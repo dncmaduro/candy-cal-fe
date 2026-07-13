@@ -586,7 +586,7 @@ function RouteComponent() {
                   </>
                 )}
               </Group>
-              {(isAdmin || me?.roles?.includes("sales-leader")) && (
+              {(isAdmin || me?.roles?.includes("sales-hunter")) && (
                 <Button
                   variant="light"
                   color="red"
