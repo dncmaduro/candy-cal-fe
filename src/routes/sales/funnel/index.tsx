@@ -12,7 +12,7 @@ import {
   Switch
 } from "@mantine/core"
 import { useQuery } from "@tanstack/react-query"
-import { useMemo, useState, useEffect } from "react"
+import { useMemo, useState } from "react"
 import { modals } from "@mantine/modals"
 import { format } from "date-fns"
 import {
@@ -89,7 +89,6 @@ export const Route = createFileRoute("/sales/funnel/")({
       stageFilter: parseString(search.stageFilter),
       provinceFilter: parseString(search.provinceFilter),
       channelFilter: parseString(search.channelFilter),
-      userFilter: parseString(search.userFilter),
       rankFilter: parseString(search.rankFilter),
       noActivityDaysFilter: parseString(search.noActivityDaysFilter),
       funnelSourceFilter: parseFunnelSource(search.funnelSourceFilter),
@@ -152,8 +151,8 @@ function RouteComponent() {
   const search = Route.useSearch()
   const { searchFunnel, deleteFunnel } = useSalesFunnel()
   const { getProvinces } = useProvinces()
-  const { publicSearchUser, getMe } = useUsers()
-  const { searchSalesChannels, getMyChannel } = useSalesChannels()
+  const { getMe } = useUsers()
+  const { searchSalesChannels } = useSalesChannels()
   // const { getConversationIdByPsid } = useMetaServices()
 
   const page = search.page
@@ -162,7 +161,6 @@ function RouteComponent() {
   const stageFilter = search.stageFilter ?? ""
   const provinceFilter = search.provinceFilter ?? ""
   const channelFilter = search.channelFilter ?? ""
-  const userFilter = search.userFilter ?? ""
   const rankFilter = search.rankFilter ?? ""
   const noActivityDaysFilter = search.noActivityDaysFilter ?? ""
   const [activitiesDrawerOpen, setActivitiesDrawerOpen] = useState(false)
@@ -224,18 +222,6 @@ function RouteComponent() {
     queryFn: () => searchSalesChannels({ page: 1, limit: 999 })
   })
 
-  const { data: usersData } = useQuery({
-    queryKey: ["users", "public", "all"],
-    queryFn: () => publicSearchUser({ page: 1, limit: 999 })
-  })
-
-  const { data: myChannelData } = useQuery({
-    queryKey: ["getMyChannel"],
-    queryFn: getMyChannel,
-    select: (data) => data.data,
-    enabled: !!meData?.data
-  })
-
   // Load funnel data with filters
   const { data, refetch, isLoading } = useQuery({
     queryKey: [
@@ -246,7 +232,6 @@ function RouteComponent() {
       stageFilter,
       provinceFilter,
       channelFilter,
-      userFilter,
       rankFilter,
       noActivityDaysFilter,
       funnelSourceFilter,
@@ -264,7 +249,6 @@ function RouteComponent() {
           : undefined,
         province: provinceFilter || undefined,
         channel: channelFilter || undefined,
-        user: userFilter || undefined,
         rank: rankFilter
           ? (rankFilter as "gold" | "silver" | "bronze")
           : undefined,
@@ -292,26 +276,6 @@ function RouteComponent() {
       value: channel._id,
       label: channel.channelName
     })) || []
-
-  const userOptions =
-    usersData?.data.data.map((user) => ({
-      value: user._id,
-      label: user.name ?? "Anonymous"
-    })) || []
-
-  useEffect(() => {
-    if (myChannelData?.channel?._id && !channelFilter) {
-      navigate({
-        to: "/sales/funnel",
-        search: {
-          ...search,
-          channelFilter: myChannelData.channel._id,
-          page: 1
-        },
-        replace: true
-      })
-    }
-  }, [channelFilter, myChannelData, navigate, search])
 
   const handleCreateLead = () => {
     modals.open({
@@ -475,42 +439,9 @@ function RouteComponent() {
   const isSalesLeader = useMemo(() => {
     return me?.roles?.includes("sales-leader") ?? false
   }, [me])
-  const isSystemEmp = useMemo(() => {
-    return me?.roles?.includes("system-emp") ?? false
-  }, [me])
-  const isSalesEmp = useMemo(() => {
-    return me?.roles?.includes("sales-emp") ?? false
-  }, [me])
   const isFacebookAdsEmp = useMemo(() => {
     return me?.roles?.includes("facebook-ads-emp") ?? false
   }, [me])
-
-  // Determine filter visibility based on roles
-  const showUserFilter = isAdmin || isSystemEmp || isFacebookAdsEmp
-  const showChannelFilter =
-    isAdmin || isSystemEmp || isSalesLeader || isFacebookAdsEmp
-
-  // Auto-apply user filter for sales-emp
-  useEffect(() => {
-    if (
-      isSalesEmp &&
-      !isAdmin &&
-      !isSystemEmp &&
-      !isSalesLeader &&
-      me?._id &&
-      !userFilter
-    ) {
-      navigate({
-        to: "/sales/funnel",
-        search: {
-          ...search,
-          userFilter: me._id,
-          page: 1
-        },
-        replace: true
-      })
-    }
-  }, [isSalesEmp, isAdmin, isSystemEmp, isSalesLeader, me?._id, navigate, userFilter, search])
 
   const mapFunnelSource = {
     ads: "Ads",
@@ -843,55 +774,28 @@ function RouteComponent() {
                   style={{ width: 200 }}
                 />
 
-                {showChannelFilter && (
-                  <Select
-                    label="Kênh"
-                    placeholder="Tất cả kênh"
-                    data={[
-                      { value: "", label: "Tất cả kênh" },
-                      ...channelOptions
-                    ]}
-                    value={channelFilter}
-                    onChange={(value) =>
-                      navigate({
-                        to: "/sales/funnel",
-                        search: {
-                          ...search,
-                          channelFilter: value || undefined,
-                          page: 1
-                        }
-                      })
-                    }
-                    searchable
-                    clearable
-                    style={{ width: 200 }}
-                  />
-                )}
-
-                {showUserFilter && (
-                  <Select
-                    label="Nhân viên"
-                    placeholder="Tất cả nhân viên"
-                    data={[
-                      { value: "", label: "Tất cả nhân viên" },
-                      ...userOptions
-                    ]}
-                    value={userFilter}
-                    onChange={(value) =>
-                      navigate({
-                        to: "/sales/funnel",
-                        search: {
-                          ...search,
-                          userFilter: value || undefined,
-                          page: 1
-                        }
-                      })
-                    }
-                    searchable
-                    clearable
-                    style={{ width: 200 }}
-                  />
-                )}
+                <Select
+                  label="Kênh"
+                  placeholder="Tất cả kênh"
+                  data={[
+                    { value: "", label: "Tất cả kênh" },
+                    ...channelOptions
+                  ]}
+                  value={channelFilter}
+                  onChange={(value) =>
+                    navigate({
+                      to: "/sales/funnel",
+                      search: {
+                        ...search,
+                        channelFilter: value || undefined,
+                        page: 1
+                      }
+                    })
+                  }
+                  searchable
+                  clearable
+                  style={{ width: 200 }}
+                />
 
                 <Select
                   label="Hạng"
