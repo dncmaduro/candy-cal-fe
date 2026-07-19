@@ -14,9 +14,11 @@ import { useUIStore } from "../../store/uiStore"
 import { MyTasksPopover } from "../tasks/MyTasksPopover.tsx"
 import { SALES_NAVS, SALES_VIEW_ROLES } from "../../constants/navs.ts"
 import { useAuthGuard } from "../../hooks/useAuthGuard.ts"
+import { useSalesRouteAccess } from "../../hooks/useSalesRouteAccess.ts"
 
 export const SalesLayout = ({ children }: { children: ReactNode }) => {
-  useAuthGuard(SALES_VIEW_ROLES)
+  const { meData: guardedUser } = useAuthGuard(SALES_VIEW_ROLES)
+  useSalesRouteAccess(guardedUser?.roles)
   const { accessToken, setUser, clearUser } = useUserStore()
   const { checkToken, getNewToken, getMe } = useUsers()
   const navigate = useNavigate()
@@ -58,13 +60,13 @@ export const SalesLayout = ({ children }: { children: ReactNode }) => {
     if (!isTokenValid) {
       getToken()
     }
-  }, [isTokenValid])
+  }, [getToken, isTokenValid])
 
   useEffect(() => {
     if (!accessToken) {
       navigate({ to: "/" })
     }
-  }, [accessToken])
+  }, [accessToken, navigate])
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "#f8fafc" }}>

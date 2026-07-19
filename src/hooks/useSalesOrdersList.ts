@@ -6,14 +6,12 @@ type UseSalesOrdersListParams = {
   page: number
   limit: number
   searchText?: string
-  returningFilter?: string
   funnelFilter?: string
   shippingTypeFilter?: string
   statusFilter?: string
   startDate?: Date | null
   endDate?: Date | null
   userIdFilter?: string
-  channelIdFilter?: string
   refetchKey?: string
   enabled?: boolean
 }
@@ -22,14 +20,12 @@ export const useSalesOrdersList = ({
   page,
   limit,
   searchText,
-  returningFilter,
   funnelFilter,
   shippingTypeFilter,
   statusFilter,
   startDate,
   endDate,
   userIdFilter,
-  channelIdFilter,
   refetchKey,
   enabled = true
 }: UseSalesOrdersListParams) => {
@@ -44,14 +40,12 @@ export const useSalesOrdersList = ({
       page,
       limit,
       searchText,
-      returningFilter,
       funnelFilter,
       shippingTypeFilter,
       statusFilter,
       startDateValue,
       endDateValue,
       userIdFilter,
-      channelIdFilter,
       refetchKey
     ],
     queryFn: () =>
@@ -59,8 +53,6 @@ export const useSalesOrdersList = ({
         page,
         limit,
         searchText: searchText || undefined,
-        returning:
-          returningFilter === "" ? undefined : returningFilter === "true",
         salesFunnelId: funnelFilter || undefined,
         shippingType:
           shippingTypeFilter === ""
@@ -72,8 +64,7 @@ export const useSalesOrdersList = ({
             : (statusFilter as "draft" | "confirmed" | "official"),
         startDate: startDateValue,
         endDate: endDateValue,
-        userId: userIdFilter || undefined,
-        channelId: channelIdFilter || undefined
+        userId: userIdFilter || undefined
       }),
     enabled,
     staleTime: 5 * 60 * 1000,

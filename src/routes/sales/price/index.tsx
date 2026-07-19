@@ -178,7 +178,7 @@ function RouteComponent() {
       id: "actions",
       header: "Thao tác",
       cell: ({ row }) => (
-        <Can roles={["admin", "sales-hunter", "sales-emp"]}>
+        <Can roles={["admin", "sales-hunter", "sales-cs"]}>
           <div className="flex gap-2">
             <ActionIcon
               variant="light"
@@ -273,7 +273,7 @@ function RouteComponent() {
             isLoading={isLoadingPriceItems || isLoadingStorageItems}
             loadingText="Đang tải báo giá..."
             extraActions={
-              <Can roles={["admin", "sales-hunter", "sales-emp"]}>
+              <Can roles={["admin", "sales-hunter", "sales-cs"]}>
                 <Button
                   onClick={() => openPriceItemModal()}
                   leftSection={<IconPlus size={16} />}

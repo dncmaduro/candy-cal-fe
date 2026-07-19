@@ -14,19 +14,27 @@ import {
   TextInput
 } from "@mantine/core"
 import { modals } from "@mantine/modals"
-import { IconPhone, IconPlus, IconRepeat, IconUserPlus } from "@tabler/icons-react"
+import {
+  IconPhone,
+  IconPlus,
+  IconUserPlus
+} from "@tabler/icons-react"
 import { ColumnDef } from "@tanstack/react-table"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { SalesLayout } from "../../../components/layouts/SalesLayout"
 import { CDataTable } from "../../../components/common/CDataTable"
 import { CToast } from "../../../components/common/CToast"
-import { useSalesLeads, type AvailableCs } from "../../../hooks/useSalesLeads"
+import {
+  useSalesLeads,
+  type AvailableCs,
+  type CallCompliance
+} from "../../../hooks/useSalesLeads"
 import { useSalesChannels } from "../../../hooks/useSalesChannels"
 import { useUsers } from "../../../hooks/useUsers"
 import type { SearchSalesChannelResponse } from "../../../hooks/models"
 
-type LeadView = "acquired" | "active" | "needs-call" | "pool" | "availability"
-type AssignmentFilter = "all" | "unassigned" | "assigned"
+type LeadView = "acquired" | "active" | "needs-call" | "availability" | "report"
+type LeadStatusFilter = "all" | "unassigned" | "assigned" | "pooled" | "retained"
 
 type Person = { _id?: string; name?: string; username?: string }
 type Funnel = { _id?: string; name?: string; phoneNumber?: string }
@@ -35,6 +43,9 @@ type LeadCaseRecord = {
   salesFunnelId?: Funnel
   hunterId?: Person
   currentAssignmentId?: { salesCsId?: Person; cycleKey?: string }
+  total?: number
+  called?: number
+  missingCall?: number
   status?: string
 }
 type LeadAssignmentRecord = {
@@ -56,17 +67,10 @@ type LeadRow = {
   cycleKey?: string
   status?: string
   leadCaseId?: string
+  total?: number
+  called?: number
+  missingCall?: number
 }
-
-const callOutcomeOptions = [
-  { value: "no_answer", label: "Không nghe máy" },
-  { value: "not_interested", label: "Không quan tâm" },
-  { value: "call_back", label: "Hẹn gọi lại" },
-  { value: "considering", label: "Đang cân nhắc" },
-  { value: "closed", label: "Đã chốt" },
-  { value: "wrong_number", label: "Sai số" },
-  { value: "other", label: "Khác" }
-]
 
 const getUserName = (user?: Person) => user?.name || user?.username || "—"
 
@@ -95,9 +99,16 @@ export const Route = createFileRoute("/sales/leads/")({
         view === "acquired" ||
         view === "active" ||
         view === "needs-call" ||
-        view === "pool" ||
-        view === "availability"
+        view === "availability" ||
+        view === "report"
           ? view
+          : undefined,
+      status:
+        search.status === "unassigned" ||
+        search.status === "assigned" ||
+        search.status === "pooled" ||
+        search.status === "retained"
+          ? search.status
           : undefined
     }
   },
@@ -121,85 +132,86 @@ function LeadsPage() {
   const roles = me?.roles || []
   const isHunter = roles.includes("sales-hunter")
   const isCs = roles.includes("sales-cs")
-  const isManager = roles.includes("admin") || roles.includes("sales-hunter")
+  const isManager =
+    roles.includes("admin") ||
+    roles.includes("sales-hunter") ||
+    roles.includes("sales-leader")
+  const canCreateLead = isHunter || roles.includes("admin") || roles.includes("sales-leader")
   const canCareLead =
     isCs || roles.includes("admin") || roles.includes("sales-leader")
-  const [assignmentFilter, setAssignmentFilter] =
-    useState<AssignmentFilter>("all")
 
-  const viewOptions = useMemo(
-    () => {
-      if (isCs || isManager) {
-        return [
-          { value: "active" as const, label: "Lead đang chờ" },
-          ...(isManager
-            ? [
-                {
-                  value: "availability" as const,
-                  label: "Trạng thái nhận lead"
-                }
-              ]
-            : [])
-        ]
-      }
-
+  const viewOptions = useMemo(() => {
+    if (isCs) {
       return [
-        ...(isHunter
-          ? [
-              { value: "acquired" as const, label: "Lead đã tạo" },
-              { value: "pool" as const, label: "Chờ phân lại" }
-            ]
-          : [])
+        { value: "active" as const, label: "Khách hàng của tôi" }
       ]
-    },
-    [isCs, isHunter, isManager]
-  )
+    }
+    return [
+      ...(isManager
+        ? [
+            { value: "acquired" as const, label: "Lead đã tạo" },
+            { value: "availability" as const, label: "Trạng thái nhận khách" },
+            { value: "report" as const, label: "Tuân thủ gọi" }
+          ]
+        : [])
+    ]
+  }, [isCs, isManager])
 
-  const defaultView: LeadView = "active"
+  const defaultView: LeadView = isCs ? "active" : "acquired"
   const currentView = viewOptions.some((option) => option.value === search.view)
     ? (search.view as LeadView)
     : defaultView
+  const statusFilter = (search.status || "all") as LeadStatusFilter
+
+  useEffect(() => {
+    if (!isManager || search.view) return
+    navigate({
+      to: "/sales/leads",
+      search: { view: "acquired", status: search.status },
+      replace: true
+    })
+  }, [isManager, navigate, search.status, search.view])
 
   const { data: availableCs } = useQuery({
     queryKey: ["salesLeads", "availableCs"],
     queryFn: api.availableCs,
-    select: (response) => response.data,
-    enabled: isHunter || isCs || isManager
+    select: (response) => response.data as AvailableCs[],
+    enabled: isManager || canCareLead
   })
   const { data: channels } = useQuery({
     queryKey: ["salesLeads", "channels"],
     queryFn: () => searchSalesChannels({ page: 1, limit: 999 }),
-    select: (response) => response.data.data,
-    enabled: isHunter
+    select: (response) => response.data.data as SalesChannel[],
+    enabled: canCreateLead
   })
   const acquiredQuery = useQuery({
     queryKey: ["salesLeads", "acquired"],
     queryFn: api.acquired,
-    select: (response) => response.data,
-    enabled: isHunter || isManager
+    select: (response) => response.data as LeadCaseRecord[],
+    enabled: isManager
   })
   const activeQuery = useQuery({
     queryKey: ["salesLeads", "active"],
     queryFn: () => api.active(false),
-    select: (response) => response.data,
+    select: (response) => response.data as LeadAssignmentRecord[],
     enabled: canCareLead
   })
   const needsCallQuery = useQuery({
     queryKey: ["salesLeads", "needsCall"],
     queryFn: () => api.active(true),
-    select: (response) => response.data,
+    select: (response) => response.data as LeadAssignmentRecord[],
     enabled: canCareLead
-  })
-  const poolQuery = useQuery({
-    queryKey: ["salesLeads", "pool"],
-    queryFn: api.pool,
-    select: (response) => response.data,
-    enabled: isHunter || isManager
   })
   const availabilityQuery = useQuery({
     queryKey: ["salesLeads", "availability"],
     queryFn: api.availability,
-    select: (response) => response.data,
+    select: (response) => response.data as AvailableCs[],
+    enabled: isManager
+  })
+  const complianceQuery = useQuery({
+    queryKey: ["salesLeads", "callCompliance"],
+    queryFn: () => api.callCompliance(),
+    select: (response) => response.data as CallCompliance,
     enabled: isManager
   })
 
@@ -233,7 +245,8 @@ function LeadsPage() {
     mutationFn: ({ id, value }: { id: string; value: boolean }) =>
       api.setAvailability(id, value),
     onSuccess: refresh,
-    onError: () => CToast.error({ title: "Không thể cập nhật trạng thái nhận lead" })
+    onError: () =>
+      CToast.error({ title: "Không thể cập nhật trạng thái nhận lead" })
   })
 
   const rows = useMemo<LeadRow[]>(() => {
@@ -241,33 +254,34 @@ function LeadsPage() {
       return (availabilityQuery.data || []).map((item) => ({
         id: item.salesCsId?._id || item._id,
         name: getUserName(item.salesCsId),
-        status: item.isReceivingLeads ? "receiving" : "paused",
+        status: item.isReceivingLeads ? "receiving" : "paused"
+      }))
+    }
+    if (currentView === "report") {
+      return (complianceQuery.data?.bySalesCs || []).map((item) => ({
+        id: item.salesCs._id,
+        name: getUserName(item.salesCs),
+        total: item.total,
+        called: item.called,
+        missingCall: item.missingCall
       }))
     }
 
-    if (currentView === "pool") {
-      return (poolQuery.data || []).map((item: LeadCaseRecord) => ({
-        id: item._id,
-        name: item.salesFunnelId?.name || "—",
-        phoneNumber: item.salesFunnelId?.phoneNumber,
-        hunterName: getUserName(item.hunterId),
-        status: "pooled"
-      }))
-    }
+    if (currentView === "acquired") {
+      const acquiredRows = (acquiredQuery.data || []).map(
+        (item: LeadCaseRecord) => ({
+          id: item._id,
+          name: item.salesFunnelId?.name || "—",
+          phoneNumber: item.salesFunnelId?.phoneNumber,
+          salesCsName: getUserName(item.currentAssignmentId?.salesCsId),
+          cycleKey: item.currentAssignmentId?.cycleKey,
+          status: item.status
+        })
+      )
 
-    if (currentView === "acquired" || (currentView === "active" && isHunter)) {
-      const acquiredRows = (acquiredQuery.data || []).map((item: LeadCaseRecord) => ({
-        id: item._id,
-        name: item.salesFunnelId?.name || "—",
-        phoneNumber: item.salesFunnelId?.phoneNumber,
-        salesCsName: getUserName(item.currentAssignmentId?.salesCsId),
-        cycleKey: item.currentAssignmentId?.cycleKey,
-        status: item.status
-      }))
-
-      return currentView === "active" && assignmentFilter !== "all"
-        ? acquiredRows.filter((item) => item.status === assignmentFilter)
-        : acquiredRows
+      return statusFilter === "all"
+        ? acquiredRows
+        : acquiredRows.filter((item) => item.status === statusFilter)
     }
 
     const assignments =
@@ -276,7 +290,9 @@ function LeadsPage() {
     return (assignments || []).map((item: LeadAssignmentRecord) => ({
       id: item._id,
       name:
-        item.leadCaseId?.salesFunnelId?.name || item.customerSnapshot?.name || "—",
+        item.leadCaseId?.salesFunnelId?.name ||
+        item.customerSnapshot?.name ||
+        "—",
       phoneNumber:
         item.leadCaseId?.salesFunnelId?.phoneNumber ||
         item.customerSnapshot?.phoneNumber,
@@ -289,25 +305,22 @@ function LeadsPage() {
     acquiredQuery.data,
     activeQuery.data,
     availabilityQuery.data,
-    assignmentFilter,
+    complianceQuery.data,
     currentView,
-    isHunter,
     needsCallQuery.data,
-    poolQuery.data
+    statusFilter
   ])
 
   const isLoading =
     currentView === "acquired"
       ? acquiredQuery.isLoading
       : currentView === "active"
-        ? isHunter
-          ? acquiredQuery.isLoading
-          : activeQuery.isLoading
+        ? activeQuery.isLoading
         : currentView === "needs-call"
           ? needsCallQuery.isLoading
-          : currentView === "pool"
-            ? poolQuery.isLoading
-            : availabilityQuery.isLoading
+          : currentView === "report"
+              ? complianceQuery.isLoading
+              : availabilityQuery.isLoading
 
   const openCreateModal = () => {
     modals.open({
@@ -340,47 +353,28 @@ function LeadsPage() {
     })
   }
 
-  const openActivityModal = (assignment: LeadRow) => {
-    modals.open({
-      title: <b>Chăm sóc lead</b>,
-      size: "lg",
-      children: (
-        <LeadActivityModal
-          name={assignment.name}
-          salesCsOptions={csOptions(availableCs)}
-          onAddCall={async (data) => {
-            if (!assignment.leadCaseId) return
-            await api.addCall(assignment.leadCaseId, data)
-            CToast.success({ title: "Đã lưu kết quả gọi" })
-            refresh()
-            modals.closeAll()
-          }}
-          onTransfer={async (salesCsId) => {
-            if (!assignment.leadCaseId) return
-            await api.transfer(assignment.leadCaseId, salesCsId)
-            CToast.success({ title: "Đã chuyển lead" })
-            refresh()
-            modals.closeAll()
-          }}
-        />
-      )
-    })
-  }
-
-  const columns = (() => {
+  const columns: ColumnDef<LeadRow>[] = (() => {
     if (currentView === "availability") {
       return [
         {
           accessorKey: "name",
-          header: "Sales CS",
-          cell: ({ row }) => <Text fw={600} size="sm">{row.original.name}</Text>
+          header: "Sales",
+          cell: ({ row }) => (
+            <Text fw={600} size="sm">
+              {row.original.name}
+            </Text>
+          )
         },
         {
           accessorKey: "status",
           header: "Trạng thái",
           cell: ({ row }) => (
-            <Badge color={row.original.status === "receiving" ? "green" : "gray"}>
-              {row.original.status === "receiving" ? "Đang nhận lead" : "Tạm dừng"}
+            <Badge
+              color={row.original.status === "receiving" ? "green" : "gray"}
+            >
+              {row.original.status === "receiving"
+                ? "Đang nhận lead"
+                : "Tạm dừng"}
             </Badge>
           )
         },
@@ -404,41 +398,62 @@ function LeadsPage() {
         }
       ]
     }
+    if (currentView === "report") {
+      return [
+        {
+          accessorKey: "name",
+          header: "Sales",
+          cell: ({ row }) => <Text fw={600} size="sm">{row.original.name}</Text>
+        },
+        { accessorKey: "total", header: "Tổng lead" },
+        { accessorKey: "called", header: "Đã gọi" },
+        {
+          accessorKey: "missingCall",
+          header: "Chưa gọi",
+          cell: ({ row }) => <Badge color={row.original.missingCall ? "orange" : "green"}>{row.original.missingCall || 0}</Badge>
+        }
+      ]
+    }
 
     const result: ColumnDef<LeadRow>[] = [
       {
         accessorKey: "name",
         header: "Khách hàng",
-        cell: ({ row }) => <Text fw={600} size="sm">{row.original.name}</Text>
+        cell: ({ row }) => (
+          <Text fw={600} size="sm">
+            {row.original.name}
+          </Text>
+        )
       },
       {
         accessorKey: "phoneNumber",
         header: "Số điện thoại",
-        cell: ({ row }) => <Text size="sm">{row.original.phoneNumber || "—"}</Text>
+        cell: ({ row }) => (
+          <Text size="sm">{row.original.phoneNumber || "—"}</Text>
+        )
       }
     ]
 
-    if (currentView === "pool") {
-      result.push({
-        accessorKey: "hunterName",
-        header: "Sales Hunter",
-        cell: ({ row }) => <Text size="sm">{row.original.hunterName || "—"}</Text>
-      })
-    } else {
-      result.push({
-        accessorKey: "salesCsName",
-        header: "Sales CS",
-        cell: ({ row }) => <Text size="sm">{row.original.salesCsName || "—"}</Text>
-      })
-    }
+    result.push({
+      accessorKey: "salesCsName",
+      header: "Sales",
+      cell: ({ row }) => (
+        <Text size="sm">{row.original.salesCsName || "—"}</Text>
+      )
+    })
 
-    if (currentView !== "pool") {
-      result.push({
-        accessorKey: "cycleKey",
-        header: "Kỳ chăm sóc",
-        cell: ({ row }) => <Text size="sm">{row.original.cycleKey || "Khách giữ lâu dài"}</Text>
-      })
-    }
+    result.push({
+      accessorKey: "cycleKey",
+      header: "Kỳ chăm sóc",
+      cell: ({ row }) => (
+        <Text size="sm">
+          {row.original.cycleKey ||
+            (["unassigned", "pooled"].includes(row.original.status || "")
+              ? "Chưa phân công"
+              : "Khách hàng")}
+        </Text>
+      )
+    })
 
     result.push({
       accessorKey: "status",
@@ -446,11 +461,12 @@ function LeadsPage() {
       cell: ({ row }) => <LeadStatusBadge status={row.original.status} />
     })
 
-    if (currentView === "pool") {
-      result.push({
-        id: "actions",
-        header: "Thao tác",
-        cell: ({ row }) => (
+    result.push({
+      id: "actions",
+      header: "Thao tác",
+      cell: ({ row }) =>
+        currentView === "acquired" &&
+        ["unassigned", "pooled"].includes(row.original.status || "") ? (
           <Button
             size="xs"
             variant="light"
@@ -459,33 +475,29 @@ function LeadsPage() {
           >
             Phân lead
           </Button>
-        ),
-        enableSorting: false
-      })
-    }
-
-    if ((currentView === "active" || currentView === "needs-call") && canCareLead) {
-      result.push({
-        id: "actions",
-        header: "Thao tác",
-        cell: ({ row }) => (
+        ) : (
           <Button
             size="xs"
             variant="light"
             leftSection={<IconPhone size={15} />}
-            onClick={() => openActivityModal(row.original)}
+            onClick={() =>
+              navigate({
+                to: "/sales/leads/$leadId",
+                params: { leadId: row.original.leadCaseId || row.original.id }
+              })
+            }
           >
-            Chăm sóc
+            Xem chi tiết
           </Button>
         ),
-        enableSorting: false
-      })
-    }
+      enableSorting: false
+    })
 
     return result
   })()
 
-  const pageTitle = viewOptions.find((option) => option.value === currentView)?.label || "Lead"
+  const pageTitle =
+    viewOptions.find((option) => option.value === currentView)?.label || "Lead"
 
   return (
     <SalesLayout>
@@ -504,9 +516,11 @@ function LeadsPage() {
         <Box pt={32} pb={16} px={{ base: 8, md: 28 }}>
           <Group justify="space-between" align="flex-start">
             <Box>
-              <Text fw={700} fz="xl" mb={2}>Quản lý lead</Text>
+              <Text fw={700} fz="xl" mb={2}>
+                Quản lý lead
+              </Text>
               <Text c="dimmed" fz="sm">
-                Lead đang chờ bao gồm lead mới và lead cũ do Sales CS phụ trách
+                Lead đang chờ bao gồm lead mới và lead cũ do Sales phụ trách
               </Text>
             </Box>
             {canCareLead && (
@@ -548,7 +562,7 @@ function LeadsPage() {
                 initialPageSize={10}
                 pageSizeOptions={[10, 20, 50, 100]}
                 extraActions={
-                  isHunter ? (
+                  canCreateLead ? (
                     <Button
                       onClick={openCreateModal}
                       leftSection={<IconPlus size={16} />}
@@ -560,19 +574,30 @@ function LeadsPage() {
                   ) : undefined
                 }
                 extraFilters={
-                  currentView === "active" && isHunter ? (
+                  currentView === "acquired" ? (
                     <Select
-                      aria-label="Lọc trạng thái phân lead"
+                      aria-label="Lọc trạng thái lead"
                       data={[
-                        { value: "all", label: "Tất cả lead" },
-                        { value: "unassigned", label: "Chưa phân cho ai" },
-                        { value: "assigned", label: "Đã phân" }
+                        { value: "all", label: "Tất cả trạng thái" },
+                        { value: "unassigned", label: "Chưa phân" },
+                        { value: "assigned", label: "Đã phân" },
+                        { value: "pooled", label: "Chờ phân lại" },
+                        { value: "retained", label: "Khách hàng" }
                       ]}
-                      value={assignmentFilter}
+                      value={statusFilter}
                       onChange={(value) =>
-                        setAssignmentFilter((value || "all") as AssignmentFilter)
+                        navigate({
+                          to: "/sales/leads",
+                          search: {
+                            view: "acquired",
+                            status:
+                              value && value !== "all"
+                                ? (value as Exclude<LeadStatusFilter, "all">)
+                                : undefined
+                          }
+                        })
                       }
-                      w={190}
+                      w={210}
                       allowDeselect={false}
                     />
                   ) : undefined
@@ -589,7 +614,7 @@ function LeadsPage() {
 function LeadStatusBadge({ status }: { status?: string }) {
   const labels: Record<string, string> = {
     active: "Đang chăm sóc",
-    retained: "Khách giữ lâu dài",
+    retained: "Khách hàng",
     unassigned: "Chưa phân cho ai",
     assigned: "Đã phân",
     pooled: "Chờ phân lại"
@@ -602,7 +627,11 @@ function LeadStatusBadge({ status }: { status?: string }) {
     pooled: "orange"
   }
 
-  return <Badge color={colors[status || ""] || "gray"}>{labels[status || ""] || status || "—"}</Badge>
+  return (
+    <Badge color={colors[status || ""] || "gray"}>
+      {labels[status || ""] || status || "—"}
+    </Badge>
+  )
 }
 
 function CreateSalesLeadModal({
@@ -654,30 +683,40 @@ function CreateSalesLeadModal({
       <Select
         label="Kênh"
         placeholder="Chọn kênh"
-        data={channels.map((item) => ({ value: item._id, label: item.channelName }))}
+        data={channels.map((item) => ({
+          value: item._id,
+          label: item.channelName
+        }))}
         value={channel}
         onChange={(value) => {
           setChannel(value)
           setSalesCsId(null)
         }}
         searchable
+        clearable
       />
       <Select
-        label="Sales CS nhận khách"
-        placeholder="Chọn Sales CS"
+        label="Sales nhận khách"
+        placeholder="Chọn Sales"
         data={filteredSalesCsOptions}
         value={salesCsId}
         onChange={setSalesCsId}
         searchable
+        clearable
+        disabled={!channel}
         description={
           channel && filteredSalesCsOptions.length === 0
-            ? "Kênh này chưa có Sales CS đang bật nhận lead"
+            ? "Kênh này chưa có Sales đang bật nhận lead"
             : undefined
         }
-        nothingFoundMessage="Không có Sales CS phù hợp"
+        nothingFoundMessage="Không có Sales phù hợp"
       />
       <Group justify="flex-end" mt="md">
-        <Button variant="default" onClick={() => modals.closeAll()} disabled={loading}>
+        <Button
+          variant="default"
+          onClick={() => modals.closeAll()}
+          disabled={loading}
+        >
           Hủy
         </Button>
         <Button
@@ -714,110 +753,33 @@ function AssignLeadModal({
 
   return (
     <Stack gap="md">
-      <Text size="sm">Chọn Sales CS nhận lead <b>{name}</b>.</Text>
+      <Text size="sm">
+        Chọn Sales nhận lead <b>{name}</b>.
+      </Text>
       <Select
-        label="Sales CS nhận khách"
-        placeholder="Chọn Sales CS"
+        label="Sales nhận khách"
+        placeholder="Chọn Sales"
         data={options}
         value={salesCsId}
         onChange={setSalesCsId}
         searchable
       />
       <Group justify="flex-end">
-        <Button variant="default" onClick={() => modals.closeAll()} disabled={loading}>Hủy</Button>
-        <Button loading={loading} disabled={!salesCsId} onClick={() => salesCsId && onSubmit(salesCsId)}>
+        <Button
+          variant="default"
+          onClick={() => modals.closeAll()}
+          disabled={loading}
+        >
+          Hủy
+        </Button>
+        <Button
+          loading={loading}
+          disabled={!salesCsId}
+          onClick={() => salesCsId && onSubmit(salesCsId)}
+        >
           Phân lead
         </Button>
       </Group>
-    </Stack>
-  )
-}
-
-function LeadActivityModal({
-  name,
-  salesCsOptions,
-  onAddCall,
-  onTransfer
-}: {
-  name: string
-  salesCsOptions: { value: string; label: string }[]
-  onAddCall: (data: { outcome: string; note: string }) => Promise<void>
-  onTransfer: (salesCsId: string) => Promise<void>
-}) {
-  const [outcome, setOutcome] = useState<string | null>(null)
-  const [note, setNote] = useState("")
-  const [salesCsId, setSalesCsId] = useState<string | null>(null)
-  const [saving, setSaving] = useState<"call" | "transfer" | null>(null)
-
-  const saveCall = async () => {
-    if (!outcome || !note.trim()) return
-    try {
-      setSaving("call")
-      await onAddCall({ outcome, note: note.trim() })
-    } catch (error: unknown) {
-      CToast.error({ title: getErrorMessage(error, "Không thể lưu kết quả gọi") })
-    } finally {
-      setSaving(null)
-    }
-  }
-  const transfer = async () => {
-    if (!salesCsId) return
-    try {
-      setSaving("transfer")
-      await onTransfer(salesCsId)
-    } catch (error: unknown) {
-      CToast.error({ title: getErrorMessage(error, "Không thể chuyển lead") })
-    } finally {
-      setSaving(null)
-    }
-  }
-
-  return (
-    <Stack gap="lg">
-      <Text size="sm">Cập nhật chăm sóc cho <b>{name}</b>.</Text>
-      <Stack gap="sm">
-        <Text fw={600} size="sm">Kết quả gọi</Text>
-        <Select
-          placeholder="Chọn kết quả"
-          data={callOutcomeOptions}
-          value={outcome}
-          onChange={setOutcome}
-        />
-        <TextInput
-          placeholder="Nhập ghi chú"
-          value={note}
-          onChange={(event) => setNote(event.currentTarget.value)}
-        />
-        <Button
-          variant="light"
-          leftSection={<IconPhone size={16} />}
-          loading={saving === "call"}
-          disabled={!outcome || !note.trim() || saving === "transfer"}
-          onClick={saveCall}
-        >
-          Lưu kết quả gọi
-        </Button>
-      </Stack>
-      <Stack gap="sm">
-        <Text fw={600} size="sm">Chuyển Sales CS</Text>
-        <Select
-          placeholder="Chọn Sales CS"
-          data={salesCsOptions}
-          value={salesCsId}
-          onChange={setSalesCsId}
-          searchable
-        />
-        <Button
-          variant="light"
-          color="orange"
-          leftSection={<IconRepeat size={16} />}
-          loading={saving === "transfer"}
-          disabled={!salesCsId || saving === "call"}
-          onClick={transfer}
-        >
-          Chuyển lead
-        </Button>
-      </Stack>
     </Stack>
   )
 }

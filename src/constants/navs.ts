@@ -33,10 +33,10 @@ export const SALES_VIEW_ROLES = [
   "admin",
   "system-emp",
   "sales-hunter",
-  "sales-emp",
   "sales-accounting",
   "facebook-ads-emp",
-  "sales-cs"
+  "sales-cs",
+  "sales-leader"
 ]
 export const SALES_WITHOUT_HUNTER_ROLES = SALES_VIEW_ROLES.filter(
   (role) => role !== "sales-hunter"
@@ -44,8 +44,8 @@ export const SALES_WITHOUT_HUNTER_ROLES = SALES_VIEW_ROLES.filter(
 export const SALES_WITHOUT_HUNTER_OR_CS_ROLES = SALES_VIEW_ROLES.filter(
   (role) => role !== "sales-hunter" && role !== "sales-cs"
 )
-export const SALES_REVENUE_REPORT_ROLES = ["admin", "sales-emp"]
-export const SALES_ADS_COST_REPORT_ROLES = ["admin", "facebook-ads-emp"]
+export const SALES_REVENUE_REPORT_ROLES = ["admin", "sales-cs"]
+export const SALES_ADS_COST_REPORT_ROLES = ["admin", "sales-hunter"]
 
 /** @constant */
 export const NAVS = [
@@ -95,7 +95,7 @@ export const NAVS = [
   //     "order-emp",
   //     "accounting-emp",
   //     "system-emp",
-  //     "sales-emp",
+  //     "sales-cs",
   //     "sales-hunter",
   //     "sales-accounting",
   //     "livestream-emp",
@@ -255,8 +255,7 @@ export const SALES_NAVS = [
   {
     to: `${SALES_NAVS_URL}/leads`,
     label: "Quản lý lead",
-    roles: ["admin", "sales-hunter"],
-    excludedRoles: ["sales-cs"],
+    roles: ["admin", "sales-hunter", "sales-leader"],
     icon: "IconUserPlus"
   },
   {
@@ -313,6 +312,49 @@ export const SALES_NAVS = [
     icon: "IconDeviceTabletStar"
   }
 ]
+
+export type NavigationItem = {
+  to: string
+  label: string
+  roles: string[]
+  icon: string
+  excludedRoles?: string[]
+  deprecated?: boolean
+  beta?: boolean
+}
+
+export const getVisibleNavigationItems = <T extends NavigationItem>(
+  navs: T[],
+  roles: string[]
+) =>
+  navs.filter((nav) => {
+    if (nav.deprecated) return false
+
+    if (
+      !roles.includes("admin") &&
+      nav.excludedRoles?.some((role) => roles.includes(role))
+    ) {
+      return false
+    }
+
+    return roles.some((role) => [...nav.roles, "admin"].includes(role))
+  })
+
+/** Mirrors the visibility rule used by the Sales sidebar. */
+export const getVisibleSalesNavs = (roles: string[]) =>
+  getVisibleNavigationItems(SALES_NAVS, roles)
+
+/** Hunter and CS can only open Sales routes that are visible in their sidebar. */
+export const canAccessSalesRoute = (roles: string[], pathname: string) => {
+  const hasRestrictedRole =
+    roles.includes("sales-hunter") || roles.includes("sales-cs")
+
+  if (!hasRestrictedRole) return true
+
+  return getVisibleSalesNavs(roles).some(
+    (nav) => pathname === nav.to || pathname.startsWith(`${nav.to}/`)
+  )
+}
 
 /** @constant */
 export const ADMIN_NAVS = [

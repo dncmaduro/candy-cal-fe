@@ -302,7 +302,7 @@ function RouteComponent() {
                 </Text>
               </div>
             </Group>
-            <Can roles={["admin", "sales-emp"]}>
+            <Can roles={["admin", "sales-cs"]}>
               <Group>
                 <Tooltip label="Chỉnh sửa sản phẩm" withArrow>
                   <ActionIcon

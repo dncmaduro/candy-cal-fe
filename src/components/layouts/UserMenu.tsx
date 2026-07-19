@@ -55,7 +55,8 @@ export const UserMenu = () => {
     "livestream-emp": "Host livestream",
     "livestream-ast": "Trợ live",
     "sales-leader": "Leader sales",
-    "sales-emp": "Nhân viên sales",
+    "sales-hunter": "Nhân viên khai thác lead",
+    "sales-cs": "Nhân viên CSKH",
     "facebook-ads-emp": "Nhân viên Facebook Ads",
     "livestream-accounting": "Kế toán livestream",
     "sales-accounting": "Kế toán sales"

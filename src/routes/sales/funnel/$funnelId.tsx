@@ -12,7 +12,6 @@ import {
   Divider,
   ActionIcon,
   Tooltip,
-  Pagination,
   Button,
   Skeleton,
   SimpleGrid
@@ -27,10 +26,7 @@ import {
   IconCash,
   IconArrowRight,
   IconEye,
-  IconPlus,
   IconPhone,
-  IconMessage,
-  IconDots,
   IconTrash,
   IconChevronDown,
   IconChevronUp,
@@ -47,14 +43,14 @@ import {
   getSalesOrderStatusColor,
   getSalesOrderStatusLabel
 } from "../../../utils/salesOrderStatus"
-import { useSalesActivities } from "../../../hooks/useSalesActivities"
 import { useUsers } from "../../../hooks/useUsers"
 import { UpdateFunnelInfoModal } from "../../../components/sales/UpdateFunnelInfoModal"
 import { UpdateStageModal } from "../../../components/sales/UpdateStageModal"
 import { UpdateFunnelCostModal } from "../../../components/sales/UpdateFunnelCostModal"
 import { MoveToContactedModal } from "../../../components/sales/MoveToContactedModal"
-import { SalesActivitiesDrawer } from "../../../components/sales/SalesActivitiesDrawer"
+import { LogSalesLeadCallModal } from "../../../components/sales/LogSalesLeadCallModal"
 import { CDataTable } from "../../../components/common/CDataTable"
+import { useSalesLeads } from "../../../hooks/useSalesLeads"
 
 export const Route = createFileRoute("/sales/funnel/$funnelId")({
   component: RouteComponent
@@ -72,6 +68,21 @@ const STAGE_LABEL: Record<string, string> = {
   contacted: "Đã liên hệ",
   customer: "Khách hàng",
   closed: "Đã đóng"
+}
+
+const CALL_OUTCOME_LABEL: Record<string, string> = {
+  no_answer: "Không nghe máy",
+  not_interested: "Không quan tâm",
+  call_back: "Hẹn gọi lại",
+  considering: "Đang cân nhắc",
+  closed: "Đã chốt",
+  wrong_number: "Sai số",
+  other: "Khác"
+}
+
+type SalesLeadCaseWithCalls = {
+  _id: string
+  calls?: Array<Record<string, unknown>>
 }
 
 const LoadingField = ({
@@ -125,12 +136,9 @@ function RouteComponent() {
   const { getFunnelById, checkPermissionOnFunnel, deleteFunnel } =
     useSalesFunnel()
   const { getOrdersByFunnel } = useSalesOrders()
-  const { getSalesActivities } = useSalesActivities()
   const { getMe } = useUsers()
+  const { detailByFunnel } = useSalesLeads()
 
-  const [activitiesDrawerOpen, setActivitiesDrawerOpen] = useState(false)
-  const [activitiesPage, setActivitiesPage] = useState(1)
-  const activitiesLimit = 5
   const [orderStartDate, setOrderStartDate] = useState<Date | null>(null)
   const [orderEndDate, setOrderEndDate] = useState<Date | null>(null)
   const [ordersPage, setOrdersPage] = useState(1)
@@ -185,21 +193,25 @@ function RouteComponent() {
     enabled: !!funnelId && hasPermission
   })
 
-  // Fetch activities
-  const { data: activitiesData, isLoading: isLoadingActivities } = useQuery({
-    queryKey: ["salesActivities", funnelId, activitiesPage],
-    queryFn: () =>
-      getSalesActivities({
-        salesFunnelId: funnelId!,
-        page: activitiesPage,
-        limit: activitiesLimit
-      }),
-    enabled: !!funnelId && hasPermission
+  // The new sales flow records calls on the lead case, not legacy activities.
+  const {
+    data: leadCaseData,
+    isLoading: isLoadingCalls,
+    refetch: refetchCalls
+  } = useQuery({
+    queryKey: ["salesLead", "byFunnel", funnelId],
+    queryFn: () => detailByFunnel(funnelId),
+    select: (response) => response.data as SalesLeadCaseWithCalls | null,
+    enabled: !!funnelId && hasPermission,
+    retry: false
   })
 
   const funnel = data?.data
+  const leadCase = leadCaseData
+  const calls = Array.isArray(leadCase?.calls) ? leadCase.calls : []
   const me = meData?.data
   const isAdmin = me?.roles?.includes("admin") ?? false
+  const canLogCalls = me?.roles?.includes("sales-cs") ?? false
   const isResponsibleUser = funnel?.user?._id === me?._id
 
   const canPerformActions = isAdmin || isResponsibleUser
@@ -256,11 +268,7 @@ function RouteComponent() {
       {
         accessorKey: "date",
         header: "Ngày đặt hàng",
-        cell: ({ row }) => (
-          <Text size="sm">
-            {format(new Date(row.original.date), "dd/MM/yyyy")}
-          </Text>
-        )
+        cell: ({ row }) => format(new Date(row.original.date), "dd/MM/yyyy")
       },
       {
         accessorKey: "status",
@@ -351,7 +359,7 @@ function RouteComponent() {
             phoneNumber: funnel.phoneNumber,
             secondaryPhoneNumbers: funnel.secondaryPhoneNumbers,
             address: funnel.address,
-            channel: funnel.channel._id,
+            channel: funnel.channel?._id ?? "",
             hasBuyed: funnel.hasBuyed,
             funnelSource: funnel.funnelSource,
             fromSystem: funnel.fromSystem
@@ -416,6 +424,20 @@ function RouteComponent() {
         />
       ),
       size: "lg"
+    })
+  }
+
+  const handleLogCall = () => {
+    if (!leadCase?._id) return
+    modals.open({
+      title: <b>Ghi nhận cuộc gọi</b>,
+      centered: true,
+      children: (
+        <LogSalesLeadCallModal
+          leadCaseId={leadCase._id as string}
+          onSuccess={() => void refetchCalls()}
+        />
+      )
     })
   }
 
@@ -638,17 +660,17 @@ function RouteComponent() {
                       <Text>{funnel.province?.name || "N/A"}</Text>
                     </DetailField>
                   </Grid.Col>
-                  <Grid.Col span={12}>
-                    <DetailField label="Địa chỉ">
-                      <Text style={{ overflowWrap: "anywhere" }}>
-                        {funnel.address || "N/A"}
-                      </Text>
-                    </DetailField>
-                  </Grid.Col>
                   <Grid.Col span={{ base: 12, sm: 6 }}>
                     <DetailField label="Nguồn khách">
                       <Text>
                         {mapFunnelSource[funnel.funnelSource] || "N/A"}
+                      </Text>
+                    </DetailField>
+                  </Grid.Col>
+                  <Grid.Col span={12}>
+                    <DetailField label="Địa chỉ">
+                      <Text style={{ overflowWrap: "anywhere" }}>
+                        {funnel.address || "N/A"}
                       </Text>
                     </DetailField>
                   </Grid.Col>
@@ -737,38 +759,38 @@ function RouteComponent() {
               </Paper>
             </Grid.Col>
 
-            {/* Activities History */}
+            {/* Call history for the new sales-lead flow */}
             <Grid.Col span={12}>
               <Paper p="lg" withBorder style={detailCardStyle}>
                 <Group justify="space-between" mb="lg" wrap="wrap">
-                  <Title order={4}>Hoạt động chăm sóc</Title>
+                  <Title order={4}>Lịch sử cuộc gọi</Title>
                   <Group gap="sm">
                     <Badge size="lg" variant="light" color="blue">
-                      {activitiesData?.data?.total ??
-                        (Array.isArray(activitiesData?.data?.data)
-                          ? activitiesData.data.data.length
-                          : 0)}{" "}
-                      hoạt động
+                      {calls.length} cuộc gọi
                     </Badge>
-                    <Button
-                      leftSection={<IconPlus size={17} />}
-                      size="sm"
-                      color="blue"
-                      onClick={() => setActivitiesDrawerOpen(true)}
-                    >
-                      Thêm hoạt động
-                    </Button>
+                    {leadCase?._id && canLogCalls && (
+                      <Button
+                        leftSection={<IconPhone size={17} />}
+                        size="sm"
+                        color="blue"
+                        onClick={handleLogCall}
+                      >
+                        Ghi nhận cuộc gọi
+                      </Button>
+                    )}
                   </Group>
                 </Group>
-                {isLoadingActivities ? (
+                {isLoadingCalls ? (
                   <Stack gap="xs">
                     <Skeleton height={12} width="100%" radius="xl" />
                     <Skeleton height={12} width="90%" radius="xl" />
                     <Skeleton height={12} width="95%" radius="xl" />
                   </Stack>
-                ) : !activitiesData?.data?.data ||
-                  (Array.isArray(activitiesData.data.data) &&
-                    activitiesData.data.data.length === 0) ? (
+                ) : !leadCase ? (
+                  <Text c="dimmed" size="sm">
+                    Funnel này chưa thuộc luồng lead mới nên chưa có call log.
+                  </Text>
+                ) : calls.length === 0 ? (
                   <Box py="md">
                     <Stack align="center" gap="xs">
                       <Box
@@ -783,15 +805,14 @@ function RouteComponent() {
                           color="var(--mantine-color-blue-6)"
                         />
                       </Box>
-                      <Text fw={500}>Chưa có hoạt động chăm sóc nào</Text>
+                      <Text fw={500}>Chưa có cuộc gọi nào</Text>
                     </Stack>
                   </Box>
                 ) : (
                   <Stack gap="sm">
-                    {Array.isArray(activitiesData.data.data) &&
-                      activitiesData.data.data.map((activity: any) => (
+                    {calls.map((call: any) => (
                         <Box
-                          key={activity._id}
+                          key={call._id}
                           p="sm"
                           style={{
                             border: "1px solid var(--mantine-color-gray-3)",
@@ -801,51 +822,26 @@ function RouteComponent() {
                         >
                           <Group justify="space-between" mb="xs">
                             <Badge
-                              color="blue"
+                              color="green"
                               variant="light"
-                              leftSection={
-                                activity.type === "call" ? (
-                                  <IconPhone size={14} />
-                                ) : activity.type === "message" ? (
-                                  <IconMessage size={14} />
-                                ) : (
-                                  <IconDots size={14} />
-                                )
-                              }
+                              leftSection={<IconPhone size={14} />}
                             >
-                              {activity.type === "call"
-                                ? "Gọi điện"
-                                : activity.type === "message"
-                                  ? "Tin nhắn"
-                                  : "Khác"}
+                              {CALL_OUTCOME_LABEL[call.outcome] || "Cuộc gọi"}
                             </Badge>
                             <Text size="xs" c="dimmed">
                               {format(
-                                new Date(activity.time),
+                                new Date(call.calledAt),
                                 "dd/MM/yyyy HH:mm"
                               )}
                             </Text>
                           </Group>
-                          {activity.note && (
-                            <Text size="sm">{activity.note}</Text>
+                          {call.note && (
+                            <Text size="sm">{call.note}</Text>
                           )}
                         </Box>
                       ))}
                   </Stack>
                 )}
-                {activitiesData &&
-                  (activitiesData?.data?.total ?? 0) > activitiesLimit && (
-                    <Group justify="center" mt="lg">
-                      <Pagination
-                        total={Math.ceil(
-                          activitiesData.data.total / activitiesLimit
-                        )}
-                        value={activitiesPage}
-                        onChange={setActivitiesPage}
-                        size="sm"
-                      />
-                    </Group>
-                  )}
               </Paper>
             </Grid.Col>
 
@@ -984,13 +980,6 @@ function RouteComponent() {
         </Stack>
       </Box>
 
-      {/* Activities Drawer */}
-      <SalesActivitiesDrawer
-        opened={activitiesDrawerOpen}
-        onClose={() => setActivitiesDrawerOpen(false)}
-        funnelId={funnelId}
-        funnelName={funnel?.name || ""}
-      />
     </SalesLayout>
   )
 }
