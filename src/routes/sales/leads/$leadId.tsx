@@ -81,6 +81,7 @@ function LeadDetailPage() {
   })
   const roles = meQuery.data?.roles || []
   const canCare = roles.includes("sales-cs") || roles.includes("admin") || roles.includes("sales-leader")
+  const canTransfer = canCare || roles.includes("sales-hunter")
   const detailQuery = useQuery({
     queryKey: ["salesLeads", "detail", leadId],
     queryFn: () => api.detail(leadId),
@@ -90,7 +91,7 @@ function LeadDetailPage() {
     queryKey: ["salesLeads", "availableCs"],
     queryFn: api.availableCs,
     select: (response) => response.data as AvailableCs[],
-    enabled: canCare
+    enabled: canTransfer
   })
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["salesLeads"] })
   const addCall = useMutation({
@@ -119,10 +120,13 @@ function LeadDetailPage() {
   const detail = detailQuery.data
   const assignments = detail?.assignments || (detail?.assignment ? [detail.assignment] : [])
   const calls = detail?.calls || []
-  const salesCsOptions = (availableCsQuery.data || []).map((row) => ({
-    value: row.salesCsId._id,
-    label: nameOf(row.salesCsId)
-  }))
+  const currentSalesCsId = detail?.assignment?.salesCsId?._id
+  const salesCsOptions = (availableCsQuery.data || [])
+    .filter((row) => row.salesCsId._id !== currentSalesCsId)
+    .map((row) => ({
+      value: row.salesCsId._id,
+      label: nameOf(row.salesCsId)
+    }))
 
   return (
     <SalesLayout>
@@ -142,20 +146,28 @@ function LeadDetailPage() {
               {detail.funnel?.address && <Text>Địa chỉ: {detail.funnel.address}</Text>}
             </Box>
 
-            {canCare && (
+            {(canCare || canTransfer) && (
               <Box p="lg" bg="white" style={{ borderRadius: 12 }}>
                 <Title order={4}>Chăm sóc khách hàng</Title>
                 <Stack mt="md">
-                  <Select placeholder="Chọn kết quả gọi" data={outcomes} value={outcome} onChange={setOutcome} />
-                  <Textarea placeholder="Ghi chú cuộc gọi" value={note} onChange={(event) => setNote(event.currentTarget.value)} />
-                  <Button leftSection={<IconPhone size={16} />} disabled={!outcome || !note.trim()} loading={addCall.isPending} onClick={() => addCall.mutate()}>
-                    Lưu cuộc gọi
-                  </Button>
-                  <Divider />
-                  <Select placeholder="Chuyển cho Sales" data={salesCsOptions} value={salesCsId} onChange={setSalesCsId} searchable clearable />
-                  <Button color="orange" variant="light" leftSection={<IconRepeat size={16} />} disabled={!salesCsId} loading={transfer.isPending} onClick={() => transfer.mutate()}>
-                    Chuyển khách hàng
-                  </Button>
+                  {canCare && (
+                    <>
+                      <Select placeholder="Chọn kết quả gọi" data={outcomes} value={outcome} onChange={setOutcome} />
+                      <Textarea placeholder="Ghi chú cuộc gọi" value={note} onChange={(event) => setNote(event.currentTarget.value)} />
+                      <Button leftSection={<IconPhone size={16} />} disabled={!outcome || !note.trim()} loading={addCall.isPending} onClick={() => addCall.mutate()}>
+                        Lưu cuộc gọi
+                      </Button>
+                    </>
+                  )}
+                  {canCare && <Divider />}
+                  {canTransfer && (
+                    <>
+                      <Select placeholder="Chuyển khách cho CSKH" data={salesCsOptions} value={salesCsId} onChange={setSalesCsId} searchable clearable />
+                      <Button color="orange" variant="light" leftSection={<IconRepeat size={16} />} disabled={!salesCsId} loading={transfer.isPending} onClick={() => transfer.mutate()}>
+                        Chuyển khách hàng
+                      </Button>
+                    </>
+                  )}
                 </Stack>
               </Box>
             )}
