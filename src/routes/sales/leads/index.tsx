@@ -17,13 +17,15 @@ import { modals } from "@mantine/modals"
 import {
   IconPhone,
   IconPlus,
-  IconUserPlus
+  IconUserPlus,
+  IconRepeat
 } from "@tabler/icons-react"
 import { ColumnDef } from "@tanstack/react-table"
 import { useEffect, useMemo, useState } from "react"
 import { SalesLayout } from "../../../components/layouts/SalesLayout"
 import { CDataTable } from "../../../components/common/CDataTable"
 import { CToast } from "../../../components/common/CToast"
+import { TransferSalesLeadModal } from "../../../components/sales/TransferSalesLeadModal"
 import {
   useSalesLeads,
   type AvailableCs,
@@ -34,7 +36,12 @@ import { useUsers } from "../../../hooks/useUsers"
 import type { SearchSalesChannelResponse } from "../../../hooks/models"
 
 type LeadView = "acquired" | "active" | "needs-call" | "availability" | "report"
-type LeadStatusFilter = "all" | "unassigned" | "assigned" | "pooled" | "retained"
+type LeadStatusFilter =
+  | "all"
+  | "unassigned"
+  | "assigned"
+  | "pooled"
+  | "retained"
 
 type Person = { _id?: string; name?: string; username?: string }
 type Funnel = { _id?: string; name?: string; phoneNumber?: string }
@@ -64,6 +71,7 @@ type LeadRow = {
   phoneNumber?: string
   hunterName?: string
   salesCsName?: string
+  salesCsId?: string
   cycleKey?: string
   status?: string
   leadCaseId?: string
@@ -136,15 +144,14 @@ function LeadsPage() {
     roles.includes("admin") ||
     roles.includes("sales-hunter") ||
     roles.includes("sales-leader")
-  const canCreateLead = isHunter || roles.includes("admin") || roles.includes("sales-leader")
+  const canCreateLead =
+    isHunter || roles.includes("admin") || roles.includes("sales-leader")
   const canCareLead =
     isCs || roles.includes("admin") || roles.includes("sales-leader")
 
   const viewOptions = useMemo(() => {
     if (isCs) {
-      return [
-        { value: "active" as const, label: "Khách hàng của tôi" }
-      ]
+      return [{ value: "active" as const, label: "Khách hàng của tôi" }]
     }
     return [
       ...(isManager
@@ -274,6 +281,7 @@ function LeadsPage() {
           name: item.salesFunnelId?.name || "—",
           phoneNumber: item.salesFunnelId?.phoneNumber,
           salesCsName: getUserName(item.currentAssignmentId?.salesCsId),
+          salesCsId: item.currentAssignmentId?.salesCsId?._id,
           cycleKey: item.currentAssignmentId?.cycleKey,
           status: item.status
         })
@@ -297,6 +305,7 @@ function LeadsPage() {
         item.leadCaseId?.salesFunnelId?.phoneNumber ||
         item.customerSnapshot?.phoneNumber,
       salesCsName: getUserName(item.salesCsId),
+      salesCsId: item.salesCsId?._id,
       cycleKey: item.cycleKey,
       status: item.status,
       leadCaseId: item.leadCaseId?._id
@@ -319,8 +328,8 @@ function LeadsPage() {
         : currentView === "needs-call"
           ? needsCallQuery.isLoading
           : currentView === "report"
-              ? complianceQuery.isLoading
-              : availabilityQuery.isLoading
+            ? complianceQuery.isLoading
+            : availabilityQuery.isLoading
 
   const openCreateModal = () => {
     modals.open({
@@ -348,6 +357,20 @@ function LeadsPage() {
           onSubmit={(salesCsId) =>
             assignLead.mutate({ id: lead.id, salesCsId })
           }
+        />
+      )
+    })
+  }
+
+  const openTransferModal = (lead: LeadRow) => {
+    modals.open({
+      title: <b>Chuyển khách hàng</b>,
+      centered: true,
+      children: (
+        <TransferSalesLeadModal
+          leadCaseId={lead.id}
+          currentSalesCsId={lead.salesCsId}
+          onSuccess={() => void refresh()}
         />
       )
     })
@@ -403,14 +426,22 @@ function LeadsPage() {
         {
           accessorKey: "name",
           header: "Sales",
-          cell: ({ row }) => <Text fw={600} size="sm">{row.original.name}</Text>
+          cell: ({ row }) => (
+            <Text fw={600} size="sm">
+              {row.original.name}
+            </Text>
+          )
         },
         { accessorKey: "total", header: "Tổng lead" },
         { accessorKey: "called", header: "Đã gọi" },
         {
           accessorKey: "missingCall",
           header: "Chưa gọi",
-          cell: ({ row }) => <Badge color={row.original.missingCall ? "orange" : "green"}>{row.original.missingCall || 0}</Badge>
+          cell: ({ row }) => (
+            <Badge color={row.original.missingCall ? "orange" : "green"}>
+              {row.original.missingCall || 0}
+            </Badge>
+          )
         }
       ]
     }
@@ -464,18 +495,50 @@ function LeadsPage() {
     result.push({
       id: "actions",
       header: "Thao tác",
-      cell: ({ row }) =>
-        currentView === "acquired" &&
-        ["unassigned", "pooled"].includes(row.original.status || "") ? (
-          <Button
-            size="xs"
-            variant="light"
-            leftSection={<IconUserPlus size={15} />}
-            onClick={() => openAssignModal(row.original)}
-          >
-            Phân lead
-          </Button>
-        ) : (
+      cell: ({ row }) => {
+        const isUnassigned = ["unassigned", "pooled"].includes(
+          row.original.status || ""
+        )
+        if (currentView === "acquired" && isUnassigned) {
+          return (
+            <Button
+              size="xs"
+              variant="light"
+              leftSection={<IconUserPlus size={15} />}
+              onClick={() => openAssignModal(row.original)}
+            >
+              Phân lead
+            </Button>
+          )
+        }
+        if (currentView === "acquired" && row.original.salesCsId) {
+          return (
+            <Group gap="xs" wrap="nowrap">
+              <Button
+                size="xs"
+                variant="light"
+                color="orange"
+                leftSection={<IconRepeat size={15} />}
+                onClick={() => openTransferModal(row.original)}
+              >
+                Chuyển nhân viên CSKH
+              </Button>
+              <Button
+                size="xs"
+                variant="subtle"
+                onClick={() =>
+                  navigate({
+                    to: "/sales/leads/$leadId",
+                    params: { leadId: row.original.id }
+                  })
+                }
+              >
+                Chi tiết
+              </Button>
+            </Group>
+          )
+        }
+        return (
           <Button
             size="xs"
             variant="light"
@@ -489,7 +552,8 @@ function LeadsPage() {
           >
             Xem chi tiết
           </Button>
-        ),
+        )
+      },
       enableSorting: false
     })
 

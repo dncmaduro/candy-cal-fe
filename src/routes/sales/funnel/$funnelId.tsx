@@ -30,7 +30,8 @@ import {
   IconTrash,
   IconChevronDown,
   IconChevronUp,
-  IconClipboardCheck
+  IconClipboardCheck,
+  IconRepeat
 } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
 import { notifications } from "@mantine/notifications"
@@ -49,6 +50,7 @@ import { UpdateStageModal } from "../../../components/sales/UpdateStageModal"
 import { UpdateFunnelCostModal } from "../../../components/sales/UpdateFunnelCostModal"
 import { MoveToContactedModal } from "../../../components/sales/MoveToContactedModal"
 import { LogSalesLeadCallModal } from "../../../components/sales/LogSalesLeadCallModal"
+import { TransferSalesLeadModal } from "../../../components/sales/TransferSalesLeadModal"
 import { CDataTable } from "../../../components/common/CDataTable"
 import { useSalesLeads } from "../../../hooks/useSalesLeads"
 
@@ -211,10 +213,16 @@ function RouteComponent() {
   const calls = Array.isArray(leadCase?.calls) ? leadCase.calls : []
   const me = meData?.data
   const isAdmin = me?.roles?.includes("admin") ?? false
+  const isSalesHunter = me?.roles?.includes("sales-hunter") ?? false
+  const isSalesCs = me?.roles?.includes("sales-cs") ?? false
   const canLogCalls = me?.roles?.includes("sales-cs") ?? false
   const isResponsibleUser = funnel?.user?._id === me?._id
 
   const canPerformActions = isAdmin || isResponsibleUser
+  const canTransfer =
+    !!leadCase?._id &&
+    !funnel?.deletedAt &&
+    (isSalesHunter || isAdmin || me?.roles?.includes("sales-leader") || (isSalesCs && isResponsibleUser))
 
   const goBackToFunnelList = () => {
     if (window.history.length > 1) {
@@ -441,6 +449,24 @@ function RouteComponent() {
     })
   }
 
+  const handleTransfer = () => {
+    if (!leadCase?._id) return
+    modals.open({
+      title: <b>Chuyển khách hàng</b>,
+      centered: true,
+      children: (
+        <TransferSalesLeadModal
+          leadCaseId={leadCase._id}
+          currentSalesCsId={funnel?.user?._id}
+          onSuccess={() => {
+            void refetch()
+            void refetchCalls()
+          }}
+        />
+      )
+    })
+  }
+
   const { mutate: handleDeleteFunnel, isPending: isDeleting } = useMutation({
     mutationFn: (id: string) => deleteFunnel({ id }),
     onSuccess: () => {
@@ -559,9 +585,19 @@ function RouteComponent() {
               </Text>
             </Box>
           </Group>
-          {canPerformActions && (
+          {(canPerformActions || canTransfer) && (
             <Group gap="xs" wrap="wrap">
-              {!funnel.deletedAt && (
+              {canTransfer && (
+                <Button
+                  variant="light"
+                  color="orange"
+                  leftSection={<IconRepeat size={17} />}
+                  onClick={handleTransfer}
+                >
+                  Chuyển khách
+                </Button>
+              )}
+              {canPerformActions && !funnel.deletedAt && (
                 <Button
                   variant="light"
                   leftSection={<IconEdit size={17} />}
@@ -570,7 +606,7 @@ function RouteComponent() {
                   Cập nhật
                 </Button>
               )}
-              <Group gap={6}>
+              {canPerformActions && <Group gap={6}>
                 {funnel.stage === "lead" && !funnel.deletedAt && (
                   <Tooltip label="Chuyển sang Đã liên hệ" withArrow>
                     <ActionIcon
@@ -607,8 +643,8 @@ function RouteComponent() {
                     </Tooltip>
                   </>
                 )}
-              </Group>
-              {(isAdmin || me?.roles?.includes("sales-hunter")) && (
+              </Group>}
+              {canPerformActions && (isAdmin || isSalesHunter) && (
                 <Button
                   variant="light"
                   color="red"
