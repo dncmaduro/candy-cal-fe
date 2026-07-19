@@ -60,18 +60,8 @@ function RouteComponent() {
   if (roles.includes("shopee-emp")) {
     return <Navigate to={`${SHOPEE_NAVS_URL}/sku`} />
   }
-  if (
-    roles.includes("sales-emp") ||
-    roles.includes("sales-leader") ||
-    roles.includes("facebook-ads-emp")
-  ) {
-    return <Navigate to="/sales/funnel" />
-  }
-  if (roles.includes("sales-accounting")) {
-    return <Navigate to="/sales/dashboard" />
-  }
   if (roles.some((role) => SALES_VIEW_ROLES.includes(role))) {
-    return <Navigate to="/sales/funnel" />
+    return <Navigate to="/sales" />
   }
   if (
     roles.includes("livestream-emp") ||

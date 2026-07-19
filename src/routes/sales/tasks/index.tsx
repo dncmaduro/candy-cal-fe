@@ -177,7 +177,7 @@ function RouteComponent() {
   }, [me])
 
   const isSaleLeader = useMemo(() => {
-    return me?.roles?.includes("sales-leader") ?? false
+    return me?.roles?.includes("sales-hunter") ?? false
   }, [me])
   const isFacebookAdsEmp = useMemo(() => {
     return me?.roles?.includes("facebook-ads-emp") ?? false

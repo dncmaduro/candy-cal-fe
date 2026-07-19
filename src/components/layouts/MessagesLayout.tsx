@@ -6,6 +6,9 @@ import { useUserStore } from "../../store/userStore"
 import { useUsers } from "../../hooks/useUsers"
 import { saveToCookies } from "../../store/cookies"
 import { CToast } from "../common/CToast"
+import { SALES_VIEW_ROLES } from "../../constants/navs"
+import { useAuthGuard } from "../../hooks/useAuthGuard"
+import { useSalesRouteAccess } from "../../hooks/useSalesRouteAccess"
 
 interface Props {
   sidebar: React.ReactNode
@@ -13,6 +16,8 @@ interface Props {
 }
 
 export function MessagesLayout({ sidebar, content }: Props) {
+  const { meData } = useAuthGuard(SALES_VIEW_ROLES)
+  useSalesRouteAccess(meData?.roles)
   const { accessToken, setUser, clearUser } = useUserStore()
   const { checkToken, getNewToken } = useUsers()
   const navigate = useNavigate()
@@ -45,13 +50,13 @@ export function MessagesLayout({ sidebar, content }: Props) {
     if (!isTokenValid) {
       getToken()
     }
-  }, [isTokenValid])
+  }, [getToken, isTokenValid])
 
   useEffect(() => {
     if (!accessToken) {
       navigate({ to: "/" })
     }
-  }, [accessToken])
+  }, [accessToken, navigate])
 
   return (
     <Box

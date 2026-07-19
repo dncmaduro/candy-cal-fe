@@ -36,6 +36,7 @@ import { Route as SalesTasksIndexImport } from './routes/sales/tasks/index'
 import { Route as SalesPriceIndexImport } from './routes/sales/price/index'
 import { Route as SalesOrdersIndexImport } from './routes/sales/orders/index'
 import { Route as SalesMessagesIndexImport } from './routes/sales/messages/index'
+import { Route as SalesLeadsIndexImport } from './routes/sales/leads/index'
 import { Route as SalesItemsIndexImport } from './routes/sales/items/index'
 import { Route as SalesFunnelIndexImport } from './routes/sales/funnel/index'
 import { Route as SalesDashboardIndexImport } from './routes/sales/dashboard/index'
@@ -77,6 +78,7 @@ import { Route as AdminHealthIndexImport } from './routes/admin/health/index'
 import { Route as TiktokshopIncomesIncomeIdImport } from './routes/tiktokshop/incomes/$incomeId'
 import { Route as SalesOrdersOrderIdImport } from './routes/sales/orders/$orderId'
 import { Route as SalesMessagesConversationIdImport } from './routes/sales/messages/$conversationId'
+import { Route as SalesLeadsLeadIdImport } from './routes/sales/leads/$leadId'
 import { Route as SalesItemsItemIdImport } from './routes/sales/items/$itemId'
 import { Route as SalesFunnelFunnelIdImport } from './routes/sales/funnel/$funnelId'
 import { Route as SalesDashboardKpiIdImport } from './routes/sales/dashboard/$kpiId'
@@ -233,6 +235,12 @@ const SalesOrdersIndexRoute = SalesOrdersIndexImport.update({
 const SalesMessagesIndexRoute = SalesMessagesIndexImport.update({
   id: '/sales/messages/',
   path: '/sales/messages/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const SalesLeadsIndexRoute = SalesLeadsIndexImport.update({
+  id: '/sales/leads/',
+  path: '/sales/leads/',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -498,6 +506,12 @@ const SalesMessagesConversationIdRoute =
     getParentRoute: () => rootRoute,
   } as any)
 
+const SalesLeadsLeadIdRoute = SalesLeadsLeadIdImport.update({
+  id: '/sales/leads/$leadId',
+  path: '/sales/leads/$leadId',
+  getParentRoute: () => rootRoute,
+} as any)
+
 const SalesItemsItemIdRoute = SalesItemsItemIdImport.update({
   id: '/sales/items/$itemId',
   path: '/sales/items/$itemId',
@@ -692,6 +706,13 @@ declare module '@tanstack/react-router' {
       path: '/sales/items/$itemId'
       fullPath: '/sales/items/$itemId'
       preLoaderRoute: typeof SalesItemsItemIdImport
+      parentRoute: typeof rootRoute
+    }
+    '/sales/leads/$leadId': {
+      id: '/sales/leads/$leadId'
+      path: '/sales/leads/$leadId'
+      fullPath: '/sales/leads/$leadId'
+      preLoaderRoute: typeof SalesLeadsLeadIdImport
       parentRoute: typeof rootRoute
     }
     '/sales/messages/$conversationId': {
@@ -981,6 +1002,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SalesItemsIndexImport
       parentRoute: typeof rootRoute
     }
+    '/sales/leads/': {
+      id: '/sales/leads/'
+      path: '/sales/leads'
+      fullPath: '/sales/leads'
+      preLoaderRoute: typeof SalesLeadsIndexImport
+      parentRoute: typeof rootRoute
+    }
     '/sales/messages/': {
       id: '/sales/messages/'
       path: '/sales/messages'
@@ -1084,6 +1112,7 @@ export interface FileRoutesByFullPath {
   '/sales/dashboard/$kpiId': typeof SalesDashboardKpiIdRoute
   '/sales/funnel/$funnelId': typeof SalesFunnelFunnelIdRoute
   '/sales/items/$itemId': typeof SalesItemsItemIdRoute
+  '/sales/leads/$leadId': typeof SalesLeadsLeadIdRoute
   '/sales/messages/$conversationId': typeof SalesMessagesConversationIdRoute
   '/sales/orders/$orderId': typeof SalesOrdersOrderIdRoute
   '/tiktokshop/incomes/$incomeId': typeof TiktokshopIncomesIncomeIdRoute
@@ -1125,6 +1154,7 @@ export interface FileRoutesByFullPath {
   '/sales/dashboard': typeof SalesDashboardIndexRoute
   '/sales/funnel': typeof SalesFunnelIndexRoute
   '/sales/items': typeof SalesItemsIndexRoute
+  '/sales/leads': typeof SalesLeadsIndexRoute
   '/sales/messages': typeof SalesMessagesIndexRoute
   '/sales/orders': typeof SalesOrdersIndexRoute
   '/sales/price': typeof SalesPriceIndexRoute
@@ -1158,6 +1188,7 @@ export interface FileRoutesByTo {
   '/sales/dashboard/$kpiId': typeof SalesDashboardKpiIdRoute
   '/sales/funnel/$funnelId': typeof SalesFunnelFunnelIdRoute
   '/sales/items/$itemId': typeof SalesItemsItemIdRoute
+  '/sales/leads/$leadId': typeof SalesLeadsLeadIdRoute
   '/sales/messages/$conversationId': typeof SalesMessagesConversationIdRoute
   '/sales/orders/$orderId': typeof SalesOrdersOrderIdRoute
   '/tiktokshop/incomes/$incomeId': typeof TiktokshopIncomesIncomeIdRoute
@@ -1199,6 +1230,7 @@ export interface FileRoutesByTo {
   '/sales/dashboard': typeof SalesDashboardIndexRoute
   '/sales/funnel': typeof SalesFunnelIndexRoute
   '/sales/items': typeof SalesItemsIndexRoute
+  '/sales/leads': typeof SalesLeadsIndexRoute
   '/sales/messages': typeof SalesMessagesIndexRoute
   '/sales/orders': typeof SalesOrdersIndexRoute
   '/sales/price': typeof SalesPriceIndexRoute
@@ -1234,6 +1266,7 @@ export interface FileRoutesById {
   '/sales/dashboard/$kpiId': typeof SalesDashboardKpiIdRoute
   '/sales/funnel/$funnelId': typeof SalesFunnelFunnelIdRoute
   '/sales/items/$itemId': typeof SalesItemsItemIdRoute
+  '/sales/leads/$leadId': typeof SalesLeadsLeadIdRoute
   '/sales/messages/$conversationId': typeof SalesMessagesConversationIdRoute
   '/sales/orders/$orderId': typeof SalesOrdersOrderIdRoute
   '/tiktokshop/incomes/$incomeId': typeof TiktokshopIncomesIncomeIdRoute
@@ -1275,6 +1308,7 @@ export interface FileRoutesById {
   '/sales/dashboard/': typeof SalesDashboardIndexRoute
   '/sales/funnel/': typeof SalesFunnelIndexRoute
   '/sales/items/': typeof SalesItemsIndexRoute
+  '/sales/leads/': typeof SalesLeadsIndexRoute
   '/sales/messages/': typeof SalesMessagesIndexRoute
   '/sales/orders/': typeof SalesOrdersIndexRoute
   '/sales/price/': typeof SalesPriceIndexRoute
@@ -1311,6 +1345,7 @@ export interface FileRouteTypes {
     | '/sales/dashboard/$kpiId'
     | '/sales/funnel/$funnelId'
     | '/sales/items/$itemId'
+    | '/sales/leads/$leadId'
     | '/sales/messages/$conversationId'
     | '/sales/orders/$orderId'
     | '/tiktokshop/incomes/$incomeId'
@@ -1352,6 +1387,7 @@ export interface FileRouteTypes {
     | '/sales/dashboard'
     | '/sales/funnel'
     | '/sales/items'
+    | '/sales/leads'
     | '/sales/messages'
     | '/sales/orders'
     | '/sales/price'
@@ -1384,6 +1420,7 @@ export interface FileRouteTypes {
     | '/sales/dashboard/$kpiId'
     | '/sales/funnel/$funnelId'
     | '/sales/items/$itemId'
+    | '/sales/leads/$leadId'
     | '/sales/messages/$conversationId'
     | '/sales/orders/$orderId'
     | '/tiktokshop/incomes/$incomeId'
@@ -1425,6 +1462,7 @@ export interface FileRouteTypes {
     | '/sales/dashboard'
     | '/sales/funnel'
     | '/sales/items'
+    | '/sales/leads'
     | '/sales/messages'
     | '/sales/orders'
     | '/sales/price'
@@ -1458,6 +1496,7 @@ export interface FileRouteTypes {
     | '/sales/dashboard/$kpiId'
     | '/sales/funnel/$funnelId'
     | '/sales/items/$itemId'
+    | '/sales/leads/$leadId'
     | '/sales/messages/$conversationId'
     | '/sales/orders/$orderId'
     | '/tiktokshop/incomes/$incomeId'
@@ -1499,6 +1538,7 @@ export interface FileRouteTypes {
     | '/sales/dashboard/'
     | '/sales/funnel/'
     | '/sales/items/'
+    | '/sales/leads/'
     | '/sales/messages/'
     | '/sales/orders/'
     | '/sales/price/'
@@ -1533,6 +1573,7 @@ export interface RootRouteChildren {
   SalesDashboardKpiIdRoute: typeof SalesDashboardKpiIdRoute
   SalesFunnelFunnelIdRoute: typeof SalesFunnelFunnelIdRoute
   SalesItemsItemIdRoute: typeof SalesItemsItemIdRoute
+  SalesLeadsLeadIdRoute: typeof SalesLeadsLeadIdRoute
   SalesMessagesConversationIdRoute: typeof SalesMessagesConversationIdRoute
   SalesOrdersOrderIdRoute: typeof SalesOrdersOrderIdRoute
   TiktokshopIncomesIncomeIdRoute: typeof TiktokshopIncomesIncomeIdRoute
@@ -1574,6 +1615,7 @@ export interface RootRouteChildren {
   SalesDashboardIndexRoute: typeof SalesDashboardIndexRoute
   SalesFunnelIndexRoute: typeof SalesFunnelIndexRoute
   SalesItemsIndexRoute: typeof SalesItemsIndexRoute
+  SalesLeadsIndexRoute: typeof SalesLeadsIndexRoute
   SalesMessagesIndexRoute: typeof SalesMessagesIndexRoute
   SalesOrdersIndexRoute: typeof SalesOrdersIndexRoute
   SalesPriceIndexRoute: typeof SalesPriceIndexRoute
@@ -1607,6 +1649,7 @@ const rootRouteChildren: RootRouteChildren = {
   SalesDashboardKpiIdRoute: SalesDashboardKpiIdRoute,
   SalesFunnelFunnelIdRoute: SalesFunnelFunnelIdRoute,
   SalesItemsItemIdRoute: SalesItemsItemIdRoute,
+  SalesLeadsLeadIdRoute: SalesLeadsLeadIdRoute,
   SalesMessagesConversationIdRoute: SalesMessagesConversationIdRoute,
   SalesOrdersOrderIdRoute: SalesOrdersOrderIdRoute,
   TiktokshopIncomesIncomeIdRoute: TiktokshopIncomesIncomeIdRoute,
@@ -1650,6 +1693,7 @@ const rootRouteChildren: RootRouteChildren = {
   SalesDashboardIndexRoute: SalesDashboardIndexRoute,
   SalesFunnelIndexRoute: SalesFunnelIndexRoute,
   SalesItemsIndexRoute: SalesItemsIndexRoute,
+  SalesLeadsIndexRoute: SalesLeadsIndexRoute,
   SalesMessagesIndexRoute: SalesMessagesIndexRoute,
   SalesOrdersIndexRoute: SalesOrdersIndexRoute,
   SalesPriceIndexRoute: SalesPriceIndexRoute,
@@ -1692,6 +1736,7 @@ export const routeTree = rootRoute
         "/sales/dashboard/$kpiId",
         "/sales/funnel/$funnelId",
         "/sales/items/$itemId",
+        "/sales/leads/$leadId",
         "/sales/messages/$conversationId",
         "/sales/orders/$orderId",
         "/tiktokshop/incomes/$incomeId",
@@ -1733,6 +1778,7 @@ export const routeTree = rootRoute
         "/sales/dashboard/",
         "/sales/funnel/",
         "/sales/items/",
+        "/sales/leads/",
         "/sales/messages/",
         "/sales/orders/",
         "/sales/price/",
@@ -1813,6 +1859,9 @@ export const routeTree = rootRoute
     },
     "/sales/items/$itemId": {
       "filePath": "sales/items/$itemId.tsx"
+    },
+    "/sales/leads/$leadId": {
+      "filePath": "sales/leads/$leadId.tsx"
     },
     "/sales/messages/$conversationId": {
       "filePath": "sales/messages/$conversationId.tsx"
@@ -1936,6 +1985,9 @@ export const routeTree = rootRoute
     },
     "/sales/items/": {
       "filePath": "sales/items/index.tsx"
+    },
+    "/sales/leads/": {
+      "filePath": "sales/leads/index.tsx"
     },
     "/sales/messages/": {
       "filePath": "sales/messages/index.tsx"

@@ -11,11 +11,10 @@ import {
   rem,
   Text,
   Select,
-  ActionIcon,
-  Flex
+  ActionIcon
 } from "@mantine/core"
 import { DatePickerInput } from "@mantine/dates"
-import { useMutation } from "@tanstack/react-query"
+import { useMutation, useQuery } from "@tanstack/react-query"
 import { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { modals } from "@mantine/modals"
 import { format } from "date-fns"
@@ -40,11 +39,8 @@ import { SearchSalesOrderResponse } from "../../../hooks/models"
 import { FormProvider, useForm } from "react-hook-form"
 import { useSalesOrdersList } from "../../../hooks/useSalesOrdersList"
 import { useSalesOrderReferenceData } from "../../../hooks/useSalesOrderReferenceData"
-import {
-  calculatePercentFromAmount,
-  formatOrderDiscountPercent,
-  type SalesOrderDiscountType
-} from "../../../utils/salesOrderDiscount"
+import { useUsers } from "../../../hooks/useUsers"
+import { type SalesOrderDiscountType } from "../../../utils/salesOrderDiscount"
 import {
   SALES_ORDER_STATUS_OPTIONS,
   getSalesOrderStatusColor,
@@ -74,14 +70,12 @@ export const Route = createFileRoute("/sales/orders/")({
       page: parsePositiveInt(search.page, 1),
       limit: parsePositiveInt(search.limit, 10),
       searchText: parseSearchText(search.searchText),
-      returningFilter: parseString(search.returningFilter),
       funnelFilter: parseString(search.funnelFilter),
       shippingTypeFilter: parseString(search.shippingTypeFilter),
       statusFilter: parseString(search.statusFilter),
       startDate: parseString(search.startDate),
       endDate: parseString(search.endDate),
       userIdFilter: parseString(search.userIdFilter),
-      channelIdFilter: parseString(search.channelIdFilter),
       createNew: search.createNew as string | undefined,
       channelId: search.channelId as string | undefined,
       funnelId: search.funnelId as string | undefined,
@@ -133,14 +127,12 @@ function RouteComponent() {
   const page = search.page
   const limit = search.limit
   const searchText = search.searchText ?? ""
-  const returningFilter = search.returningFilter ?? ""
   const funnelFilter = search.funnelFilter ?? ""
   const shippingTypeFilter = search.shippingTypeFilter ?? ""
   const statusFilter = search.statusFilter ?? ""
   const startDate = search.startDate ? new Date(search.startDate) : null
   const endDate = search.endDate ? new Date(search.endDate) : null
   const userIdFilter = search.userIdFilter ?? ""
-  const channelIdFilter = search.channelIdFilter ?? ""
   const [selectedOrders, setSelectedOrders] = useState<SalesOrderItem[]>([])
   const isOrdersListRoute =
     location.pathname === "/sales/orders" || location.pathname === "/sales/orders/"
@@ -149,30 +141,24 @@ function RouteComponent() {
 
   const {
     me,
-    channelsData,
     myChannelData,
     funnelData,
     canSeeAllFunnels,
-    isSalesEmp,
+    isSalesCs,
     isAccountingEmp
   } = useSalesOrderReferenceData({
     enabled: isOrdersListRoute
   })
+  const { publicSearchUser } = useUsers()
+  const isSalesHunter = me?.roles.includes("sales-hunter") ?? false
 
-  useEffect(() => {
-    if (!isOrdersListRoute) return
-    if (myChannelData?.channel?._id && !channelIdFilter) {
-      navigate({
-        to: "/sales/orders",
-        search: {
-          ...search,
-          channelIdFilter: myChannelData.channel._id,
-          page: 1
-        },
-        replace: true
-      })
-    }
-  }, [channelIdFilter, isOrdersListRoute, myChannelData, navigate, search])
+  const { data: salesCsUsersData } = useQuery({
+    queryKey: ["salesCsUsers", "orders-filter"],
+    queryFn: () =>
+      publicSearchUser({ page: 1, limit: 999, role: "sales-cs", status: "active" }),
+    enabled: isOrdersListRoute && isSalesHunter,
+    staleTime: 5 * 60 * 1000
+  })
 
   const formMethods = useForm<CreateSalesOrderFormData>({
     defaultValues: {
@@ -199,10 +185,10 @@ function RouteComponent() {
     }
   })
 
-  // Auto-apply user filter for sales-emp
+  // Auto-apply user filter for sales-cs
   useEffect(() => {
     if (!isOrdersListRoute) return
-    if (!canSeeAllFunnels && isSalesEmp && me?._id && !userIdFilter) {
+    if (!canSeeAllFunnels && isSalesCs && me?._id && !userIdFilter) {
       navigate({
         to: "/sales/orders",
         search: {
@@ -216,7 +202,7 @@ function RouteComponent() {
   }, [
     canSeeAllFunnels,
     isOrdersListRoute,
-    isSalesEmp,
+    isSalesCs,
     me?._id,
     navigate,
     userIdFilter,
@@ -228,14 +214,12 @@ function RouteComponent() {
     page,
     limit,
     searchText,
-    returningFilter,
     funnelFilter,
     shippingTypeFilter,
     statusFilter,
     startDate,
     endDate,
     userIdFilter,
-    channelIdFilter,
     refetchKey: search.refetch,
     enabled: isOrdersListRoute
   })
@@ -301,10 +285,10 @@ function RouteComponent() {
       label: `${item.name}${item.phoneNumber ? ` - ${item.phoneNumber}` : ""}`
     })) || []
 
-  const channelOptions =
-    channelsData?.data.data.map((channel) => ({
-      value: channel._id,
-      label: channel.channelName
+  const salesCsOptions =
+    salesCsUsersData?.data.data.map((user) => ({
+      value: user._id,
+      label: user.name
     })) || []
   const currentChannelId = myChannelData?.channel?._id || ""
 
@@ -461,33 +445,23 @@ function RouteComponent() {
 
           return (
             <Box style={{ maxWidth: rem(220) }}>
-              <Flex gap={4} align="center" wrap="nowrap">
-                <Text
-                  fw={500}
-                  size="sm"
-                  style={{
-                    flex: 1,
-                    minWidth: 0,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                    cursor: funnelId ? "pointer" : undefined
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handleOpenFunnelDetail(funnelId)
-                  }}
-                >
-                  {row.original.salesFunnelId.name}
-                </Text>
-                <Badge
-                  variant="light"
-                  size="xs"
-                  color={row.original.returning ? "violet" : "green"}
-                >
-                  {row.original.returning ? "Khách cũ" : "Khách mới"}
-                </Badge>
-              </Flex>
+              <Text
+                fw={500}
+                size="sm"
+                style={{
+                  minWidth: 0,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  cursor: funnelId ? "pointer" : undefined
+                }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleOpenFunnelDetail(funnelId)
+                }}
+              >
+                {row.original.salesFunnelId.name}
+              </Text>
               <Text
                 size="xs"
                 c="dimmed"
@@ -520,38 +494,6 @@ function RouteComponent() {
             {row.original.total.toLocaleString("vi-VN")}đ
           </Text>
         )
-      },
-      {
-        accessorKey: "orderDiscount",
-        header: "Chiết khấu",
-        cell: ({ row }) => {
-          const orderDiscount = row.original.orderDiscount || 0
-          const otherDiscount = row.original.otherDiscount || 0
-          const totalDiscount = orderDiscount + otherDiscount
-          const subtotal = row.original.items.reduce(
-            (sum, item) => sum + item.price * item.quantity,
-            0
-          )
-          const orderDiscountPercent =
-            row.original.orderDiscountType === "percent"
-              ? calculatePercentFromAmount(subtotal, orderDiscount)
-              : 0
-
-          return totalDiscount > 0 ? (
-            <Box>
-              <Text size="sm">{totalDiscount.toLocaleString("vi-VN")}đ</Text>
-              {row.original.orderDiscountType === "percent" && (
-                <Badge mt={4} variant="light" color="orange" size="xs">
-                  CK đơn: {formatOrderDiscountPercent(orderDiscountPercent)}%
-                </Badge>
-              )}
-            </Box>
-          ) : (
-            <Text size="sm" c="dimmed">
-              -
-            </Text>
-          )
-        }
       },
       {
         accessorKey: "status",
@@ -590,17 +532,6 @@ function RouteComponent() {
           )
       },
       {
-        accessorKey: "storage",
-        header: "Kho",
-        cell: ({ row }) => (
-          <Text size="sm">
-            {row.original.storage === "position_HaNam"
-              ? "Kho Hà Nội"
-              : "Kho MKT"}
-          </Text>
-        )
-      },
-      {
         accessorKey: "date",
         header: "Ngày đặt",
         cell: ({ row }) => (
@@ -626,7 +557,7 @@ function RouteComponent() {
             >
               <IconEye size={16} />
             </ActionIcon>
-            <Can roles={["admin", "sales-leader", "sales-emp"]}>
+            <Can roles={["admin", "sales-cs"]}>
               <ActionIcon
                 variant="light"
                 color="indigo"
@@ -855,29 +786,6 @@ function RouteComponent() {
             extraFilters={
               <>
                 <Select
-                  label="Loại khách"
-                  placeholder="Loại khách"
-                  data={[
-                    { value: "", label: "Tất cả" },
-                    { value: "false", label: "Khách mới" },
-                    { value: "true", label: "Khách cũ" }
-                  ]}
-                  value={returningFilter}
-                  onChange={(value) =>
-                    navigate({
-                      to: "/sales/orders",
-                      search: {
-                        ...search,
-                        returningFilter: value || undefined,
-                        page: 1
-                      }
-                    })
-                  }
-                  clearable
-                  style={{ width: 200 }}
-                />
-
-                <Select
                   label="Khách hàng"
                   placeholder="Tất cả khách hàng"
                   data={[
@@ -899,6 +807,31 @@ function RouteComponent() {
                   clearable
                   style={{ width: 250 }}
                 />
+
+                {isSalesHunter && (
+                  <Select
+                    label="Nhân viên CSKH"
+                    placeholder="Tất cả nhân viên CSKH"
+                    data={[
+                      { value: "", label: "Tất cả nhân viên CSKH" },
+                      ...salesCsOptions
+                    ]}
+                    value={userIdFilter}
+                    onChange={(value) =>
+                      navigate({
+                        to: "/sales/orders",
+                        search: {
+                          ...search,
+                          userIdFilter: value || undefined,
+                          page: 1
+                        }
+                      })
+                    }
+                    searchable
+                    clearable
+                    style={{ width: 220 }}
+                  />
+                )}
 
                 <Select
                   label="Đơn vị vận chuyển"
@@ -946,29 +879,6 @@ function RouteComponent() {
                   }
                   clearable
                   style={{ width: 180 }}
-                />
-
-                <Select
-                  label="Kênh"
-                  placeholder="Tất cả kênh"
-                  data={[
-                    { value: "", label: "Tất cả kênh" },
-                    ...channelOptions
-                  ]}
-                  value={channelIdFilter}
-                  onChange={(value) =>
-                    navigate({
-                      to: "/sales/orders",
-                      search: {
-                        ...search,
-                        channelIdFilter: value || undefined,
-                        page: 1
-                      }
-                    })
-                  }
-                  searchable
-                  clearable
-                  style={{ width: 200 }}
                 />
 
                 <DatePickerInput
@@ -1050,16 +960,6 @@ function RouteComponent() {
                                   • Tìm kiếm: <strong>{searchText}</strong>
                                 </Text>
                               )}
-                              {returningFilter && (
-                                <Text size="sm" mb={4}>
-                                  • Loại khách:{" "}
-                                  <strong>
-                                    {returningFilter === "true"
-                                      ? "Khách cũ"
-                                      : "Khách mới"}
-                                  </strong>
-                                </Text>
-                              )}
                               {funnelFilter && (
                                 <Text size="sm" mb={4}>
                                   • Khách hàng:{" "}
@@ -1112,7 +1012,6 @@ function RouteComponent() {
                                 </Text>
                               )}
                               {!searchText &&
-                                !returningFilter &&
                                 !funnelFilter &&
                                 !shippingTypeFilter &&
                                 !statusFilter &&
@@ -1139,12 +1038,7 @@ function RouteComponent() {
                           page: 1,
                           limit: 9999,
                           searchText: searchText || undefined,
-                          channelId: channelIdFilter || undefined,
                           userId: userIdFilter || undefined,
-                          returning:
-                            returningFilter === ""
-                              ? undefined
-                              : returningFilter === "true",
                           salesFunnelId: funnelFilter || undefined,
                           shippingType:
                             shippingTypeFilter === ""
@@ -1210,16 +1104,6 @@ function RouteComponent() {
                                   • Tìm kiếm: <strong>{searchText}</strong>
                                 </Text>
                               )}
-                              {returningFilter && (
-                                <Text size="sm" mb={4}>
-                                  • Loại khách:{" "}
-                                  <strong>
-                                    {returningFilter === "true"
-                                      ? "Khách cũ"
-                                      : "Khách mới"}
-                                  </strong>
-                                </Text>
-                              )}
                               {funnelFilter && (
                                 <Text size="sm" mb={4}>
                                   • Khách hàng:{" "}
@@ -1272,7 +1156,6 @@ function RouteComponent() {
                                 </Text>
                               )}
                               {!searchText &&
-                                !returningFilter &&
                                 !funnelFilter &&
                                 !shippingTypeFilter &&
                                 !statusFilter &&
@@ -1296,12 +1179,7 @@ function RouteComponent() {
                             page: 1,
                             limit: 9999,
                             searchText: searchText || undefined,
-                            channelId: channelIdFilter || undefined,
                             userId: userIdFilter || undefined,
-                            returning:
-                              returningFilter === ""
-                                ? undefined
-                                : returningFilter === "true",
                             salesFunnelId: funnelFilter || undefined,
                             shippingType:
                               shippingTypeFilter === ""
@@ -1335,7 +1213,7 @@ function RouteComponent() {
                     Xuất Excel kế toán
                   </Button>
                 )}
-                <Can roles={["admin", "sales-leader", "sales-emp"]}>
+                <Can roles={["admin", "sales-hunter", "sales-cs"]}>
                   <Button
                     onClick={handleUploadOrders}
                     leftSection={<IconFileUpload size={16} />}

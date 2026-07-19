@@ -1,13 +1,17 @@
 import { useMediaQuery } from "@mantine/hooks"
-import { NAVS } from "../../constants/navs"
+import {
+  getVisibleNavigationItems,
+  type NavigationItem
+} from "../../constants/navs"
 import { NavButton } from "./NavButton"
 import { IconChevronLeft, IconMenu2 } from "@tabler/icons-react"
+import type { GetMeResponse } from "../../hooks/models"
 
 type SidebarProps = {
-  meData: any
+  meData: GetMeResponse | undefined
   collapsed: boolean
   setCollapsed: (c: (prev: boolean) => boolean) => void
-  navs?: typeof NAVS
+  navs?: NavigationItem[]
 }
 
 export const Sidebar = ({
@@ -17,6 +21,10 @@ export const Sidebar = ({
   navs
 }: SidebarProps) => {
   const isMobile = useMediaQuery("(max-width: 768px)")
+  const visibleNavs =
+    navs && meData
+      ? getVisibleNavigationItems(navs, meData.roles)
+      : []
 
   return (
     <nav
@@ -44,23 +52,16 @@ export const Sidebar = ({
       </button>
 
       <div className="flex flex-1 flex-col gap-3 px-2">
-        {navs
-          ?.filter((n) => {
-            if (!meData || (n as any).deprecated) return false
-            return meData.roles.some((role: string) =>
-              [...n.roles, "admin"].includes(role)
-            )
-          })
-          .map((n) => (
-            <NavButton
-              key={n.to}
-              to={n.to}
-              label={n.label}
-              iconName={n.icon as any}
-              beta={(n as any).beta}
-              collapsed={collapsed}
-            />
-          ))}
+        {visibleNavs.map((n) => (
+          <NavButton
+            key={n.to}
+            to={n.to}
+            label={n.label}
+            iconName={n.icon}
+            beta={n.beta}
+            collapsed={collapsed}
+          />
+        ))}
       </div>
     </nav>
   )
