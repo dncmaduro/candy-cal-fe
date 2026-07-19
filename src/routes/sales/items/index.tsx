@@ -350,7 +350,7 @@ function RouteComponent() {
                 <IconEye size={16} />
               </ActionIcon>
             </Tooltip>
-            <Can roles={["admin", "sales-emp"]}>
+            <Can roles={["admin", "sales-cs"]}>
               <Tooltip label="Chỉnh sửa" withArrow>
                 <ActionIcon
                   variant="light"
@@ -410,7 +410,7 @@ function RouteComponent() {
                 Đồng bộ và quản lý danh sách sản phẩm
               </Text>
             </div>
-            <Can roles={["admin", "sales-leader", "sales-emp"]}>
+            <Can roles={["admin", "sales-hunter", "sales-cs"]}>
               <Group gap="sm">
                 <Button
                   leftSection={<IconUpload size={16} />}
@@ -539,7 +539,7 @@ function RouteComponent() {
             }
             extraActions={
               <Group gap="xs">
-                <Can roles={["admin", "sales-emp", "system-emp"]}>
+                <Can roles={["admin", "sales-cs", "system-emp"]}>
                   <Button
                     leftSection={<IconDownload size={16} />}
                     onClick={handleExportItems}
@@ -552,7 +552,7 @@ function RouteComponent() {
                     Xuất XLSX
                   </Button>
                 </Can>
-                <Can roles={["admin", "sales-leader", "sales-emp"]}>
+                <Can roles={["admin", "sales-hunter", "sales-cs"]}>
                   <Group gap="xs">
                     <Button
                       leftSection={<IconUpload size={16} />}

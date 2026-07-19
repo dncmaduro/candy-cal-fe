@@ -1,16 +1,26 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useEffect } from "react"
-import { SALES_NAVS } from "../../constants/navs"
+import { SALES_VIEW_ROLES, getVisibleSalesNavs } from "../../constants/navs"
+import { useAuthGuard } from "../../hooks/useAuthGuard"
 
 export const Route = createFileRoute("/sales/")({
   component: RouteComponent
 })
 
 function RouteComponent() {
-  const navigate = useNavigate()
-  useEffect(() => {
-    navigate({ to: `${SALES_NAVS[0].to}` })
-  }, [])
+  const navigate = useNavigate({ from: "/sales/" })
+  const { meData } = useAuthGuard(SALES_VIEW_ROLES)
 
-  return <div>Hello "/livestream/"!</div>
+  useEffect(() => {
+    if (!meData) return
+
+    const firstAccessibleNav = getVisibleSalesNavs(meData.roles)[0]
+
+    navigate({
+      to: firstAccessibleNav ? `${firstAccessibleNav.to}` : "/access-denied",
+      replace: true
+    })
+  }, [meData, navigate])
+
+  return null
 }

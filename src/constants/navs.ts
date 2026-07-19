@@ -32,13 +32,20 @@ export const KHO_VAN_EDITOR_ROLES = ["admin", "accounting-emp"]
 export const SALES_VIEW_ROLES = [
   "admin",
   "system-emp",
-  "sales-leader",
-  "sales-emp",
+  "sales-hunter",
   "sales-accounting",
-  "facebook-ads-emp"
+  "facebook-ads-emp",
+  "sales-cs",
+  "sales-leader"
 ]
-export const SALES_REVENUE_REPORT_ROLES = ["admin", "sales-emp"]
-export const SALES_ADS_COST_REPORT_ROLES = ["admin", "facebook-ads-emp"]
+export const SALES_WITHOUT_HUNTER_ROLES = SALES_VIEW_ROLES.filter(
+  (role) => role !== "sales-hunter"
+)
+export const SALES_WITHOUT_HUNTER_OR_CS_ROLES = SALES_VIEW_ROLES.filter(
+  (role) => role !== "sales-hunter" && role !== "sales-cs"
+)
+export const SALES_REVENUE_REPORT_ROLES = ["admin", "sales-cs"]
+export const SALES_ADS_COST_REPORT_ROLES = ["admin", "sales-hunter"]
 
 /** @constant */
 export const NAVS = [
@@ -88,8 +95,8 @@ export const NAVS = [
   //     "order-emp",
   //     "accounting-emp",
   //     "system-emp",
-  //     "sales-emp",
-  //     "sales-leader",
+  //     "sales-cs",
+  //     "sales-hunter",
   //     "sales-accounting",
   //     "livestream-emp",
   //     "livestream-ast",
@@ -246,15 +253,23 @@ export const LIVESTREAM_NAVS = [
 /** @constant */
 export const SALES_NAVS = [
   {
+    to: `${SALES_NAVS_URL}/leads`,
+    label: "Quản lý lead",
+    roles: ["admin", "sales-hunter", "sales-leader"],
+    icon: "IconUserPlus"
+  },
+  {
     to: `${SALES_NAVS_URL}/funnel`,
     label: "Funnel khách",
-    roles: SALES_VIEW_ROLES,
+    roles: SALES_WITHOUT_HUNTER_ROLES,
+    excludedRoles: ["sales-hunter"],
     icon: "IconChartFunnel"
   },
   {
     to: `${SALES_NAVS_URL}/tasks`,
     label: "Công việc",
-    roles: SALES_VIEW_ROLES,
+    roles: SALES_WITHOUT_HUNTER_OR_CS_ROLES,
+    excludedRoles: ["sales-hunter", "sales-cs"],
     icon: "IconChecklist"
   },
   {
@@ -266,13 +281,15 @@ export const SALES_NAVS = [
   {
     to: `${SALES_NAVS_URL}/channels`,
     label: "Kênh bán hàng",
-    roles: SALES_VIEW_ROLES,
+    roles: SALES_WITHOUT_HUNTER_OR_CS_ROLES,
+    excludedRoles: ["sales-hunter", "sales-cs"],
     icon: "IconAt"
   },
   {
     to: `${SALES_NAVS_URL}/items`,
     label: "Mặt hàng",
-    roles: SALES_VIEW_ROLES,
+    roles: SALES_WITHOUT_HUNTER_ROLES,
+    excludedRoles: ["sales-hunter"],
     icon: "IconPackage"
   },
   {
@@ -290,10 +307,54 @@ export const SALES_NAVS = [
   {
     to: `${SALES_NAVS_URL}/customer-ranks`,
     label: "Hạng khách hàng",
-    roles: SALES_VIEW_ROLES,
+    roles: SALES_WITHOUT_HUNTER_OR_CS_ROLES,
+    excludedRoles: ["sales-hunter", "sales-cs"],
     icon: "IconDeviceTabletStar"
   }
 ]
+
+export type NavigationItem = {
+  to: string
+  label: string
+  roles: string[]
+  icon: string
+  excludedRoles?: string[]
+  deprecated?: boolean
+  beta?: boolean
+}
+
+export const getVisibleNavigationItems = <T extends NavigationItem>(
+  navs: T[],
+  roles: string[]
+) =>
+  navs.filter((nav) => {
+    if (nav.deprecated) return false
+
+    if (
+      !roles.includes("admin") &&
+      nav.excludedRoles?.some((role) => roles.includes(role))
+    ) {
+      return false
+    }
+
+    return roles.some((role) => [...nav.roles, "admin"].includes(role))
+  })
+
+/** Mirrors the visibility rule used by the Sales sidebar. */
+export const getVisibleSalesNavs = (roles: string[]) =>
+  getVisibleNavigationItems(SALES_NAVS, roles)
+
+/** Hunter and CS can only open Sales routes that are visible in their sidebar. */
+export const canAccessSalesRoute = (roles: string[], pathname: string) => {
+  const hasRestrictedRole =
+    roles.includes("sales-hunter") || roles.includes("sales-cs")
+
+  if (!hasRestrictedRole) return true
+
+  return getVisibleSalesNavs(roles).some(
+    (nav) => pathname === nav.to || pathname.startsWith(`${nav.to}/`)
+  )
+}
 
 /** @constant */
 export const ADMIN_NAVS = [

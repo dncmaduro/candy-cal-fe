@@ -114,7 +114,7 @@ type FunnelItem = {
   secondaryPhoneNumbers?: string[]
   address?: string
   psid: string
-  channel: {
+  channel?: {
     _id: string
     channelName: string
   }
@@ -272,10 +272,12 @@ function RouteComponent() {
     })) || []
 
   const channelOptions =
-    channelsData?.data.data.map((channel) => ({
-      value: channel._id,
-      label: channel.channelName
-    })) || []
+    (channelsData?.data?.data || [])
+      .filter((channel) => Boolean(channel?.channelName))
+      .map((channel) => ({
+        value: channel._id,
+        label: channel.channelName
+      }))
 
   const handleCreateLead = () => {
     modals.open({
@@ -339,7 +341,7 @@ function RouteComponent() {
             phoneNumber: item.phoneNumber,
             secondaryPhoneNumbers: item.secondaryPhoneNumbers,
             address: item.address,
-            channel: item.channel._id,
+            channel: item.channel?._id ?? "",
             hasBuyed: item.hasBuyed,
             funnelSource: item.funnelSource
           }}
@@ -437,11 +439,39 @@ function RouteComponent() {
     return me?.roles?.includes("admin") ?? false
   }, [me])
   const isSalesLeader = useMemo(() => {
-    return me?.roles?.includes("sales-leader") ?? false
+    return me?.roles?.includes("sales-hunter") ?? false
   }, [me])
   const isFacebookAdsEmp = useMemo(() => {
     return me?.roles?.includes("facebook-ads-emp") ?? false
   }, [me])
+  const isSalesCsOnly = useMemo(
+    () =>
+      (me?.roles?.includes("sales-cs") ?? false) &&
+      !me?.roles?.some((role) =>
+        ["admin", "sales-hunter", "sales-leader"].includes(role)
+      ),
+    [me]
+  )
+  const hasActiveFilters = Boolean(
+    stageFilter ||
+      provinceFilter ||
+      channelFilter ||
+      rankFilter ||
+      noActivityDaysFilter ||
+      funnelSourceFilter ||
+      showDeleted
+  )
+  const clearFilters = () =>
+    navigate({
+      to: "/sales/funnel",
+      search: {
+        page: 1,
+        limit,
+        searchText: searchText || undefined,
+        sortBy,
+        sortOrder
+      }
+    })
 
   const mapFunnelSource = {
     ads: "Ads",
@@ -478,7 +508,7 @@ function RouteComponent() {
       accessorKey: "channel",
       header: "Kênh",
       cell: ({ row }) => (
-        <Text size="sm">{row.original.channel.channelName}</Text>
+        <Text size="sm">{row.original.channel?.channelName || "N/A"}</Text>
       ),
       enableSorting: false
     },
@@ -574,7 +604,7 @@ function RouteComponent() {
                 <IconHistory size={16} />
               </ActionIcon>
             </Tooltip>
-            {(isAdmin || me?.roles?.includes("sales-leader")) && (
+            {(isAdmin || me?.roles?.includes("sales-hunter")) && (
               <Tooltip label="Tạo task" withArrow>
                 <ActionIcon
                   variant="light"
@@ -666,10 +696,12 @@ function RouteComponent() {
         {/* Header Section */}
         <Box pt={32} pb={16} px={{ base: 8, md: 28 }}>
           <Text fw={700} fz="xl" mb={2}>
-            Quản lý Sales Funnel
+            {isSalesCsOnly ? "Khách hàng của tôi" : "Quản lý Sales Funnel"}
           </Text>
           <Text c="dimmed" fz="sm">
-            Quản lý quy trình chuyển đổi khách hàng từ lead đến customer
+            {isSalesCsOnly
+              ? "Các funnel đang được phân công cho bạn"
+              : "Quản lý quy trình chuyển đổi khách hàng từ lead đến customer"}
           </Text>
         </Box>
 
@@ -749,6 +781,32 @@ function RouteComponent() {
                   }
                   clearable
                   style={{ width: 200 }}
+                />
+
+                <Select
+                  label="Không hoạt động"
+                  placeholder="Tất cả khách"
+                  data={[
+                    { value: "", label: "Tất cả" },
+                    { value: "7", label: "> 7 ngày" },
+                    { value: "14", label: "> 14 ngày" },
+                    { value: "30", label: "> 30 ngày" },
+                    { value: "60", label: "> 60 ngày" },
+                    { value: "90", label: "> 90 ngày" }
+                  ]}
+                  value={noActivityDaysFilter}
+                  onChange={(value) =>
+                    navigate({
+                      to: "/sales/funnel",
+                      search: {
+                        ...search,
+                        noActivityDaysFilter: value || undefined,
+                        page: 1
+                      }
+                    })
+                  }
+                  clearable
+                  style={{ width: 180 }}
                 />
 
                 <Select
@@ -835,33 +893,7 @@ function RouteComponent() {
                   }}
                 />
 
-                <Select
-                  label="Không hoạt động"
-                  placeholder="Chọn số ngày"
-                  data={[
-                    { value: "", label: "Tất cả" },
-                    { value: "7", label: "> 7 ngày" },
-                    { value: "14", label: "> 14 ngày" },
-                    { value: "30", label: "> 30 ngày" },
-                    { value: "60", label: "> 60 ngày" },
-                    { value: "90", label: "> 90 ngày" }
-                  ]}
-                  value={noActivityDaysFilter}
-                  onChange={(value) =>
-                    navigate({
-                      to: "/sales/funnel",
-                      search: {
-                        ...search,
-                        noActivityDaysFilter: value || undefined,
-                        page: 1
-                      }
-                    })
-                  }
-                  clearable
-                  style={{ width: 180 }}
-                />
-
-                <Select
+                {!isSalesCsOnly && <Select
                   label="Nguồn"
                   placeholder="Chọn nguồn"
                   data={[
@@ -887,9 +919,9 @@ function RouteComponent() {
                   }
                   clearable
                   style={{ width: 180 }}
-                />
+                />}
 
-                <Switch
+                {!isSalesCsOnly && <Switch
                   label="Hiển thị đã xóa"
                   checked={showDeleted}
                   onChange={(event) =>
@@ -904,11 +936,17 @@ function RouteComponent() {
                   }
                   color="red"
                   styles={{ body: { alignItems: "center" } }}
-                />
+                />}
+
+                {hasActiveFilters && (
+                  <Button variant="subtle" size="sm" onClick={clearFilters}>
+                    Xóa bộ lọc
+                  </Button>
+                )}
               </>
             }
             extraActions={
-              <Can roles={["admin", "sales-leader", "sales-emp"]}>
+              <Can roles={["admin", "sales-hunter", "sales-cs"]}>
                 <Group gap="xs">
                   <Button
                     onClick={handleUploadFunnels}

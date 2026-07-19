@@ -48,7 +48,8 @@ const ROLE_LABELS: Record<string, string> = {
   "livestream-ast": "Trợ live",
   "livestream-accounting": "Kế toán livestream",
   "sales-leader": "Leader sales",
-  "sales-emp": "Nhân viên sales",
+  "sales-hunter": "Nhân viên khai thác lead",
+  "sales-cs": "Nhân viên CSKH",
   "sales-accounting": "Kế toán sales"
 }
 
@@ -64,7 +65,8 @@ const ROLE_COLORS: Record<string, string> = {
   "livestream-ast": "indigo",
   "livestream-accounting": "teal",
   "sales-leader": "lime",
-  "sales-emp": "green",
+  "sales-hunter": "orange",
+  "sales-cs": "teal",
   "sales-accounting": "blue"
 }
 
@@ -92,7 +94,11 @@ function RouteComponent() {
   const [limit, setLimit] = useState(10)
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null)
 
-  const { data: usersResponse, isLoading, isFetching } = useQuery({
+  const {
+    data: usersResponse,
+    isLoading,
+    isFetching
+  } = useQuery({
     queryKey: ["adminUsers", searchText, role, status, page, limit],
     queryFn: () =>
       adminListUsers({
@@ -117,7 +123,9 @@ function RouteComponent() {
     },
     onSuccess: (_response, variables) => {
       notifications.show({
-        title: variables.active ? "Đã kích hoạt tài khoản" : "Đã vô hiệu hóa tài khoản",
+        title: variables.active
+          ? "Đã kích hoạt tài khoản"
+          : "Đã vô hiệu hóa tài khoản",
         message: "Trạng thái người dùng đã được cập nhật",
         color: variables.active ? "green" : "orange"
       })
@@ -126,7 +134,9 @@ function RouteComponent() {
     onError: (error: any) => {
       notifications.show({
         title: "Cập nhật thất bại",
-        message: error?.response?.data?.message || "Không thể cập nhật trạng thái người dùng",
+        message:
+          error?.response?.data?.message ||
+          "Không thể cập nhật trạng thái người dùng",
         color: "red"
       })
     },
@@ -157,14 +167,18 @@ function RouteComponent() {
         cell: ({ row }) => (
           <Group gap="sm" wrap="nowrap">
             <Avatar src={row.original.avatarUrl} radius="xl" size="md">
-              {row.original.name?.charAt(0)?.toUpperCase() || row.original.username?.charAt(0)?.toUpperCase() || "U"}
+              {row.original.name?.charAt(0)?.toUpperCase() ||
+                row.original.username?.charAt(0)?.toUpperCase() ||
+                "U"}
             </Avatar>
             <Stack gap={2}>
               <Text fw={600} size="sm">
                 {row.original.name || "Chưa cập nhật tên"}
               </Text>
               <Text size="xs" c="dimmed">
-                {row.original.avatarUrl ? "Có ảnh đại diện" : "Chưa có ảnh đại diện"}
+                {row.original.avatarUrl
+                  ? "Có ảnh đại diện"
+                  : "Chưa có ảnh đại diện"}
               </Text>
             </Stack>
           </Group>
@@ -320,7 +334,8 @@ function RouteComponent() {
                 Quản lý người dùng
               </Text>
               <Text c="dimmed" fz="sm">
-                Tìm kiếm người dùng, lọc theo vai trò và bật tắt trạng thái hoạt động.
+                Tìm kiếm người dùng, lọc theo vai trò và bật tắt trạng thái hoạt
+                động.
               </Text>
             </Box>
           </Flex>
