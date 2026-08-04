@@ -150,13 +150,12 @@ function RouteComponent() {
     enabled: isOrdersListRoute
   })
   const { publicSearchUser } = useUsers()
-  const isSalesHunter = me?.roles.includes("sales-hunter") ?? false
 
   const { data: salesCsUsersData } = useQuery({
     queryKey: ["salesCsUsers", "orders-filter"],
     queryFn: () =>
       publicSearchUser({ page: 1, limit: 999, role: "sales-cs", status: "active" }),
-    enabled: isOrdersListRoute && isSalesHunter,
+    enabled: isOrdersListRoute && canSeeAllFunnels,
     staleTime: 5 * 60 * 1000
   })
 
@@ -290,6 +289,9 @@ function RouteComponent() {
       value: user._id,
       label: user.name
     })) || []
+  const selectedSalesCsLabel =
+    salesCsOptions.find((user) => user.value === userIdFilter)?.label ||
+    "Nhân viên CSKH đã chọn"
   const currentChannelId = myChannelData?.channel?._id || ""
 
   const handleCreateOrder = (channelId: string) => {
@@ -808,7 +810,7 @@ function RouteComponent() {
                   style={{ width: 250 }}
                 />
 
-                {isSalesHunter && (
+                {canSeeAllFunnels && (
                   <Select
                     label="Nhân viên CSKH"
                     placeholder="Tất cả nhân viên CSKH"
@@ -972,6 +974,12 @@ function RouteComponent() {
                                   </strong>
                                 </Text>
                               )}
+                              {userIdFilter && (
+                                <Text size="sm" mb={4}>
+                                  • Nhân viên CSKH: {" "}
+                                  <strong>{selectedSalesCsLabel}</strong>
+                                </Text>
+                              )}
                               {shippingTypeFilter && (
                                 <Text size="sm" mb={4}>
                                   • Đơn vị vận chuyển:{" "}
@@ -1013,6 +1021,7 @@ function RouteComponent() {
                               )}
                               {!searchText &&
                                 !funnelFilter &&
+                                !userIdFilter &&
                                 !shippingTypeFilter &&
                                 !statusFilter &&
                                 !startDate &&
@@ -1116,6 +1125,12 @@ function RouteComponent() {
                                   </strong>
                                 </Text>
                               )}
+                              {userIdFilter && (
+                                <Text size="sm" mb={4}>
+                                  • Nhân viên CSKH: {" "}
+                                  <strong>{selectedSalesCsLabel}</strong>
+                                </Text>
+                              )}
                               {shippingTypeFilter && (
                                 <Text size="sm" mb={4}>
                                   • Đơn vị vận chuyển:{" "}
@@ -1157,6 +1172,7 @@ function RouteComponent() {
                               )}
                               {!searchText &&
                                 !funnelFilter &&
+                                !userIdFilter &&
                                 !shippingTypeFilter &&
                                 !statusFilter &&
                                 !startDate &&
