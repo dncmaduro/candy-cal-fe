@@ -47,8 +47,10 @@ export function RevenueKPICards({
   revenueFromReturningCustomers
 }: RevenueKPICardsProps) {
   const displayedTotalRevenue = totalRevenueBeforeDiscount ?? totalRevenue ?? 0
-  const adsCostPct =
-    displayedTotalRevenue > 0 ? ((totalAdsCost ?? 0) / displayedTotalRevenue) * 100 : 0
+  const adsCostToNewCustomerRevenuePct =
+    (revenueFromNewCustomers ?? 0) > 0
+      ? ((totalAdsCost ?? 0) / (revenueFromNewCustomers ?? 0)) * 100
+      : 0
 
   const items: KpiItem[] = [
     {
@@ -58,12 +60,12 @@ export function RevenueKPICards({
       iconColor: "blue"
     },
     {
-      label: "Tổng chi phí ads (toàn Sales)",
+      label: "Chi phí ads / DT khách mới",
       value: (
         <>
           {(totalAdsCost ?? 0).toLocaleString("vi-VN")}đ{" "}
           <Text component="span" size="md" c="dimmed" fw={500}>
-            ({adsCostPct.toFixed(2)}%)
+            ({adsCostToNewCustomerRevenuePct.toFixed(2)}%)
           </Text>
         </>
       ),
