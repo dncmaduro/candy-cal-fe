@@ -14,9 +14,13 @@ import {
   GetSalesItemsTopCustomersByRangeResponse,
   SearchSalesItemsRequest,
   SearchSalesItemsResponse,
+  UploadSalesInventoryResponse,
+  GetDailySalesInventoryReportResponse,
+  GetDailySalesInventoryReportHistoryResponse,
   UpdateSalesItemRequest,
   UpdateSalesItemResponse
 } from "./models"
+import { format } from "date-fns"
 
 export const useSalesItems = () => {
   const { accessToken } = useUserStore()
@@ -46,7 +50,68 @@ export const useSalesItems = () => {
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         Accept:
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-      }
+      },
+      responseType: "blob"
+    })
+  }
+
+  const uploadSalesInventory = async (file: File) => {
+    const formData = new FormData()
+    formData.append("file", file)
+
+    return callApi<FormData, UploadSalesInventoryResponse>({
+      path: `/v1/salesitems/inventory/upload`,
+      data: formData,
+      method: "POST",
+      token: accessToken,
+      headers: { "Content-Type": "multipart/form-data" }
+    })
+  }
+
+  const downloadSalesInventoryTemplate = async () => {
+    return callApi<never, Blob>({
+      path: `/v1/salesitems/inventory/template`,
+      method: "GET",
+      token: accessToken,
+      headers: {
+        "Content-Type":
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        Accept:
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      },
+      responseType: "blob"
+    })
+  }
+
+  const getDailySalesInventoryReport = async (date: Date) => {
+    return callApi<never, GetDailySalesInventoryReportResponse>({
+      path: `/v1/salesitems/inventory/daily-report?date=${format(date, "yyyy-MM-dd")}`,
+      method: "GET",
+      token: accessToken
+    })
+  }
+
+  const getDailySalesInventoryReportHistory = async (
+    month: number,
+    year: number
+  ) => {
+    return callApi<never, GetDailySalesInventoryReportHistoryResponse>({
+      path: `/v1/salesitems/inventory/daily-reports?month=${month}&year=${year}`,
+      method: "GET",
+      token: accessToken
+    })
+  }
+
+  const downloadDailySalesInventoryReport = async (date: Date) => {
+    return callApi<never, Blob>({
+      path: `/v1/salesitems/inventory/daily-report/xlsx?date=${format(date, "yyyy-MM-dd")}`,
+      method: "GET",
+      token: accessToken,
+      headers: {
+        Accept:
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      },
+      responseType: "blob"
     })
   }
 
@@ -157,6 +222,11 @@ export const useSalesItems = () => {
 
   return {
     uploadSalesItems,
+    uploadSalesInventory,
+    downloadSalesInventoryTemplate,
+    getDailySalesInventoryReport,
+    getDailySalesInventoryReportHistory,
+    downloadDailySalesInventoryReport,
     downloadSalesItemsTemplate,
     searchSalesItems,
     exportSalesItemsToXlsx,

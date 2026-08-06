@@ -232,7 +232,7 @@ export const UpdateOrderItemsModal = ({
   const salesItemOptions =
     salesItemsData?.data.data.map((item) => ({
       value: item.code,
-      label: `${item.code} - ${item.name.vn}`
+      label: `${item.code} - ${item.name.vn} (Tồn: ${(item.inventoryQuantity ?? 0).toLocaleString("vi-VN")})`
     })) || []
 
   return (
@@ -249,7 +249,6 @@ export const UpdateOrderItemsModal = ({
               ? "Nhập phần trăm chiết khấu"
               : "Nhập số tiền chiết khấu đơn hàng"
           }
-          description="Chiết khấu trực tiếp lên các mặt hàng"
           value={
             orderDiscountType === "percent"
               ? orderDiscountPercent
@@ -303,11 +302,6 @@ export const UpdateOrderItemsModal = ({
           </Text>
         }
         placeholder="Nhập số tiền chiết khấu 2"
-        description={
-          <Text size="xs" c="dimmed">
-            Chiết khấu bổ sung (khuyến mãi, voucher,...)
-          </Text>
-        }
         value={otherDiscount}
         onChange={(value) => setOtherDiscount(Number(value) || 0)}
         mb="md"
@@ -330,11 +324,6 @@ export const UpdateOrderItemsModal = ({
           </Text>
         }
         placeholder="Nhập số tiền cọc"
-        description={
-          <Text size="xs" c="dimmed">
-            Số tiền khách hàng đã đặt cọc cho đơn hàng này
-          </Text>
-        }
         value={deposit}
         onChange={(value) => setDeposit(Number(value) || 0)}
         mb="md"
