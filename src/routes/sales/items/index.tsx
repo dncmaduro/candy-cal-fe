@@ -18,8 +18,8 @@ import {
   IconPlus,
   IconEye,
   IconEdit,
-  IconTrash,
-  IconDownload
+  IconDownload,
+  IconReportAnalytics
 } from "@tabler/icons-react"
 import { CDataTable } from "../../../components/common/CDataTable"
 import { useSalesItems } from "../../../hooks/useSalesItems"
@@ -33,6 +33,8 @@ import { UploadSalesItemsModal } from "../../../components/sales/UploadSalesItem
 import { SalesItemModal } from "../../../components/sales/SalesItemModal"
 import { Can } from "../../../components/common/Can"
 import { CToast } from "../../../components/common/CToast"
+import { UploadSalesInventoryModal } from "../../../components/sales/UploadSalesInventoryModal"
+import { SalesInventoryDailyReportModal } from "../../../components/sales/SalesInventoryDailyReportModal"
 
 export const Route = createFileRoute("/sales/items/")({
   validateSearch: (search: Record<string, unknown>) => {
@@ -88,7 +90,6 @@ function RouteComponent() {
   const search = Route.useSearch()
   const {
     searchSalesItems,
-    deleteSalesItem,
     getSalesItemDetail,
     getSalesItemsFactory,
     getSalesItemsSource,
@@ -134,21 +135,6 @@ function RouteComponent() {
         page,
         limit: pageSize
       })
-  })
-
-  // Delete mutation
-  const deleteMutation = useMutation({
-    mutationFn: deleteSalesItem,
-    onSuccess: () => {
-      CToast.success({ title: "Xóa sản phẩm thành công" })
-      refetch()
-    },
-    onError: (error: any) => {
-      CToast.error({
-        title:
-          error?.response?.data?.message || "Có lỗi xảy ra khi xóa sản phẩm"
-      })
-    }
   })
 
   const exportMutation = useMutation({
@@ -236,21 +222,6 @@ function RouteComponent() {
     }
   }
 
-  const handleDeleteItem = (item: SalesItem) => {
-    modals.openConfirmModal({
-      title: "Xác nhận xóa sản phẩm",
-      children: (
-        <Text size="sm">
-          Bạn có chắc chắn muốn xóa sản phẩm <strong>{item.name.vn}</strong>{" "}
-          không? Hành động này không thể hoàn tác.
-        </Text>
-      ),
-      labels: { confirm: "Xóa", cancel: "Hủy" },
-      confirmProps: { color: "red" },
-      onConfirm: () => deleteMutation.mutate(item._id)
-    })
-  }
-
   const handleExportItems = () => {
     exportMutation.mutate({
       searchText: searchText || undefined,
@@ -276,6 +247,59 @@ function RouteComponent() {
       cell: ({ row }) => (
         <Text size="sm" lineClamp={2}>
           {row.original.name.vn}
+        </Text>
+      )
+    },
+    {
+      accessorKey: "previousPeriodQuantity",
+      header: "Tồn kỳ trước",
+      cell: ({ row }) => (
+        <Text size="sm">
+          {(row.original.previousPeriodQuantity ?? 0).toLocaleString("vi-VN")}
+        </Text>
+      )
+    },
+    {
+      accessorKey: "lastImportedQuantity",
+      header: "Nhập",
+      cell: ({ row }) => (
+        <Text size="sm" c="blue">
+          {(row.original.lastImportedQuantity ?? 0).toLocaleString("vi-VN")}
+        </Text>
+      )
+    },
+    {
+      accessorKey: "currentPeriodExportedQuantity",
+      header: "Xuất",
+      cell: ({ row }) => (
+        <Text size="sm" c="orange">
+          {(row.original.currentPeriodExportedQuantity ?? 0).toLocaleString(
+            "vi-VN"
+          )}
+        </Text>
+      )
+    },
+    {
+      accessorKey: "inventoryQuantity",
+      header: "Tồn",
+      cell: ({ row }) => (
+        <Text
+          size="sm"
+          fw={600}
+          c={(row.original.inventoryQuantity ?? 0) > 0 ? "teal" : "red"}
+        >
+          {(row.original.inventoryQuantity ?? 0).toLocaleString("vi-VN")}
+        </Text>
+      )
+    },
+    {
+      accessorKey: "lastImportedAt",
+      header: "Nhập gần nhất",
+      cell: ({ row }) => (
+        <Text size="sm">
+          {row.original.lastImportedAt
+            ? new Date(row.original.lastImportedAt).toLocaleString("vi-VN")
+            : "-"}
         </Text>
       )
     },
@@ -322,15 +346,6 @@ function RouteComponent() {
       )
     },
     {
-      accessorKey: "createdAt",
-      header: "Ngày tạo",
-      cell: ({ row }) => (
-        <Text size="sm">
-          {new Date(row.original.createdAt).toLocaleDateString("vi-VN")}
-        </Text>
-      )
-    },
-    {
       id: "actions",
       header: "Thao tác",
       cell: ({ row }) => {
@@ -362,20 +377,6 @@ function RouteComponent() {
                   }}
                 >
                   <IconEdit size={16} />
-                </ActionIcon>
-              </Tooltip>
-              <Tooltip label="Xóa" withArrow>
-                <ActionIcon
-                  variant="light"
-                  color="red"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handleDeleteItem(item)
-                  }}
-                  loading={deleteMutation.isPending}
-                >
-                  <IconTrash size={16} />
                 </ActionIcon>
               </Tooltip>
             </Can>
@@ -541,6 +542,22 @@ function RouteComponent() {
               <Group gap="xs">
                 <Can roles={["admin", "sales-cs", "system-emp"]}>
                   <Button
+                    leftSection={<IconReportAnalytics size={16} />}
+                    onClick={() => {
+                      modals.open({
+                        title: <b>Báo cáo tồn kho theo ngày</b>,
+                        children: <SalesInventoryDailyReportModal />,
+                        size: "xl"
+                      })
+                    }}
+                    variant="light"
+                    size="sm"
+                    radius="md"
+                    color="teal"
+                  >
+                    Báo cáo tồn
+                  </Button>
+                  <Button
                     leftSection={<IconDownload size={16} />}
                     onClick={handleExportItems}
                     variant="light"
@@ -554,6 +571,31 @@ function RouteComponent() {
                 </Can>
                 <Can roles={["admin", "sales-hunter", "sales-cs"]}>
                   <Group gap="xs">
+                    <Can roles={["admin", "sales-cs"]}>
+                      <Button
+                        leftSection={<IconUpload size={16} />}
+                        onClick={() => {
+                          modals.open({
+                            title: <b>Nhập kho từ file</b>,
+                            children: (
+                              <UploadSalesInventoryModal
+                                onSuccess={() => {
+                                  modals.closeAll()
+                                  refetch()
+                                }}
+                              />
+                            ),
+                            size: "md"
+                          })
+                        }}
+                        variant="light"
+                        size="sm"
+                        radius="md"
+                        color="orange"
+                      >
+                        Nhập kho
+                      </Button>
+                    </Can>
                     <Button
                       leftSection={<IconUpload size={16} />}
                       onClick={handleUploadItems}

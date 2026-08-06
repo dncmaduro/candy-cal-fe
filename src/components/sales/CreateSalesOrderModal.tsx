@@ -400,7 +400,7 @@ export const CreateSalesOrderModal = ({
   const salesItemOptions =
     salesItemsData?.data.data.map((item) => ({
       value: item.code,
-      label: `${item.code} - ${item.name.vn}`
+      label: `${item.code} - ${item.name.vn} (Tồn: ${(item.inventoryQuantity ?? 0).toLocaleString("vi-VN")})`
     })) || []
 
   const provinceOptions =
@@ -679,7 +679,6 @@ export const CreateSalesOrderModal = ({
                   ? "Nhập phần trăm chiết khấu"
                   : "Nhập số tiền chiết khấu đơn hàng"
               }
-              description="Chiết khấu trực tiếp lên các mặt hàng"
               error={
                 (watchOrderDiscountType === "percent"
                   ? orderDiscountPercentError
@@ -727,7 +726,6 @@ export const CreateSalesOrderModal = ({
               </Text>
             }
             placeholder="Nhập số tiền chiết khấu 2"
-            description="Chiết khấu bổ sung (khuyến mãi, voucher,...)"
             error={errors.otherDiscount?.message}
             mb="md"
             min={0}
@@ -756,7 +754,6 @@ export const CreateSalesOrderModal = ({
               </Text>
             }
             placeholder="Nhập số tiền cọc"
-            description="Số tiền khách hàng đã đặt cọc cho đơn hàng này"
             error={errors.deposit?.message}
             mb="md"
             min={0}
@@ -807,14 +804,13 @@ export const CreateSalesOrderModal = ({
               )
               const rowSalesItemOptions = salesItemOptions.map((option) => {
                 const selectedIndexes = duplicateCodeIndexes[option.value] || []
-                const isSelected = selectedIndexes.length > 0
                 const selectedOnAnotherRow = selectedIndexes.some(
                   (selectedIndex) => selectedIndex !== index
                 )
 
                 return {
                   ...option,
-                  label: `${option.label}${isSelected ? " (đã chọn)" : ""}`,
+                  label: option.label,
                   disabled: selectedOnAnotherRow && option.value !== currentCode
                 }
               })
