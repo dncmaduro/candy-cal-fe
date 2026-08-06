@@ -4791,6 +4791,12 @@ export interface SalesItem {
   area?: number
   specification?: string
   mass?: number
+  inventoryQuantity?: number
+  previousPeriodQuantity?: number
+  lastImportedQuantity?: number
+  currentPeriodExportedQuantity?: number
+  inventoryUpdatedAt?: string
+  lastImportedAt?: string
   createdAt: string
   updatedAt: string
 }
@@ -4807,6 +4813,39 @@ export interface SearchSalesItemsRequest {
 /** @interface */
 export interface SearchSalesItemsResponse {
   data: SalesItem[]
+  total: number
+}
+
+/** @interface */
+export interface UploadSalesInventoryResponse {
+  success: true
+  imported: number
+  skipped: number
+  uploadBatchId: string
+  warnings?: string[]
+  totalWarnings?: number
+}
+
+/** @interface */
+export interface GetDailySalesInventoryReportResponse {
+  date: string
+  data: {
+    code: string
+    name: string
+    openingQuantity: number
+    importedQuantity: number
+    exportedQuantity: number
+    closingQuantity: number
+  }[]
+}
+
+/** @interface */
+export interface GetDailySalesInventoryReportHistoryResponse {
+  data: {
+    date: string
+    importedQuantity: number
+    exportedQuantity: number
+  }[]
   total: number
 }
 
