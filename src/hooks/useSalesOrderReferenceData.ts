@@ -32,7 +32,8 @@ export const useSalesOrderReferenceData = ({
     me?.roles.includes("accounting-emp") ||
     me?.roles.includes("sales-accounting")
 
-  const canSeeAllFunnels = isAdmin || isSystemEmp || isSalesHunter
+  const canSeeAllFunnels =
+    isAdmin || isSystemEmp || isSalesHunter || isAccountingEmp
 
   const { data: channelsData } = useQuery({
     queryKey: ["salesChannels", "all"],
