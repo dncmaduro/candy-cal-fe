@@ -4601,6 +4601,7 @@ export interface TransitionSalesOrderStatusRequest {
   tax?: number
   shippingCost?: number
   receivedDate?: string
+  inventoryHandling?: "export_available_items" | "skip_inventory_export"
 }
 
 /** @interface */
