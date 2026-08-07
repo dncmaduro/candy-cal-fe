@@ -4,7 +4,9 @@ import {
   TextInput,
   Select,
   NumberInput,
-  Text
+  Text,
+  Radio,
+  Stack
 } from "@mantine/core"
 import { DateInput } from "@mantine/dates"
 import { useForm, Controller } from "react-hook-form"
@@ -28,6 +30,7 @@ type TransitionOrderStatusFormData = {
   tax?: number
   shippingCost?: number
   receivedDate?: Date
+  inventoryHandling?: "export_available_items" | "skip_inventory_export"
 }
 
 type TransitionOrderStatusModalProps = {
@@ -70,7 +73,8 @@ export const TransitionOrderStatusModal = ({
       shippingType: currentShippingType || undefined,
       tax: currentTax || undefined,
       shippingCost: currentShippingCost || undefined,
-      receivedDate: currentReceivedDate || undefined
+      receivedDate: currentReceivedDate || undefined,
+      inventoryHandling: "export_available_items"
     }
   })
 
@@ -98,8 +102,9 @@ export const TransitionOrderStatusModal = ({
         tax: data.status === "official" ? (data.tax ?? 0) : undefined,
         shippingCost:
           data.status === "official" ? (data.shippingCost ?? 0) : undefined,
-        receivedDate:
-          data.status === "official" ? data.receivedDate?.toISOString() : undefined
+        receivedDate: data.status === "official" ? data.receivedDate?.toISOString() : undefined,
+        inventoryHandling:
+          data.status === "official" ? data.inventoryHandling : undefined
       }
       return transitionSalesOrderStatus(orderId, requestData)
     },
@@ -112,9 +117,10 @@ export const TransitionOrderStatusModal = ({
       onSuccess()
     },
     onError: (error: any) => {
+      const message = error?.response?.data?.message
       CToast.error({
         title:
-          error?.response?.data?.message ||
+          message ||
           "Có lỗi xảy ra khi chuyển trạng thái đơn hàng"
       })
     }
@@ -158,6 +164,29 @@ export const TransitionOrderStatusModal = ({
 
       {isOfficialTarget && (
         <>
+          <Controller
+            name="inventoryHandling"
+            control={control}
+            render={({ field }) => (
+              <Radio.Group
+                {...field}
+                label="Phương án xuất kho"
+                description="Nếu một số mã hàng thiếu tồn, hãy chọn cách xử lý trước khi xác nhận đơn."
+                mb="md"
+              >
+                <Stack gap="xs" mt="xs">
+                  <Radio
+                    value="export_available_items"
+                    label="Xác nhận đơn và xuất kho các mã hàng đủ tồn"
+                  />
+                  <Radio
+                    value="skip_inventory_export"
+                    label="Xác nhận đơn, chưa thực hiện xuất kho"
+                  />
+                </Stack>
+              </Radio.Group>
+            )}
+          />
           <Controller
             name="shippingCode"
             control={control}
