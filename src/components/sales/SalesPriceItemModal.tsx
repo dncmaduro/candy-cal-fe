@@ -124,7 +124,7 @@ export const SalesPriceItemModal = ({ priceItem, refetch }: Props) => {
               required
               size="md"
               min={0}
-              thousandSeparator=","
+              thousandSeparator="."
               error={errors.price?.message}
               {...field}
             />

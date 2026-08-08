@@ -177,7 +177,7 @@ export const SalesItemModal = ({ item, onSuccess }: SalesItemModalProps) => {
               min={0}
               required
               hideControls
-              thousandSeparator=","
+              thousandSeparator="."
               error={errors.price?.message}
             />
           )}

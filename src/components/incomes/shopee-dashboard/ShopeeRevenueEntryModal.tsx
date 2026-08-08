@@ -350,7 +350,7 @@ export const ShopeeRevenueEntryModal = ({
         onChange={setAdsCost}
         min={0}
         size="md"
-        thousandSeparator=","
+        thousandSeparator="."
         suffix=" đ"
         hideControls
         styles={{
@@ -366,7 +366,7 @@ export const ShopeeRevenueEntryModal = ({
         onChange={setLiveRevenue}
         min={0}
         size="md"
-        thousandSeparator=","
+        thousandSeparator="."
         suffix=" đ"
         hideControls
         styles={{

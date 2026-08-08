@@ -46,7 +46,7 @@ export const SalesDailyAdsModal = ({
             <DatePickerInput {...field} label="Ngày" valueFormat="DD/MM/YYYY" required withAsterisk />
           )} />
           <Controller name="adsCost" control={control} rules={{ min: 0 }} render={({ field }) => (
-            <NumberInput {...field} label="Chi phí ads" thousandSeparator="," min={0} required withAsterisk leftSection="đ" />
+            <NumberInput {...field} label="Chi phí ads" thousandSeparator="." min={0} required withAsterisk leftSection="đ" />
           )} />
           <Group justify="flex-end">
             <Button type="button" variant="subtle" onClick={() => modals.closeAll()} disabled={isPending}>Huỷ</Button>

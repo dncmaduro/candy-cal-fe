@@ -151,7 +151,7 @@ export const UpdateShippingInfoModal = ({
                 </Button>
               </>
             }
-            thousandSeparator=","
+            thousandSeparator="."
             suffix=" đ"
           />
         )}
@@ -169,7 +169,7 @@ export const UpdateShippingInfoModal = ({
             error={errors.shippingCost?.message}
             mb="md"
             min={0}
-            thousandSeparator=","
+            thousandSeparator="."
             suffix=" đ"
             styles={{
               section: {
