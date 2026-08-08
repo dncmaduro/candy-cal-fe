@@ -639,6 +639,20 @@ export interface UpdateUserActiveResponse {
 }
 
 /** @interface */
+export interface UpdateUserRolesRequest {
+  roles: string[]
+}
+
+/** @interface */
+export interface UpdateUserRolesResponse {
+  message: string
+  data: {
+    _id: string
+    roles: string[]
+  }
+}
+
+/** @interface */
 export interface CreateDeliveredRequestRequest {
   items: {
     _id: string
