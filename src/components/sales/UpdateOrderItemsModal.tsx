@@ -272,7 +272,7 @@ export const UpdateOrderItemsModal = ({
           step={orderDiscountType === "percent" ? 0.5 : 1}
           decimalScale={orderDiscountType === "percent" ? 2 : 0}
           hideControls
-          thousandSeparator=","
+          thousandSeparator="."
           flex={1}
           styles={{
             input: {
@@ -306,7 +306,7 @@ export const UpdateOrderItemsModal = ({
         onChange={(value) => setOtherDiscount(Number(value) || 0)}
         mb="md"
         min={0}
-        thousandSeparator=","
+        thousandSeparator="."
         suffix=" đ"
         styles={{
           input: {
@@ -328,7 +328,7 @@ export const UpdateOrderItemsModal = ({
         onChange={(value) => setDeposit(Number(value) || 0)}
         mb="md"
         min={0}
-        thousandSeparator=","
+        thousandSeparator="."
         suffix=" đ"
         styles={{
           input: {

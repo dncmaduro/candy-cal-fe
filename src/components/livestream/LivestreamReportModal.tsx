@@ -240,7 +240,7 @@ export const openLivestreamReportModal = ({
                 label="Doanh thu"
                 placeholder="Nhập doanh thu"
                 min={0}
-                thousandSeparator=","
+                thousandSeparator="."
                 suffix=" VNĐ"
                 readOnly={hasData || isPreviousMonthLivestream}
                 className="grow"
@@ -249,7 +249,7 @@ export const openLivestreamReportModal = ({
               <NumberInput
                 label="Doanh thu thực"
                 readOnly
-                thousandSeparator=","
+                thousandSeparator="."
                 suffix=" VNĐ"
                 className="grow"
                 {...form.getInputProps("realIncome")}
@@ -261,7 +261,7 @@ export const openLivestreamReportModal = ({
                 label="Chi phí quảng cáo"
                 placeholder="Nhập chi phí quảng cáo"
                 min={0}
-                thousandSeparator=","
+                thousandSeparator="."
                 suffix=" VNĐ"
                 readOnly={hasData || isPreviousMonthLivestream}
                 className="grow"

@@ -689,7 +689,7 @@ export const CreateSalesOrderModal = ({
               step={watchOrderDiscountType === "percent" ? 0.5 : 1}
               decimalScale={watchOrderDiscountType === "percent" ? 2 : 0}
               hideControls
-              thousandSeparator=","
+              thousandSeparator="."
               flex={1}
               styles={{
                 input: {
@@ -729,7 +729,7 @@ export const CreateSalesOrderModal = ({
             error={errors.otherDiscount?.message}
             mb="md"
             min={0}
-            thousandSeparator=","
+            thousandSeparator="."
             suffix=" đ"
             styles={{
               input: {
@@ -757,7 +757,7 @@ export const CreateSalesOrderModal = ({
             error={errors.deposit?.message}
             mb="md"
             min={0}
-            thousandSeparator=","
+            thousandSeparator="."
             suffix=" đ"
             styles={{
               input: {

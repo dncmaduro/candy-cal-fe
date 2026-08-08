@@ -248,7 +248,7 @@ export const TransitionOrderStatusModal = ({
                     Thuế 0.75%
                   </Button>
                 }
-                thousandSeparator=","
+                thousandSeparator="."
                 suffix=" đ"
               />
             )}
@@ -266,7 +266,7 @@ export const TransitionOrderStatusModal = ({
                 error={errors.shippingCost?.message}
                 mb="md"
                 min={0}
-                thousandSeparator=","
+                thousandSeparator="."
                 suffix=" đ"
                 styles={{
                   section: {

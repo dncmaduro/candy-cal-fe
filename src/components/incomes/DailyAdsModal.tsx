@@ -514,7 +514,7 @@ export const DailyAdsModal = ({ refetch }: Props) => {
               onChange={(value) => setLiveAdsCost(Number(value) || 0)}
               min={0}
               size="md"
-              thousandSeparator=","
+              thousandSeparator="."
               suffix={currency === "vnd" ? " VNĐ" : " USD"}
               withAsterisk
               disabled={submittingSimpleAds}
@@ -526,7 +526,7 @@ export const DailyAdsModal = ({ refetch }: Props) => {
               onChange={(value) => setShopAdsCost(Number(value) || 0)}
               min={0}
               size="md"
-              thousandSeparator=","
+              thousandSeparator="."
               suffix={currency === "vnd" ? " VNĐ" : " USD"}
               withAsterisk
               disabled={submittingSimpleAds}
