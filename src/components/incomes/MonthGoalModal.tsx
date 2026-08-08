@@ -138,7 +138,7 @@ export const MonthGoalModal = ({ monthGoal, refetch }: Props) => {
               placeholder="Nhập KPI Live"
               min={0}
               size="md"
-              thousandSeparator=","
+              thousandSeparator="."
               {...field}
             />
           )}
@@ -152,7 +152,7 @@ export const MonthGoalModal = ({ monthGoal, refetch }: Props) => {
               placeholder="Nhập KPI Shop"
               min={0}
               size="md"
-              thousandSeparator=","
+              thousandSeparator="."
               {...field}
             />
           )}

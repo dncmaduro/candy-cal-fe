@@ -178,7 +178,7 @@ export const LivestreamGoalModal = ({ goal, refetch }: Props) => {
               disabled={isPending}
               size="md"
               min={0}
-              thousandSeparator=","
+              thousandSeparator="."
               error={errors.goal?.message}
             />
           )}

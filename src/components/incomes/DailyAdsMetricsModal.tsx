@@ -213,7 +213,7 @@ export function DailyAdsMetricsModal({
               label="ROI Protect"
               value={form.roiProtect}
               onChange={(value) => updateField("roiProtect", value)}
-              thousandSeparator=","
+              thousandSeparator="."
               min={0}
               styles={{
                 label: fieldLabelStyles,
@@ -224,7 +224,7 @@ export function DailyAdsMetricsModal({
               label="Tiền hoàn tín"
               value={form.tinRefundAmount}
               onChange={(value) => updateField("tinRefundAmount", value)}
-              thousandSeparator=","
+              thousandSeparator="."
               min={0}
               styles={{
                 label: fieldLabelStyles,
@@ -235,7 +235,7 @@ export function DailyAdsMetricsModal({
               label="GMV ADS"
               value={form.gmvAds}
               onChange={(value) => updateField("gmvAds", value)}
-              thousandSeparator=","
+              thousandSeparator="."
               min={0}
               styles={{
                 label: fieldLabelStyles,
@@ -246,7 +246,7 @@ export function DailyAdsMetricsModal({
               label="Chi phí Aff"
               value={form.affiliateCost}
               onChange={(value) => updateField("affiliateCost", value)}
-              thousandSeparator=","
+              thousandSeparator="."
               min={0}
               styles={{
                 label: fieldLabelStyles,
@@ -257,7 +257,7 @@ export function DailyAdsMetricsModal({
               label="Doanh thu tổng"
               value={form.totalRevenue}
               onChange={(value) => updateField("totalRevenue", value)}
-              thousandSeparator=","
+              thousandSeparator="."
               min={0}
               styles={{
                 label: fieldLabelStyles,

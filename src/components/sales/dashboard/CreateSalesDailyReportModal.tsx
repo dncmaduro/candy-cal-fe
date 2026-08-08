@@ -448,7 +448,7 @@ export const CreateSalesDailyReportModal = () => {
                           {...field}
                           label="KPI ngày"
                           placeholder="Tự động từ KPI tháng"
-                          thousandSeparator=","
+                          thousandSeparator="."
                           required
                           min={0}
                           hideControls
@@ -494,7 +494,7 @@ export const CreateSalesDailyReportModal = () => {
                                 <NumberInput
                                   {...field}
                                   label="Tổng doanh thu ngày"
-                                  thousandSeparator=","
+                                  thousandSeparator="."
                                   readOnly
                                   hideControls
                                   leftSection={<Text size="sm">đ</Text>}
@@ -513,7 +513,7 @@ export const CreateSalesDailyReportModal = () => {
                             <NumberInput
                               value={newRevenueTotal}
                               label="Doanh thu khách mới"
-                              thousandSeparator=","
+                              thousandSeparator="."
                               readOnly
                               hideControls
                               leftSection={<Text size="sm">đ</Text>}
@@ -533,7 +533,7 @@ export const CreateSalesDailyReportModal = () => {
                                 <NumberInput
                                   {...field}
                                   label="Từ Ads"
-                                  thousandSeparator=","
+                                  thousandSeparator="."
                                   readOnly
                                   hideControls
                                   leftSection={<Text size="sm">đ</Text>}
@@ -550,7 +550,7 @@ export const CreateSalesDailyReportModal = () => {
                                 <NumberInput
                                   {...field}
                                   label="Từ nguồn khác"
-                                  thousandSeparator=","
+                                  thousandSeparator="."
                                   readOnly
                                   hideControls
                                   leftSection={<Text size="sm">đ</Text>}
@@ -583,7 +583,7 @@ export const CreateSalesDailyReportModal = () => {
                                 <NumberInput
                                   {...field}
                                   label="Doanh thu khách cũ"
-                                  thousandSeparator=","
+                                  thousandSeparator="."
                                   readOnly
                                   hideControls
                                   leftSection={<Text size="sm">đ</Text>}
@@ -630,7 +630,7 @@ export const CreateSalesDailyReportModal = () => {
                                 <NumberInput
                                   {...field}
                                   label="Tổng doanh thu lũy kế"
-                                  thousandSeparator=","
+                                  thousandSeparator="."
                                   readOnly
                                   hideControls
                                   leftSection={<Text size="sm">đ</Text>}
@@ -648,7 +648,7 @@ export const CreateSalesDailyReportModal = () => {
                             <NumberInput
                               value={accumulatedNewRevenueTotal}
                               label="DT khách mới lũy kế"
-                              thousandSeparator=","
+                              thousandSeparator="."
                               readOnly
                               hideControls
                               leftSection={<Text size="sm">đ</Text>}
@@ -668,7 +668,7 @@ export const CreateSalesDailyReportModal = () => {
                                 <NumberInput
                                   {...field}
                                   label="Từ Ads"
-                                  thousandSeparator=","
+                                  thousandSeparator="."
                                   readOnly
                                   hideControls
                                   leftSection={<Text size="sm">đ</Text>}
@@ -685,7 +685,7 @@ export const CreateSalesDailyReportModal = () => {
                                 <NumberInput
                                   {...field}
                                   label="Từ nguồn khác"
-                                  thousandSeparator=","
+                                  thousandSeparator="."
                                   readOnly
                                   hideControls
                                   leftSection={<Text size="sm">đ</Text>}
@@ -712,7 +712,7 @@ export const CreateSalesDailyReportModal = () => {
                             <NumberInput
                               value={projectedRevenue}
                               label="Tổng DT lũy kế"
-                              thousandSeparator=","
+                              thousandSeparator="."
                               readOnly
                               hideControls
                               leftSection={<Text size="sm">đ</Text>}
@@ -728,7 +728,7 @@ export const CreateSalesDailyReportModal = () => {
                             <NumberInput
                               value={projectedNewRevenueTotal}
                               label="DT khách mới"
-                              thousandSeparator=","
+                              thousandSeparator="."
                               readOnly
                               hideControls
                               leftSection={<Text size="sm">đ</Text>}
@@ -744,7 +744,7 @@ export const CreateSalesDailyReportModal = () => {
                             <NumberInput
                               value={projectedNewFunnelRevenueAds}
                               label="Từ Ads"
-                              thousandSeparator=","
+                              thousandSeparator="."
                               readOnly
                               hideControls
                               leftSection={<Text size="sm">đ</Text>}
@@ -755,7 +755,7 @@ export const CreateSalesDailyReportModal = () => {
                             <NumberInput
                               value={projectedNewFunnelRevenueOther}
                               label="Từ nguồn khác"
-                              thousandSeparator=","
+                              thousandSeparator="."
                               readOnly
                               hideControls
                               leftSection={<Text size="sm">đ</Text>}

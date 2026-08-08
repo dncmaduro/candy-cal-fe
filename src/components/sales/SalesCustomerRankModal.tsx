@@ -90,7 +90,7 @@ export function SalesCustomerRankModal({ rank, refetch }: Props) {
               placeholder="Nhập số tiền"
               min={0}
               required
-              thousandSeparator=","
+              thousandSeparator="."
               suffix=" đ"
               error={fieldState.error?.message}
               withAsterisk

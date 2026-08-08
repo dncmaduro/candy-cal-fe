@@ -121,7 +121,7 @@ function PerformanceModal({
                 label="Doanh thu tối thiểu (VNĐ)"
                 placeholder="Nhập doanh thu tối thiểu"
                 error={errors.minIncome?.message}
-                thousandSeparator=","
+                thousandSeparator="."
                 min={0}
                 required
               />
@@ -138,7 +138,7 @@ function PerformanceModal({
                 label="Doanh thu tối đa (VNĐ)"
                 placeholder="Nhập doanh thu tối đa"
                 error={errors.maxIncome?.message}
-                thousandSeparator=","
+                thousandSeparator="."
                 min={0}
                 required
               />
@@ -157,7 +157,7 @@ function PerformanceModal({
                 label="Lương theo giờ (VNĐ)"
                 placeholder="Nhập lương theo giờ"
                 error={errors.salaryPerHour?.message}
-                thousandSeparator=","
+                thousandSeparator="."
                 min={0}
                 required
               />

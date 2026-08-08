@@ -232,7 +232,7 @@ export const ShopeeMonthKpiModal = ({
               error={errors.revenueKpi?.message}
               min={0}
               step={1000000}
-              thousandSeparator=","
+              thousandSeparator="."
               required
             />
           )}
@@ -256,7 +256,7 @@ export const ShopeeMonthKpiModal = ({
               error={errors.adsCostKpi?.message}
               min={0}
               step={1000000}
-              thousandSeparator=","
+              thousandSeparator="."
               required
             />
           )}

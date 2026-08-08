@@ -71,7 +71,7 @@ export const UpdateFunnelCostModal = ({
             error={errors.cost?.message}
             mb="md"
             suffix=" đ"
-            thousandSeparator=","
+            thousandSeparator="."
             hideControls
           />
         )}

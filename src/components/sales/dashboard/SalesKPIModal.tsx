@@ -165,7 +165,7 @@ export const SalesKPIModal = ({ kpi, channels, onSuccess }: Props) => {
               error={errors.kpi?.message}
               min={0}
               step={1000000}
-              thousandSeparator=","
+              thousandSeparator="."
               required
             />
           )}
