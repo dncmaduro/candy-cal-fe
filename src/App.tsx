@@ -14,7 +14,7 @@ import "@mantine/carousel/styles.css"
 import "@mantine/dates/styles.css"
 import "@mantine/charts/styles.css"
 
-import { createTheme, MantineProvider, Modal } from "@mantine/core"
+import { createTheme, MantineProvider, Modal, NumberInput } from "@mantine/core"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { MaintenancePage } from "./components/common/MaintenancePage"
 import { ConfirmingModalsProvider } from "./components/common/ConfirmingModalsProvider"
@@ -41,6 +41,12 @@ const theme = createTheme({
     Modal: Modal.extend({
       defaultProps: {
         overlayProps: { backgroundOpacity: 0.6, blur: 2, color: "black" }
+      }
+    }),
+    NumberInput: NumberInput.extend({
+      defaultProps: {
+        // Use the Vietnamese decimal separator when thousandSeparator is ".".
+        decimalSeparator: ","
       }
     })
   }
