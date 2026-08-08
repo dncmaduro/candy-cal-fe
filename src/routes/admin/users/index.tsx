@@ -10,9 +10,12 @@ import {
   Avatar,
   Badge,
   Box,
+  Button,
   Divider,
   Flex,
   Group,
+  Modal,
+  MultiSelect,
   Select,
   Stack,
   Switch,
@@ -21,7 +24,7 @@ import {
   rem
 } from "@mantine/core"
 import { ColumnDef } from "@tanstack/react-table"
-import { IconSearch } from "@tabler/icons-react"
+import { IconEdit, IconSearch } from "@tabler/icons-react"
 import { Helmet } from "react-helmet-async"
 import { notifications } from "@mantine/notifications"
 import { AdminLayout } from "../../../components/layouts/AdminLayout"
@@ -85,7 +88,7 @@ function RouteComponent() {
   useAuthGuard(["admin"])
 
   const queryClient = useQueryClient()
-  const { adminListUsers, updateUserActive } = useUsers()
+  const { adminListUsers, updateUserActive, updateUserRoles } = useUsers()
 
   const [searchText, setSearchText] = useState("")
   const [role, setRole] = useState<string | null>(null)
@@ -93,6 +96,11 @@ function RouteComponent() {
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(10)
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null)
+  const [updatingRolesUserId, setUpdatingRolesUserId] = useState<string | null>(
+    null
+  )
+  const [editingUser, setEditingUser] = useState<UserRow | null>(null)
+  const [editingRoles, setEditingRoles] = useState<string[]>([])
 
   const {
     data: usersResponse,
@@ -144,6 +152,37 @@ function RouteComponent() {
       setUpdatingUserId(null)
     }
   })
+
+  const { mutate: saveUserRoles } = useMutation({
+    mutationFn: async (payload: { userId: string; roles: string[] }) => {
+      setUpdatingRolesUserId(payload.userId)
+      return updateUserRoles(payload.userId, { roles: payload.roles })
+    },
+    onSuccess: () => {
+      notifications.show({
+        title: "Đã cập nhật vai trò",
+        message: "Vai trò của tài khoản đã được lưu",
+        color: "green"
+      })
+      setEditingUser(null)
+      queryClient.invalidateQueries({ queryKey: ["adminUsers"] })
+    },
+    onError: (error: any) => {
+      notifications.show({
+        title: "Cập nhật vai trò thất bại",
+        message:
+          error?.response?.data?.message ||
+          "Không thể cập nhật vai trò của tài khoản",
+        color: "red"
+      })
+    },
+    onSettled: () => setUpdatingRolesUserId(null)
+  })
+
+  const openRoleEditor = (user: UserRow) => {
+    setEditingUser(user)
+    setEditingRoles(user.roles)
+  }
 
   const columns = useMemo<ColumnDef<UserRow>[]>(
     () => [
@@ -235,9 +274,24 @@ function RouteComponent() {
             </Group>
           )
         }
+      },
+      {
+        id: "actions",
+        header: "Thao tác",
+        enableSorting: false,
+        cell: ({ row }) => (
+          <Button
+            size="xs"
+            variant="light"
+            leftSection={<IconEdit size={15} />}
+            onClick={() => openRoleEditor(row.original)}
+          >
+            Sửa vai trò
+          </Button>
+        )
       }
     ],
-    [toggleUserActive, updatingUserId]
+    [openRoleEditor, toggleUserActive, updatingUserId]
   )
 
   const extraFilters = (
@@ -365,6 +419,47 @@ function RouteComponent() {
             />
           </Box>
         </Box>
+
+        <Modal
+          opened={Boolean(editingUser)}
+          onClose={() => setEditingUser(null)}
+          title={<Text fw={700}>Chỉnh sửa vai trò</Text>}
+          centered
+        >
+          <Stack gap="md">
+            <Text size="sm" c="dimmed">
+              Tài khoản: <b>{editingUser?.username}</b>
+            </Text>
+            <MultiSelect
+              label="Vai trò"
+              description="Một tài khoản có thể có nhiều vai trò."
+              data={ROLE_OPTIONS}
+              value={editingRoles}
+              onChange={setEditingRoles}
+              searchable
+              clearable
+              placeholder="Chọn vai trò"
+            />
+            <Group justify="flex-end">
+              <Button variant="default" onClick={() => setEditingUser(null)}>
+                Hủy
+              </Button>
+              <Button
+                onClick={() =>
+                  editingUser &&
+                  saveUserRoles({
+                    userId: editingUser._id,
+                    roles: editingRoles
+                  })
+                }
+                loading={updatingRolesUserId === editingUser?._id}
+                disabled={!editingRoles.length}
+              >
+                Lưu vai trò
+              </Button>
+            </Group>
+          </Stack>
+        </Modal>
       </AdminLayout>
     </>
   )

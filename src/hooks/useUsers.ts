@@ -21,7 +21,9 @@ import {
   UpdateAvatarRequest,
   UpdateAvatarResponse,
   UpdateUserRequest,
-  UpdateUserResponse
+  UpdateUserResponse,
+  UpdateUserRolesRequest,
+  UpdateUserRolesResponse
 } from "./models"
 
 export const useUsers = () => {
@@ -119,6 +121,18 @@ export const useUsers = () => {
     })
   }
 
+  const updateUserRoles = async (
+    userId: string,
+    req: UpdateUserRolesRequest
+  ) => {
+    return callApi<UpdateUserRolesRequest, UpdateUserRolesResponse>({
+      method: "PATCH",
+      path: `/v1/users/${userId}/roles`,
+      data: req,
+      token: accessToken
+    })
+  }
+
   return {
     login,
     getNewToken,
@@ -129,6 +143,7 @@ export const useUsers = () => {
     updateUser,
     publicSearchUser,
     adminListUsers,
-    updateUserActive
+    updateUserActive,
+    updateUserRoles
   }
 }
