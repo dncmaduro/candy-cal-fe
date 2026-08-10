@@ -515,6 +515,7 @@ export const DailyAdsModal = ({ refetch }: Props) => {
               min={0}
               size="md"
               thousandSeparator="."
+              decimalSeparator=","
               suffix={currency === "vnd" ? " VNĐ" : " USD"}
               withAsterisk
               disabled={submittingSimpleAds}
@@ -527,6 +528,7 @@ export const DailyAdsModal = ({ refetch }: Props) => {
               min={0}
               size="md"
               thousandSeparator="."
+              decimalSeparator=","
               suffix={currency === "vnd" ? " VNĐ" : " USD"}
               withAsterisk
               disabled={submittingSimpleAds}
