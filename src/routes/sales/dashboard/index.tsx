@@ -80,8 +80,7 @@ function RouteComponent() {
     enabled: !!startDate && !!endDate
   })
   const {
-    data: salesDailyAdsData,
-    isLoading: salesDailyAdsLoading
+    data: salesDailyAdsData
   } = useQuery({
     queryKey: ["salesDailyAds", new Date().getFullYear(), new Date().getMonth() + 1],
     queryFn: () =>
