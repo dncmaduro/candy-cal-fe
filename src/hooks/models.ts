@@ -5578,12 +5578,14 @@ export interface GetSalesDailyReportDetailResponse {
 export interface UpsertSalesDailyAdsRequest {
   date: Date
   adsCost: number
+  newLeads: number
 }
 
 /** @interface */
 export interface SalesDailyAdsItem {
   date: string
   adsCost: number
+  newLeads: number
 }
 
 /** @interface */

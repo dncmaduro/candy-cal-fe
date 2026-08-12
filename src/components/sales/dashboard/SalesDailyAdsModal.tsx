@@ -8,7 +8,7 @@ import { SalesDailyAdsItem } from "../../../hooks/models"
 import { useSalesDailyAds } from "../../../hooks/useSalesDailyAds"
 import { CToast } from "../../common/CToast"
 
-type SalesDailyAdsFormValues = { date: Date; adsCost: number }
+type SalesDailyAdsFormValues = { date: Date; adsCost: number; newLeads: number }
 
 export const SalesDailyAdsModal = ({
   initialAds,
@@ -22,12 +22,13 @@ export const SalesDailyAdsModal = ({
   const { control, handleSubmit } = useForm<SalesDailyAdsFormValues>({
     defaultValues: {
       date: initialAds ? new Date(initialAds.date) : new Date(new Date().setHours(0, 0, 0, 0)),
-      adsCost: initialAds?.adsCost ?? 0
+      adsCost: initialAds?.adsCost ?? 0,
+      newLeads: initialAds?.newLeads ?? 0
     }
   })
   const { mutate: save, isPending } = useMutation({
     mutationFn: (values: SalesDailyAdsFormValues) =>
-      upsertSalesDailyAds({ date: new Date(values.date), adsCost: values.adsCost }),
+      upsertSalesDailyAds({ date: new Date(values.date), adsCost: values.adsCost, newLeads: values.newLeads }),
     onSuccess: () => {
       CToast.success({ title: "Lưu chi phí ads thành công" })
       void queryClient.invalidateQueries({ queryKey: ["salesDailyAds"] })
@@ -47,6 +48,9 @@ export const SalesDailyAdsModal = ({
           )} />
           <Controller name="adsCost" control={control} rules={{ min: 0 }} render={({ field }) => (
             <NumberInput {...field} label="Chi phí ads" thousandSeparator="." min={0} required withAsterisk leftSection="đ" />
+          )} />
+          <Controller name="newLeads" control={control} rules={{ min: 0 }} render={({ field }) => (
+            <NumberInput {...field} label="Số Lead mới" thousandSeparator="." min={0} required withAsterisk/>
           )} />
           <Group justify="flex-end">
             <Button type="button" variant="subtle" onClick={() => modals.closeAll()} disabled={isPending}>Huỷ</Button>
