@@ -34,7 +34,6 @@ import {
   SALES_ADS_COST_REPORT_ROLES,
   SALES_REVENUE_REPORT_ROLES
 } from "../../../constants/navs"
-import { useSalesDailyAds } from "../../../hooks/useSalesDailyAds"
 export const Route = createFileRoute("/sales/dashboard/")({
   validateSearch: (search: Record<string, unknown>) => ({
     tab: search.tab === "monthly" ? "monthly" : "revenue"
@@ -51,7 +50,6 @@ function RouteComponent() {
     getMonthlyMetrics,
     getMonthlyTopCustomers
   } = useSalesDashboard()
-  const { getSalesDailyAdsByMonth } = useSalesDailyAds()
   const { searchSalesChannels } = useSalesChannels()
 
   const [startDate, setStartDate] = useState<Date | null>(new Date())
@@ -79,16 +77,7 @@ function RouteComponent() {
       }),
     enabled: !!startDate && !!endDate
   })
-  const {
-    data: salesDailyAdsData
-  } = useQuery({
-    queryKey: ["salesDailyAds", new Date().getFullYear(), new Date().getMonth() + 1],
-    queryFn: () =>
-      getSalesDailyAdsByMonth({
-        month: new Date().getMonth() + 1,
-        year: new Date().getFullYear()
-      })
-  })
+  
   const {
     data: provinceSalesData,
     isLoading: provinceSalesLoading,
