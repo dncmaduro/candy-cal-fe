@@ -69,6 +69,9 @@ export function RevenueKPICards({
           <Text component="span" size="md" c="dimmed" fw={500}>
             ({adsCostToNewCustomerRevenuePct.toFixed(2)}%)
           </Text>
+          <Text component="span" size="md" c="dimmed" fw={500}>
+          (Lead mới: {newLeads ?? 0})
+        </Text>
         </>
       ),
       icon: <IconCash size={18} />,
@@ -87,15 +90,8 @@ export function RevenueKPICards({
       iconColor: "red"
     },
     {
-    label: "Tổng số lượng / Lead mới",
-    value: (
-      <>
-        {(totalQuantity ?? 0).toLocaleString("vi-VN")}{" "}
-        <Text component="span" size="md" c="dimmed" fw={500}>
-          (Lead mới: {newLeads ?? 0})
-        </Text>
-      </>
-    ),
+    label: "Tổng số lượng",
+    value:  `${(totalQuantity ?? 0).toLocaleString("vi-VN")}`,
     icon: <IconPackageExport size={18} />,
     iconColor: "yellow"
   },

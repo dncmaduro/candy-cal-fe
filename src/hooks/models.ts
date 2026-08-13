@@ -5008,6 +5008,7 @@ export interface GetSalesRevenueResponse {
   totalShippingCost: number
   revenueFromNewCustomers: number
   revenueFromReturningCustomers: number
+  newLeads: number
   topItemsByRevenue: {
     code: string
     name: string

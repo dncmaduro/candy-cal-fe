@@ -182,19 +182,8 @@ function RouteComponent() {
   }
 
   const revenue = revenueData?.data
-  const today = new Date()
 
-  const todayAdsData = salesDailyAdsData?.data?.data?.find((item) => {
-  const itemDate = new Date(item.date)
-
-  return (
-    itemDate.getFullYear() === today.getFullYear() &&
-    itemDate.getMonth() === today.getMonth() &&
-    itemDate.getDate() === today.getDate()
-  )
-})
-
-  const todayNewLeads = todayAdsData?.newLeads ?? 0
+  //const todayNewLeads = todayAdsData?.newLeads ?? 0
   const provinceSales = provinceSalesData?.data
   const metrics = metricsData?.data
   const topCustomers = topCustomersData?.data
@@ -454,7 +443,8 @@ function RouteComponent() {
                   totalShippingCost={revenue?.totalShippingCost}
                   revenueFromNewCustomers={revenue?.revenueFromNewCustomers}
                   revenueFromReturningCustomers={revenue?.revenueFromReturningCustomers}
-                  newLeads={todayNewLeads}
+                  //newLeads={todayNewLeads}
+                  newLeads={revenue?.newLeads}
                 />
               </Box>
 
