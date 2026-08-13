@@ -384,6 +384,15 @@ export const SalesDailyReports = () => {
       )
     },
     {
+      accessorKey: "newLeads",
+      header: "Lead mới",
+      cell: ({ row }) => (
+        <Text c="orange" fw={600}>
+          {row.original.newLeads}
+        </Text>
+      )
+    },
+    {
       id: "actions",
       header: "Thao tác",
       enableSorting: false,

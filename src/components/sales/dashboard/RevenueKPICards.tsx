@@ -18,6 +18,7 @@ interface RevenueKPICardsProps {
   totalShippingCost?: number
   revenueFromNewCustomers?: number
   revenueFromReturningCustomers?: number
+  newLeads?: number
 }
 
 type KpiItem = {
@@ -44,7 +45,8 @@ export function RevenueKPICards({
   totalTax,
   totalShippingCost,
   revenueFromNewCustomers,
-  revenueFromReturningCustomers
+  revenueFromReturningCustomers,
+  newLeads
 }: RevenueKPICardsProps) {
   const displayedTotalRevenue = totalRevenueBeforeDiscount ?? totalRevenue ?? 0
   const adsCostToNewCustomerRevenuePct =
@@ -67,6 +69,9 @@ export function RevenueKPICards({
           <Text component="span" size="md" c="dimmed" fw={500}>
             ({adsCostToNewCustomerRevenuePct.toFixed(2)}%)
           </Text>
+          <Text component="span" size="md" c="dimmed" fw={500}>
+          (Lead mới: {newLeads ?? 0})
+        </Text>
         </>
       ),
       icon: <IconCash size={18} />,
@@ -85,11 +90,11 @@ export function RevenueKPICards({
       iconColor: "red"
     },
     {
-      label: "Tổng số lượng",
-      value: totalQuantity ?? 0,
-      icon: <IconPackageExport size={18} />,
-      iconColor: "yellow"
-    },
+    label: "Tổng số lượng",
+    value:  `${(totalQuantity ?? 0).toLocaleString("vi-VN")}`,
+    icon: <IconPackageExport size={18} />,
+    iconColor: "yellow"
+  },
     {
       label: "Tổng đơn hàng",
       value: totalOrders ?? 0,
