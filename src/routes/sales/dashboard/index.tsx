@@ -34,7 +34,6 @@ import {
   SALES_ADS_COST_REPORT_ROLES,
   SALES_REVENUE_REPORT_ROLES
 } from "../../../constants/navs"
-
 export const Route = createFileRoute("/sales/dashboard/")({
   validateSearch: (search: Record<string, unknown>) => ({
     tab: search.tab === "monthly" ? "monthly" : "revenue"
@@ -78,7 +77,7 @@ function RouteComponent() {
       }),
     enabled: !!startDate && !!endDate
   })
-
+  
   const {
     data: provinceSalesData,
     isLoading: provinceSalesLoading,
@@ -172,6 +171,8 @@ function RouteComponent() {
   }
 
   const revenue = revenueData?.data
+
+  //const todayNewLeads = todayAdsData?.newLeads ?? 0
   const provinceSales = provinceSalesData?.data
   const metrics = metricsData?.data
   const topCustomers = topCustomersData?.data
@@ -431,6 +432,8 @@ function RouteComponent() {
                   totalShippingCost={revenue?.totalShippingCost}
                   revenueFromNewCustomers={revenue?.revenueFromNewCustomers}
                   revenueFromReturningCustomers={revenue?.revenueFromReturningCustomers}
+                  //newLeads={todayNewLeads}
+                  newLeads={revenue?.newLeads}
                 />
               </Box>
 
