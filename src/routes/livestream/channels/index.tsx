@@ -18,6 +18,7 @@ type LivestreamChannel = {
   name: string
   username: string
   usernames: string[]
+  platform: string
   link: string
   createdAt?: string
   updatedAt?: string
@@ -106,6 +107,19 @@ function RouteComponent() {
       cell: ({ row }) => (
         <Text size="sm" className="max-w-xs truncate">
           {row.original.usernames?.length ? row.original.usernames.join(", ") : "-"}
+        </Text>
+      )
+    },
+    {
+      accessorKey: "platform",
+      header: "Nền tảng",
+      cell: ({ row }) => (
+        <Text size="sm">
+          {row.original.platform === "tiktokshop"
+            ? "TikTok Shop"
+            : row.original.platform === "shopee"
+              ? "Shopee"
+              : "-"}
         </Text>
       )
     },

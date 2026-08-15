@@ -3190,6 +3190,7 @@ export interface CreateLivestreamChannelRequest {
   name: string
   username: string
   usernames: string[]
+  platform: "tiktokshop" | "shopee"
   link: string
 }
 
