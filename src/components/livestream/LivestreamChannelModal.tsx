@@ -1,6 +1,6 @@
 import { useLivestreamChannels } from "../../hooks/useLivestreamChannels"
 import { useMutation } from "@tanstack/react-query"
-import { Stack, Button, Group, TextInput } from "@mantine/core"
+import { Stack, Button, Group, Select, TextInput } from "@mantine/core"
 import { useForm, Controller } from "react-hook-form"
 import { modals } from "@mantine/modals"
 import { CToast } from "../common/CToast"
@@ -24,6 +24,7 @@ interface FormData {
   name: string
   usernamesText: string
   link: string
+  platform: "tiktokshop" | "shopee"
 }
 
 export const LivestreamChannelModal = ({ channel, refetch }: Props) => {
@@ -38,7 +39,8 @@ export const LivestreamChannelModal = ({ channel, refetch }: Props) => {
     defaultValues: {
       name: channel?.name ?? "",
       usernamesText: channel?.usernames?.join(", ") ?? "",
-      link: channel?.link ?? ""
+      link: channel?.link ?? "",
+      platform: "tiktokshop"
     }
   })
 
@@ -93,7 +95,7 @@ export const LivestreamChannelModal = ({ channel, refetch }: Props) => {
       })
     } else {
       // Create new channel
-      createChannel(payload)
+      createChannel({ ...payload, platform: values.platform })
     }
   }
 
@@ -162,6 +164,30 @@ export const LivestreamChannelModal = ({ channel, refetch }: Props) => {
             />
           )}
         />
+
+        {!channel && (
+          <Controller
+            name="platform"
+            control={control}
+            rules={{ required: "Vui lòng chọn nền tảng" }}
+            render={({ field }) => (
+              <Select
+                label="Nền tảng"
+                placeholder="Chọn nền tảng livestream"
+                data={[
+                  { value: "tiktokshop", label: "TikTok Shop" },
+                  { value: "shopee", label: "Shopee" }
+                ]}
+                value={field.value}
+                onChange={field.onChange}
+                required
+                disabled={isPending}
+                size="md"
+                error={errors.platform?.message}
+              />
+            )}
+          />
+        )}
 
         <Group justify="flex-end" mt="md">
           <Button
