@@ -13,7 +13,8 @@ import {
   ActionIcon,
   Tooltip,
   Button,
-  Skeleton
+  Skeleton,
+  
 } from "@mantine/core"
 import { format } from "date-fns"
 import {
@@ -28,7 +29,7 @@ import {
 import { modals } from "@mantine/modals"
 import { useCallback, useMemo } from "react"
 import { ColumnDef } from "@tanstack/react-table"
-import { useMutation } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { SalesLayout } from "../../../components/layouts/SalesLayout"
 import { CDataTable } from "../../../components/common/CDataTable"
 import { useSalesOrders } from "../../../hooks/useSalesOrders"
@@ -86,10 +87,12 @@ const LoadingField = ({
 function RouteComponent() {
   const { orderId } = Route.useParams()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const {
-    deleteSalesOrder,
+    transitionSalesOrderStatus,
     updateSalesOrderItems,
     updateSalesOrderDate
+
   } = useSalesOrders()
 
   const goBackToOrders = () => {
@@ -464,94 +467,87 @@ function RouteComponent() {
     })
   }
 
-  const handleDeleteAndCreateNew = async () => {
-    if (!order) return
+  
+  const handleCancelOrder = () => {
+  if (!order) return
 
-    try {
-      await deleteSalesOrder({ id: order._id })
-      CToast.success({ title: "Đã xóa đơn hàng" })
+  let cancelReason = ""
 
-      // Navigate to orders page with state to trigger create modal
-      navigate({
-        to: "/sales/orders",
-        search: {
-          createNew: "true",
-          channelId: order.salesFunnelId.channel._id,
-          funnelId: order.salesFunnelId._id,
-          items: JSON.stringify(
-            order.items.map((item) => ({
-              code: item.code,
-              quantity: item.quantity,
-              note: item.note
-            }))
-          ),
-          orderDiscount: order.orderDiscount?.toString(),
-          orderDiscountType: order.orderDiscountType || undefined,
-          otherDiscount: order.otherDiscount?.toString(),
-          deposit: order.deposit?.toString()
-        }
-      })
-    } catch (error: any) {
-      CToast.error({
-        title:
-          error?.response?.data?.message || "Có lỗi xảy ra khi xóa đơn hàng"
-      })
-    }
-  }
+  modals.open({
+    title: <b>Hủy đơn hàng</b>,
+    children: (
+      <Stack gap="md">
+        <Text>
+          Bạn có chắc chắn muốn <b>hủy đơn hàng</b> này?
+        </Text>
 
-  const handleDeleteOrder = () => {
-    if (!order) return
-    modals.open({
-      title: <b>Xác nhận xóa</b>,
-      children: (
-        <Stack gap="md">
-          <Text>Bạn có chắc chắn muốn xóa đơn hàng này?</Text>
-          <Text size="sm" c="dimmed">
-            Hoặc bạn có thể xóa và tạo đơn mới với cùng thông tin khách hàng và
-            sản phẩm.
-          </Text>
+        <Text size="sm" c="dimmed">
+          Sau khi hủy, đơn hàng sẽ chuyển sang trạng thái "Đã hủy".
+        </Text>
 
-          <Group justify="space-between" mt="md">
-            <Button
-              variant="outline"
-              color="blue"
-              onClick={() => {
+        <textarea
+          placeholder="Nhập lý do hủy..."
+          onChange={(e) => {
+            cancelReason = e.target.value
+          }}
+          rows={4}
+          style={{
+            width: "100%",
+            padding: "8px 12px",
+            border: "1px solid #ced4da",
+            borderRadius: "4px",
+            resize: "vertical"
+          }}
+        />
+        <Group justify="flex-end" mt="md">
+          <Button
+            variant="default"
+            onClick={() => modals.closeAll()}
+          >
+            Hủy bỏ
+          </Button>
+          <Button
+            color="red"
+            onClick={async () => {
+              if (!cancelReason.trim()) {
+                CToast.error({
+                  title: "Vui lòng nhập lý do hủy đơn hàng"
+                })
+                return
+              }
+              try {
+                await transitionSalesOrderStatus(order._id, {
+                  status: "cancelled",
+                  cancelReason: cancelReason.trim()
+                })
+
+                // Làm mới danh sách đơn hàng
+                await queryClient.invalidateQueries({
+                  queryKey: ["salesOrders"]
+                })
+
+                CToast.success({
+                  title: "Hủy đơn hàng thành công"
+                })
+
                 modals.closeAll()
-                handleDeleteAndCreateNew()
-              }}
-            >
-              Xóa & Tạo đơn mới
-            </Button>
-
-            <Group gap="xs">
-              <Button variant="default" onClick={() => modals.closeAll()}>
-                Hủy
-              </Button>
-              <Button
-                color="red"
-                onClick={async () => {
-                  try {
-                    await deleteSalesOrder({ id: order._id })
-                    CToast.success({ title: "Xóa đơn hàng thành công" })
-                    modals.closeAll()
-                    goBackToOrders()
-                  } catch (error: any) {
-                    CToast.error({
-                      title:
-                        error?.response?.data?.message ||
-                        "Có lỗi xảy ra khi xóa đơn hàng"
-                    })
-                  }
-                }}
-              >
-                Xóa
-              </Button>
-            </Group>
-          </Group>
-        </Stack>
-      )
-    })
-  }
+                goBackToOrders()
+              } catch (error: any) {
+                CToast.error({
+                  title:
+                    error?.response?.data?.message ||
+                    "Có lỗi xảy ra khi hủy đơn hàng"
+                })
+              }
+            }}
+          >
+            Xác nhận hủy
+          </Button>
+        </Group>
+      </Stack>
+    )
+  })
+}
 
   if (!order) {
     return (
@@ -598,7 +594,29 @@ function RouteComponent() {
   const handleSyncItems = () => {
     sync()
   }
+  const handleRecreateOrder = () => {
+  if (!order) return
 
+  navigate({
+    to: "/sales/orders",
+    search: {
+      createNew: "true",
+      channelId: order.salesFunnelId.channel._id,
+      funnelId: order.salesFunnelId._id,
+      items: JSON.stringify(
+        order.items.map((item) => ({
+          code: item.code,
+          quantity: item.quantity,
+          note: item.note
+        }))
+      ),
+      orderDiscount: order.orderDiscount?.toString(),
+      orderDiscountType: order.orderDiscountType || undefined,
+      otherDiscount: order.otherDiscount?.toString(),
+      deposit: order.deposit?.toString()
+    }
+  })
+}
   const handleUpdateDate = () => {
     modals.open({
       title: <b>Cập nhật ngày của đơn hàng</b>,
@@ -664,16 +682,18 @@ function RouteComponent() {
                 >
                   Báo giá cho khách
                 </Button>
-                <Tooltip label="Cập nhật vận chuyển & thuế" withArrow>
-                  <ActionIcon
-                    variant="light"
-                    color="blue"
-                    size="lg"
-                    onClick={handleUpdateShippingInfo}
-                  >
-                    <IconTruck size={20} />
-                  </ActionIcon>
-                </Tooltip>
+                {order.status !== "cancelled" && (
+                  <Tooltip label="Cập nhật vận chuyển & thuế" withArrow>
+                    <ActionIcon
+                      variant="light"
+                      color="blue"
+                      size="lg"
+                      onClick={handleUpdateShippingInfo}
+                    >
+                      <IconTruck size={20} />
+                    </ActionIcon>
+                  </Tooltip>
+                )}
                 {(order.status === "draft" || order.status === "confirmed") && (
                   <>
                     <Button
@@ -713,16 +733,27 @@ function RouteComponent() {
                   </Tooltip>
                 )}
 
-                <Tooltip label="Xóa đơn hàng" withArrow>
-                  <ActionIcon
+                {order.status === "cancelled" ? (
+                  <Button
                     variant="light"
-                    color="red"
-                    size="lg"
-                    onClick={handleDeleteOrder}
+                    color="green"
+                    leftSection={<IconRefresh size={18} />}
+                    onClick={handleRecreateOrder}
                   >
-                    <IconTrash size={20} />
-                  </ActionIcon>
-                </Tooltip>
+                    Tạo lại đơn hàng
+                  </Button>
+                ) : (
+                  <Tooltip label="Hủy đơn hàng" withArrow>
+                    <ActionIcon
+                      variant="light"
+                      color="red"
+                      size="lg"
+                      onClick={handleCancelOrder}
+                    >
+                      <IconTrash size={20} />
+                    </ActionIcon>
+                  </Tooltip>
+                )}
               </Group>
             </Can>
           </Group>
@@ -835,6 +866,7 @@ function RouteComponent() {
                         <Text size="sm" c="dimmed">
                           Trạng thái
                         </Text>
+
                         <Badge
                           color={getSalesOrderStatusColor(order.status)}
                           size="lg"
@@ -842,6 +874,24 @@ function RouteComponent() {
                           {getSalesOrderStatusLabel(order.status)}
                         </Badge>
                       </div>
+
+                      {order.status === "cancelled" && order.cancelReason && (
+                        <Box
+                          p="sm"
+                          style={{
+                            border: "1px solid #ffa8a8",
+                            borderRadius: rem(6),
+                          }}
+                        >
+                          <Text size="sm" c="red.7" fw={500} mb={4}>
+                            Lý do hủy
+                          </Text>
+
+                          <Text size="sm">
+                            {order.cancelReason}
+                          </Text>
+                        </Box>
+                      )}
                       <div>
                         <Text size="sm" c="dimmed">
                           Mã vận đơn

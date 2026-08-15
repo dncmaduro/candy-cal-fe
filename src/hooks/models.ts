@@ -4397,7 +4397,8 @@ export interface GetSalesOrderByIdResponse {
   deposit?: number
   tax?: number
   shippingCost?: number
-  status: "draft" | "confirmed" | "official"
+  status: "draft" | "confirmed" | "official"|"cancelled"
+  cancelReason?: string
   phoneNumber: string
   address: string
   province: {
@@ -4519,7 +4520,7 @@ export interface SearchSalesOrderResponse {
     orderDiscountType?: "percent" | "value" | null
     otherDiscount?: number
     deposit?: number
-    status: "draft" | "confirmed" | "official"
+    status: "draft" | "confirmed" | "official"| "cancelled"
     phoneNumber: string
     address: string
     province: {
@@ -4609,13 +4610,14 @@ export interface UpdateSalesOrderTaxShippingResponse {
 
 /** @interface */
 export interface TransitionSalesOrderStatusRequest {
-  status: "draft" | "confirmed" | "official"
+  status: "draft" | "confirmed" | "official"|"cancelled"
   shippingCode?: string
   shippingType?: "shipping_vtp" | "shipping_cargo"
   tax?: number
   shippingCost?: number
   receivedDate?: string
   inventoryHandling?: "export_available_items" | "skip_inventory_export"
+  cancelReason?:string
 }
 
 /** @interface */
@@ -4640,10 +4642,11 @@ export interface TransitionSalesOrderStatusResponse {
   orderDiscountType?: "percent" | "value" | null
   otherDiscount?: number
   deposit?: number
+  cancelReason?:string
   tax: number
   shippingCost: number
   receivedDate?: string
-  status: "draft" | "confirmed" | "official"
+  status: "draft" | "confirmed" | "official"|"cancelled"
   createdAt: string
   updatedAt: string
 }

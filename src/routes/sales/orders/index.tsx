@@ -582,6 +582,7 @@ function RouteComponent() {
                   handleDeleteOrder(row.original._id)
                 }}
                 title="Xóa đơn hàng"
+                hidden={row.original.status === "cancelled"}
               >
                 <IconTrash size={16} />
               </ActionIcon>
