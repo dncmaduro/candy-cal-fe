@@ -1027,8 +1027,8 @@ function RouteComponent() {
                       </div>
 
                       {order.status === "cancelled" && (
-                        <div className="rounded-md border border-red-300 p-3">
-                          <Text size="sm" c="red.7" fw={500} mb={4}>
+                        <div className="rounded-md border-l border-red-300 bg-red-50 px-3 py-2">
+                          <Text size="xs" c="red.6" fw={500} mb={2}>
                             Lý do hủy
                           </Text>
 
