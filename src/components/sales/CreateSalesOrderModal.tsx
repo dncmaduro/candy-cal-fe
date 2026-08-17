@@ -14,7 +14,7 @@ import {
   Switch
 } from "@mantine/core"
 import { DatePickerInput } from "@mantine/dates"
-import { Controller, useFormContext, useFieldArray } from "react-hook-form"
+import { Controller, useFormContext, useFieldArray, useWatch } from "react-hook-form"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { IconPlus, IconTrash } from "@tabler/icons-react"
 import type { AxiosError } from "axios"
@@ -86,7 +86,10 @@ export const CreateSalesOrderModal = ({
   } = useFormContext<CreateSalesOrderFormData>()
 
   const watchIsNewCustomer = watch("isNewCustomer")
-  const watchItems = watch("items") || []
+  const watchItems = useWatch({
+  control,
+  name: "items"
+}) || []
   const watchOrderDiscountAmount = Number(watch("orderDiscount") || 0)
   const watchOtherDiscountAmount = Number(watch("otherDiscount") || 0)
   const watchOrderDiscountType = getEffectiveOrderDiscountType(
