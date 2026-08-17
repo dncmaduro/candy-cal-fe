@@ -582,6 +582,7 @@ function RouteComponent() {
                   handleDeleteOrder(row.original._id)
                 }}
                 title="Xóa đơn hàng"
+                disabled={row.original.status === "cancelled"}
               >
                 <IconTrash size={16} />
               </ActionIcon>

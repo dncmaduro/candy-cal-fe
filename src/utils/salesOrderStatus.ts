@@ -1,4 +1,4 @@
-export type SalesOrderStatus = "draft" | "confirmed" | "official"
+export type SalesOrderStatus = "draft" | "confirmed" | "official"|"cancelled"
 
 export const SALES_ORDER_STATUS_OPTIONS: Array<{
   value: SalesOrderStatus
@@ -6,7 +6,8 @@ export const SALES_ORDER_STATUS_OPTIONS: Array<{
 }> = [
   { value: "draft", label: "Báo giá" },
   { value: "confirmed", label: "Đã xác nhận" },
-  { value: "official", label: "Chính thức" }
+  { value: "official", label: "Chính thức" },
+  { value: "cancelled", label: "Đã hủy" }
 ]
 
 export const getSalesOrderStatusLabel = (status: SalesOrderStatus) => {
@@ -15,6 +16,8 @@ export const getSalesOrderStatusLabel = (status: SalesOrderStatus) => {
       return "Chính thức"
     case "confirmed":
       return "Đã xác nhận"
+    case "cancelled":
+      return "Đã hủy"
     default:
       return "Báo giá"
   }
