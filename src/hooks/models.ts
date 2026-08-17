@@ -4398,7 +4398,7 @@ export interface GetSalesOrderByIdResponse {
   tax?: number
   shippingCost?: number
   status: "draft" | "confirmed" | "official"|"cancelled"
-  cancelReason?: string
+  cancelReason: string
   phoneNumber: string
   address: string
   province: {
