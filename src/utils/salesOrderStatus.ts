@@ -1,4 +1,4 @@
-export type SalesOrderStatus = "draft" | "confirmed" | "official"|"cancelled"
+export type SalesOrderStatus = "draft" | "confirmed" | "official" | "cancelled"
 
 export const SALES_ORDER_STATUS_OPTIONS: Array<{
   value: SalesOrderStatus
@@ -29,6 +29,8 @@ export const getSalesOrderStatusColor = (status: SalesOrderStatus) => {
       return "green"
     case "confirmed":
       return "blue"
+    case "draft":
+      return "orange"
     default:
       return "gray"
   }
