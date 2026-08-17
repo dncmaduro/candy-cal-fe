@@ -29,8 +29,6 @@ export const getSalesOrderStatusColor = (status: SalesOrderStatus) => {
       return "green"
     case "confirmed":
       return "blue"
-    case "cancelled":
-      return "red"
     default:
       return "gray"
   }
