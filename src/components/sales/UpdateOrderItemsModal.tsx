@@ -1,5 +1,6 @@
 import {
   Button,
+  Badge,
   Group,
   Select,
   NumberInput,
@@ -140,12 +141,34 @@ export const UpdateOrderItemsModal = ({
     }
   }, [orderDiscount, orderDiscountPercent, orderDiscountType, subtotal])
 
+  const duplicateCodeIndexes = items.reduce(
+    (acc, item, index) => {
+      if (!item?.code) return acc
+      if (!acc[item.code]) {
+        acc[item.code] = []
+      }
+      acc[item.code].push(index)
+      return acc
+    },
+    {} as Record<string, number[]>
+  )
+
+  const duplicatedCodes = Object.entries(duplicateCodeIndexes).filter(
+    ([, indexes]) => indexes.length > 1
+  )
+
   const mutation = useMutation({
     mutationFn: () => {
       const validItems = items.filter((item) => item.code && item.quantity > 0)
 
       if (validItems.length === 0) {
         throw new Error("Vui lòng thêm ít nhất một sản phẩm")
+      }
+
+      if (duplicatedCodes.length > 0) {
+        throw new Error(
+          `Có ${duplicatedCodes.length} mã sản phẩm đang bị trùng dòng`
+        )
       }
 
       if (orderDiscountType === "percent" && orderDiscountPercentError) {
@@ -157,9 +180,9 @@ export const UpdateOrderItemsModal = ({
         orderDiscount:
           orderDiscountType === "percent"
             ? calculatePercentDiscountAmount(
-                calculateItemsSubtotal(validItems),
-                orderDiscountPercent
-              )
+              calculateItemsSubtotal(validItems),
+              orderDiscountPercent
+            )
             : orderDiscount,
         orderDiscountType,
         otherDiscount,
@@ -184,6 +207,18 @@ export const UpdateOrderItemsModal = ({
   })
 
   const onSubmit = () => {
+    if (orderDiscountType === "percent" && orderDiscountPercentError) {
+      CToast.error({ title: orderDiscountPercentError })
+      return
+    }
+
+    if (duplicatedCodes.length > 0) {
+      CToast.error({
+        title: `Có ${duplicatedCodes.length} mã sản phẩm đang bị trùng dòng`
+      })
+      return
+    }
+
     mutation.mutate()
   }
 
@@ -343,48 +378,90 @@ export const UpdateOrderItemsModal = ({
         Sản phẩm
       </Text>
 
-      {items.map((item, index) => (
-        <Group key={index} mb="sm" align="flex-end">
-          <Select
-            label={index === 0 ? "Mã sản phẩm" : undefined}
-            placeholder="Chọn sản phẩm"
-            data={salesItemOptions}
-            value={item.code}
-            onChange={(value) => handleItemChange(index, "code", value || "")}
-            searchable
-            style={{ flex: 1 }}
-          />
-          <NumberInput
-            label={index === 0 ? "Số lượng" : undefined}
-            placeholder="Số lượng"
-            value={item.quantity}
-            onChange={(value) =>
-              handleItemChange(index, "quantity", Number(value) || 0)
-            }
-            min={1}
-            style={{ width: 120 }}
-          />
-          <TextInput
-            label={index === 0 ? "Ghi chú" : undefined}
-            placeholder="Nhập ghi chú"
-            value={item.note}
-            onChange={(e) =>
-              handleItemChange(index, "note", e.target.value || "")
-            }
-            w={250}
-          />
-          {items.length > 1 && (
-            <Button
-              color="red"
-              variant="light"
-              onClick={() => handleRemoveItem(index)}
-              size="sm"
-            >
-              <IconTrash size={16} />
-            </Button>
-          )}
-        </Group>
-      ))}
+      {duplicatedCodes.length > 0 && (
+        <Stack gap={4} mb="sm">
+          <Text size="xs" c="orange.7" fw={600}>
+            Có {duplicatedCodes.length} mã sản phẩm đang bị trùng dòng.
+          </Text>
+          <Group gap={6}>
+            {duplicatedCodes.map(([code, indexes]) => (
+              <Badge key={code} variant="light" color="orange">
+                {code}: dòng {indexes.map((i) => i + 1).join(", ")}
+              </Badge>
+            ))}
+          </Group>
+        </Stack>
+      )}
+
+      {items.map((item, index) => {
+        const currentCode = item.code
+        const sameCodeIndexes = currentCode
+          ? duplicateCodeIndexes[currentCode] || []
+          : []
+        const duplicateIndexes = sameCodeIndexes.filter((i) => i !== index)
+        const rowSalesItemOptions = salesItemOptions.map((option) => {
+          const selectedIndexes = duplicateCodeIndexes[option.value] || []
+          const selectedOnAnotherRow = selectedIndexes.some(
+            (selectedIndex) => selectedIndex !== index
+          )
+
+          return {
+            ...option,
+            label: option.label,
+            disabled: selectedOnAnotherRow && option.value !== currentCode
+          }
+        })
+
+        return (
+          <Group key={index} mb="sm" align="flex-end" wrap="nowrap">
+            <Select
+              label={index === 0 ? "Mã sản phẩm" : undefined}
+              placeholder="Chọn sản phẩm"
+              data={rowSalesItemOptions}
+              value={item.code}
+              onChange={(value) => handleItemChange(index, "code", value || "")}
+              searchable
+              style={{ flex: 1 }}
+              description={
+                duplicateIndexes.length > 0
+                  ? `Mã này đang trùng với dòng ${duplicateIndexes
+                    .map((i) => i + 1)
+                    .join(", ")}`
+                  : undefined
+              }
+            />
+            <NumberInput
+              label={index === 0 ? "Số lượng" : undefined}
+              placeholder="Số lượng"
+              value={item.quantity}
+              onChange={(value) =>
+                handleItemChange(index, "quantity", Number(value) || 0)
+              }
+              min={1}
+              style={{ width: 100 }}
+            />
+            <TextInput
+              label={index === 0 ? "Ghi chú" : undefined}
+              placeholder="Nhập ghi chú"
+              value={item.note}
+              onChange={(e) =>
+                handleItemChange(index, "note", e.target.value || "")
+              }
+              w={250}
+            />
+            {items.length > 1 && (
+              <Button
+                color="red"
+                variant="light"
+                onClick={() => handleRemoveItem(index)}
+                size="sm"
+              >
+                <IconTrash size={16} />
+              </Button>
+            )}
+          </Group>
+        )
+      })}
 
       <Group mb="md" justify="flex-start">
         <Button
@@ -407,7 +484,6 @@ export const UpdateOrderItemsModal = ({
           {totalDiscountAmount.toLocaleString("vi-VN")}đ chiết khấu
         </Text>
       </Stack>
-
       <Group justify="flex-end" mt="xl">
         <Button type="submit" loading={mutation.isPending}>
           Cập nhật
@@ -416,3 +492,4 @@ export const UpdateOrderItemsModal = ({
     </form>
   )
 }
+
