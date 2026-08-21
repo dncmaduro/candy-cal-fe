@@ -1,6 +1,5 @@
 import {
   Button,
-  Badge,
   Group,
   Select,
   NumberInput,
@@ -153,22 +152,12 @@ export const UpdateOrderItemsModal = ({
     {} as Record<string, number[]>
   )
 
-  const duplicatedCodes = Object.entries(duplicateCodeIndexes).filter(
-    ([, indexes]) => indexes.length > 1
-  )
-
   const mutation = useMutation({
     mutationFn: () => {
       const validItems = items.filter((item) => item.code && item.quantity > 0)
 
       if (validItems.length === 0) {
         throw new Error("Vui lòng thêm ít nhất một sản phẩm")
-      }
-
-      if (duplicatedCodes.length > 0) {
-        throw new Error(
-          `Có ${duplicatedCodes.length} mã sản phẩm đang bị trùng dòng`
-        )
       }
 
       if (orderDiscountType === "percent" && orderDiscountPercentError) {
@@ -209,13 +198,6 @@ export const UpdateOrderItemsModal = ({
   const onSubmit = () => {
     if (orderDiscountType === "percent" && orderDiscountPercentError) {
       CToast.error({ title: orderDiscountPercentError })
-      return
-    }
-
-    if (duplicatedCodes.length > 0) {
-      CToast.error({
-        title: `Có ${duplicatedCodes.length} mã sản phẩm đang bị trùng dòng`
-      })
       return
     }
 
@@ -378,27 +360,8 @@ export const UpdateOrderItemsModal = ({
         Sản phẩm
       </Text>
 
-      {duplicatedCodes.length > 0 && (
-        <Stack gap={4} mb="sm">
-          <Text size="xs" c="orange.7" fw={600}>
-            Có {duplicatedCodes.length} mã sản phẩm đang bị trùng dòng.
-          </Text>
-          <Group gap={6}>
-            {duplicatedCodes.map(([code, indexes]) => (
-              <Badge key={code} variant="light" color="orange">
-                {code}: dòng {indexes.map((i) => i + 1).join(", ")}
-              </Badge>
-            ))}
-          </Group>
-        </Stack>
-      )}
-
       {items.map((item, index) => {
         const currentCode = item.code
-        const sameCodeIndexes = currentCode
-          ? duplicateCodeIndexes[currentCode] || []
-          : []
-        const duplicateIndexes = sameCodeIndexes.filter((i) => i !== index)
         const rowSalesItemOptions = salesItemOptions.map((option) => {
           const selectedIndexes = duplicateCodeIndexes[option.value] || []
           const selectedOnAnotherRow = selectedIndexes.some(
@@ -422,13 +385,6 @@ export const UpdateOrderItemsModal = ({
               onChange={(value) => handleItemChange(index, "code", value || "")}
               searchable
               style={{ flex: 1 }}
-              description={
-                duplicateIndexes.length > 0
-                  ? `Mã này đang trùng với dòng ${duplicateIndexes
-                    .map((i) => i + 1)
-                    .join(", ")}`
-                  : undefined
-              }
             />
             <NumberInput
               label={index === 0 ? "Số lượng" : undefined}
