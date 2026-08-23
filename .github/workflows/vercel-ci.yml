@@ -1,0 +1,85 @@
+name: Vercel-equivalent CI
+
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Like Vercel's branch queue, discard a stale run when a newer commit arrives
+# for the same pull request or branch.
+concurrency:
+  group: vercel-ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Vercel's current default Node.js LTS. Keep this aligned with the project's
+  # Node.js version in Vercel Project Settings if that setting is overridden.
+  NODE_VERSION: "24"
+  YARN_VERSION: "1.22.22"
+  # vite.config.ts reads this Vercel system variable to stamp the build commit.
+  VERCEL: "1"
+  VERCEL_ENV: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
+  VERCEL_GIT_COMMIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+  VERCEL_GIT_COMMIT_REF: ${{ github.head_ref || github.ref_name }}
+
+jobs:
+  verify:
+    name: Build Vite output
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      # Vercel uses a shallow clone with the latest 10 commits for Git builds.
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 10
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
+          cache-dependency-path: yarn.lock
+
+      # yarn.lock is a Yarn 1 lockfile. Pin the same major/package-manager
+      # selection that Vercel infers, instead of relying on the runner image.
+      - name: Set up Yarn
+        run: npm install --global yarn@${YARN_VERSION}
+
+      - name: Report build toolchain
+        run: |
+          node --version
+          yarn --version
+
+      # --frozen-lockfile prevents a CI build from silently changing dependency
+      # resolution; --production=false keeps TypeScript/Vite available even if
+      # NODE_ENV is configured in Vercel.
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile --production=false --non-interactive
+
+      # This is the same configured Vercel build command.
+      - name: Build
+        run: yarn build
+
+      - name: Verify deployable output
+        run: |
+          test -f dist/index.html
+          test -d dist/assets
+          test -f dist/manifest.webmanifest
+          test "$(find dist -type f | wc -l | tr -d ' ')" -gt 0
+          printf 'Build output: '
+          du -sh dist
+
+      # Retain the exact static files Vercel would publish for troubleshooting,
+      # without deploying from CI.
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vite-dist-${{ github.sha }}
+          path: dist
+          if-no-files-found: error
+          retention-days: 7
