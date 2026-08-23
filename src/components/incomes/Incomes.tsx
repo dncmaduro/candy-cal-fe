@@ -533,7 +533,7 @@ export const Incomes = () => {
               >
                 Xuất Excel
               </Button>
-              <Can roles={["admin", "accounting-emp", "tiktokshop-emp"]}>
+              <Can permissions={["api.dailyads.upsert-daily-ads"]}>
                 <Button
                   onClick={() =>
                     modals.open({
@@ -551,7 +551,7 @@ export const Incomes = () => {
                   Thêm chi phí ads
                 </Button>
               </Can>
-              <Can roles={["admin", "accounting-emp"]}>
+              <Can permissions={["api.income.delete-income-by-date"]}>
                 <Button
                   leftSection={<IconX size={16} />}
                   color="red"
@@ -569,7 +569,7 @@ export const Incomes = () => {
                   Xoá doanh thu
                 </Button>
               </Can>
-              <Can roles={["admin", "accounting-emp"]}>
+              <Can permissions={["api.income.insert-income"]}>
                 <Button
                   onClick={openIncomeModal}
                   size="sm"

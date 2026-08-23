@@ -25,7 +25,8 @@ export const SalesChannelModal = ({ channel, refetch }: Props) => {
   // Load users for assignee selection
   const { data: usersData } = useQuery({
     queryKey: ["users", "public", "sales-cs"],
-    queryFn: () => publicSearchUser({ page: 1, limit: 999, role: "sales-cs" })
+    queryFn: () =>
+      publicSearchUser({ page: 1, limit: 999, permission: "sales.assignee" })
   })
 
   const userOptions = [

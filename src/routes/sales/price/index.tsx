@@ -178,7 +178,7 @@ function RouteComponent() {
       id: "actions",
       header: "Thao tác",
       cell: ({ row }) => (
-        <Can roles={["admin", "sales-hunter", "sales-cs"]}>
+        <Can permissions={["api.salespriceitems.update-sales-price-item"]}>
           <div className="flex gap-2">
             <ActionIcon
               variant="light"
@@ -273,7 +273,7 @@ function RouteComponent() {
             isLoading={isLoadingPriceItems || isLoadingStorageItems}
             loadingText="Đang tải báo giá..."
             extraActions={
-              <Can roles={["admin", "sales-hunter", "sales-cs"]}>
+              <Can permissions={["api.salespriceitems.create-sales-price-item"]}>
                 <Button
                   onClick={() => openPriceItemModal()}
                   leftSection={<IconPlus size={16} />}

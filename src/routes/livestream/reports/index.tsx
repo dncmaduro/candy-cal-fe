@@ -194,7 +194,7 @@ function RouteComponent() {
       publicSearchUser({
         page: 1,
         limit: 100,
-        role: "livestream-emp",
+        permission: "api.livestreamcore.report-snapshot",
         status: "active"
       }),
     select: (data) => data.data.data
@@ -207,7 +207,7 @@ function RouteComponent() {
       publicSearchUser({
         page: 1,
         limit: 100,
-        role: "livestream-ast",
+        permission: "api.livestreamcore.update-snapshot-alt",
         status: "active"
       }),
     select: (data) => data.data.data
@@ -219,7 +219,7 @@ function RouteComponent() {
       publicSearchUser({
         page: 1,
         limit: 100,
-        role: "livestream-leader",
+        permission: "api.livestreamcore.create-livestream",
         status: "active"
       }),
     select: (data) => data.data.data

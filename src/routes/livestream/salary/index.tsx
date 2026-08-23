@@ -271,7 +271,7 @@ function SalaryModal({
       publicSearchUser({
         page: 1,
         limit: 1000,
-        role: "livestream-emp",
+        permission: "api.livestreamcore.report-snapshot",
         status: "active"
       }),
     select: (data) => data.data.data
@@ -610,7 +610,7 @@ function RouteComponent() {
         header: "Thao tác",
         cell: ({ row }) => (
           <Group gap="xs">
-            <Can roles={["admin", "livestream-leader"]}>
+            <Can permissions={["api.livestreamperformance.update-performance"]}>
               <ActionIcon
                 variant="light"
                 color="indigo"
@@ -678,7 +678,7 @@ function RouteComponent() {
         header: "Thao tác",
         cell: ({ row }) => (
           <Group gap="xs">
-            <Can roles={["admin", "livestream-leader"]}>
+            <Can permissions={["api.livestreamsalary.update-salary"]}>
               <ActionIcon
                 variant="light"
                 color="indigo"
@@ -705,7 +705,7 @@ function RouteComponent() {
 
   return (
     <LivestreamLayout>
-      <Can roles={["admin", "livestream-leader"]}>
+      <Can permissions={["api.livestreamperformance.create-performance"]}>
         {/* Performance Rules Section */}
         <Box
           mt={40}
@@ -811,7 +811,7 @@ function RouteComponent() {
             </Text>
           </Box>
 
-          <Can roles={["admin", "livestream-leader"]}>
+          <Can permissions={["api.livestreamsalary.create-salary"]}>
             <Button
               leftSection={<IconPlus size={16} />}
               onClick={() => openSalaryModal()}

@@ -12,7 +12,7 @@ import {
   Switch
 } from "@mantine/core"
 import { useQuery } from "@tanstack/react-query"
-import { useMemo, useState } from "react"
+import { useState } from "react"
 import { modals } from "@mantine/modals"
 import { format } from "date-fns"
 import {
@@ -435,23 +435,11 @@ function RouteComponent() {
 
   // Check permissions
   const me = meData?.data
-  const isAdmin = useMemo(() => {
-    return me?.roles?.includes("admin") ?? false
-  }, [me])
-  const isSalesLeader = useMemo(() => {
-    return me?.roles?.includes("sales-hunter") ?? false
-  }, [me])
-  const isFacebookAdsEmp = useMemo(() => {
-    return me?.roles?.includes("facebook-ads-emp") ?? false
-  }, [me])
-  const isSalesCsOnly = useMemo(
-    () =>
-      (me?.roles?.includes("sales-cs") ?? false) &&
-      !me?.roles?.some((role) =>
-        ["admin", "sales-hunter", "sales-leader"].includes(role)
-      ),
-    [me]
-  )
+  const permissions = me?.permissions ?? []
+  const isSalesLeader = permissions.includes("sales.funnels.manage.all")
+  const isAdmin = isSalesLeader
+  const isFacebookAdsEmp = false
+  const isSalesCsOnly = !permissions.includes("sales.funnels.read.all")
   const hasActiveFilters = Boolean(
     stageFilter ||
       provinceFilter ||
@@ -604,7 +592,7 @@ function RouteComponent() {
                 <IconHistory size={16} />
               </ActionIcon>
             </Tooltip>
-            {(isAdmin || me?.roles?.includes("sales-hunter")) && (
+            {permissions.includes("api.salestasks.create-task") && (
               <Tooltip label="Tạo task" withArrow>
                 <ActionIcon
                   variant="light"
@@ -946,7 +934,7 @@ function RouteComponent() {
               </>
             }
             extraActions={
-              <Can roles={["admin", "sales-hunter", "sales-cs"]}>
+              <Can permissions={["api.salesfunnel.create-lead"]}>
                 <Group gap="xs">
                   <Button
                     onClick={handleUploadFunnels}

@@ -1,12 +1,12 @@
 import { Box, Group } from "@mantine/core"
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { useNavigate } from "@tanstack/react-router"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { useUserStore } from "../../store/userStore"
 import { useUsers } from "../../hooks/useUsers"
 import { saveToCookies } from "../../store/cookies"
 import { CToast } from "../common/CToast"
-import { SALES_VIEW_ROLES } from "../../constants/navs"
+import { SALES_ACCESS_PERMISSIONS } from "../../constants/navs"
 import { useAuthGuard } from "../../hooks/useAuthGuard"
 import { useSalesRouteAccess } from "../../hooks/useSalesRouteAccess"
 
@@ -16,13 +16,14 @@ interface Props {
 }
 
 export function MessagesLayout({ sidebar, content }: Props) {
-  const { meData } = useAuthGuard(SALES_VIEW_ROLES)
-  useSalesRouteAccess(meData?.roles)
+  const { meData } = useAuthGuard(SALES_ACCESS_PERMISSIONS)
+  useSalesRouteAccess(meData?.permissions)
   const { accessToken, setUser, clearUser } = useUserStore()
   const { checkToken, getNewToken } = useUsers()
   const navigate = useNavigate()
+  const refreshAttemptedRef = useRef(false)
 
-  const { mutate: getToken } = useMutation({
+  const { mutate: getToken, isPending: isRefreshing } = useMutation({
     mutationKey: ["getNewToken"],
     mutationFn: getNewToken,
     onSuccess: (response) => {
@@ -40,17 +41,28 @@ export function MessagesLayout({ sidebar, content }: Props) {
   })
 
   const { data: isTokenValid } = useQuery({
-    queryKey: ["validateToken"],
+    queryKey: ["validateToken", accessToken],
     queryFn: checkToken,
+    enabled: !!accessToken,
     select: (data) => data.data.valid,
     refetchInterval: 1000 * 30 // 30s
   })
 
   useEffect(() => {
-    if (!isTokenValid) {
+    if (isTokenValid === true) {
+      refreshAttemptedRef.current = false
+      return
+    }
+
+    if (
+      isTokenValid === false &&
+      !isRefreshing &&
+      !refreshAttemptedRef.current
+    ) {
+      refreshAttemptedRef.current = true
       getToken()
     }
-  }, [getToken, isTokenValid])
+  }, [getToken, isRefreshing, isTokenValid])
 
   useEffect(() => {
     if (!accessToken) {

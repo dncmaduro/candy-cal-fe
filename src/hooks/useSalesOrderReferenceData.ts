@@ -24,16 +24,10 @@ export const useSalesOrderReferenceData = ({
 
   const me = meData?.data
 
-  const isAdmin = me?.roles.includes("admin")
-  const isSystemEmp = me?.roles.includes("system-emp")
-  const isSalesHunter = me?.roles.includes("sales-hunter")
-  const isSalesCs = me?.roles.includes("sales-cs")
-  const isAccountingEmp =
-    me?.roles.includes("accounting-emp") ||
-    me?.roles.includes("sales-accounting")
-
-  const canSeeAllFunnels =
-    isAdmin || isSystemEmp || isSalesHunter || isAccountingEmp
+  const permissions = me?.permissions ?? []
+  const canSeeAllFunnels = permissions.includes("sales.funnels.read.all")
+  const isSalesCs = !canSeeAllFunnels
+  const isAccountingEmp = permissions.includes("api.salesorders.export-orders-to-excel-for-accounting")
 
   const { data: channelsData } = useQuery({
     queryKey: ["salesChannels", "all"],

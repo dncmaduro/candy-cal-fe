@@ -259,7 +259,7 @@ export function DailyAdsMetricsManager() {
         header: "",
         size: 96,
         cell: ({ row }) => (
-          <Can roles={["admin", "accounting-emp"]}>
+          <Can permissions={["api.dailyads.upsert-daily-ads-metrics"]}>
             <Flex gap={4}>
               <Button
                 size="xs"
@@ -395,7 +395,7 @@ export function DailyAdsMetricsManager() {
                   >
                     Làm mới
                   </Button>
-                  <Can roles={["admin", "accounting-emp"]}>
+                  <Can permissions={["api.dailyads.delete-daily-ads-metrics"]}>
                     <Button
                       size="sm"
                       radius="md"

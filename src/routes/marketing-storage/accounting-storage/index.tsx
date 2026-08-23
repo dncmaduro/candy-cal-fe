@@ -7,7 +7,7 @@ import { StorageLogs } from "../../../components/accounting-storage/StorageLogs"
 import { useAuthGuard } from "../../../hooks/useAuthGuard"
 import { MonthlyExports } from "../../../components/accounting-storage/MonthlyExports"
 import { StorageItems } from "../../../components/accounting-storage/StorageItems"
-import { KHO_VAN_ROLES, NAVS, NAVS_URL } from "../../../constants/navs"
+import { NAVS, NAVS_URL, STORAGE_ACCESS_PERMISSIONS } from "../../../constants/navs"
 
 export type StorageTab = {
   tab: string
@@ -30,16 +30,16 @@ type AccountingStoragePageProps = {
   tab: string
   baseUrl?: string
   navs?: typeof NAVS
-  allowedRoles?: string[]
+  allowedPermissions?: string[]
 }
 
 export function AccountingStoragePage({
   tab,
   baseUrl = NAVS_URL,
   navs = NAVS,
-  allowedRoles = KHO_VAN_ROLES
+  allowedPermissions = STORAGE_ACCESS_PERMISSIONS
 }: AccountingStoragePageProps) {
-  useAuthGuard(allowedRoles)
+  useAuthGuard(allowedPermissions)
   const navigate = useNavigate()
 
   const tabOptions = [

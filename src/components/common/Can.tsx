@@ -3,8 +3,8 @@ import { ReactNode } from "react"
 import { useUsers } from "../../hooks/useUsers"
 
 interface CanProps {
-  roles?: string[]
-  /** If true, render children when user role is NOT in roles */
+  permissions?: string[]
+  /** If true, render children when user does not have any listed permission */
   not?: boolean
   /** Fallback to render when permission check fails */
   fallback?: ReactNode
@@ -12,13 +12,13 @@ interface CanProps {
 }
 
 /**
- * Role based conditional rendering helper.
+ * Permission based conditional rendering helper.
  * Usage:
- * <Can roles={["admin","accounting-emp"]}>...content...</Can>
- * <Can roles={["guest"]} not fallback={null}>...content...</Can>
+ * <Can permissions={["api.storageitems.create-item"]}>...content...</Can>
+ * <Can permissions={["api.storageitems.delete-item"]} not fallback={null}>...content...</Can>
  */
 export const Can = ({
-  roles,
+  permissions,
   not = false,
   fallback = null,
   children
@@ -29,11 +29,11 @@ export const Can = ({
     queryFn: getMe,
     select: (data) => data.data
   })
-  const userRoles = meData?.roles
+  const userPermissions = meData?.permissions || []
 
-  if (!roles || roles.length === 0) return <>{children}</>
+  if (!permissions || permissions.length === 0) return <>{children}</>
 
-  const has = userRoles ? roles.some((role) => userRoles.includes(role)) : false
+  const has = permissions.some((permission) => userPermissions.includes(permission))
   const pass = not ? !has : has
 
   if (!pass) return <>{fallback}</>

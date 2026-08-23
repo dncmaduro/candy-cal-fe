@@ -24,7 +24,8 @@ export const UpdateFunnelResponsibleUserModal = ({
 
   const { data: usersData } = useQuery({
     queryKey: ["users", "public", "sales-cs"],
-    queryFn: () => publicSearchUser({ page: 1, limit: 999, role: "sales-cs" })
+    queryFn: () =>
+      publicSearchUser({ page: 1, limit: 999, permission: "sales.assignee" })
   })
 
   const { handleSubmit, control } = useForm<UpdateFunnelResponsibleUserRequest>(

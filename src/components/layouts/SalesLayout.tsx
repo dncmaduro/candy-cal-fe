@@ -1,7 +1,7 @@
 import { Badge, Box, Container, Group, rem } from "@mantine/core"
 import pkg from "../../../package.json"
 import { useNavigate } from "@tanstack/react-router"
-import { ReactNode, useEffect } from "react"
+import { ReactNode, useEffect, useRef } from "react"
 import { useUserStore } from "../../store/userStore"
 import { UserMenu } from "./UserMenu"
 import { useUsers } from "../../hooks/useUsers"
@@ -12,20 +12,21 @@ import { Notifications } from "./Notifications"
 import { Sidebar } from "./Sidebar"
 import { useUIStore } from "../../store/uiStore"
 import { MyTasksPopover } from "../tasks/MyTasksPopover.tsx"
-import { SALES_NAVS, SALES_VIEW_ROLES } from "../../constants/navs.ts"
+import { SALES_ACCESS_PERMISSIONS, SALES_NAVS } from "../../constants/navs.ts"
 import { useAuthGuard } from "../../hooks/useAuthGuard.ts"
 import { useSalesRouteAccess } from "../../hooks/useSalesRouteAccess.ts"
 
 export const SalesLayout = ({ children }: { children: ReactNode }) => {
-  const { meData: guardedUser } = useAuthGuard(SALES_VIEW_ROLES)
-  useSalesRouteAccess(guardedUser?.roles)
+  const { meData: guardedUser } = useAuthGuard(SALES_ACCESS_PERMISSIONS)
+  useSalesRouteAccess(guardedUser?.permissions)
   const { accessToken, setUser, clearUser } = useUserStore()
   const { checkToken, getNewToken, getMe } = useUsers()
   const navigate = useNavigate()
+  const refreshAttemptedRef = useRef(false)
   const collapsed = useUIStore((s) => s.sidebarCollapsed)
   const setCollapsed = useUIStore((s) => s.setSidebarCollapsed)
 
-  const { mutate: getToken } = useMutation({
+  const { mutate: getToken, isPending: isRefreshing } = useMutation({
     mutationKey: ["getNewToken"],
     mutationFn: getNewToken,
     onSuccess: (response) => {
@@ -50,17 +51,28 @@ export const SalesLayout = ({ children }: { children: ReactNode }) => {
   })
 
   const { data: isTokenValid } = useQuery({
-    queryKey: ["validateToken"],
+    queryKey: ["validateToken", accessToken],
     queryFn: checkToken,
+    enabled: !!accessToken,
     select: (data) => data.data.valid,
     refetchInterval: 1000 * 30 // 30s
   })
 
   useEffect(() => {
-    if (!isTokenValid) {
+    if (isTokenValid === true) {
+      refreshAttemptedRef.current = false
+      return
+    }
+
+    if (
+      isTokenValid === false &&
+      !isRefreshing &&
+      !refreshAttemptedRef.current
+    ) {
+      refreshAttemptedRef.current = true
       getToken()
     }
-  }, [getToken, isTokenValid])
+  }, [getToken, isRefreshing, isTokenValid])
 
   useEffect(() => {
     if (!accessToken) {

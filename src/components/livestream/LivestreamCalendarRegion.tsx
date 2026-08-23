@@ -49,7 +49,6 @@ import { useLivestreamCore } from "../../hooks/useLivestreamCore"
 type LivestreamEmployee = {
   _id: string
   name: string
-  roles?: string[]
 }
 
 type LivestreamSnapshot = {
@@ -886,7 +885,7 @@ const SnapshotActions = ({
       ? snapshot.altOtherAssignee || "Khác"
       : altEmployee?.name
     : snapshot.assignee?.name
-  const isUserLivestreamAst = currentUser?.roles?.includes("livestream-ast")
+  const isUserLivestreamAst = currentUser?.permissions?.includes("api.livestreamcore.update-snapshot-alt")
 
   const { data: requestData } = useQuery({
     queryKey: ["getAltRequestBySnapshot", snapshot._id, dayData._id],
@@ -1232,8 +1231,7 @@ export const LivestreamCalendarRegion = ({
   const isAdminOrLeader = useMemo(() => {
     if (!currentUser) return false
     return (
-      currentUser.roles?.includes("admin") ||
-      currentUser.roles?.includes("livestream-leader")
+      currentUser.permissions?.includes("api.livestreamcore.delete-snapshot")
     )
   }, [currentUser])
 

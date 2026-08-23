@@ -103,7 +103,7 @@ export const StorageItems = ({ readOnly, activeTab }: Props) => {
           Làm mới
         </Button>
 
-        <Can roles={["admin", "accounting-emp"]}>
+        <Can permissions={["api.storageitems.create-item"]}>
           <Button
             color="indigo"
             leftSection={<IconPlus size={18} />}
