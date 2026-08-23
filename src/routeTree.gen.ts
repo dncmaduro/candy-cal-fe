@@ -60,12 +60,10 @@ import { Route as MarketingStorageCalfileIndexImport } from './routes/marketing-
 import { Route as MarketingStorageCalIndexImport } from './routes/marketing-storage/cal/index'
 import { Route as MarketingStorageAiIndexImport } from './routes/marketing-storage/ai/index'
 import { Route as MarketingStorageAccountingStorageIndexImport } from './routes/marketing-storage/accounting-storage/index'
-import { Route as LivestreamStatsIndexImport } from './routes/livestream/stats/index'
 import { Route as LivestreamSalaryIndexImport } from './routes/livestream/salary/index'
 import { Route as LivestreamReportsIndexImport } from './routes/livestream/reports/index'
 import { Route as LivestreamPeriodsIndexImport } from './routes/livestream/periods/index'
 import { Route as LivestreamPerformanceIndexImport } from './routes/livestream/performance/index'
-import { Route as LivestreamMembersIndexImport } from './routes/livestream/members/index'
 import { Route as LivestreamGoalsIndexImport } from './routes/livestream/goals/index'
 import { Route as LivestreamChannelsIndexImport } from './routes/livestream/channels/index'
 import { Route as LivestreamCalendarIndexImport } from './routes/livestream/calendar/index'
@@ -85,6 +83,7 @@ import { Route as SalesDashboardKpiIdImport } from './routes/sales/dashboard/$kp
 import { Route as SalesDashboardDailyReportIdImport } from './routes/sales/dashboard/$dailyReportId'
 import { Route as MktStorageIncomesIncomeIdImport } from './routes/mkt-storage/incomes/$incomeId'
 import { Route as MarketingStorageIncomesIncomeIdImport } from './routes/marketing-storage/incomes/$incomeId'
+import { Route as AdminUsersUserIdPermissionsImport } from './routes/admin/users/$userId/permissions'
 
 // Create/Update Routes
 
@@ -393,12 +392,6 @@ const MarketingStorageAccountingStorageIndexRoute =
     getParentRoute: () => rootRoute,
   } as any)
 
-const LivestreamStatsIndexRoute = LivestreamStatsIndexImport.update({
-  id: '/livestream/stats/',
-  path: '/livestream/stats/',
-  getParentRoute: () => rootRoute,
-} as any)
-
 const LivestreamSalaryIndexRoute = LivestreamSalaryIndexImport.update({
   id: '/livestream/salary/',
   path: '/livestream/salary/',
@@ -424,12 +417,6 @@ const LivestreamPerformanceIndexRoute = LivestreamPerformanceIndexImport.update(
     getParentRoute: () => rootRoute,
   } as any,
 )
-
-const LivestreamMembersIndexRoute = LivestreamMembersIndexImport.update({
-  id: '/livestream/members/',
-  path: '/livestream/members/',
-  getParentRoute: () => rootRoute,
-} as any)
 
 const LivestreamGoalsIndexRoute = LivestreamGoalsIndexImport.update({
   id: '/livestream/goals/',
@@ -547,6 +534,13 @@ const MarketingStorageIncomesIncomeIdRoute =
   MarketingStorageIncomesIncomeIdImport.update({
     id: '/marketing-storage/incomes/$incomeId',
     path: '/marketing-storage/incomes/$incomeId',
+    getParentRoute: () => rootRoute,
+  } as any)
+
+const AdminUsersUserIdPermissionsRoute =
+  AdminUsersUserIdPermissionsImport.update({
+    id: '/admin/users/$userId/permissions',
+    path: '/admin/users/$userId/permissions',
     getParentRoute: () => rootRoute,
   } as any)
 
@@ -799,13 +793,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LivestreamGoalsIndexImport
       parentRoute: typeof rootRoute
     }
-    '/livestream/members/': {
-      id: '/livestream/members/'
-      path: '/livestream/members'
-      fullPath: '/livestream/members'
-      preLoaderRoute: typeof LivestreamMembersIndexImport
-      parentRoute: typeof rootRoute
-    }
     '/livestream/performance/': {
       id: '/livestream/performance/'
       path: '/livestream/performance'
@@ -832,13 +819,6 @@ declare module '@tanstack/react-router' {
       path: '/livestream/salary'
       fullPath: '/livestream/salary'
       preLoaderRoute: typeof LivestreamSalaryIndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/livestream/stats/': {
-      id: '/livestream/stats/'
-      path: '/livestream/stats'
-      fullPath: '/livestream/stats'
-      preLoaderRoute: typeof LivestreamStatsIndexImport
       parentRoute: typeof rootRoute
     }
     '/marketing-storage/accounting-storage/': {
@@ -1072,6 +1052,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TiktokshopSkuIndexImport
       parentRoute: typeof rootRoute
     }
+    '/admin/users/$userId/permissions': {
+      id: '/admin/users/$userId/permissions'
+      path: '/admin/users/$userId/permissions'
+      fullPath: '/admin/users/$userId/permissions'
+      preLoaderRoute: typeof AdminUsersUserIdPermissionsImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -1125,12 +1112,10 @@ export interface FileRoutesByFullPath {
   '/livestream/calendar': typeof LivestreamCalendarIndexRoute
   '/livestream/channels': typeof LivestreamChannelsIndexRoute
   '/livestream/goals': typeof LivestreamGoalsIndexRoute
-  '/livestream/members': typeof LivestreamMembersIndexRoute
   '/livestream/performance': typeof LivestreamPerformanceIndexRoute
   '/livestream/periods': typeof LivestreamPeriodsIndexRoute
   '/livestream/reports': typeof LivestreamReportsIndexRoute
   '/livestream/salary': typeof LivestreamSalaryIndexRoute
-  '/livestream/stats': typeof LivestreamStatsIndexRoute
   '/marketing-storage/accounting-storage': typeof MarketingStorageAccountingStorageIndexRoute
   '/marketing-storage/ai': typeof MarketingStorageAiIndexRoute
   '/marketing-storage/cal': typeof MarketingStorageCalIndexRoute
@@ -1164,6 +1149,7 @@ export interface FileRoutesByFullPath {
   '/shopee/sku': typeof ShopeeSkuIndexRoute
   '/tiktokshop/incomes': typeof TiktokshopIncomesIndexRoute
   '/tiktokshop/sku': typeof TiktokshopSkuIndexRoute
+  '/admin/users/$userId/permissions': typeof AdminUsersUserIdPermissionsRoute
 }
 
 export interface FileRoutesByTo {
@@ -1201,12 +1187,10 @@ export interface FileRoutesByTo {
   '/livestream/calendar': typeof LivestreamCalendarIndexRoute
   '/livestream/channels': typeof LivestreamChannelsIndexRoute
   '/livestream/goals': typeof LivestreamGoalsIndexRoute
-  '/livestream/members': typeof LivestreamMembersIndexRoute
   '/livestream/performance': typeof LivestreamPerformanceIndexRoute
   '/livestream/periods': typeof LivestreamPeriodsIndexRoute
   '/livestream/reports': typeof LivestreamReportsIndexRoute
   '/livestream/salary': typeof LivestreamSalaryIndexRoute
-  '/livestream/stats': typeof LivestreamStatsIndexRoute
   '/marketing-storage/accounting-storage': typeof MarketingStorageAccountingStorageIndexRoute
   '/marketing-storage/ai': typeof MarketingStorageAiIndexRoute
   '/marketing-storage/cal': typeof MarketingStorageCalIndexRoute
@@ -1240,6 +1224,7 @@ export interface FileRoutesByTo {
   '/shopee/sku': typeof ShopeeSkuIndexRoute
   '/tiktokshop/incomes': typeof TiktokshopIncomesIndexRoute
   '/tiktokshop/sku': typeof TiktokshopSkuIndexRoute
+  '/admin/users/$userId/permissions': typeof AdminUsersUserIdPermissionsRoute
 }
 
 export interface FileRoutesById {
@@ -1279,12 +1264,10 @@ export interface FileRoutesById {
   '/livestream/calendar/': typeof LivestreamCalendarIndexRoute
   '/livestream/channels/': typeof LivestreamChannelsIndexRoute
   '/livestream/goals/': typeof LivestreamGoalsIndexRoute
-  '/livestream/members/': typeof LivestreamMembersIndexRoute
   '/livestream/performance/': typeof LivestreamPerformanceIndexRoute
   '/livestream/periods/': typeof LivestreamPeriodsIndexRoute
   '/livestream/reports/': typeof LivestreamReportsIndexRoute
   '/livestream/salary/': typeof LivestreamSalaryIndexRoute
-  '/livestream/stats/': typeof LivestreamStatsIndexRoute
   '/marketing-storage/accounting-storage/': typeof MarketingStorageAccountingStorageIndexRoute
   '/marketing-storage/ai/': typeof MarketingStorageAiIndexRoute
   '/marketing-storage/cal/': typeof MarketingStorageCalIndexRoute
@@ -1318,6 +1301,7 @@ export interface FileRoutesById {
   '/shopee/sku/': typeof ShopeeSkuIndexRoute
   '/tiktokshop/incomes/': typeof TiktokshopIncomesIndexRoute
   '/tiktokshop/sku/': typeof TiktokshopSkuIndexRoute
+  '/admin/users/$userId/permissions': typeof AdminUsersUserIdPermissionsRoute
 }
 
 export interface FileRouteTypes {
@@ -1358,12 +1342,10 @@ export interface FileRouteTypes {
     | '/livestream/calendar'
     | '/livestream/channels'
     | '/livestream/goals'
-    | '/livestream/members'
     | '/livestream/performance'
     | '/livestream/periods'
     | '/livestream/reports'
     | '/livestream/salary'
-    | '/livestream/stats'
     | '/marketing-storage/accounting-storage'
     | '/marketing-storage/ai'
     | '/marketing-storage/cal'
@@ -1397,6 +1379,7 @@ export interface FileRouteTypes {
     | '/shopee/sku'
     | '/tiktokshop/incomes'
     | '/tiktokshop/sku'
+    | '/admin/users/$userId/permissions'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -1433,12 +1416,10 @@ export interface FileRouteTypes {
     | '/livestream/calendar'
     | '/livestream/channels'
     | '/livestream/goals'
-    | '/livestream/members'
     | '/livestream/performance'
     | '/livestream/periods'
     | '/livestream/reports'
     | '/livestream/salary'
-    | '/livestream/stats'
     | '/marketing-storage/accounting-storage'
     | '/marketing-storage/ai'
     | '/marketing-storage/cal'
@@ -1472,6 +1453,7 @@ export interface FileRouteTypes {
     | '/shopee/sku'
     | '/tiktokshop/incomes'
     | '/tiktokshop/sku'
+    | '/admin/users/$userId/permissions'
   id:
     | '__root__'
     | '/'
@@ -1509,12 +1491,10 @@ export interface FileRouteTypes {
     | '/livestream/calendar/'
     | '/livestream/channels/'
     | '/livestream/goals/'
-    | '/livestream/members/'
     | '/livestream/performance/'
     | '/livestream/periods/'
     | '/livestream/reports/'
     | '/livestream/salary/'
-    | '/livestream/stats/'
     | '/marketing-storage/accounting-storage/'
     | '/marketing-storage/ai/'
     | '/marketing-storage/cal/'
@@ -1548,6 +1528,7 @@ export interface FileRouteTypes {
     | '/shopee/sku/'
     | '/tiktokshop/incomes/'
     | '/tiktokshop/sku/'
+    | '/admin/users/$userId/permissions'
   fileRoutesById: FileRoutesById
 }
 
@@ -1586,12 +1567,10 @@ export interface RootRouteChildren {
   LivestreamCalendarIndexRoute: typeof LivestreamCalendarIndexRoute
   LivestreamChannelsIndexRoute: typeof LivestreamChannelsIndexRoute
   LivestreamGoalsIndexRoute: typeof LivestreamGoalsIndexRoute
-  LivestreamMembersIndexRoute: typeof LivestreamMembersIndexRoute
   LivestreamPerformanceIndexRoute: typeof LivestreamPerformanceIndexRoute
   LivestreamPeriodsIndexRoute: typeof LivestreamPeriodsIndexRoute
   LivestreamReportsIndexRoute: typeof LivestreamReportsIndexRoute
   LivestreamSalaryIndexRoute: typeof LivestreamSalaryIndexRoute
-  LivestreamStatsIndexRoute: typeof LivestreamStatsIndexRoute
   MarketingStorageAccountingStorageIndexRoute: typeof MarketingStorageAccountingStorageIndexRoute
   MarketingStorageAiIndexRoute: typeof MarketingStorageAiIndexRoute
   MarketingStorageCalIndexRoute: typeof MarketingStorageCalIndexRoute
@@ -1625,6 +1604,7 @@ export interface RootRouteChildren {
   ShopeeSkuIndexRoute: typeof ShopeeSkuIndexRoute
   TiktokshopIncomesIndexRoute: typeof TiktokshopIncomesIndexRoute
   TiktokshopSkuIndexRoute: typeof TiktokshopSkuIndexRoute
+  AdminUsersUserIdPermissionsRoute: typeof AdminUsersUserIdPermissionsRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -1662,12 +1642,10 @@ const rootRouteChildren: RootRouteChildren = {
   LivestreamCalendarIndexRoute: LivestreamCalendarIndexRoute,
   LivestreamChannelsIndexRoute: LivestreamChannelsIndexRoute,
   LivestreamGoalsIndexRoute: LivestreamGoalsIndexRoute,
-  LivestreamMembersIndexRoute: LivestreamMembersIndexRoute,
   LivestreamPerformanceIndexRoute: LivestreamPerformanceIndexRoute,
   LivestreamPeriodsIndexRoute: LivestreamPeriodsIndexRoute,
   LivestreamReportsIndexRoute: LivestreamReportsIndexRoute,
   LivestreamSalaryIndexRoute: LivestreamSalaryIndexRoute,
-  LivestreamStatsIndexRoute: LivestreamStatsIndexRoute,
   MarketingStorageAccountingStorageIndexRoute:
     MarketingStorageAccountingStorageIndexRoute,
   MarketingStorageAiIndexRoute: MarketingStorageAiIndexRoute,
@@ -1703,6 +1681,7 @@ const rootRouteChildren: RootRouteChildren = {
   ShopeeSkuIndexRoute: ShopeeSkuIndexRoute,
   TiktokshopIncomesIndexRoute: TiktokshopIncomesIndexRoute,
   TiktokshopSkuIndexRoute: TiktokshopSkuIndexRoute,
+  AdminUsersUserIdPermissionsRoute: AdminUsersUserIdPermissionsRoute,
 }
 
 export const routeTree = rootRoute
@@ -1749,12 +1728,10 @@ export const routeTree = rootRoute
         "/livestream/calendar/",
         "/livestream/channels/",
         "/livestream/goals/",
-        "/livestream/members/",
         "/livestream/performance/",
         "/livestream/periods/",
         "/livestream/reports/",
         "/livestream/salary/",
-        "/livestream/stats/",
         "/marketing-storage/accounting-storage/",
         "/marketing-storage/ai/",
         "/marketing-storage/cal/",
@@ -1787,7 +1764,8 @@ export const routeTree = rootRoute
         "/shopee/kpi/",
         "/shopee/sku/",
         "/tiktokshop/incomes/",
-        "/tiktokshop/sku/"
+        "/tiktokshop/sku/",
+        "/admin/users/$userId/permissions"
       ]
     },
     "/": {
@@ -1899,9 +1877,6 @@ export const routeTree = rootRoute
     "/livestream/goals/": {
       "filePath": "livestream/goals/index.tsx"
     },
-    "/livestream/members/": {
-      "filePath": "livestream/members/index.tsx"
-    },
     "/livestream/performance/": {
       "filePath": "livestream/performance/index.tsx"
     },
@@ -1913,9 +1888,6 @@ export const routeTree = rootRoute
     },
     "/livestream/salary/": {
       "filePath": "livestream/salary/index.tsx"
-    },
-    "/livestream/stats/": {
-      "filePath": "livestream/stats/index.tsx"
     },
     "/marketing-storage/accounting-storage/": {
       "filePath": "marketing-storage/accounting-storage/index.tsx"
@@ -2015,6 +1987,9 @@ export const routeTree = rootRoute
     },
     "/tiktokshop/sku/": {
       "filePath": "tiktokshop/sku/index.tsx"
+    },
+    "/admin/users/$userId/permissions": {
+      "filePath": "admin/users/$userId/permissions.tsx"
     }
   }
 }

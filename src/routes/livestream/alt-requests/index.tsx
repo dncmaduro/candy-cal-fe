@@ -53,13 +53,8 @@ function RouteComponent() {
     select: (data) => data.data
   })
 
-  // Check if user is admin or livestream-leader
-  const isAdminOrLeader = useMemo(() => {
-    if (!me) return false
-    return (
-      me.roles?.includes("admin") || me.roles?.includes("livestream-leader")
-    )
-  }, [me])
+  const isAdminOrLeader =
+    me?.permissions?.includes("api.livestreamaltrequests.update-request-status") ?? false
 
   // Fetch employees for alt assignee selection
   const { data: livestreamEmpData } = useQuery({
@@ -68,7 +63,7 @@ function RouteComponent() {
       publicSearchUser({
         page: 1,
         limit: 100,
-        role: "livestream-emp",
+        permission: "api.livestreamcore.report-snapshot",
         status: "active"
       }),
     select: (data) => data.data.data
@@ -80,7 +75,7 @@ function RouteComponent() {
       publicSearchUser({
         page: 1,
         limit: 100,
-        role: "livestream-leader",
+        permission: "api.livestreamaltrequests.update-request-status",
         status: "active"
       }),
     select: (data) => data.data.data

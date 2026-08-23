@@ -29,7 +29,7 @@ export const Route = createFileRoute("/admin/system-logs/")({
 })
 
 function RouteComponent() {
-  useAuthGuard(["admin"])
+  useAuthGuard(["api.systemlogs.get-system-logs"])
 
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(10)

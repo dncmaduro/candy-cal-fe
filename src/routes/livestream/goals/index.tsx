@@ -132,7 +132,7 @@ function RouteComponent() {
         header: "Thao tác",
         cell: ({ row }) => (
           <Group gap="xs">
-            <Can roles={["admin", "livestream-leader"]}>
+            <Can permissions={["api.livestreammonthgoals.update-livestream-month-goal"]}>
               <ActionIcon
                 variant="light"
                 color="indigo"
@@ -199,7 +199,7 @@ function RouteComponent() {
               size="sm"
               w={180}
             />
-            <Can roles={["admin", "livestream-leader"]}>
+            <Can permissions={["api.livestreammonthgoals.create-livestream-month-goal"]}>
               <Button
                 onClick={() => openGoalModal()}
                 leftSection={<IconPlus size={16} />}

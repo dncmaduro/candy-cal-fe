@@ -302,7 +302,7 @@ function RouteComponent() {
                 </Text>
               </div>
             </Group>
-            <Can roles={["admin", "sales-cs"]}>
+            <Can permissions={["api.salesitems.update-sales-item"]}>
               <Group>
                 <Tooltip label="Chỉnh sửa sản phẩm" withArrow>
                   <ActionIcon

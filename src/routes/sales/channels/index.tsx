@@ -187,7 +187,7 @@ function RouteComponent() {
       id: "actions",
       header: "Thao tác",
       cell: ({ row }) => (
-        <Can roles={["admin", "sales-hunter"]}>
+        <Can permissions={["api.saleschannels.update-channel"]}>
           <div className="flex gap-2">
             <ActionIcon
               variant="light"
@@ -281,7 +281,7 @@ function RouteComponent() {
             pageSizeOptions={[10, 20, 50, 100]}
             isLoading={isLoading}
             extraActions={
-              <Can roles={["admin", "sales-hunter"]}>
+              <Can permissions={["api.saleschannels.create-channel"]}>
                 <Button
                   onClick={() => openChannelModal()}
                   leftSection={<IconPlus size={16} />}

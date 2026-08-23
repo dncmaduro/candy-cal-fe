@@ -10,7 +10,6 @@ import {
   Tooltip
 } from "@mantine/core"
 import { useQuery, useMutation } from "@tanstack/react-query"
-import { useMemo } from "react"
 import { modals } from "@mantine/modals"
 import { format } from "date-fns"
 import {
@@ -172,16 +171,9 @@ function RouteComponent() {
 
   // Check permissions
   const me = meData?.data
-  const isAdmin = useMemo(() => {
-    return me?.roles?.includes("admin") ?? false
-  }, [me])
-
-  const isSaleLeader = useMemo(() => {
-    return me?.roles?.includes("sales-hunter") ?? false
-  }, [me])
-  const isFacebookAdsEmp = useMemo(() => {
-    return me?.roles?.includes("facebook-ads-emp") ?? false
-  }, [me])
+  const isAdmin = me?.permissions?.includes("sales.funnels.manage.all") ?? false
+  const isSaleLeader = isAdmin
+  const isFacebookAdsEmp = false
 
   const columns: ColumnDef<TaskItem>[] = [
     {

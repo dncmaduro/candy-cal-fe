@@ -214,7 +214,7 @@ export const StorageItemsTable = ({
                   Chi tiết
                 </Button>
 
-                <Can roles={["admin", "accounting-emp"]}>
+                <Can permissions={["api.storageitems.update-item"]}>
                   <Button
                     hidden={readOnly}
                     variant="light"
@@ -319,7 +319,7 @@ export const StorageItemsTable = ({
                 Chi tiết
               </Button>
 
-              <Can roles={["admin", "accounting-emp"]}>
+              <Can permissions={["api.storageitems.update-item"]}>
                 <Button
                   hidden={readOnly}
                   variant="light"

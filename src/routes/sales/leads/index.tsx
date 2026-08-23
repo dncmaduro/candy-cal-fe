@@ -137,17 +137,11 @@ function LeadsPage() {
     select: (response) => response.data
   })
 
-  const roles = me?.roles || []
-  const isHunter = roles.includes("sales-hunter")
-  const isCs = roles.includes("sales-cs")
-  const isManager =
-    roles.includes("admin") ||
-    roles.includes("sales-hunter") ||
-    roles.includes("sales-leader")
-  const canCreateLead =
-    isHunter || roles.includes("admin") || roles.includes("sales-leader")
-  const canCareLead =
-    isCs || roles.includes("admin") || roles.includes("sales-leader")
+  const permissions = me?.permissions || []
+  const isManager = permissions.includes("sales.funnels.manage.all")
+  const canCreateLead = permissions.includes("api.salesleads.create")
+  const canCareLead = permissions.includes("api.salesleads.call")
+  const isCs = canCareLead && !isManager
 
   const viewOptions = useMemo(() => {
     if (isCs) {

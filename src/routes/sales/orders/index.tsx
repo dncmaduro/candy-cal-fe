@@ -154,7 +154,12 @@ function RouteComponent() {
   const { data: salesCsUsersData } = useQuery({
     queryKey: ["salesCsUsers", "orders-filter"],
     queryFn: () =>
-      publicSearchUser({ page: 1, limit: 999, role: "sales-cs", status: "active" }),
+      publicSearchUser({
+        page: 1,
+        limit: 999,
+        permission: "sales.assignee",
+        status: "active"
+      }),
     enabled: isOrdersListRoute && canSeeAllFunnels,
     staleTime: 5 * 60 * 1000
   })
@@ -559,7 +564,7 @@ function RouteComponent() {
             >
               <IconEye size={16} />
             </ActionIcon>
-            <Can roles={["admin", "sales-cs"]}>
+            <Can permissions={["api.salesorders.update-order-items"]}>
               <ActionIcon
                 variant="light"
                 color="indigo"
@@ -1230,7 +1235,7 @@ function RouteComponent() {
                     Xuất Excel kế toán
                   </Button>
                 )}
-                <Can roles={["admin", "sales-hunter", "sales-cs"]}>
+                <Can permissions={["api.salesorders.create-order"]}>
                   <Button
                     onClick={handleUploadOrders}
                     leftSection={<IconFileUpload size={16} />}

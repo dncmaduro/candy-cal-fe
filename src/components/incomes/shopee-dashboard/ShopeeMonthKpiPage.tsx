@@ -29,7 +29,7 @@ import {
 } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
 import type { ColumnDef } from "@tanstack/react-table"
-import { SHOPEE_EDITOR_ROLES, SHOPEE_NAVS, SHOPEE_ROLES } from "../../../constants/navs"
+import { SHOPEE_NAVS } from "../../../constants/navs"
 import { useAuthGuard } from "../../../hooks/useAuthGuard"
 import type { ShopeeMonthKpiRecord } from "../../../hooks/models"
 import { useShopeeChannels } from "../../../hooks/useShopeeChannels"
@@ -113,7 +113,7 @@ export const ShopeeMonthKpiPage = ({
   search,
   onSearchChange
 }: ShopeeMonthKpiPageProps) => {
-  useAuthGuard(SHOPEE_ROLES)
+  useAuthGuard(["api.shopeemonthkpis.get-shopee-month-kpis"])
   const { getMe } = useUsers()
   const { data: meData } = useQuery({
     queryKey: ["getMe"],
@@ -121,7 +121,7 @@ export const ShopeeMonthKpiPage = ({
     select: (data) => data.data
   })
   const canMutateShopeeKpi = Boolean(
-    meData?.roles?.some((role) => SHOPEE_EDITOR_ROLES.includes(role))
+    meData?.permissions?.includes("api.shopeemonthkpis.create-shopee-month-kpi")
   )
 
   const { getShopeeMonthKpis, deleteShopeeMonthKpi } = useShopeeMonthKpis()

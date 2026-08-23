@@ -139,7 +139,7 @@ function RouteComponent() {
         size: 120,
         cell: ({ row }) => (
           <Group gap={8}>
-            <Can roles={["admin", "livestream-leader"]}>
+            <Can permissions={["api.livestreamperiods.update-livestream-period"]}>
               <ActionIcon
                 variant="light"
                 color="indigo"
@@ -149,7 +149,7 @@ function RouteComponent() {
                 <IconEdit size={16} />
               </ActionIcon>
             </Can>
-            <Can roles={["admin", "livestream-leader"]}>
+            <Can permissions={["api.livestreamperiods.delete-livestream-period"]}>
               <ActionIcon
                 variant="light"
                 color="red"
@@ -204,7 +204,7 @@ function RouteComponent() {
             initialPageSize={100}
             pageSizeOptions={[50, 100]}
             extraActions={
-              <Can roles={["admin", "livestream-leader"]}>
+              <Can permissions={["api.livestreamperiods.create-livestream-period"]}>
                 <Button
                   onClick={() => openPeriodModal()}
                   leftSection={<IconPlus size={16} />}

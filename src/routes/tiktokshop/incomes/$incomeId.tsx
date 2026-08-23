@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router"
 import {
   TIKTOKSHOP_NAVS,
   TIKTOKSHOP_NAVS_URL,
-  TIKTOKSHOP_ROLES
+  TIKTOKSHOP_ACCESS_PERMISSIONS
 } from "../../../constants/navs"
 import { StorageIncomeDetailPage } from "../../marketing-storage/incomes/$incomeId"
 
@@ -18,7 +18,7 @@ function RouteComponent() {
       incomeId={incomeId}
       baseUrl={TIKTOKSHOP_NAVS_URL}
       navs={TIKTOKSHOP_NAVS}
-      allowedRoles={TIKTOKSHOP_ROLES}
+      allowedPermissions={TIKTOKSHOP_ACCESS_PERMISSIONS}
     />
   )
 }

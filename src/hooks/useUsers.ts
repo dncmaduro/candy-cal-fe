@@ -5,6 +5,7 @@ import { callApi } from "./axios"
 import {
   AdminListUsersRequest,
   AdminListUsersResponse,
+  AdminGetUserResponse,
   ChangePasswordRequest,
   ChangePasswordResponse,
   CheckTokenRequest,
@@ -22,8 +23,10 @@ import {
   UpdateAvatarResponse,
   UpdateUserRequest,
   UpdateUserResponse,
-  UpdateUserRolesRequest,
-  UpdateUserRolesResponse
+  ListPermissionGroupsResponse,
+  ListPermissionsResponse,
+  UpdateUserPermissionsRequest,
+  UpdateUserPermissionsResponse
 } from "./models"
 
 export const useUsers = () => {
@@ -121,13 +124,37 @@ export const useUsers = () => {
     })
   }
 
-  const updateUserRoles = async (
+  const adminGetUser = async (userId: string) => {
+    return callApi<never, AdminGetUserResponse>({
+      method: "GET",
+      path: `/v1/users/admin/${userId}`,
+      token: accessToken
+    })
+  }
+
+  const listPermissions = async () => {
+    return callApi<never, ListPermissionsResponse>({
+      method: "GET",
+      path: "/v1/users/permissions",
+      token: accessToken
+    })
+  }
+
+  const listPermissionGroups = async () => {
+    return callApi<never, ListPermissionGroupsResponse>({
+      method: "GET",
+      path: "/v1/users/permission-groups",
+      token: accessToken
+    })
+  }
+
+  const updateUserPermissions = async (
     userId: string,
-    req: UpdateUserRolesRequest
+    req: UpdateUserPermissionsRequest
   ) => {
-    return callApi<UpdateUserRolesRequest, UpdateUserRolesResponse>({
+    return callApi<UpdateUserPermissionsRequest, UpdateUserPermissionsResponse>({
       method: "PATCH",
-      path: `/v1/users/${userId}/roles`,
+      path: `/v1/users/${userId}/permissions`,
       data: req,
       token: accessToken
     })
@@ -143,7 +170,10 @@ export const useUsers = () => {
     updateUser,
     publicSearchUser,
     adminListUsers,
+    adminGetUser,
     updateUserActive,
-    updateUserRoles
+    listPermissions,
+    listPermissionGroups,
+    updateUserPermissions
   }
 }

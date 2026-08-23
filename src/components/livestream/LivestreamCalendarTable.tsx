@@ -46,7 +46,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 type LivestreamEmployee = {
   _id: string
   name: string
-  roles?: string[]
 }
 
 type LivestreamSnapshot = {
@@ -235,7 +234,7 @@ const ScheduleCell = ({
   const showUpdateAdmin =
     isHovering && isLivestreamFixed && isAdminOrLeader && !!dayData
 
-  const isUserLivestreamAst = currentUser?.roles?.includes("livestream-ast")
+  const isUserLivestreamAst = currentUser?.permissions?.includes("api.livestreamcore.update-snapshot-alt")
 
   return (
     <td
@@ -1054,8 +1053,7 @@ export const LivestreamCalendarTable = ({
   const isAdminOrLeader = useMemo(() => {
     if (!currentUser) return false
     return (
-      currentUser.roles?.includes("admin") ||
-      currentUser.roles?.includes("livestream-leader")
+      currentUser.permissions?.includes("api.livestreamcore.delete-snapshot")
     )
   }, [currentUser])
 

@@ -19,15 +19,16 @@ import {
   NAVS_URL,
   TIKTOKSHOP_NAVS,
   TIKTOKSHOP_NAVS_URL,
-  TIKTOKSHOP_ROLES,
-    SHOPEE_NAVS,
-    SHOPEE_NAVS_URL,
-    SHOPEE_ROLES,
-    KHO_VAN_ROLES,
-    LIVESTREAM_NAVS,
-    SALES_NAVS,
-    SALES_VIEW_ROLES,
-    ADMIN_NAVS
+  TIKTOKSHOP_ACCESS_PERMISSIONS,
+  SHOPEE_NAVS,
+  SHOPEE_NAVS_URL,
+  SHOPEE_ACCESS_PERMISSIONS,
+  STORAGE_ACCESS_PERMISSIONS,
+  LIVESTREAM_NAVS,
+  SALES_NAVS,
+  SALES_ACCESS_PERMISSIONS,
+  ADMIN_NAVS,
+  hasAnyPermission
   } from "../../constants/navs"
 import { resetSessionCache } from "../../utils/authSession"
 
@@ -43,33 +44,16 @@ export const UserMenu = () => {
     enabled: !!accessToken
   })
   const isMobile = useMediaQuery("(max-width: 768px)")
+  const userPermissions = meData?.permissions ?? []
 
-  const ROLES: Record<string, string> = {
-    admin: "Admin",
-    "order-emp": "Nhân viên TikTok Shop",
-    "tiktokshop-emp": "Nhân viên TikTok Shop",
-    "shopee-emp": "Nhân viên Shopee",
-    "accounting-emp": "Nhân viên kế toán",
-    "system-emp": "Nhân viên hệ thống",
-    "livestream-leader": "Leader livestream",
-    "livestream-emp": "Host livestream",
-    "livestream-ast": "Trợ live",
-    "sales-leader": "Leader sales",
-    "sales-hunter": "Nhân viên khai thác lead",
-    "sales-cs": "Nhân viên CSKH",
-    "facebook-ads-emp": "Nhân viên Facebook Ads",
-    "livestream-accounting": "Kế toán livestream",
-    "sales-accounting": "Kế toán sales"
-  }
-
-  // Hàm tìm nav đầu tiên mà user có quyền truy cập
+  // Find the first page the user can access in an application.
   const getFirstAccessibleNav = (
-    navs: Array<{ to: string; roles: string[]; deprecated?: boolean }>,
-    userRoles: string[]
+    navs: Array<{ to: string; permissions: string[]; deprecated?: boolean }>,
+    userPermissions: string[]
   ): string | null => {
     const accessibleNav = navs.find(
       (nav) =>
-        !nav.deprecated && nav.roles.some((role) => userRoles.includes(role))
+        !nav.deprecated && hasAnyPermission(userPermissions, nav.permissions)
     )
     return accessibleNav?.to || null
   }
@@ -99,44 +83,37 @@ export const UserMenu = () => {
       to: NAVS_URL,
       label: "Kho vận",
       icon: <IconPackages size={isMobile ? 14 : 18} />,
-      roles: KHO_VAN_ROLES
+      permissions: STORAGE_ACCESS_PERMISSIONS
     },
     {
       to: TIKTOKSHOP_NAVS_URL,
       label: "TikTok Shop",
       icon: <IconBrandTiktok size={isMobile ? 14 : 18} />,
-      roles: TIKTOKSHOP_ROLES
+      permissions: TIKTOKSHOP_ACCESS_PERMISSIONS
     },
     {
       to: SHOPEE_NAVS_URL,
       label: "Shopee",
       icon: <IconBrandShopee size={isMobile ? 14 : 18} />,
-      roles: SHOPEE_ROLES
+      permissions: SHOPEE_ACCESS_PERMISSIONS
     },
     {
       to: "/livestream",
       label: "Livestream",
       icon: <IconVideo size={isMobile ? 14 : 18} />,
-      roles: [
-        "admin",
-        "system-emp",
-        "livestream-leader",
-        "livestream-emp",
-        "livestream-ast",
-        "livestream-accounting"
-      ]
+      permissions: LIVESTREAM_NAVS.flatMap((nav) => nav.permissions)
     },
     {
       to: "/sales",
       label: "Sales",
       icon: <IconShoppingBag size={isMobile ? 14 : 18} />,
-      roles: SALES_VIEW_ROLES
+      permissions: SALES_ACCESS_PERMISSIONS
     },
     {
       to: "/admin",
       label: "Quản trị",
       icon: <IconSettings size={isMobile ? 14 : 18} />,
-      roles: ["admin"]
+      permissions: ["api.users.admin-list-users", "api.systemlogs.get-system-logs"]
     }
   ]
 
@@ -166,13 +143,6 @@ export const UserMenu = () => {
             <Text fw={500} fz={isMobile ? "xs" : "sm"} lh={isMobile ? 1 : 1.2}>
               {meData?.name ?? "Người dùng"}
             </Text>
-            <Text
-              fz={isMobile ? "10" : "xs"}
-              c="dimmed"
-              lh={isMobile ? 1 : 1.2}
-            >
-              {meData?.roles.map((r) => ROLES[r]).join(", ")}
-            </Text>
           </Box>
         </Group>
       </Menu.Target>
@@ -190,22 +160,20 @@ export const UserMenu = () => {
             <Text fw={600} fz={isMobile ? "sm" : "md"}>
               {meData?.name ?? "Người dùng"}
             </Text>
-            <Text c="dimmed" fz={isMobile ? "xs" : "sm"}>
-              {meData?.roles.map((r) => ROLES[r]).join(", ")}
-            </Text>
           </Stack>
         </Box>
 
         <Menu.Label fz={isMobile ? "11" : "sm"}>Các ứng dụng</Menu.Label>
         {APPS.map((app) => {
-          const hasPermission = app.roles.some((role) =>
-            meData?.roles.includes(role)
+          const hasPermission = hasAnyPermission(
+            userPermissions,
+            app.permissions
           )
 
           // Tìm nav đầu tiên mà user có quyền truy cập
           const appNavs = getAppNavs(app.to)
           const firstAccessibleNavPath =
-            getFirstAccessibleNav(appNavs, meData?.roles || []) || app.to
+            getFirstAccessibleNav(appNavs, userPermissions) || app.to
 
           return (
             <Menu.Item

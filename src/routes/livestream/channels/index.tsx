@@ -160,7 +160,7 @@ function RouteComponent() {
       id: "actions",
       header: "Thao tác",
       cell: ({ row }) => (
-        <Can roles={["admin", "livestream-leader"]}>
+        <Can permissions={["api.livestreamchannels.update-livestream-channel"]}>
           <div className="flex gap-2">
             <ActionIcon
               variant="light"
@@ -225,7 +225,7 @@ function RouteComponent() {
             pageSizeOptions={[10, 20, 50, 100]}
             isLoading={isLoading}
             extraActions={
-              <Can roles={["admin", "livestream-leader"]}>
+              <Can permissions={["api.livestreamchannels.create-livestream-channel"]}>
                 <Button
                   onClick={() => openChannelModal()}
                   leftSection={<IconPlus size={16} />}

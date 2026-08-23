@@ -365,7 +365,7 @@ function RouteComponent() {
                 <IconEye size={16} />
               </ActionIcon>
             </Tooltip>
-            <Can roles={["admin", "sales-cs"]}>
+            <Can permissions={["api.salesitems.update-sales-item"]}>
               <Tooltip label="Chỉnh sửa" withArrow>
                 <ActionIcon
                   variant="light"
@@ -411,7 +411,7 @@ function RouteComponent() {
                 Đồng bộ và quản lý danh sách sản phẩm
               </Text>
             </div>
-            <Can roles={["admin", "sales-hunter", "sales-cs"]}>
+            <Can permissions={["api.salesitems.upload-sales-items"]}>
               <Group gap="sm">
                 <Button
                   leftSection={<IconUpload size={16} />}
@@ -540,7 +540,7 @@ function RouteComponent() {
             }
             extraActions={
               <Group gap="xs">
-                <Can roles={["admin", "sales-cs", "system-emp"]}>
+                <Can permissions={["api.salesitems.get-daily-inventory-report"]}>
                   <Button
                     leftSection={<IconReportAnalytics size={16} />}
                     onClick={() => {
@@ -569,9 +569,9 @@ function RouteComponent() {
                     Xuất XLSX
                   </Button>
                 </Can>
-                <Can roles={["admin", "sales-hunter", "sales-cs"]}>
+                <Can permissions={["api.salesitems.create-sales-item"]}>
                   <Group gap="xs">
-                    <Can roles={["admin", "sales-cs"]}>
+                    <Can permissions={["api.salesitems.upload-inventory"]}>
                       <Button
                         leftSection={<IconUpload size={16} />}
                         onClick={() => {

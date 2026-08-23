@@ -1,7 +1,7 @@
 import { Badge, Box, Container, Group, rem } from "@mantine/core"
 import pkg from "../../../package.json"
 import { useLocation, useNavigate } from "@tanstack/react-router"
-import { ReactNode, useEffect } from "react"
+import { ReactNode, useEffect, useRef } from "react"
 import { useUserStore } from "../../store/userStore"
 import { UserMenu } from "./UserMenu"
 import { useUsers } from "../../hooks/useUsers"
@@ -28,11 +28,12 @@ export const AppLayout = ({
   const { accessToken, setUser, clearUser } = useUserStore()
   const { checkToken, getNewToken, getMe } = useUsers()
   const navigate = useNavigate()
+  const refreshAttemptedRef = useRef(false)
   const location = useLocation()
   const collapsed = useUIStore((s) => s.sidebarCollapsed)
   const setCollapsed = useUIStore((s) => s.setSidebarCollapsed)
 
-  const { mutate: getToken } = useMutation({
+  const { mutate: getToken, isPending: isRefreshing } = useMutation({
     mutationKey: ["getNewToken"],
     mutationFn: getNewToken,
     onSuccess: (response) => {
@@ -57,17 +58,28 @@ export const AppLayout = ({
   })
 
   const { data: isTokenValid } = useQuery({
-    queryKey: ["validateToken"],
+    queryKey: ["validateToken", accessToken],
     queryFn: checkToken,
+    enabled: !!accessToken,
     select: (data) => data.data.valid,
     refetchInterval: 1000 * 30 // 30s
   })
 
   useEffect(() => {
-    if (!isTokenValid) {
+    if (isTokenValid === true) {
+      refreshAttemptedRef.current = false
+      return
+    }
+
+    if (
+      isTokenValid === false &&
+      !isRefreshing &&
+      !refreshAttemptedRef.current
+    ) {
+      refreshAttemptedRef.current = true
       getToken()
     }
-  }, [isTokenValid])
+  }, [getToken, isRefreshing, isTokenValid])
 
   useEffect(() => {
     if (!accessToken) {
@@ -76,7 +88,7 @@ export const AppLayout = ({
   }, [accessToken])
 
   const resolvedNavs =
-    navs ?? getStorageNavsByPath(location.pathname, meData?.roles)
+    navs ?? getStorageNavsByPath(location.pathname)
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "#f8fafc" }}>

@@ -189,7 +189,7 @@ export const StorageItemModal = ({ item, refetch }: Props) => {
                 <NumberInput
                   label="Số lượng"
                   min={0}
-                  disabled={!!item?._id && !meData?.roles?.includes("admin")}
+                  disabled={!!item?._id && !meData?.permissions?.includes("api.storageitems.update-item")}
                   size="sm"
                   radius="md"
                   hideControls
@@ -225,7 +225,7 @@ export const StorageItemModal = ({ item, refetch }: Props) => {
               render={({ field }) => (
                 <NumberInput
                   label="Số lượng"
-                  disabled={!!item?._id && !meData?.roles?.includes("admin")}
+                  disabled={!!item?._id && !meData?.permissions?.includes("api.storageitems.update-item")}
                   min={0}
                   size="sm"
                   radius="md"
@@ -263,7 +263,7 @@ export const StorageItemModal = ({ item, refetch }: Props) => {
                 <NumberInput
                   label="Số lượng"
                   min={0}
-                  disabled={!!item?._id && !meData?.roles?.includes("admin")}
+                  disabled={!!item?._id && !meData?.permissions?.includes("api.storageitems.update-item")}
                   size="sm"
                   radius="md"
                   hideControls

@@ -3,13 +3,8 @@ import { useUsers } from "../hooks/useUsers"
 import { useQuery } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { useEffect } from "react"
-import {
-  KHO_VAN_ROLES,
-  SHOPEE_ROLES,
-  TIKTOKSHOP_ROLES
-} from "../constants/navs"
 
-export const useAuthGuard = (roles: string[]) => {
+export const useAuthGuard = (permissions: string[] = []) => {
   const { getMe } = useUsers()
   const { accessToken, clearUser } = useUserStore()
   const navigate = useNavigate()
@@ -26,19 +21,22 @@ export const useAuthGuard = (roles: string[]) => {
   })
 
   useEffect(() => {
-    if (roles.includes("all")) {
-      roles = [...new Set([...KHO_VAN_ROLES, ...TIKTOKSHOP_ROLES, ...SHOPEE_ROLES])]
-    }
     // Nếu chưa login hoặc token fail, về login
     if (!accessToken || isError) {
       clearUser()
       navigate({ to: "/" })
     }
     // Nếu login ok nhưng sai quyền, về home
-    if (roles && meData && !roles.some((role) => meData.roles.includes(role))) {
+    if (
+      permissions.length > 0 &&
+      meData &&
+      !permissions.some((permission) =>
+        (meData.permissions ?? []).includes(permission)
+      )
+    ) {
       navigate({ to: "/access-denied" })
     }
-  }, [accessToken, isError, meData])
+  }, [accessToken, isError, meData, permissions, navigate, clearUser])
 
   return { meData, isLoading }
 }

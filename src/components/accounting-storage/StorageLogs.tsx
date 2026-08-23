@@ -508,7 +508,7 @@ export const StorageLogs = ({ activeTab }: Props) => {
 
           return (
             <Group gap={8} justify="flex-end" wrap="nowrap">
-              <Can roles={["admin", "accounting-emp"]}>
+              <Can permissions={["api.storagelogs.update-storage-log"]}>
                 <Button
                   variant="light"
                   color="orange"
@@ -526,7 +526,7 @@ export const StorageLogs = ({ activeTab }: Props) => {
                 </Button>
               </Can>
 
-              <Can roles={["admin"]}>
+              <Can permissions={["api.storagelogs.delete-storage-log"]}>
                 <Button
                   variant="light"
                   color="red"
@@ -545,8 +545,8 @@ export const StorageLogs = ({ activeTab }: Props) => {
                 </Button>
               </Can>
 
-              <Can roles={["accounting-emp"]}>
-                <Can roles={["admin"]} not>
+              <Can permissions={["inventory.logs.delete.with-negative-quantity"]}>
+                <Can permissions={["api.storagelogs.delete-storage-log"]} not>
                   <Tooltip
                     label="Không thể xóa giao dịch này"
                     withArrow
@@ -665,7 +665,7 @@ export const StorageLogs = ({ activeTab }: Props) => {
           </Text>
         </Box>
 
-        <Can roles={["admin", "accounting-emp"]}>
+        <Can permissions={["api.storagelogs.create-storage-log"]}>
           <Button
             color="indigo"
             leftSection={<IconPlus size={18} />}

@@ -10,14 +10,14 @@ import {
   Text
 } from "@mantine/core"
 import { Link, useNavigate } from "@tanstack/react-router"
-import { ReactNode, useEffect } from "react"
+import { ReactNode, useEffect, useRef } from "react"
 import { useUserStore } from "../../store/userStore"
 import { UserMenu } from "./UserMenu"
 import { useUsers } from "../../hooks/useUsers"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { saveToCookies } from "../../store/cookies"
 import { CToast } from "../common/CToast"
-import { LANDING_NAVS } from "../../constants/navs"
+import { getVisibleNavigationItems, LANDING_NAVS } from "../../constants/navs"
 import { Notifications } from "./Notifications"
 import { NavButton } from "./NavButton"
 
@@ -29,8 +29,9 @@ export const LandingLayout = ({ children }: Props) => {
   const { accessToken, setUser, clearUser } = useUserStore()
   const { checkToken, getNewToken, getMe } = useUsers()
   const navigate = useNavigate()
+  const refreshAttemptedRef = useRef(false)
 
-  const { mutate: getToken } = useMutation({
+  const { mutate: getToken, isPending: isRefreshing } = useMutation({
     mutationKey: ["getNewToken"],
     mutationFn: getNewToken,
     onSuccess: (response) => {
@@ -55,17 +56,28 @@ export const LandingLayout = ({ children }: Props) => {
   })
 
   const { data: isTokenValid } = useQuery({
-    queryKey: ["validateToken"],
+    queryKey: ["validateToken", accessToken],
     queryFn: checkToken,
+    enabled: !!accessToken,
     select: (data) => data.data.valid,
     refetchInterval: 1000 * 30 // 30s
   })
 
   useEffect(() => {
-    if (!isTokenValid) {
+    if (isTokenValid === true) {
+      refreshAttemptedRef.current = false
+      return
+    }
+
+    if (
+      isTokenValid === false &&
+      !isRefreshing &&
+      !refreshAttemptedRef.current
+    ) {
+      refreshAttemptedRef.current = true
       getToken()
     }
-  }, [isTokenValid])
+  }, [getToken, isRefreshing, isTokenValid])
 
   useEffect(() => {
     if (!accessToken) {
@@ -98,13 +110,7 @@ export const LandingLayout = ({ children }: Props) => {
             style={{ minHeight: rem(60) }}
           >
             <Group gap={8}>
-              {LANDING_NAVS.filter((n) => {
-                if (!meData) return false
-                return (
-                  meData.roles.includes("admin") ||
-                  n.roles.some((role) => meData.roles.includes(role))
-                )
-              }).map((n) => (
+              {getVisibleNavigationItems(LANDING_NAVS, meData?.permissions).map((n) => (
                 <NavButton key={n.to} to={n.to} label={n.label} />
               ))}
               <Badge

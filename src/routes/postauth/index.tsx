@@ -6,11 +6,13 @@ import { useEffect } from "react"
 import { Helmet } from "react-helmet-async"
 import { AppLayout } from "../../components/layouts/AppLayout"
 import {
-    NAVS_URL,
-    SALES_VIEW_ROLES,
-    TIKTOKSHOP_EMPLOYEE_ROLES,
-    TIKTOKSHOP_NAVS_URL,
-    SHOPEE_NAVS_URL
+  ADMIN_NAVS,
+  LIVESTREAM_NAVS,
+  NAVS,
+  SALES_NAVS,
+  SHOPEE_NAVS,
+  TIKTOKSHOP_NAVS,
+  getFirstAccessibleNavigationPath
 } from "../../constants/navs"
 
 export const Route = createFileRoute("/postauth/")({
@@ -43,34 +45,19 @@ function RouteComponent() {
 
   if (!accessToken || isLoading || isError) return null
 
-  const roles = meData?.roles ?? []
+  const permissions = meData?.permissions ?? []
+  const destination = [
+    NAVS,
+    TIKTOKSHOP_NAVS,
+    SHOPEE_NAVS,
+    SALES_NAVS,
+    LIVESTREAM_NAVS,
+    ADMIN_NAVS
+  ]
+    .map((navs) => getFirstAccessibleNavigationPath(navs, permissions))
+    .find(Boolean)
 
-  if (
-    roles.includes("admin") ||
-    roles.includes("system-emp")
-  ) {
-    return <Navigate to={`${NAVS_URL}/logs`} />
-  }
-  if (roles.includes("accounting-emp")) {
-    return <Navigate to={`${NAVS_URL}/accounting-storage`} />
-  }
-  if (roles.some((role) => TIKTOKSHOP_EMPLOYEE_ROLES.includes(role))) {
-    return <Navigate to={`${TIKTOKSHOP_NAVS_URL}/sku`} />
-  }
-  if (roles.includes("shopee-emp")) {
-    return <Navigate to={`${SHOPEE_NAVS_URL}/sku`} />
-  }
-  if (roles.some((role) => SALES_VIEW_ROLES.includes(role))) {
-    return <Navigate to="/sales" />
-  }
-  if (
-    roles.includes("livestream-emp") ||
-    roles.includes("livestream-leader") ||
-    roles.includes("livestream-ast") ||
-    roles.includes("livestream-accounting")
-  ) {
-    return <Navigate to="/livestream/calendar" />
-  }
+  if (destination) return <Navigate to={destination} />
 
   return (
     <>

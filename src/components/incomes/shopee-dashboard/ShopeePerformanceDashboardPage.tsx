@@ -17,7 +17,7 @@ import {
 import { IconPlus, IconTrash } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
 import { format } from "date-fns"
-import { NAVS, SHOPEE_NAVS, SHOPEE_ROLES } from "../../../constants/navs"
+import { NAVS, SHOPEE_ACCESS_PERMISSIONS, SHOPEE_NAVS } from "../../../constants/navs"
 import { useAuthGuard } from "../../../hooks/useAuthGuard"
 import type {
   ShopeePerformanceTimeMode,
@@ -67,7 +67,7 @@ interface ShopeePerformanceDashboardPageProps {
     nextSearch: Partial<ShopeeDashboardSearchState>,
     replace?: boolean
   ) => void
-  allowedRoles?: string[]
+  allowedPermissions?: string[]
   navs?: typeof NAVS
   pageTitle?: string
 }
@@ -123,11 +123,11 @@ const safeDivide = (numerator: number, denominator: number) => {
 export const ShopeePerformanceDashboardPage = ({
   search,
   onSearchChange,
-  allowedRoles = SHOPEE_ROLES,
+  allowedPermissions = SHOPEE_ACCESS_PERMISSIONS,
   navs = SHOPEE_NAVS,
   pageTitle = "Dashboard Shopee"
 }: ShopeePerformanceDashboardPageProps) => {
-  useAuthGuard(allowedRoles)
+  useAuthGuard(allowedPermissions)
   const { getMe } = useUsers()
   const { data: meData } = useQuery({
     queryKey: ["getMe"],
@@ -135,7 +135,7 @@ export const ShopeePerformanceDashboardPage = ({
     select: (data) => data.data
   })
   const canMutateShopee = Boolean(
-    meData?.roles?.includes("admin") || meData?.roles?.includes("shopee-emp")
+    meData?.permissions?.includes("api.shopeedailyliverevenues.create-shopee-daily-live-revenue")
   )
   const [usePreviousDayKpiMode, setUsePreviousDayKpiMode] = useState(false)
 
