@@ -25,7 +25,7 @@ import { useLivestreamChannels } from "../../../hooks/useLivestreamChannels"
 import { LivestreamChannelProvider } from "../../../context/LivestreamChannelContext"
 import { ShopeeDashboard } from "../../../components/incomes/ShopeeDashboard"
 import { ShopeeIncomes } from "../../../components/incomes/ShopeeIncomes"
-import { KHO_VAN_ROLES, NAVS, NAVS_URL } from "../../../constants/navs"
+import { NAVS, NAVS_URL, STORAGE_ACCESS_PERMISSIONS } from "../../../constants/navs"
 
 export type Subtab = {
   tab: string
@@ -50,7 +50,7 @@ type StorageIncomesPageProps = {
   search: Subtab
   baseUrl?: string
   navs?: typeof NAVS
-  allowedRoles?: string[]
+  allowedPermissions?: string[]
   allowedPlatforms?: string[]
 }
 
@@ -58,10 +58,10 @@ export function StorageIncomesPage({
   search,
   baseUrl = NAVS_URL,
   navs = NAVS,
-  allowedRoles = KHO_VAN_ROLES,
+  allowedPermissions = STORAGE_ACCESS_PERMISSIONS,
   allowedPlatforms
 }: StorageIncomesPageProps) {
-  useAuthGuard(allowedRoles)
+  useAuthGuard(allowedPermissions)
   const { tab, channel } = search
   const navigate = useNavigate()
   const { searchLivestreamChannels } = useLivestreamChannels()

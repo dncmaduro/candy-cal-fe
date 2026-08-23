@@ -154,7 +154,7 @@ export const MonthGoals = () => {
         header: "",
         size: 140,
         cell: ({ row }) => (
-          <Can roles={["admin", "accounting-emp"]}>
+          <Can permissions={["api.livestreammonthgoals.update-livestream-month-goal"]}>
             <Button
               variant="light"
               color="indigo"
@@ -220,7 +220,7 @@ export const MonthGoals = () => {
               Xem KPI từng tháng trong năm
             </Text>
           </Box>
-          <Can roles={["admin", "accounting-emp"]}>
+          <Can permissions={["api.livestreammonthgoals.create-livestream-month-goal"]}>
             <Button
               leftSection={<IconPlus size={16} />}
               color="indigo"

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { Helmet } from "react-helmet-async"
 
-import { KHO_VAN_ROLES, NAVS } from "../../../constants/navs"
+import { NAVS } from "../../../constants/navs"
 import { StorageXlsxCalculatorsPage } from "../../../components/storage/StorageXlsxCalculatorsPage"
 import { AppLayout } from "../../../components/layouts/AppLayout"
 import { useAuthGuard } from "../../../hooks/useAuthGuard"
@@ -11,7 +11,7 @@ export const Route = createFileRoute("/mkt-storage/xlsx-calculators/")({
 })
 
 function RouteComponent() {
-  useAuthGuard(KHO_VAN_ROLES)
+  useAuthGuard(["api.products.cal-xlsx"])
 
   return (
     <>

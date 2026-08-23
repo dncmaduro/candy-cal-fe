@@ -436,7 +436,7 @@ export interface GetLogsRangeResponse {
 export interface GetMeResponse {
   username: string
   name: string
-  roles: string[]
+  permissions: string[]
   avatarUrl?: string
   _id: string
 }
@@ -605,7 +605,7 @@ export interface UpdateUserResponse {
 /** @interface */
 export interface AdminListUsersRequest {
   searchText?: string
-  role?: string
+  permission?: string
   status?: "all" | "active" | "inactive"
   page: number
   limit: number
@@ -617,9 +617,9 @@ export interface AdminListUsersResponse {
     _id: string
     username: string
     name: string
-    roles: string[]
     avatarUrl?: string
     active: boolean
+    permissions: string[]
   }[]
   total: number
 }
@@ -639,17 +639,50 @@ export interface UpdateUserActiveResponse {
 }
 
 /** @interface */
-export interface UpdateUserRolesRequest {
-  roles: string[]
+export interface AdminGetUserResponse {
+  _id: string
+  username: string
+  name: string
+  permissions: string[]
+  avatarUrl?: string
+  active: boolean
 }
 
 /** @interface */
-export interface UpdateUserRolesResponse {
+export interface PermissionResponse {
+  key: string
+  label: string
+  description?: string
+  module?: string
+}
+
+/** @interface */
+export interface PermissionGroupResponse {
+  key: string
+  label: string
+  permissionKeys: string[]
+  kind?: string
+}
+
+/** @interface */
+export interface ListPermissionsResponse {
+  data: PermissionResponse[]
+}
+
+/** @interface */
+export interface ListPermissionGroupsResponse {
+  data: PermissionGroupResponse[]
+}
+
+/** @interface */
+export interface UpdateUserPermissionsRequest {
+  permissions: string[]
+}
+
+/** @interface */
+export interface UpdateUserPermissionsResponse {
   message: string
-  data: {
-    _id: string
-    roles: string[]
-  }
+  data: { _id: string; permissions: string[] }
 }
 
 /** @interface */
@@ -4551,7 +4584,7 @@ export interface PublicSearchUsersRequest {
   searchText?: string
   page: number
   limit: number
-  role?: string
+  permission?: string
   status?: "all" | "active" | "inactive"
 }
 
@@ -4560,7 +4593,7 @@ export interface PublicSearchUsersResponse {
   data: {
     _id: string
     name: string
-    roles?: string[]
+    permissions?: string[]
   }[]
   total: number
 }

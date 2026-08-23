@@ -404,8 +404,7 @@ export const ShopeeCalOrders = ({ orders, allCalItems, date }: Props) => {
             Gửi yêu cầu xuất kho
           </Text>
 
-          {meData?.roles &&
-          ["admin", "accounting-emp"].some((role) => meData.roles.includes(role)) ? (
+          {meData?.permissions?.includes("api.deliveredrequests.create-delivered-request") ? (
             <Stack gap={10}>
               {!date && (
                 <DatePickerInput

@@ -22,7 +22,7 @@ import { ColumnDef } from "@tanstack/react-table"
 import { AppLayout } from "../../../components/layouts/AppLayout"
 import { CDataTable } from "../../../components/common/CDataTable"
 import { useIncomes } from "../../../hooks/useIncomes"
-import { KHO_VAN_ROLES, NAVS, NAVS_URL } from "../../../constants/navs"
+import { NAVS, NAVS_URL, STORAGE_ACCESS_PERMISSIONS } from "../../../constants/navs"
 import { useAuthGuard } from "../../../hooks/useAuthGuard"
 
 export const Route = createFileRoute("/marketing-storage/incomes/$incomeId")({
@@ -53,16 +53,16 @@ type StorageIncomeDetailPageProps = {
   incomeId: string
   baseUrl?: string
   navs?: typeof NAVS
-  allowedRoles?: string[]
+  allowedPermissions?: string[]
 }
 
 export function StorageIncomeDetailPage({
   incomeId,
   baseUrl = NAVS_URL,
   navs = NAVS,
-  allowedRoles = KHO_VAN_ROLES
+  allowedPermissions = STORAGE_ACCESS_PERMISSIONS
 }: StorageIncomeDetailPageProps) {
-  useAuthGuard(allowedRoles)
+  useAuthGuard(allowedPermissions)
   const navigate = useNavigate()
   const { getIncomesByDateRange } = useIncomes()
 

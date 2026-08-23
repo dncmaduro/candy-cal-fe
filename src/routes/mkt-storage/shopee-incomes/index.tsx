@@ -3,10 +3,7 @@ import {
   ShopeePerformanceDashboardPage,
   type ShopeeDashboardSearchState
 } from "../../../components/incomes/shopee-dashboard/ShopeePerformanceDashboardPage"
-import {
-  KHO_VAN_ROLES,
-  NAVS
-} from "../../../constants/navs"
+import { NAVS, STORAGE_ACCESS_PERMISSIONS } from "../../../constants/navs"
 import { validateShopeeDashboardSearch } from "../../../utils/shopeeDashboardSearch"
 
 export const Route = createFileRoute("/mkt-storage/shopee-incomes/")({
@@ -21,7 +18,7 @@ function RouteComponent() {
   return (
     <ShopeePerformanceDashboardPage
       search={search}
-      allowedRoles={KHO_VAN_ROLES}
+      allowedPermissions={STORAGE_ACCESS_PERMISSIONS}
       navs={NAVS}
       pageTitle="Doanh thu Shopee"
       onSearchChange={(nextSearch, replace = true) =>

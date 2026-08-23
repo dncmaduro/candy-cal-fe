@@ -30,10 +30,6 @@ import { CreateSalesRevenueDailyReportModal } from "../../../components/sales/da
 import { SalesDailyAdsModal } from "../../../components/sales/dashboard/SalesDailyAdsModal"
 import { useSalesChannels } from "../../../hooks/useSalesChannels"
 import { Can } from "../../../components/common/Can"
-import {
-  SALES_ADS_COST_REPORT_ROLES,
-  SALES_REVENUE_REPORT_ROLES
-} from "../../../constants/navs"
 export const Route = createFileRoute("/sales/dashboard/")({
   validateSearch: (search: Record<string, unknown>) => ({
     tab: search.tab === "monthly" ? "monthly" : "revenue"
@@ -232,7 +228,7 @@ function RouteComponent() {
               </Text>
             </Box>
             <Group gap="sm">
-              <Can roles={SALES_REVENUE_REPORT_ROLES}>
+              <Can permissions={["api.salesdailyreports.create-report"]}>
                 <Button
                   color="yellow"
                   h={42}
@@ -244,7 +240,7 @@ function RouteComponent() {
                   Báo cáo doanh thu
                 </Button>
               </Can>
-              <Can roles={SALES_ADS_COST_REPORT_ROLES}>
+              <Can permissions={["api.salesdailyads.upsert-ads-cost"]}>
                 <Button
                   color="orange"
                   h={42}

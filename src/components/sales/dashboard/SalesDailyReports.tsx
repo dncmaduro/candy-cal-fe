@@ -28,10 +28,6 @@ import {
 import { useSalesDailyAds } from "../../../hooks/useSalesDailyAds"
 import { useSalesDailyReports } from "../../../hooks/useSalesDailyReports"
 import { useUsers } from "../../../hooks/useUsers"
-import {
-  SALES_ADS_COST_REPORT_ROLES,
-  SALES_REVENUE_REPORT_ROLES
-} from "../../../constants/navs"
 import { Can } from "../../common/Can"
 import { CDataTable } from "../../common/CDataTable"
 import { CToast } from "../../common/CToast"
@@ -84,18 +80,10 @@ export const SalesDailyReports = () => {
     select: (data) => data.data
   })
 
-  const roles = meData?.data?.roles ?? []
-  const showChannelFilter = [
-    "admin",
-    "sales-hunter",
-    "system-emp",
-    "facebook-ads-emp"
-  ].some((role) => roles.includes(role))
-  const shouldUseMyChannel =
-    roles.includes("sales-cs") &&
-    !["admin", "sales-hunter", "system-emp"].some((role) =>
-      roles.includes(role)
-    )
+  const canReadAllActivities =
+    meData?.data?.permissions?.includes("sales.activities.read.all") ?? false
+  const showChannelFilter = canReadAllActivities
+  const shouldUseMyChannel = !canReadAllActivities
   const channelOptions = useMemo(
     () =>
       channelsData?.data.map((item) => ({
@@ -332,7 +320,7 @@ export const SalesDailyReports = () => {
               <IconMessage size={16} />
             </ActionIcon>
           </Tooltip>
-          <Can roles={["admin", "sales-hunter", "sales-cs", "system-emp"]}>
+          <Can permissions={["api.salesdailyreports.delete-report"]}>
             <Tooltip label="Xóa báo cáo" withArrow>
               <ActionIcon
                 variant="light"
@@ -397,7 +385,7 @@ export const SalesDailyReports = () => {
       header: "Thao tác",
       enableSorting: false,
       cell: ({ row }) => (
-        <Can roles={SALES_ADS_COST_REPORT_ROLES}>
+        <Can permissions={["api.salesdailyads.upsert-ads-cost"]}>
           <Tooltip label="Sửa chi phí ads" withArrow>
             <ActionIcon
               variant="light"
@@ -501,7 +489,7 @@ export const SalesDailyReports = () => {
             {...paginationProps(reports.length)}
             extraFilters={filters(true)}
             extraActions={
-              <Can roles={SALES_REVENUE_REPORT_ROLES}>
+              <Can permissions={["api.salesdailyreports.create-report"]}>
                 <Button
                   color="yellow"
                   leftSection={<IconReportAnalytics size={16} />}
@@ -527,7 +515,7 @@ export const SalesDailyReports = () => {
             {...paginationProps(ads.length)}
             extraFilters={filters(false)}
             extraActions={
-              <Can roles={SALES_ADS_COST_REPORT_ROLES}>
+              <Can permissions={["api.salesdailyads.upsert-ads-cost"]}>
                 <Button
                   color="orange"
                   leftSection={<IconReportAnalytics size={16} />}

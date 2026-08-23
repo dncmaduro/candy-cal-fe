@@ -68,16 +68,7 @@ function RouteComponent() {
     select: (data) => data.data
   })
 
-  const isAdmin = useMemo(() => {
-    return me?.roles?.some((role) =>
-      [
-        "admin",
-        "system-emp",
-        "livestream-leader",
-        "livestream-accounting"
-      ].includes(role)
-    )
-  }, [me])
+  const isAdmin = me?.permissions?.includes("api.livestreamcore.get-livestreams-by-date-range") ?? false
 
   useEffect(() => {
     setViewMode(isAdmin ? "calendar" : "salary")
@@ -228,8 +219,7 @@ function RouteComponent() {
   // Handle opening report modal
   const handleOpenReport = (livestreamId: string, snapshot: any) => {
     const isAdminOrLeader =
-      !!me?.roles?.includes("admin") ||
-      !!me?.roles?.includes("livestream-leader")
+      me?.permissions?.includes("api.livestreamcore.delete-snapshot") ?? false
     const livestreamDate = livestreamData?.find(
       (item) => item._id === livestreamId
     )?.date
@@ -339,7 +329,7 @@ function RouteComponent() {
       publicSearchUser({
         page: 1,
         limit: 100,
-        role: "livestream-emp",
+        permission: "api.livestreamcore.report-snapshot",
         status: "active"
       }),
     select: (data) => data.data.data
@@ -351,7 +341,7 @@ function RouteComponent() {
       publicSearchUser({
         page: 1,
         limit: 100,
-        role: "livestream-leader",
+        permission: "api.livestreamcore.create-livestream",
         status: "active"
       }),
     select: (data) => data.data.data
@@ -730,7 +720,7 @@ function RouteComponent() {
   return (
     <LivestreamLayout>
       {/* Salary Configuration Section */}
-      <Can roles={["admin", "livestream-leader"]}>
+      <Can permissions={["api.livestreamcore.get-livestreams-by-date-range"]}>
         <Box
           mt={40}
           mx="auto"
@@ -1026,15 +1016,7 @@ function RouteComponent() {
               </Center>
             ) : (
               <Stack gap="xl">
-                <Can
-                  roles={[
-                    "admin",
-                    "livestream-leader",
-                    "livestream-emp",
-                    "livestream-accounting",
-                    "system-emp"
-                  ]}
-                >
+                <Can permissions={["api.livestreamcore.get-livestreams-by-date-range"]}>
                   <LivestreamCalendarRegion
                     role="host"
                     weekDays={weekDays}
@@ -1058,15 +1040,7 @@ function RouteComponent() {
                   />
                 </Can>
 
-                <Can
-                  roles={[
-                    "admin",
-                    "livestream-leader",
-                    "livestream-ast",
-                    "livestream-accounting",
-                    "system-emp"
-                  ]}
-                >
+                <Can permissions={["api.livestreamcore.get-livestreams-by-date-range"]}>
                   <LivestreamCalendarRegion
                     role="assistant"
                     weekDays={weekDays}

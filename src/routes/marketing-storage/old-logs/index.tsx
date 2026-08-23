@@ -3,7 +3,7 @@ import { useAuthGuard } from "../../../hooks/useAuthGuard"
 import { AppLayout } from "../../../components/layouts/AppLayout"
 import { ScrollArea, Tabs } from "@mantine/core"
 import { Helmet } from "react-helmet-async"
-import { KHO_VAN_ROLES, NAVS, NAVS_URL } from "../../../constants/navs"
+import { NAVS, NAVS_URL, STORAGE_ACCESS_PERMISSIONS } from "../../../constants/navs"
 import { SessionLogs } from "../../../components/logs/SessionLogs"
 import { useEffect } from "react"
 import { DailyLogs } from "../../../components/logs/DailyLogs"
@@ -29,16 +29,16 @@ type OldLogsPageProps = {
   tab: string
   baseUrl?: string
   navs?: typeof NAVS
-  allowedRoles?: string[]
+  allowedPermissions?: string[]
 }
 
 export function OldLogsPage({
   tab,
   baseUrl = NAVS_URL,
   navs = NAVS,
-  allowedRoles = KHO_VAN_ROLES
+  allowedPermissions = STORAGE_ACCESS_PERMISSIONS
 }: OldLogsPageProps) {
-  useAuthGuard(allowedRoles)
+  useAuthGuard(allowedPermissions)
   const navigate = useNavigate()
 
   const tabOptions = [

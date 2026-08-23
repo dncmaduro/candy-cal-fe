@@ -30,7 +30,6 @@ import { Can } from "../common/Can"
 import { CToast } from "../common/CToast"
 
 import { CDataTable } from "../common/CDataTable"
-import { TIKTOKSHOP_EDITOR_ROLES } from "../../constants/navs"
 import { TiktokXlsxCalculator } from "./TiktokXlsxCalculator"
 
 type ProductRow = {
@@ -128,7 +127,7 @@ export const ProductsV2 = () => {
             <Group gap={8} wrap="nowrap">
               {!showDeleted ? (
                 <>
-                  <Can roles={TIKTOKSHOP_EDITOR_ROLES}>
+                  <Can permissions={["api.products.update-product"]}>
                     <Button
                       variant="light"
                       color="indigo"
@@ -158,7 +157,7 @@ export const ProductsV2 = () => {
                     </Button>
                   </Can>
 
-                  <Can roles={["admin"]}>
+                  <Can permissions={["api.products.delete-product"]}>
                     <Button
                       variant="light"
                       color="red"
@@ -176,7 +175,7 @@ export const ProductsV2 = () => {
                   </Can>
                 </>
               ) : (
-                <Can roles={["admin"]}>
+                <Can permissions={["api.products.restore-product"]}>
                   <Button
                     variant="outline"
                     color="green"
@@ -243,7 +242,7 @@ export const ProductsV2 = () => {
     <Group gap={10} align="end" wrap="wrap">
       {!showDeleted && (
         <Tooltip label="Thêm sản phẩm mới" withArrow>
-          <Can roles={TIKTOKSHOP_EDITOR_ROLES}>
+          <Can permissions={["api.products.create-product"]}>
             <Button
               color="indigo"
               leftSection={<IconPlus size={18} />}

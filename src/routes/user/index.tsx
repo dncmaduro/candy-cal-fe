@@ -67,18 +67,7 @@ function RouteComponent() {
     }
   }
 
-  const roleText = meData?.roles?.includes("admin")
-    ? "Quản trị viên"
-    : meData?.roles?.includes("tiktokshop-emp") ||
-        meData?.roles?.includes("order-emp")
-      ? "Nhân viên TikTok Shop"
-      : meData?.roles?.includes("shopee-emp")
-        ? "Nhân viên Shopee"
-      : meData?.roles?.includes("system-emp")
-        ? "Nhân viên hệ thống"
-        : meData?.roles?.includes("accounting-emp")
-          ? "Nhân viên kế toán"
-          : meData?.roles?.[0] || ""
+  const permissionText = `${meData?.permissions?.length ?? 0} quyền đã cấp`
 
   return (
     <AppLayout>
@@ -132,7 +121,7 @@ function RouteComponent() {
             {meData?.name}
           </Text>
           <Text c="dimmed" fz="sm">
-            {roleText}
+            {permissionText}
           </Text>
         </Flex>
 

@@ -212,17 +212,18 @@ function RouteComponent() {
   const leadCase = leadCaseData
   const calls = Array.isArray(leadCase?.calls) ? leadCase.calls : []
   const me = meData?.data
-  const isAdmin = me?.roles?.includes("admin") ?? false
-  const isSalesHunter = me?.roles?.includes("sales-hunter") ?? false
-  const isSalesCs = me?.roles?.includes("sales-cs") ?? false
-  const canLogCalls = me?.roles?.includes("sales-cs") ?? false
+  const permissions = me?.permissions ?? []
+  const canManageAll = permissions.includes("sales.funnels.manage.all")
+  const canLogCalls = permissions.includes("api.salesleads.call")
   const isResponsibleUser = funnel?.user?._id === me?._id
 
-  const canPerformActions = isAdmin || isResponsibleUser
+  const canPerformActions =
+    isResponsibleUser || permissions.includes("api.salesfunnel.update-info")
   const canTransfer =
     !!leadCase?._id &&
     !funnel?.deletedAt &&
-    (isSalesHunter || isAdmin || me?.roles?.includes("sales-leader") || (isSalesCs && isResponsibleUser))
+    permissions.includes("api.salesleads.transfer") &&
+    (canManageAll || isResponsibleUser)
 
   const goBackToFunnelList = () => {
     if (window.history.length > 1) {
@@ -644,7 +645,7 @@ function RouteComponent() {
                   </>
                 )}
               </Group>}
-              {canPerformActions && (isAdmin || isSalesHunter) && (
+              {permissions.includes("api.salesfunnel.soft-delete") && (
                 <Button
                   variant="light"
                   color="red"

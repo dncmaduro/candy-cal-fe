@@ -79,9 +79,9 @@ function LeadDetailPage() {
     queryFn: getMe,
     select: (response) => response.data
   })
-  const roles = meQuery.data?.roles || []
-  const canCare = roles.includes("sales-cs") || roles.includes("admin") || roles.includes("sales-leader")
-  const canTransfer = canCare || roles.includes("sales-hunter")
+  const permissions = meQuery.data?.permissions || []
+  const canCare = permissions.includes("api.salesleads.call")
+  const canTransfer = permissions.includes("api.salesleads.transfer")
   const detailQuery = useQuery({
     queryKey: ["salesLeads", "detail", leadId],
     queryFn: () => api.detail(leadId),

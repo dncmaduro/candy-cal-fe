@@ -21,7 +21,7 @@ export const Route = createFileRoute("/admin/tasks/")({
 })
 
 function RouteComponent() {
-  useAuthGuard(["admin"])
+  useAuthGuard(["api.dailytasks.list-definitions"])
   const { tab } = Route.useSearch()
   const navigate = useNavigate()
 

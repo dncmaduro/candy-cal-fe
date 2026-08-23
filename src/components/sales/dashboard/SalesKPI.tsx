@@ -140,7 +140,7 @@ export const SalesKPI = () => {
       id: "actions",
       header: "",
       cell: ({ row }) => (
-        <Can roles={["admin", "sales-hunter", "sales-cs", "system-emp"]}>
+        <Can permissions={["api.salesdailyreports.create-or-update-month-kpi"]}>
           <Tooltip label="Chỉnh sửa">
             <ActionIcon
               variant="light"
@@ -275,7 +275,7 @@ export const SalesKPI = () => {
             </>
           }
           extraActions={
-            <Can roles={["admin", "sales-hunter", "sales-cs", "system-emp"]}>
+            <Can permissions={["api.salesdailyreports.create-or-update-month-kpi"]}>
               <Button
                 leftSection={<IconPlus size={16} />}
                 onClick={() => openKPIModal()}

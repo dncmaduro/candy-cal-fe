@@ -26,7 +26,6 @@ import { ShopeeProductItems } from "./ShopeeProductItems"
 import { ShopeeProductModal } from "./ShopeeProductModal"
 import { CToast } from "../common/CToast"
 import { CDataTable } from "../common/CDataTable"
-import { SHOPEE_EDITOR_ROLES } from "../../constants/navs"
 import { ShopeeXlsxCalculator } from "./ShopeeXlsxCalculator"
 import { useUsers } from "../../hooks/useUsers"
 
@@ -44,7 +43,7 @@ export const ShopeeProducts = () => {
     select: (data) => data.data
   })
   const canMutateShopeeSku = Boolean(
-    meData?.roles?.some((role) => SHOPEE_EDITOR_ROLES.includes(role))
+    meData?.permissions?.includes("api.shopeeproducts.create-shopee-product")
   )
   const { searchShopeeProducts, deleteShopeeProduct } = useShopeeProducts()
   const [searchText, setSearchText] = useState<string>("")

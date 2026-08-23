@@ -105,7 +105,7 @@ function RouteComponent() {
       id: "actions",
       header: "Thao tác",
       cell: ({ row }) => (
-        <Can roles={["admin", "sales-hunter"]}>
+        <Can permissions={["api.salescustomerranks.update-rank"]}>
           <Group gap="xs">
             <ActionIcon
               variant="light"
@@ -154,7 +154,7 @@ function RouteComponent() {
                 Quản lý các hạng khách hàng theo doanh thu
               </p>
             </div>
-            <Can roles={["admin", "sales-hunter"]}>
+            <Can permissions={["api.salescustomerranks.create-rank"]}>
               <Button
                 leftSection={<IconPlus size={18} />}
                 onClick={() => openRankModal()}

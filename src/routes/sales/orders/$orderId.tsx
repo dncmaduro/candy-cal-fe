@@ -796,7 +796,7 @@ function RouteComponent() {
                 </Text>
               </div>
             </Group>
-            <Can roles={["sales-hunter", "sales-cs"]}>
+            <Can permissions={["api.salesorders.get-order-by-id"]}>
               <Group>
                 <Button
                   color="gray"
@@ -1157,7 +1157,7 @@ function RouteComponent() {
                   pageSizeOptions={[10, 20, 50]}
                   initialPageSize={10}
                   extraActions={
-                    <Can roles={["sales-hunter", "sales-cs"]}>
+                    <Can permissions={["api.salesorders.update-order-items"]}>
                       <Group>
                         <Button
                           onClick={handleSyncItems}

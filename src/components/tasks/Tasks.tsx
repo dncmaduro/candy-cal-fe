@@ -67,7 +67,7 @@ export const Tasks = () => {
         <Text fw={700} fz={20}>
           Định nghĩa Tasks
         </Text>
-        <Can roles={["admin"]}>
+        <Can permissions={["api.dailytasks.generate"]}>
           <Group>
             <Button
               leftSection={<IconPlus size={16} />}
@@ -194,7 +194,7 @@ export const Tasks = () => {
                           )}
                         </Table.Td>
                         <Table.Td style={{ width: 120 }}>
-                          <Can roles={["admin"]}>
+                          <Can permissions={["api.dailytasks.update-definition"]}>
                             <Group gap={4}>
                               <ActionIcon
                                 variant="subtle"

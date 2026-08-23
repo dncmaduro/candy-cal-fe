@@ -163,7 +163,7 @@ function RouteComponent() {
       publicSearchUser({
         page: 1,
         limit: 100,
-        role: "livestream-emp",
+        permission: "api.livestreamcore.report-snapshot",
         status: "active"
       }),
     select: (data) => data.data.data
@@ -175,22 +175,11 @@ function RouteComponent() {
       publicSearchUser({
         page: 1,
         limit: 100,
-        role: "livestream-ast",
+        permission: "api.livestreamcore.update-snapshot-alt",
         status: "active"
       }),
     select: (data) => data.data.data
   })
-
-  // const { data: livestreamLeaderData } = useQuery({
-  //   queryKey: ["livestreamLeaders"],
-  //   queryFn: () =>
-  //     publicSearchUser({
-  //       page: 1,
-  //       limit: 100,
-  //       role: "livestream-leader"
-  //     }),
-  //   select: (data) => data.data.data
-  // })
 
   const { mutate: reportLivestreamMutation, isPending: isReporting } =
     useMutation({
@@ -446,8 +435,7 @@ function RouteComponent() {
   // Handle opening report modal
   const handleOpenReport = (livestreamId: string, snapshot: any) => {
     const isAdminOrLeader =
-      !!me?.roles?.includes("admin") ||
-      !!me?.roles?.includes("livestream-leader")
+      me?.permissions?.includes("api.livestreamcore.delete-snapshot") ?? false
 
     const livestreamDate = livestreamData?.find(
       (item) => item._id === livestreamId
@@ -546,16 +534,7 @@ function RouteComponent() {
     // Render 2 separate tables for Host and Assistant
     return (
       <Stack gap="xl">
-        <Can
-          roles={[
-            "admin",
-            "livestream-leader",
-            "livestream-emp",
-            "system-emp",
-            "livestream-ast",
-            "livestream-accounting"
-          ]}
-        >
+        <Can permissions={["api.livestreamcore.get-livestreams-by-date-range"]}>
           <SimpleGrid cols={{ base: 1, lg: 1 }} spacing="lg">
             {/* <LivestreamCalendarTable
               role="host"
@@ -595,16 +574,7 @@ function RouteComponent() {
           </SimpleGrid>
         </Can>
 
-        <Can
-          roles={[
-            "admin",
-            "livestream-leader",
-            "livestream-ast",
-            "system-emp",
-            "livestream-accounting",
-            "livestream-emp"
-          ]}
-        >
+        <Can permissions={["api.livestreamcore.get-livestreams-by-date-range"]}>
           <SimpleGrid cols={{ base: 1, lg: 1 }} spacing="lg">
             {/* <LivestreamCalendarTable
               role="assistant"
@@ -747,7 +717,7 @@ function RouteComponent() {
                   </Group>
                 </Stack>
 
-                <Can roles={["admin", "livestream-leader"]}>
+                <Can permissions={["api.livestreamcore.sync-snapshots"]}>
                   <Group gap="xs" style={{ flexShrink: 0 }}>
                     <Tooltip
                       label={

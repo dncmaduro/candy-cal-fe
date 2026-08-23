@@ -27,7 +27,7 @@ import { DeliveredRequestModal } from "../../../components/delivered-requests/De
 import { Helmet } from "react-helmet-async"
 import { Can } from "../../../components/common/Can"
 import { CDataTable } from "../../../components/common/CDataTable"
-import { KHO_VAN_ROLES, NAVS } from "../../../constants/navs"
+import { NAVS, STORAGE_ACCESS_PERMISSIONS } from "../../../constants/navs"
 
 import type { ColumnDef } from "@tanstack/react-table"
 
@@ -63,14 +63,14 @@ const endOfDayISO = (d: Date) => {
 
 type DeliveredRequestsPageProps = {
   navs?: typeof NAVS
-  allowedRoles?: string[]
+  allowedPermissions?: string[]
 }
 
 export function DeliveredRequestsPage({
   navs = NAVS,
-  allowedRoles = KHO_VAN_ROLES
+  allowedPermissions = STORAGE_ACCESS_PERMISSIONS
 }: DeliveredRequestsPageProps) {
-  useAuthGuard(allowedRoles)
+  useAuthGuard(allowedPermissions)
 
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(10)
@@ -305,7 +305,7 @@ export function DeliveredRequestsPage({
                 Xem
               </Button>
 
-              <Can roles={["admin", "accounting-emp"]}>
+              <Can permissions={["api.deliveredrequests.create-delivered-request"]}>
                 {!req.accepted ? (
                   <Button
                     size="xs"
