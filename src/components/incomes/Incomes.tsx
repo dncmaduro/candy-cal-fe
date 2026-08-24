@@ -551,7 +551,7 @@ export const Incomes = () => {
                   Thêm chi phí ads
                 </Button>
               </Can>
-              <Can permissions={["api.income.delete-income-by-date"]}>
+              <Can permissions={["api.incomes.delete-income-by-date"]}>
                 <Button
                   leftSection={<IconX size={16} />}
                   color="red"
@@ -569,7 +569,7 @@ export const Incomes = () => {
                   Xoá doanh thu
                 </Button>
               </Can>
-              <Can permissions={["api.income.insert-income"]}>
+              <Can permissions={["api.incomes.insert-income"]}>
                 <Button
                   onClick={openIncomeModal}
                   size="sm"
