@@ -85,7 +85,10 @@ export const CreateSalesOrderModal = ({
     formState: { errors }
   } = useFormContext<CreateSalesOrderFormData>()
 
-  const watchIsNewCustomer = watch("isNewCustomer")
+  const watchIsNewCustomer =
+    useWatch({ control, name: "isNewCustomer" }) ?? false
+  const watchSalesFunnelId =
+    useWatch({ control, name: "salesFunnelId" }) ?? ""
   const watchItems = useWatch({
   control,
   name: "items"
@@ -426,7 +429,7 @@ export const CreateSalesOrderModal = ({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      {!watch("salesFunnelId") && (
+      {!watchSalesFunnelId && (
         <Controller
           name="isNewCustomer"
           control={control}
