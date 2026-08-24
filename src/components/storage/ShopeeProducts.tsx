@@ -42,8 +42,14 @@ export const ShopeeProducts = () => {
     queryFn: getMe,
     select: (data) => data.data
   })
-  const canMutateShopeeSku = Boolean(
+  const canCreateShopeeSku = Boolean(
     meData?.permissions?.includes("api.shopeeproducts.create-shopee-product")
+  )
+  const canUpdateShopeeSku = Boolean(
+    meData?.permissions?.includes("api.shopeeproducts.update-shopee-product")
+  )
+  const canDeleteShopeeSku = Boolean(
+    meData?.permissions?.includes("api.shopeeproducts.delete-shopee-product")
   )
   const { searchShopeeProducts, deleteShopeeProduct } = useShopeeProducts()
   const [searchText, setSearchText] = useState<string>("")
@@ -142,7 +148,7 @@ export const ShopeeProducts = () => {
             <Group gap={8} wrap="nowrap">
               <Tooltip
                 label={
-                  canMutateShopeeSku
+                  canUpdateShopeeSku
                     ? "Chỉnh sửa SKU"
                     : "Bạn chỉ có quyền xem dữ liệu Shopee"
                 }
@@ -155,7 +161,7 @@ export const ShopeeProducts = () => {
                   px={14}
                   leftSection={<IconEdit size={14} />}
                   onClick={() => {
-                    if (!canMutateShopeeSku) return
+                    if (!canUpdateShopeeSku) return
                     modals.open({
                       title: (
                         <Text fw={700} fz="md">
@@ -168,7 +174,7 @@ export const ShopeeProducts = () => {
                       size: "lg"
                     })
                   }}
-                  disabled={!canMutateShopeeSku}
+                  disabled={!canUpdateShopeeSku}
                   style={{ fontWeight: 500 }}
                 >
                   Chỉnh sửa
@@ -177,7 +183,7 @@ export const ShopeeProducts = () => {
 
               <Tooltip
                 label={
-                  canMutateShopeeSku
+                  canDeleteShopeeSku
                     ? "Xóa SKU"
                     : "Bạn chỉ có quyền xem dữ liệu Shopee"
                 }
@@ -189,11 +195,11 @@ export const ShopeeProducts = () => {
                   radius="xl"
                   px={14}
                   onClick={() => {
-                    if (!canMutateShopeeSku) return
+                    if (!canDeleteShopeeSku) return
                     handleDeleteProduct(product._id, product.name)
                   }}
                   leftSection={<IconTrash size={14} />}
-                  disabled={!canMutateShopeeSku}
+                  disabled={!canDeleteShopeeSku}
                   style={{ fontWeight: 500 }}
                 >
                   Xóa
@@ -204,7 +210,13 @@ export const ShopeeProducts = () => {
         }
       }
     ],
-    [handleDeleteProduct, refetch, showDeleted]
+    [
+      canDeleteShopeeSku,
+      canUpdateShopeeSku,
+      handleDeleteProduct,
+      refetch,
+      showDeleted
+    ]
   )
 
   const extraFilters = (
@@ -257,7 +269,7 @@ export const ShopeeProducts = () => {
             size="sm"
             px={14}
             onClick={() => {
-              if (!canMutateShopeeSku) return
+              if (!canCreateShopeeSku) return
               modals.open({
                 title: (
                   <Text fw={700} fz="md">
@@ -268,7 +280,7 @@ export const ShopeeProducts = () => {
                 size: "lg"
               })
             }}
-            disabled={!canMutateShopeeSku}
+            disabled={!canCreateShopeeSku}
             style={{ fontWeight: 600, letterSpacing: 0.1 }}
           >
             Thêm SKU

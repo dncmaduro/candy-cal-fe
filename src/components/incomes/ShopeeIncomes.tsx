@@ -344,7 +344,7 @@ export const ShopeeIncomes = () => {
           }
           extraActions={
             <>
-              <Can permissions={["api.shopeeincome.upload-income-file"]}>
+              <Can permissions={["api.shopeeincomes.upload-income-file"]}>
                 <FileButton
                   onChange={handleFileSelect}
                   accept=".xlsx,.xls"

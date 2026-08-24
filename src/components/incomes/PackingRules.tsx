@@ -111,7 +111,7 @@ export const PackingRules = () => {
           )
 
           return (
-            <Can permissions={["api.packingrules.update-packing-rule"]}>
+            <Can permissions={["api.packingrules.update-rule"]}>
               <Button
                 variant="light"
                 color="indigo"
@@ -163,7 +163,7 @@ export const PackingRules = () => {
               Quản lý các quy cách đóng hàng để sử dụng trong đơn hàng
             </Text>
           </Box>
-          <Can permissions={["api.packingrules.create-packing-rule"]}>
+          <Can permissions={["api.packingrules.create-rule"]}>
             <Button
               radius="xl"
               size="md"
