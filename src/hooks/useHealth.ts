@@ -1,5 +1,6 @@
 import { callApi } from "./axios"
 import { HealthLiveResponse, HealthReadyResponse } from "./models"
+import { useUserStore } from "../store/userStore"
 
 export const HEALTH_LIVE_PATH = "/v1"
 export const HEALTH_READY_PATH = "/v1/provinces"
@@ -11,6 +12,8 @@ const getBackendUrls = () =>
     .filter(Boolean) ?? []
 
 export const useHealth = () => {
+  const { accessToken } = useUserStore()
+
   const getHealthLive = async (customUrl?: string) => {
     const response = await callApi<never, string>({
       path: HEALTH_LIVE_PATH,
@@ -30,7 +33,8 @@ export const useHealth = () => {
     return callApi<never, HealthReadyResponse>({
       path: HEALTH_READY_PATH,
       method: "GET",
-      customUrl
+      customUrl,
+      token: accessToken
     })
   }
 
