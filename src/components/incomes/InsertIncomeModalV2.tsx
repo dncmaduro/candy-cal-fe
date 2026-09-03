@@ -13,7 +13,6 @@ import {
   Select
 } from "@mantine/core"
 import { Dropzone, FileWithPath } from "@mantine/dropzone"
-import { DatePickerInput } from "@mantine/dates"
 import { useQuery } from "@tanstack/react-query"
 import { useLivestreamChannels } from "../../hooks/useLivestreamChannels"
 import { CToast } from "../common/CToast"
@@ -38,7 +37,6 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
   const { searchLivestreamChannels } = useLivestreamChannels()
   const activeTask = useIncomeImportTaskStore((state) => state.task)
   const [updateMode, setUpdateMode] = useState<"full" | "status-only">("full")
-  const [date, setDate] = useState<Date | null>(null)
   const [channel, setChannel] = useState<string | null>(null)
   const [files, setFiles] = useState<Record<keyof typeof LABELS, FileState>>({
     totalIncome: { file: null },
@@ -61,12 +59,12 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
   const handleInsertIncomes = () => {
     const missingSourceSplit = updateMode === "full" && !files.sourceSplit.file
 
-    if (!date || !channel || !files.totalIncome.file || missingSourceSplit) {
+    if (!channel || !files.totalIncome.file || missingSourceSplit) {
       CToast.error({
         title:
           updateMode === "status-only"
-            ? "Vui lòng chọn ngày, kênh và file tổng đơn"
-            : "Vui lòng chọn ngày, kênh và đủ 2 file"
+            ? "Vui lòng chọn kênh và file tổng đơn"
+            : "Vui lòng chọn kênh và đủ 2 file"
       })
       return
     }
@@ -74,7 +72,6 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
     const started = startIncomeImportTask({
       totalIncomeFile: files.totalIncome.file,
       affiliateFile: files.sourceSplit.file || undefined,
-      date,
       channel,
       updateMode,
       onComplete: refetch
@@ -90,7 +87,6 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
   }
 
   const disabledInsertIncomes =
-    !date ||
     !channel ||
     !files.totalIncome.file ||
     (updateMode === "full" && !files.sourceSplit.file) ||
@@ -154,13 +150,13 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
   return (
     <Stack gap="md" p="sm">
       <Text size="xl" fw={700}>
-        Thêm doanh thu theo ngày
+        Thêm doanh thu từ file
       </Text>
       <Alert title="Lưu ý" color="yellow" variant="light">
         <Text size="sm">
           {updateMode === "status-only"
-            ? "Chế độ này chỉ cập nhật trạng thái hoàn/hủy từ file tổng đơn, không xóa và import lại doanh thu."
-            : "Sau khi tải file lên, hệ thống sẽ chạy ngầm việc thêm doanh thu, vui lòng chờ thông báo của hệ thống và kiểm tra. Trong thời gian đó, bạn vẫn có thể đóng cửa sổ này và làm việc khác."}
+            ? "Chế độ này chỉ cập nhật trạng thái hoàn/hủy của các đơn cũ từ file tổng đơn, không xóa và import lại doanh thu."
+            : "Hệ thống tự nhận diện ngày tạo đơn từ file TikTok Shop. Sau khi tải file lên, hệ thống sẽ chạy ngầm; bạn có thể đóng cửa sổ và tiếp tục làm việc khác."}
         </Text>
       </Alert>
 
@@ -174,19 +170,6 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
       />
 
       <Group align="flex-end" gap={12} w={"100%"}>
-        <DatePickerInput
-          label="Chọn ngày"
-          size="md"
-          placeholder="Chọn ngày"
-          value={date}
-          onChange={setDate}
-          maxDate={new Date()}
-          withAsterisk
-          className="flex-1"
-          valueFormat="DD/MM/YYYY"
-          disabled={taskRunning}
-        />
-
         <Select
           label="Chọn kênh Tiktokshop"
           size="md"
@@ -203,7 +186,7 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
           }
           searchable
           withAsterisk
-          className="flex-1"
+          className="w-full"
           disabled={taskRunning}
         />
       </Group>
