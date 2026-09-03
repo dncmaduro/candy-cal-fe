@@ -13,7 +13,6 @@ type IncomeImportMode = "full" | "status-only" | "base-only" | "affiliate-only"
 interface StartIncomeImportTaskInput {
   totalIncomeFile: File
   affiliateFile?: File
-  date: Date
   channel: string
   updateMode: "full" | "status-only"
   onComplete?: () => void
@@ -74,7 +73,6 @@ const splitAffiliateFile = async (file: File): Promise<File[]> => {
 const uploadChunk = async (
   files: File[],
   req: {
-    date: Date
     channel: string
     updateMode: IncomeImportMode
     chunkIndex?: number
@@ -131,7 +129,6 @@ const runIncomeImportTask = async (
       })
 
       await uploadChunk([input.totalIncomeFile], {
-        date: input.date,
         channel: input.channel,
         updateMode: "status-only",
         chunkIndex: 0,
@@ -152,7 +149,6 @@ const runIncomeImportTask = async (
 
       updateTask({ currentChunk: 1 })
       await uploadChunk([input.totalIncomeFile], {
-        date: input.date,
         channel: input.channel,
         updateMode: "base-only",
         chunkIndex: 0,
@@ -163,7 +159,6 @@ const runIncomeImportTask = async (
         updateTask({ currentChunk: index + 2 })
 
         await uploadChunk([affiliateChunks[index]], {
-          date: input.date,
           channel: input.channel,
           updateMode: "affiliate-only",
           chunkIndex: index + 1,
