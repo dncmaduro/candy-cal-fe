@@ -331,7 +331,7 @@ export const Incomes = () => {
     modals.closeAll()
     modals.open({
       id: "income-v2",
-      title: <b>Thêm doanh thu theo ngày</b>,
+      title: <b>Thêm doanh thu từ file</b>,
       children: <InsertIncomeModalV2 refetch={refetch} />,
       size: "xl"
     })
@@ -569,7 +569,9 @@ export const Incomes = () => {
                   Xoá doanh thu
                 </Button>
               </Can>
-              <Can permissions={["api.incomes.insert-income"]}>
+              <Can
+                permissions={["api.incomes.insert-and-update-affiliate-type"]}
+              >
                 <Button
                   onClick={openIncomeModal}
                   size="sm"

@@ -2230,9 +2230,10 @@ export interface GetPreviousDailyAdsBefore4pmResponse {
 
 /** @interface */
 export interface InsertIncomeAndUpdateSourceRequest {
-  date: Date
+  /** Optional legacy field; TikTok order dates are now read from the uploaded file. */
+  date?: Date
   channel: string
-  updateMode?: "full" | "status-only"
+  updateMode?: "full" | "status-only" | "base-only" | "affiliate-only"
 }
 
 /** @interface */

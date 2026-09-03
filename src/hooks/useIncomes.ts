@@ -29,7 +29,11 @@ import {
   GetTotalCountIncomeByMonthResponse
 } from "./models"
 
-type IncomeImportMode = "full" | "status-only" | "affiliate-only"
+type IncomeImportMode =
+  | "full"
+  | "status-only"
+  | "base-only"
+  | "affiliate-only"
 
 type IncomeImportRequest = Omit<
   InsertIncomeAndUpdateSourceRequest,
