@@ -24,7 +24,8 @@ import {
   IconFileUpload,
   IconHistory,
   IconChecklist,
-  IconTrash
+  IconTrash,
+  IconDownload
 } from "@tabler/icons-react"
 import { SalesLayout } from "../../../components/layouts/SalesLayout"
 import { Can } from "../../../components/common/Can"
@@ -149,7 +150,7 @@ const RANK_COLORS: Record<string, string> = {
 function RouteComponent() {
   const navigate = useNavigate()
   const search = Route.useSearch()
-  const { searchFunnel, deleteFunnel } = useSalesFunnel()
+  const { searchFunnel, exportFunnelsToXlsx, deleteFunnel } = useSalesFunnel()
   const { getProvinces } = useProvinces()
   const { getMe } = useUsers()
   const { searchSalesChannels } = useSalesChannels()
@@ -306,6 +307,62 @@ function RouteComponent() {
         />
       ),
       size: "md"
+    })
+  }
+
+  const exportMutation = useMutation({
+    mutationFn: exportFunnelsToXlsx,
+    onSuccess: (response) => {
+      const blob =
+        response.data instanceof Blob
+          ? response.data
+          : new Blob([response.data], {
+              type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = `funnels-${new Date().getTime()}.xlsx`
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      URL.revokeObjectURL(url)
+
+      notifications.show({
+        title: "Thành công",
+        message: "Xuất file Excel thành công",
+        color: "green"
+      })
+    },
+    onError: (error: any) => {
+      notifications.show({
+        title: "Lỗi",
+        message:
+          error?.response?.data?.message ||
+          "Có lỗi xảy ra khi xuất file Excel",
+        color: "red"
+      })
+    }
+  })
+
+  const handleExportFunnels = () => {
+    exportMutation.mutate({
+      searchText: searchText || undefined,
+      stage: stageFilter
+        ? (stageFilter as "lead" | "contacted" | "customer" | "closed")
+        : undefined,
+      province: provinceFilter || undefined,
+      channel: channelFilter || undefined,
+      rank: rankFilter
+        ? (rankFilter as "gold" | "silver" | "bronze")
+        : undefined,
+      noActivityDays: noActivityDaysFilter
+        ? Number(noActivityDaysFilter)
+        : undefined,
+      funnelSource: funnelSourceFilter,
+      deleted: showDeleted,
+      sortBy,
+      sortOrder
     })
   }
 
@@ -934,8 +991,19 @@ function RouteComponent() {
               </>
             }
             extraActions={
-              <Can permissions={["api.salesfunnel.create-lead"]}>
-                <Group gap="xs">
+              <Group gap="xs">
+                <Button
+                  onClick={handleExportFunnels}
+                  leftSection={<IconDownload size={16} />}
+                  size="sm"
+                  radius="md"
+                  variant="light"
+                  color="green"
+                  loading={exportMutation.isPending}
+                >
+                  Xuất Excel
+                </Button>
+                <Can permissions={["api.salesfunnel.create-lead"]}>
                   <Button
                     onClick={handleUploadFunnels}
                     leftSection={<IconFileUpload size={16} />}
@@ -953,8 +1021,8 @@ function RouteComponent() {
                   >
                     Tạo Lead
                   </Button>
-                </Group>
-              </Can>
+                </Can>
+              </Group>
             }
           />
         </Box>
