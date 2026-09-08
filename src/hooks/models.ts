@@ -3872,6 +3872,10 @@ export interface SearchFunnelRequest {
 }
 
 /** @interface */
+export interface ExportFunnelsRequest
+  extends Omit<SearchFunnelRequest, "page" | "limit"> {}
+
+/** @interface */
 export interface SearchFunnelResponse {
   data: {
     _id: string
