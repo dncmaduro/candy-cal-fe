@@ -6,6 +6,7 @@ import {
   CreateLeadRequest,
   CreateLeadResponse,
   DeleteFunnelRequest,
+  ExportFunnelsRequest,
   GetFunnelByIdRequest,
   GetFunnelByIdResponse,
   GetFunnelByUserRequest,
@@ -81,6 +82,24 @@ export const useSalesFunnel = () => {
       path: `/v1/salesfunnel?${query}`,
       method: "GET",
       token: accessToken
+    })
+  }
+
+  const exportFunnelsToXlsx = async (req: ExportFunnelsRequest) => {
+    const query = toQueryString(req)
+    const path = query
+      ? `/v1/salesfunnel/export/xlsx?${query}`
+      : "/v1/salesfunnel/export/xlsx"
+
+    return callApi<never, Blob>({
+      path,
+      method: "GET",
+      token: accessToken,
+      headers: {
+        Accept:
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      },
+      responseType: "blob"
     })
   }
 
@@ -191,6 +210,7 @@ export const useSalesFunnel = () => {
     updateFunnelInfo,
     getFunnelById,
     searchFunnel,
+    exportFunnelsToXlsx,
     getFunnelByPsid,
     updateFunnelCost,
     updateFunnelResponsibleUser,
