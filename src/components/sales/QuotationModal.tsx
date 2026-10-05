@@ -114,9 +114,9 @@ const QuotationCaptureContent = ({
   const orderDiscountPercent =
     order?.orderDiscountType === "percent"
       ? calculatePercentFromAmount(
-          calculations.subtotal,
-          calculations.orderDiscount
-        )
+        calculations.subtotal,
+        calculations.orderDiscount
+      )
       : 0
   const orderDiscountLabel =
     order?.orderDiscountType === "percent"
@@ -648,9 +648,9 @@ export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
   const orderDiscountPercent =
     orderData?.data.orderDiscountType === "percent"
       ? calculatePercentFromAmount(
-          calculations.subtotal,
-          calculations.orderDiscount
-        )
+        calculations.subtotal,
+        calculations.orderDiscount
+      )
       : 0
   const orderDiscountLabel =
     orderData?.data.orderDiscountType === "percent"
@@ -1011,6 +1011,14 @@ export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
                 </Text>
               </Group>
 
+              <Group justify="space-between">
+                <Text size="sm" fw={600}>
+                  Tổng phí ship + thuế:
+                </Text>
+                <Text size="sm" fw={600}>
+                  {(calculations.shippingCost + calculations.tax).toLocaleString("vi-VN")}đ
+                </Text>
+              </Group>
               <Divider size="xs" />
 
               <Group justify="space-between">
