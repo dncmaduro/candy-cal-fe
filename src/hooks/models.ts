@@ -4501,6 +4501,22 @@ export interface ExportXlsxSalesOrderForAccountingRequest {
 }
 
 /** @interface */
+export interface ExportXlsxSalesOrderViettelPostRequest {
+  salesFunnelId?: string
+  userId?: string
+  channelId?: string
+  returning?: boolean
+  startDate?: string
+  endDate?: string
+  searchText?: string
+  shippingType?: "shipping_vtp" | "shipping_cargo"
+  status?: "draft" | "confirmed" | "official"
+  page: number
+  limit: number
+  orderIds?: string[]
+}
+
+/** @interface */
 export interface ExportXlsxSalesOrderByIdsRequest {
   orderIds: string[]
 }
