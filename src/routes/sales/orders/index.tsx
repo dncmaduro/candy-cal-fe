@@ -112,7 +112,16 @@ type CreateSalesOrderFormData = {
   items: { code: string; quantity: number; note?: string }[]
   secondaryPhones: string[]
 }
-
+type DownloadInfoRowProps = {
+  label: string
+  value: React.ReactNode
+  unit?: string
+}
+const DownloadInfoRow = ({ label, value, unit }: DownloadInfoRowProps) => (
+  <Text size="sm" mb={4}>
+    • {label}: <strong>{value}</strong>{unit ? ` ${unit}` : ""}
+  </Text>
+)
 function RouteComponent() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -139,7 +148,7 @@ function RouteComponent() {
     location.pathname === "/sales/orders" || location.pathname === "/sales/orders/"
 
   const selectedOrderIds = selectedOrders.map((o) => o._id)
-
+  const hasSelection = selectedOrderIds.length > 0
   const {
     me,
     myChannelData,
@@ -281,23 +290,22 @@ function RouteComponent() {
   })
 
   // Export Excel Viettel Post mutation
-  const { mutate: exportXlsxViettelPost, isPending: isExportingViettelPost } =
-    useMutation({
-      mutationFn: exportXlsxSalesOrderViettelPost,
-      onSuccess: (response) => {
-        const url = URL.createObjectURL(response.data)
-        const link = document.createElement("a")
-        link.href = url
-        link.download = `Don_hang_viettel_post_${format(new Date(), "ddMMyyyy")}_${startDate ? format(startDate, "ddMMyyyy") : ""
-          }_${endDate ? format(endDate, "ddMMyyyy") : ""}.xlsx`
-        link.click()
-        URL.revokeObjectURL(url)
-        CToast.success({ title: "Xuất file Excel Viettel Post thành công" })
-      },
-      onError: () => {
-        CToast.error({ title: "Có lỗi xảy ra khi xuất file Excel Viettel Post" })
-      }
-    })
+  const { mutate: exportXlsxViettelPost, isPending: isExportingViettelPost } = useMutation({
+    mutationFn: exportXlsxSalesOrderViettelPost,
+    onSuccess: (response) => {
+      const url = URL.createObjectURL(response.data)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = `Don_hang_viettel_post_${format(new Date(), "ddMMyyyy")}_${startDate ? format(startDate, "ddMMyyyy") : ""
+        }_${endDate ? format(endDate, "ddMMyyyy") : ""}.xlsx`
+      link.click()
+      URL.revokeObjectURL(url)
+      CToast.success({ title: "Xuất file Excel Viettel Post thành công" })
+    },
+    onError: () => {
+      CToast.error({ title: "Có lỗi xảy ra khi xuất file Excel Viettel Post" })
+    }
+  })
 
   const ordersData = data?.data.data || []
 
@@ -954,8 +962,6 @@ function RouteComponent() {
               <>
                 <Button
                   onClick={() => {
-                    const hasSelection = selectedOrderIds.length > 0
-
                     modals.openConfirmModal({
                       title: <b>Xác nhận xuất file Excel</b>,
                       children: (
@@ -977,10 +983,11 @@ function RouteComponent() {
                               <Text size="sm" fw={600} mb="xs">
                                 Thông tin xuất:
                               </Text>
-                              <Text size="sm" mb={4}>
-                                • Tổng số đơn hàng:{" "}
-                                <strong>{data?.data.total || 0}</strong> đơn
-                              </Text>
+                              <DownloadInfoRow
+                                label="Tổng số đơn hàng"
+                                value={data?.data.total || 0}
+                                unit="đơn"
+                              />
                               {searchText && (
                                 <Text size="sm" mb={4}>
                                   • Tìm kiếm: <strong>{searchText}</strong>
@@ -1113,7 +1120,6 @@ function RouteComponent() {
                 >
                   <Button
                     onClick={() => {
-                      const hasSelection = selectedOrderIds.length > 0
 
                       modals.openConfirmModal({
                         title: <b>Xác nhận xuất file Excel Viettel Post</b>,
@@ -1133,89 +1139,58 @@ function RouteComponent() {
                                   borderRadius: "8px"
                                 }}
                               >
-                              <Text size="sm" fw={600} mb="xs">
-                                Thông tin xuất:
-                              </Text>
-                              <Text size="sm" mb={4}>
-                                • Tổng số đơn hàng:{" "}
-                                <strong>{data?.data.total || 0}</strong> đơn
-                              </Text>
-                              {searchText && (
-                                <Text size="sm" mb={4}>
-                                  • Tìm kiếm: <strong>{searchText}</strong>
+                                <Text size="sm" fw={600} mb="xs">
+                                  Thông tin xuất:
                                 </Text>
-                              )}
-                              {funnelFilter && (
-                                <Text size="sm" mb={4}>
-                                  • Khách hàng:{" "}
-                                  <strong>
-                                    {
-                                      funnelOptions.find(
-                                        (f) => f.value === funnelFilter
-                                      )?.label
-                                    }
-                                  </strong>
-                                </Text>
-                              )}
-                              {userIdFilter && (
-                                <Text size="sm" mb={4}>
-                                  • Nhân viên CSKH:{" "}
-                                  <strong>{selectedSalesCsLabel}</strong>
-                                </Text>
-                              )}
-                              {shippingTypeFilter && (
-                                <Text size="sm" mb={4}>
-                                  • Đơn vị vận chuyển:{" "}
-                                  <strong>
-                                    {shippingTypeFilter === "shipping_vtp"
-                                      ? "Viettel Post"
-                                      : "Shipcode lên chành"}
-                                  </strong>
-                                </Text>
-                              )}
-                              {statusFilter && (
-                                <Text size="sm" mb={4}>
-                                  • Trạng thái:{" "}
-                                  <strong>
-                                    {getSalesOrderStatusLabel(
-                                      statusFilter as
-                                      | "draft"
-                                      | "confirmed"
-                                      | "official"
-                                    )}
-                                  </strong>
-                                </Text>
-                              )}
-                              {startDate && (
-                                <Text size="sm" mb={4}>
-                                  • Từ ngày:{" "}
-                                  <strong>
-                                    {format(startDate, "dd/MM/yyyy")}
-                                  </strong>
-                                </Text>
-                              )}
-                              {endDate && (
-                                <Text size="sm" mb={4}>
-                                  • Đến ngày:{" "}
-                                  <strong>
-                                    {format(endDate, "dd/MM/yyyy")}
-                                  </strong>
-                                </Text>
-                              )}
-                              {!searchText &&
-                                !funnelFilter &&
-                                !userIdFilter &&
-                                !shippingTypeFilter &&
-                                !statusFilter &&
-                                !startDate &&
-                                !endDate && (
-                                  <Text size="sm" c="orange" mb={4}>
-                                    ⚠️ Không có bộ lọc nào được áp dụng. Tất cả
-                                    đơn hàng sẽ được xuất.
-                                  </Text>
+                                <DownloadInfoRow
+                                  label="Tổng số đơn hàng"
+                                  value={data?.data.total || 0}
+                                  unit="đơn"
+                                />
+                                {searchText && (
+                                  <DownloadInfoRow label="Tìm kiếm" value={searchText} />
                                 )}
-                            </Box>
-                          )}
+                                {funnelFilter && (
+                                  <DownloadInfoRow
+                                    label="Khách hàng"
+                                    value={funnelOptions.find((f) => f.value === funnelFilter)?.label}
+                                  />
+                                )}
+                                {userIdFilter && (
+                                  <DownloadInfoRow label="Nhân viên CSKH" value={selectedSalesCsLabel} />
+                                )}
+                                {shippingTypeFilter && (
+                                  <DownloadInfoRow
+                                    label="Đơn vị vận chuyển"
+                                    value={shippingTypeFilter === "shipping_vtp" ? "Viettel Post" : "Shipcode lên chành"}
+                                  />
+                                )}
+                                {statusFilter && (
+                                  <DownloadInfoRow
+                                    label="Trạng thái"
+                                    value={getSalesOrderStatusLabel(statusFilter as "draft" | "confirmed" | "official")}
+                                  />
+                                )}
+                                {startDate && (
+                                  <DownloadInfoRow label="Từ ngày" value={format(startDate, "dd/MM/yyyy")} />
+                                )}
+                                {endDate && (
+                                  <DownloadInfoRow label="Đến ngày" value={format(endDate, "dd/MM/yyyy")} />
+                                )}
+                                {!searchText &&
+                                  !funnelFilter &&
+                                  !userIdFilter &&
+                                  !shippingTypeFilter &&
+                                  !statusFilter &&
+                                  !startDate &&
+                                  !endDate && (
+                                    <Text size="sm" c="orange" mb={4}>
+                                      ⚠️ Không có bộ lọc nào được áp dụng. Tất cả
+                                      đơn hàng sẽ được xuất.
+                                    </Text>
+                                  )}
+                              </Box>
+                            )}
                           </Box>
                         ),
                         labels: {
@@ -1261,7 +1236,7 @@ function RouteComponent() {
                     variant="light"
                     loading={isExportingViettelPost}
                   >
-                    {selectedOrderIds.length > 0
+                    {hasSelection
                       ? `Xuất Viettel Post (${selectedOrderIds.length} đã chọn)`
                       : "Xuất Viettel Post"}
                   </Button>
@@ -1288,71 +1263,40 @@ function RouteComponent() {
                               <Text size="sm" fw={600} mb="xs">
                                 Thông tin xuất:
                               </Text>
-                              <Text size="sm" mb={4}>
-                                • Tổng số đơn hàng:{" "}
-                                <strong>{data?.data.total || 0}</strong> đơn
-                              </Text>
+                              <DownloadInfoRow
+                                label="Tổng số đơn hàng"
+                                value={data?.data.total || 0}
+                                unit="đơn"
+                              />
                               {searchText && (
-                                <Text size="sm" mb={4}>
-                                  • Tìm kiếm: <strong>{searchText}</strong>
-                                </Text>
+                                <DownloadInfoRow label="Tìm kiếm" value={searchText} />
                               )}
                               {funnelFilter && (
-                                <Text size="sm" mb={4}>
-                                  • Khách hàng:{" "}
-                                  <strong>
-                                    {
-                                      funnelOptions.find(
-                                        (f) => f.value === funnelFilter
-                                      )?.label
-                                    }
-                                  </strong>
-                                </Text>
+                                <DownloadInfoRow
+                                  label="Khách hàng"
+                                  value={funnelOptions.find((f) => f.value === funnelFilter)?.label}
+                                />
                               )}
                               {userIdFilter && (
-                                <Text size="sm" mb={4}>
-                                  • Nhân viên CSKH: {" "}
-                                  <strong>{selectedSalesCsLabel}</strong>
-                                </Text>
+                                <DownloadInfoRow label="Nhân viên CSKH" value={selectedSalesCsLabel} />
                               )}
                               {shippingTypeFilter && (
-                                <Text size="sm" mb={4}>
-                                  • Đơn vị vận chuyển:{" "}
-                                  <strong>
-                                    {shippingTypeFilter === "shipping_vtp"
-                                      ? "Viettel Post"
-                                      : "Shipcode lên chành"}
-                                  </strong>
-                                </Text>
+                                <DownloadInfoRow
+                                  label="Đơn vị vận chuyển"
+                                  value={shippingTypeFilter === "shipping_vtp" ? "Viettel Post" : "Shipcode lên chành"}
+                                />
                               )}
                               {statusFilter && (
-                                <Text size="sm" mb={4}>
-                                  • Trạng thái:{" "}
-                                  <strong>
-                                    {getSalesOrderStatusLabel(
-                                      statusFilter as
-                                      | "draft"
-                                      | "confirmed"
-                                      | "official"
-                                    )}
-                                  </strong>
-                                </Text>
+                                <DownloadInfoRow
+                                  label="Trạng thái"
+                                  value={getSalesOrderStatusLabel(statusFilter as "draft" | "confirmed" | "official")}
+                                />
                               )}
                               {startDate && (
-                                <Text size="sm" mb={4}>
-                                  • Từ ngày:{" "}
-                                  <strong>
-                                    {format(startDate, "dd/MM/yyyy")}
-                                  </strong>
-                                </Text>
+                                <DownloadInfoRow label="Từ ngày" value={format(startDate, "dd/MM/yyyy")} />
                               )}
                               {endDate && (
-                                <Text size="sm" mb={4}>
-                                  • Đến ngày:{" "}
-                                  <strong>
-                                    {format(endDate, "dd/MM/yyyy")}
-                                  </strong>
-                                </Text>
+                                <DownloadInfoRow label="Đến ngày" value={format(endDate, "dd/MM/yyyy")} />
                               )}
                               {!searchText &&
                                 !funnelFilter &&
