@@ -121,7 +121,8 @@ function RouteComponent() {
     deleteSalesOrder,
     exportXlsxSalesOrder,
     exportXlsxSalesOrderByIds,
-    exportXlsxSalesOrderForAccounting
+    exportXlsxSalesOrderForAccounting,
+    exportXlsxSalesOrderViettelPost
   } = useSalesOrders()
 
   const page = search.page
@@ -235,9 +236,8 @@ function RouteComponent() {
       const url = URL.createObjectURL(response.data)
       const link = document.createElement("a")
       link.href = url
-      link.download = `Don_hang_${format(new Date(), "ddMMyyyy")}_${
-        startDate ? format(startDate, "ddMMyyyy") : ""
-      }_${endDate ? format(endDate, "ddMMyyyy") : ""}.xlsx`
+      link.download = `Don_hang_${format(new Date(), "ddMMyyyy")}_${startDate ? format(startDate, "ddMMyyyy") : ""
+        }_${endDate ? format(endDate, "ddMMyyyy") : ""}.xlsx`
       link.click()
       URL.revokeObjectURL(url)
       CToast.success({ title: "Xuất file Excel thành công" })
@@ -269,9 +269,8 @@ function RouteComponent() {
       const url = URL.createObjectURL(response.data)
       const link = document.createElement("a")
       link.href = url
-      link.download = `Don_hang_ke_toan_${format(new Date(), "ddMMyyyy")}_${
-        startDate ? format(startDate, "ddMMyyyy") : ""
-      }_${endDate ? format(endDate, "ddMMyyyy") : ""}.xlsx`
+      link.download = `Don_hang_ke_toan_${format(new Date(), "ddMMyyyy")}_${startDate ? format(startDate, "ddMMyyyy") : ""
+        }_${endDate ? format(endDate, "ddMMyyyy") : ""}.xlsx`
       link.click()
       URL.revokeObjectURL(url)
       CToast.success({ title: "Xuất file Excel kế toán thành công" })
@@ -280,6 +279,25 @@ function RouteComponent() {
       CToast.error({ title: "Có lỗi xảy ra khi xuất file Excel kế toán" })
     }
   })
+
+  // Export Excel Viettel Post mutation
+  const { mutate: exportXlsxViettelPost, isPending: isExportingViettelPost } =
+    useMutation({
+      mutationFn: exportXlsxSalesOrderViettelPost,
+      onSuccess: (response) => {
+        const url = URL.createObjectURL(response.data)
+        const link = document.createElement("a")
+        link.href = url
+        link.download = `Don_hang_viettel_post_${format(new Date(), "ddMMyyyy")}_${startDate ? format(startDate, "ddMMyyyy") : ""
+          }_${endDate ? format(endDate, "ddMMyyyy") : ""}.xlsx`
+        link.click()
+        URL.revokeObjectURL(url)
+        CToast.success({ title: "Xuất file Excel Viettel Post thành công" })
+      },
+      onError: () => {
+        CToast.error({ title: "Có lỗi xảy ra khi xuất file Excel Viettel Post" })
+      }
+    })
 
   const ordersData = data?.data.data || []
 
@@ -1002,9 +1020,9 @@ function RouteComponent() {
                                   <strong>
                                     {getSalesOrderStatusLabel(
                                       statusFilter as
-                                        | "draft"
-                                        | "confirmed"
-                                        | "official"
+                                      | "draft"
+                                      | "confirmed"
+                                      | "official"
                                     )}
                                   </strong>
                                 </Text>
@@ -1059,15 +1077,15 @@ function RouteComponent() {
                             shippingTypeFilter === ""
                               ? undefined
                               : (shippingTypeFilter as
-                                  | "shipping_vtp"
-                                  | "shipping_cargo"),
+                                | "shipping_vtp"
+                                | "shipping_cargo"),
                           status:
                             statusFilter === ""
                               ? undefined
                               : (statusFilter as
-                                  | "draft"
-                                  | "confirmed"
-                                  | "official"),
+                                | "draft"
+                                | "confirmed"
+                                | "official"),
                           startDate: startDate
                             ? format(startDate, "yyyy-MM-dd")
                             : undefined,
@@ -1088,6 +1106,166 @@ function RouteComponent() {
                     ? `Xuất Excel (${selectedOrderIds.length} đã chọn)`
                     : "Xuất Excel"}
                 </Button>
+                <Can
+                  permissions={[
+                    "api.salesorders.export-orders-to-viettel-post-excel"
+                  ]}
+                >
+                  <Button
+                    onClick={() => {
+                      const hasSelection = selectedOrderIds.length > 0
+
+                      modals.openConfirmModal({
+                        title: <b>Xác nhận xuất file Excel Viettel Post</b>,
+                        children: (
+                          <Box>
+                            <Text mb="md">
+                              {hasSelection
+                                ? `Bạn đang chọn ${selectedOrderIds.length} đơn hàng. Xuất theo danh sách đã chọn?`
+                                : "Bạn có chắc chắn muốn xuất file Excel Viettel Post với các bộ lọc hiện tại?"}
+                            </Text>
+
+                            {!hasSelection && (
+                              <Box
+                                style={{
+                                  background: "#f8f9fa",
+                                  padding: "12px",
+                                  borderRadius: "8px"
+                                }}
+                              >
+                              <Text size="sm" fw={600} mb="xs">
+                                Thông tin xuất:
+                              </Text>
+                              <Text size="sm" mb={4}>
+                                • Tổng số đơn hàng:{" "}
+                                <strong>{data?.data.total || 0}</strong> đơn
+                              </Text>
+                              {searchText && (
+                                <Text size="sm" mb={4}>
+                                  • Tìm kiếm: <strong>{searchText}</strong>
+                                </Text>
+                              )}
+                              {funnelFilter && (
+                                <Text size="sm" mb={4}>
+                                  • Khách hàng:{" "}
+                                  <strong>
+                                    {
+                                      funnelOptions.find(
+                                        (f) => f.value === funnelFilter
+                                      )?.label
+                                    }
+                                  </strong>
+                                </Text>
+                              )}
+                              {userIdFilter && (
+                                <Text size="sm" mb={4}>
+                                  • Nhân viên CSKH:{" "}
+                                  <strong>{selectedSalesCsLabel}</strong>
+                                </Text>
+                              )}
+                              {shippingTypeFilter && (
+                                <Text size="sm" mb={4}>
+                                  • Đơn vị vận chuyển:{" "}
+                                  <strong>
+                                    {shippingTypeFilter === "shipping_vtp"
+                                      ? "Viettel Post"
+                                      : "Shipcode lên chành"}
+                                  </strong>
+                                </Text>
+                              )}
+                              {statusFilter && (
+                                <Text size="sm" mb={4}>
+                                  • Trạng thái:{" "}
+                                  <strong>
+                                    {getSalesOrderStatusLabel(
+                                      statusFilter as
+                                      | "draft"
+                                      | "confirmed"
+                                      | "official"
+                                    )}
+                                  </strong>
+                                </Text>
+                              )}
+                              {startDate && (
+                                <Text size="sm" mb={4}>
+                                  • Từ ngày:{" "}
+                                  <strong>
+                                    {format(startDate, "dd/MM/yyyy")}
+                                  </strong>
+                                </Text>
+                              )}
+                              {endDate && (
+                                <Text size="sm" mb={4}>
+                                  • Đến ngày:{" "}
+                                  <strong>
+                                    {format(endDate, "dd/MM/yyyy")}
+                                  </strong>
+                                </Text>
+                              )}
+                              {!searchText &&
+                                !funnelFilter &&
+                                !userIdFilter &&
+                                !shippingTypeFilter &&
+                                !statusFilter &&
+                                !startDate &&
+                                !endDate && (
+                                  <Text size="sm" c="orange" mb={4}>
+                                    ⚠️ Không có bộ lọc nào được áp dụng. Tất cả
+                                    đơn hàng sẽ được xuất.
+                                  </Text>
+                                )}
+                            </Box>
+                          )}
+                          </Box>
+                        ),
+                        labels: {
+                          confirm: "Xuất Excel Viettel Post",
+                          cancel: "Hủy"
+                        },
+                        confirmProps: { color: "red" },
+                        onConfirm: () => {
+                          exportXlsxViettelPost({
+                            page: 1,
+                            limit: 9999,
+                            orderIds: hasSelection ? selectedOrderIds : undefined,
+                            searchText: searchText || undefined,
+                            userId: userIdFilter || undefined,
+                            salesFunnelId: funnelFilter || undefined,
+                            shippingType:
+                              shippingTypeFilter === ""
+                                ? undefined
+                                : (shippingTypeFilter as
+                                  | "shipping_vtp"
+                                  | "shipping_cargo"),
+                            status:
+                              statusFilter === ""
+                                ? undefined
+                                : (statusFilter as
+                                  | "draft"
+                                  | "confirmed"
+                                  | "official"),
+                            startDate: startDate
+                              ? format(startDate, "yyyy-MM-dd")
+                              : undefined,
+                            endDate: endDate
+                              ? format(endDate, "yyyy-MM-dd")
+                              : undefined
+                          })
+                        }
+                      })
+                    }}
+                    leftSection={<IconDownload size={16} />}
+                    size="sm"
+                    radius="md"
+                    color="red"
+                    variant="light"
+                    loading={isExportingViettelPost}
+                  >
+                    {selectedOrderIds.length > 0
+                      ? `Xuất Viettel Post (${selectedOrderIds.length} đã chọn)`
+                      : "Xuất Viettel Post"}
+                  </Button>
+                </Can>
                 {isAccountingEmp && (
                   <Button
                     onClick={() => {
@@ -1153,9 +1331,9 @@ function RouteComponent() {
                                   <strong>
                                     {getSalesOrderStatusLabel(
                                       statusFilter as
-                                        | "draft"
-                                        | "confirmed"
-                                        | "official"
+                                      | "draft"
+                                      | "confirmed"
+                                      | "official"
                                     )}
                                   </strong>
                                 </Text>
@@ -1207,15 +1385,15 @@ function RouteComponent() {
                               shippingTypeFilter === ""
                                 ? undefined
                                 : (shippingTypeFilter as
-                                    | "shipping_vtp"
-                                    | "shipping_cargo"),
+                                  | "shipping_vtp"
+                                  | "shipping_cargo"),
                             status:
                               statusFilter === ""
                                 ? undefined
                                 : (statusFilter as
-                                    | "draft"
-                                    | "confirmed"
-                                    | "official"),
+                                  | "draft"
+                                  | "confirmed"
+                                  | "official"),
                             startDate: startDate
                               ? format(startDate, "yyyy-MM-dd")
                               : undefined,
