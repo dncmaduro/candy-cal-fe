@@ -5907,6 +5907,10 @@ export type RangeSummaryResponse = {
   summary: {
     grossRevenue: number
     netRevenue: number
+    grossOrders: number
+    netOrders: number
+    cancelledRevenue: number
+    cancelledOrders: number
     liveRevenue: number
     adsCost: number
     totalOrders: number
@@ -5915,6 +5919,20 @@ export type RangeSummaryResponse = {
     revenuePerDay: number
     ordersPerDay: number
     adsCostPerDay: number
+    beforeCancellation: {
+      revenue: number
+      orders: number
+      adsCost: number
+      roas: number
+      aov: number
+    }
+    afterCancellation: {
+      revenue: number
+      orders: number
+      adsCost: number
+      roas: number
+      aov: number
+    }
   }
   meta: {
     lastSyncedAt: string | null
@@ -5927,10 +5945,13 @@ export type RangeSummaryResponse = {
 /** @interface */
 export type RangeTimeseriesPoint = {
   orderDate: string
+  grossRevenue: number
+  grossOrders: number
   revenue: number
   liveRevenue: number
   adsCost: number
   orders: number
+  grossRoas: number
   roas: number
   aov: number
 }
