@@ -170,6 +170,26 @@ export interface RangeNormalizedMetricItem {
 export interface RangeMetricsViewModel {
   summaryItems: ShopeeDashboardSummaryItem[]
   normalizedItems: RangeNormalizedMetricItem[]
+  cancellationBreakdown: {
+    before: {
+      revenue: number
+      orders: number
+      adsCost: number
+      roas: number
+      aov: number
+    }
+    after: {
+      revenue: number
+      orders: number
+      adsCost: number
+      roas: number
+      aov: number
+    }
+    cancelled: {
+      revenue: number
+      orders: number
+    }
+  }
   rangeRevenueTarget: number
   series: RangeTimeseriesResponse["series"]
   orderFrom: string
@@ -321,16 +341,36 @@ const adaptRangeMetrics = (
   rangeRevenueTarget: number
 ): RangeMetricsViewModel => {
   const netRevenue = normalizeNumber(summary.summary.netRevenue)
+  const beforeCancellation = summary.summary.beforeCancellation ?? {
+    revenue: normalizeNumber(summary.summary.grossRevenue),
+    orders: normalizeNumber(summary.summary.grossOrders),
+    adsCost: normalizeNumber(summary.summary.adsCost),
+    roas: safeDivide(
+      normalizeNumber(summary.summary.grossRevenue),
+      normalizeNumber(summary.summary.adsCost)
+    ),
+    aov: safeDivide(
+      normalizeNumber(summary.summary.grossRevenue),
+      normalizeNumber(summary.summary.grossOrders)
+    )
+  }
+  const afterCancellation = summary.summary.afterCancellation ?? {
+    revenue: netRevenue,
+    orders: normalizeNumber(summary.summary.netOrders),
+    adsCost: normalizeNumber(summary.summary.adsCost),
+    roas: normalizeNumber(summary.summary.roas),
+    aov: normalizeNumber(summary.summary.aov)
+  }
   const adsRevenueRatio =
-    safeDivide(normalizeNumber(summary.summary.adsCost), netRevenue) * 100
+    safeDivide(afterCancellation.adsCost, afterCancellation.revenue) * 100
 
   const summaryItems: ShopeeDashboardSummaryItem[] = [
     {
       key: "revenue",
-      label: "Tổng doanh thu",
-      value: netRevenue,
+      label: "Doanh thu sau lọc hủy",
+      value: afterCancellation.revenue,
       format: "currency",
-      description: "Doanh thu thuần trong khoảng thời gian đang chọn."
+      description: "Doanh thu còn lại sau khi loại các đơn hủy."
     },
     {
       key: "liveRevenue",
@@ -341,24 +381,24 @@ const adaptRangeMetrics = (
     },
     {
       key: "adsCost",
-      label: "Tổng chi phí ads",
-      value: normalizeNumber(summary.summary.adsCost),
+      label: "Chi phí ads",
+      value: afterCancellation.adsCost,
       format: "currency",
-      description: "Chi phí ads trong khoảng thời gian đang chọn."
+      description: "Chi phí ads gốc; hiện chưa gắn trực tiếp với từng đơn để loại theo đơn hủy."
     },
     {
       key: "roas",
       label: "ROAS",
-      value: normalizeNumber(summary.summary.roas),
+      value: afterCancellation.roas,
       format: "decimal",
-      description: "ROAS trong khoảng thời gian đang chọn."
+      description: "ROAS sau khi loại doanh thu của đơn hủy."
     },
     {
       key: "totalOrders",
-      label: "Tổng số đơn hàng",
-      value: normalizeNumber(summary.summary.totalOrders),
+      label: "Đơn sau lọc hủy",
+      value: afterCancellation.orders,
       format: "integer",
-      description: "Tổng đơn hàng trong khoảng thời gian đang chọn."
+      description: "Số đơn còn lại sau khi loại các đơn hủy."
     }
   ]
 
@@ -387,7 +427,7 @@ const adaptRangeMetrics = (
     {
       key: "aov",
       label: "AOV",
-      value: normalizeNumber(summary.summary.aov),
+      value: afterCancellation.aov,
       format: "currency",
       description: "Giá trị đơn hàng trung bình."
     },
@@ -403,14 +443,38 @@ const adaptRangeMetrics = (
   const values = [
     ...summaryItems.map((item) => item.value),
     ...normalizedItems.map((item) => item.value),
+    beforeCancellation.revenue,
+    beforeCancellation.orders,
     ...timeseries.series.map((item) => normalizeNumber(item.revenue)),
+    ...timeseries.series.map((item) => normalizeNumber(item.grossRevenue)),
     ...timeseries.series.map((item) => normalizeNumber(item.adsCost)),
-    ...timeseries.series.map((item) => normalizeNumber(item.orders))
+    ...timeseries.series.map((item) => normalizeNumber(item.orders)),
+    ...timeseries.series.map((item) => normalizeNumber(item.grossOrders))
   ]
 
   return {
     summaryItems,
     normalizedItems,
+    cancellationBreakdown: {
+      before: {
+        revenue: normalizeNumber(beforeCancellation.revenue),
+        orders: normalizeNumber(beforeCancellation.orders),
+        adsCost: normalizeNumber(beforeCancellation.adsCost),
+        roas: normalizeNumber(beforeCancellation.roas),
+        aov: normalizeNumber(beforeCancellation.aov)
+      },
+      after: {
+        revenue: normalizeNumber(afterCancellation.revenue),
+        orders: normalizeNumber(afterCancellation.orders),
+        adsCost: normalizeNumber(afterCancellation.adsCost),
+        roas: normalizeNumber(afterCancellation.roas),
+        aov: normalizeNumber(afterCancellation.aov)
+      },
+      cancelled: {
+        revenue: normalizeNumber(summary.summary.cancelledRevenue),
+        orders: normalizeNumber(summary.summary.cancelledOrders)
+      }
+    },
     rangeRevenueTarget,
     series: timeseries.series,
     orderFrom: summary.scope.orderFrom,

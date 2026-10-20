@@ -195,11 +195,27 @@ export const DailyAnalyticsDashboard = ({
 
   const chartData = data.series.map((item) => ({
     label: formatDateLabel(item.orderDate),
+    grossRevenue: item.grossRevenue,
     revenue: item.revenue,
+    grossOrders: item.grossOrders,
     orders: item.orders,
     adsCost: item.adsCost,
+    grossRoas: item.grossRoas,
     roas: item.roas
   }))
+
+  const cancellationMetrics = [
+    {
+      label: "Trước lọc đơn hủy",
+      values: data.cancellationBreakdown.before,
+      tone: "#64748b"
+    },
+    {
+      label: "Sau lọc đơn hủy",
+      values: data.cancellationBreakdown.after,
+      tone: "#2563eb"
+    }
+  ] as const
 
   return (
     <Stack gap="lg">
@@ -230,6 +246,64 @@ export const DailyAnalyticsDashboard = ({
       ) : null}
 
       {rangeComparisonTable}
+
+      <Paper
+        withBorder
+        radius={24}
+        p="lg"
+        style={{
+          borderColor: "#dbe4f0",
+          background: "#ffffff",
+          boxShadow: "0 12px 34px rgba(15, 23, 42, 0.05)"
+        }}
+      >
+        <Stack gap="md">
+          <div>
+            <Text fz="sm" fw={600} c="#0f172a">
+              Đối soát đơn hủy
+            </Text>
+            <Text fw={700} fz="xl" mt={4}>
+              Doanh thu và ads trước / sau lọc đơn hủy
+            </Text>
+            <Text size="sm" c="dimmed" mt={4}>
+              Đã loại {formatCurrency(data.cancellationBreakdown.cancelled.revenue)} doanh thu từ {formatDecimal(data.cancellationBreakdown.cancelled.orders)} đơn hủy. Ads được giữ nguyên ở hai phía vì dữ liệu ads chưa gắn trực tiếp với từng đơn hàng.
+            </Text>
+          </div>
+
+          <Box style={createResponsiveGridStyle(360)}>
+            {cancellationMetrics.map((metric) => (
+              <Paper
+                key={metric.label}
+                withBorder
+                radius={20}
+                p="md"
+                style={{ borderColor: "#e2e8f0" }}
+              >
+                <Text fw={700} c={metric.tone}>
+                  {metric.label}
+                </Text>
+                <Stack gap={6} mt="sm">
+                  <Text size="sm">
+                    Doanh thu: <strong>{formatCurrency(metric.values.revenue)}</strong>
+                  </Text>
+                  <Text size="sm">
+                    Đơn hàng: <strong>{formatDecimal(metric.values.orders)} đơn</strong>
+                  </Text>
+                  <Text size="sm">
+                    Ads: <strong>{formatCurrency(metric.values.adsCost)}</strong>
+                  </Text>
+                  <Text size="sm">
+                    ROAS: <strong>{formatDecimal(metric.values.roas)}</strong>
+                  </Text>
+                  <Text size="sm">
+                    AOV: <strong>{formatCurrency(metric.values.aov)}</strong>
+                  </Text>
+                </Stack>
+              </Paper>
+            ))}
+          </Box>
+        </Stack>
+      </Paper>
 
       <Paper
         withBorder
@@ -279,6 +353,9 @@ export const DailyAnalyticsDashboard = ({
             <Text fw={700} fz="xl" mt={4}>
               Doanh thu, đơn hàng, ads cost và ROAS
             </Text>
+            <Text size="xs" c="dimmed" mt={4}>
+              Đường xám: trước lọc đơn hủy · Đường màu: sau lọc đơn hủy · Ads cost là cùng một dữ liệu gốc ở cả hai phía.
+            </Text>
           </div>
 
           <Box style={createResponsiveGridStyle(360)}>
@@ -291,7 +368,10 @@ export const DailyAnalyticsDashboard = ({
                 data={chartData}
                 dataKey="label"
                 withLegend={false}
-                series={[{ name: "revenue", color: "blue.6" }]}
+                series={[
+                  { name: "grossRevenue", color: "gray.6" },
+                  { name: "revenue", color: "blue.6" }
+                ]}
                 curveType="monotone"
                 yAxisProps={{
                   width: 72
@@ -308,7 +388,10 @@ export const DailyAnalyticsDashboard = ({
                 data={chartData}
                 dataKey="label"
                 withLegend={false}
-                series={[{ name: "orders", color: "teal.6" }]}
+                series={[
+                  { name: "grossOrders", color: "gray.6" },
+                  { name: "orders", color: "teal.6" }
+                ]}
                 curveType="monotone"
               />
             </Paper>
@@ -339,7 +422,10 @@ export const DailyAnalyticsDashboard = ({
                 data={chartData}
                 dataKey="label"
                 withLegend={false}
-                series={[{ name: "roas", color: "grape.6" }]}
+                series={[
+                  { name: "grossRoas", color: "gray.6" },
+                  { name: "roas", color: "grape.6" }
+                ]}
                 curveType="monotone"
               />
             </Paper>
