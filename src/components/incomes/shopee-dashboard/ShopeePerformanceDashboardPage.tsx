@@ -638,6 +638,7 @@ export const ShopeePerformanceDashboardPage = ({
                         isError={monthlyQuery.isError}
                         comparisonLoading={monthlyComparisonQuery.isLoading}
                         comparisonError={monthlyComparisonQuery.isError}
+                        cancellationMode={cancellationMode}
                         onRetry={handleRetry}
                       />
                     ) : isRangeReady ? (
