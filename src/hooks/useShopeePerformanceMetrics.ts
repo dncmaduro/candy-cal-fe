@@ -117,6 +117,16 @@ const getRangeMonthSegments = (orderFrom?: string, orderTo?: string) => {
 export interface MonthlyMetricsViewModel {
   summaryItems: ShopeeDashboardSummaryItem[]
   metrics: ShopeeDashboardMetricViewModel[]
+  cancellationBreakdown: {
+    before: {
+      revenue: number
+      adsCost: number
+    }
+    after: {
+      revenue: number
+      adsCost: number
+    }
+  }
   expectedProgressPercentage: number
   revenueTarget: number
   lastSyncedAt: string | null
@@ -143,6 +153,16 @@ export interface MonthlyChannelComparisonRowViewModel {
   roas: MonthlyChannelComparisonMetricViewModel
   totalOrders: number
   adsRevenueRatio: number
+  cancellation: {
+    before: {
+      revenue: number
+      adsCost: number
+    }
+    after: {
+      revenue: number
+      adsCost: number
+    }
+  }
   lastSyncedAt: string | null
 }
 
@@ -237,6 +257,14 @@ const adaptMonthlyMetrics = (
   summary: MonthlySummaryResponse,
   kpis: MonthlyKpisResponse
 ): MonthlyMetricsViewModel => {
+  const beforeCancellation = summary.summary.beforeCancellation ?? {
+    revenue: normalizeNumber(summary.summary.currentRevenue),
+    adsCost: normalizeNumber(summary.summary.adsCost)
+  }
+  const afterCancellation = summary.summary.afterCancellation ?? {
+    revenue: normalizeNumber(summary.summary.currentRevenue),
+    adsCost: normalizeNumber(summary.summary.adsCost)
+  }
   const currentRevenue = normalizeNumber(summary.summary.currentRevenue)
   const adsCost = normalizeNumber(summary.summary.adsCost)
   const revenueTarget = normalizeNumber(summary.summary.revenueTarget)
@@ -318,12 +346,24 @@ const adaptMonthlyMetrics = (
   const values = [
     ...summaryItems.map((item) => item.value),
     ...metrics.map((item) => item.actual),
-    ...metrics.map((item) => item.target)
+    ...metrics.map((item) => item.target),
+    beforeCancellation.revenue,
+    beforeCancellation.adsCost
   ]
 
   return {
     summaryItems,
     metrics,
+    cancellationBreakdown: {
+      before: {
+        revenue: normalizeNumber(beforeCancellation.revenue),
+        adsCost: normalizeNumber(beforeCancellation.adsCost)
+      },
+      after: {
+        revenue: normalizeNumber(afterCancellation.revenue),
+        adsCost: normalizeNumber(afterCancellation.adsCost)
+      }
+    },
     expectedProgressPercentage: normalizeNumber(
       summary.summary.expectedProgressPercent
     ),
@@ -595,6 +635,14 @@ const adaptMonthlyChannelComparisonRow = (
     typeof adsCostExpectedValue === "number"
       ? safeDivide(revenueExpectedValue, adsCostExpectedValue)
       : undefined
+  const beforeCancellation = summary.summary.beforeCancellation ?? {
+    revenue: revenueActual,
+    adsCost: adsCostActual
+  }
+  const afterCancellation = summary.summary.afterCancellation ?? {
+    revenue: revenueActual,
+    adsCost: adsCostActual
+  }
 
   return {
     channelId: channel._id,
@@ -636,6 +684,16 @@ const adaptMonthlyChannelComparisonRow = (
     }),
     totalOrders: normalizeNumber(summary.summary.totalOrders),
     adsRevenueRatio: safeDivide(adsCostActual, revenueActual) * 100,
+    cancellation: {
+      before: {
+        revenue: normalizeNumber(beforeCancellation.revenue),
+        adsCost: normalizeNumber(beforeCancellation.adsCost)
+      },
+      after: {
+        revenue: normalizeNumber(afterCancellation.revenue),
+        adsCost: normalizeNumber(afterCancellation.adsCost)
+      }
+    },
     lastSyncedAt: resolveLatestSyncedAt(
       summary.meta.lastSyncedAt,
       kpis.meta.lastSyncedAt
@@ -717,6 +775,14 @@ const buildMonthlyComparisonTotals = (
     0
   )
   const totalOrders = rows.reduce((total, row) => total + row.totalOrders, 0)
+  const beforeRevenue = rows.reduce(
+    (total, row) => total + row.cancellation.before.revenue,
+    0
+  )
+  const beforeAdsCost = rows.reduce(
+    (total, row) => total + row.cancellation.before.adsCost,
+    0
+  )
   const roasActual = safeDivide(revenueActual, adsCostActual)
   const roasTarget = safeDivide(revenueTarget, adsCostTarget)
   const revenueExpectedValue = rows.reduce(
@@ -775,6 +841,16 @@ const buildMonthlyComparisonTotals = (
     }),
     totalOrders,
     adsRevenueRatio: safeDivide(adsCostActual, revenueActual) * 100,
+    cancellation: {
+      before: {
+        revenue: beforeRevenue,
+        adsCost: beforeAdsCost
+      },
+      after: {
+        revenue: revenueActual,
+        adsCost: adsCostActual
+      }
+    },
     lastSyncedAt: latestSyncedAt
   }
 }
@@ -978,7 +1054,9 @@ export const useMonthlyChannelComparison = ({
             row.liveRevenue.actual === 0 &&
             row.adsCost.actual === 0 &&
             row.roas.actual === 0 &&
-            row.totalOrders === 0
+            row.totalOrders === 0 &&
+            row.cancellation.before.revenue === 0 &&
+            row.cancellation.before.adsCost === 0
         )
       }
     },

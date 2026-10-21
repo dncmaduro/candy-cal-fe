@@ -92,7 +92,7 @@ export const PerformanceTimeFilter = ({
             styles={compactFilterSegmentedStyles}
           />
 
-          {mode === "range" && cancellationMode && onCancellationModeChange ? (
+          {cancellationMode && onCancellationModeChange ? (
             <Stack gap={0}>
               <Text size="xs" fw={600} c="dimmed" mb={4}>
                 Chế độ dữ liệu hủy
