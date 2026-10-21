@@ -20,7 +20,11 @@ import {
   IconReceipt2,
   IconTargetArrow
 } from "@tabler/icons-react"
-import type { ShopeeDashboardMetricViewModel, ShopeeDashboardSummaryItem } from "../../../hooks/models"
+import type {
+  ShopeeCancellationMode,
+  ShopeeDashboardMetricViewModel,
+  ShopeeDashboardSummaryItem
+} from "../../../hooks/models"
 import type {
   MonthlyChannelComparisonViewModel,
   MonthlyMetricsViewModel
@@ -276,6 +280,7 @@ interface MonthlyDashboardProps {
   isError: boolean
   comparisonLoading: boolean
   comparisonError: boolean
+  cancellationMode: ShopeeCancellationMode
   onRetry: () => void
 }
 
@@ -286,6 +291,7 @@ export const MonthlyDashboard = ({
   isError,
   comparisonLoading,
   comparisonError,
+  cancellationMode,
   onRetry
 }: MonthlyDashboardProps) => {
   const metricsByKey = new Map<
@@ -330,19 +336,47 @@ export const MonthlyDashboard = ({
     return <DashboardEmptyState onRetry={onRetry} />
   }
 
-  const visibleSummaryItems = data.summaryItems.filter(
+  const selectedCancellation =
+    cancellationMode === "beforeCancellation"
+      ? data.cancellationBreakdown.before
+      : data.cancellationBreakdown.after
+  const selectedSummaryItems = data.summaryItems.map((item) => {
+    if (item.key === "revenue") {
+      return { ...item, value: selectedCancellation.revenue }
+    }
+
+    if (item.key === "adsCost") {
+      return { ...item, value: selectedCancellation.adsCost }
+    }
+
+    if (item.key === "adsRevenueRatio") {
+      return {
+        ...item,
+        value:
+          selectedCancellation.revenue > 0
+            ? (selectedCancellation.adsCost / selectedCancellation.revenue) * 100
+            : 0
+      }
+    }
+
+    return item
+  })
+  const visibleSummaryItems = selectedSummaryItems.filter(
     (item) =>
       item.key !== "adsRevenueRatio" && item.key !== "avgRevenuePerDayVsKpi"
   )
-  const adsRevenueRatioItem = data.summaryItems.find(
+  const adsRevenueRatioItem = selectedSummaryItems.find(
     (item) => item.key === "adsRevenueRatio"
   )
 
   return (
     <>
       <Box style={createResponsiveGridStyle(280)}>
+        <Text size="sm" c="#64748b" style={{ gridColumn: "1 / -1" }}>
+          Đang hiển thị số liệu {cancellationMode === "beforeCancellation" ? "trước hủy" : "sau hủy"}.
+        </Text>
         {visibleSummaryItems.map((item) => {
-          const relatedMetric =
+          const baseMetric =
             item.key === "totalOrders" ||
             item.key === "liveRevenue" ||
             !metricSummaryKeys.has(
@@ -350,6 +384,16 @@ export const MonthlyDashboard = ({
             )
               ? undefined
               : metricsByKey.get(item.key as ShopeeDashboardMetricViewModel["key"])
+          const relatedMetric = baseMetric
+            ? {
+                ...baseMetric,
+                actual: item.value,
+                achievedPercentage:
+                  baseMetric.target > 0
+                    ? (item.value / baseMetric.target) * 100
+                    : baseMetric.achievedPercentage
+              }
+            : undefined
 
           return (
             <SummaryProgressCard
@@ -387,6 +431,7 @@ export const MonthlyDashboard = ({
         data={comparisonData}
         isLoading={comparisonLoading}
         isError={comparisonError}
+        cancellationMode={cancellationMode}
         onRetry={onRetry}
       />
     </>

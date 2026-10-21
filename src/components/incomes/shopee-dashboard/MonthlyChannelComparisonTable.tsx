@@ -11,6 +11,7 @@ import {
   Text
 } from "@mantine/core"
 import { IconAlertCircle, IconRefresh } from "@tabler/icons-react"
+import type { ShopeeCancellationMode } from "../../../hooks/models"
 import type {
   MonthlyChannelComparisonMetricViewModel,
   MonthlyChannelComparisonRowViewModel,
@@ -133,11 +134,28 @@ const MetricTableCell = ({
 }
 
 const createTableRow = ({
-  row
+  row,
+  cancellationMode
 }: {
   row: MonthlyChannelComparisonRowViewModel
+  cancellationMode: ShopeeCancellationMode
 }) => {
   const isSummaryRow = row.channelId === "total"
+  const isBeforeCancellation = cancellationMode === "beforeCancellation"
+  const revenue = {
+    ...row.revenue,
+    actual: isBeforeCancellation
+      ? row.cancellation.before.revenue
+      : row.cancellation.after.revenue
+  }
+  const adsCost = {
+    ...row.adsCost,
+    actual: isBeforeCancellation
+      ? row.cancellation.before.adsCost
+      : row.cancellation.after.adsCost
+  }
+  const adsRevenueRatio =
+    revenue.actual > 0 ? (adsCost.actual / revenue.actual) * 100 : 0
 
   return (
     <Table.Tr key={`row-${row.channelId}`} style={{ background: "#ffffff" }}>
@@ -147,13 +165,13 @@ const createTableRow = ({
         </Text>
       </Table.Td>
       <Table.Td>
-        <MetricTableCell metric={row.revenue} tone="revenue" />
+        <MetricTableCell metric={revenue} tone="revenue" />
       </Table.Td>
       <Table.Td>
         <MetricTableCell metric={row.liveRevenue} tone="liveRevenue" />
       </Table.Td>
       <Table.Td>
-        <MetricTableCell metric={row.adsCost} tone="adsCost" />
+        <MetricTableCell metric={adsCost} tone="adsCost" />
       </Table.Td>
       <Table.Td>
         <MetricTableCell metric={row.roas} tone="roas" />
@@ -165,7 +183,7 @@ const createTableRow = ({
       </Table.Td>
       <Table.Td miw={90}>
         <Text fw={700} c="#0f172a">
-          {formatPercent(row.adsRevenueRatio)}
+          {formatPercent(adsRevenueRatio)}
         </Text>
       </Table.Td>
     </Table.Tr>
@@ -197,11 +215,13 @@ export const MonthlyChannelComparisonTable = ({
   data,
   isLoading,
   isError,
+  cancellationMode,
   onRetry
 }: {
   data?: MonthlyChannelComparisonViewModel
   isLoading: boolean
   isError: boolean
+  cancellationMode: ShopeeCancellationMode
   onRetry: () => void
 }) => {
   if (isLoading && !data) {
@@ -259,7 +279,7 @@ export const MonthlyChannelComparisonTable = ({
           </Text>
           <Text size="sm" c="#64748b" mt={4}>
             Tổng hợp {data.shopCount.toLocaleString("vi-VN")} kênh Shopee trong
-            tháng đang chọn.
+            tháng đang chọn. Đang hiển thị số liệu {cancellationMode === "beforeCancellation" ? "trước hủy" : "sau hủy"}.
           </Text>
         </div>
 
@@ -287,9 +307,11 @@ export const MonthlyChannelComparisonTable = ({
                 <Table.Th miw={90}>%Ads/DT</Table.Th>
               </Table.Tr>
             </Table.Thead>
-              <Table.Tbody>
-              {data.rows.map((row) => createTableRow({ row }))}
-              {createTableRow({ row: data.totals })}
+            <Table.Tbody>
+              {data.rows.map((row) =>
+                createTableRow({ row, cancellationMode })
+              )}
+              {createTableRow({ row: data.totals, cancellationMode })}
             </Table.Tbody>
           </Table>
         </ScrollArea>
