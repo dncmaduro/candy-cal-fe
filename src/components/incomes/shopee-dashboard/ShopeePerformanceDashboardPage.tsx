@@ -20,6 +20,7 @@ import { format } from "date-fns"
 import { NAVS, SHOPEE_ACCESS_PERMISSIONS, SHOPEE_NAVS } from "../../../constants/navs"
 import { useAuthGuard } from "../../../hooks/useAuthGuard"
 import type {
+  ShopeeCancellationMode,
   ShopeePerformanceTimeMode,
   ShopeeRangePreset
 } from "../../../hooks/models"
@@ -138,6 +139,8 @@ export const ShopeePerformanceDashboardPage = ({
     meData?.permissions?.includes("api.shopeedailyliverevenues.create-shopee-daily-live-revenue")
   )
   const [usePreviousDayKpiMode, setUsePreviousDayKpiMode] = useState(false)
+  const [cancellationMode, setCancellationMode] =
+    useState<ShopeeCancellationMode>("afterCancellation")
 
   const monthOptions = useMemo(() => createMonthOptions(), [])
   const yearOptions = useMemo(
@@ -550,6 +553,12 @@ export const ShopeePerformanceDashboardPage = ({
                 (search.tab === "dashboard" && activeDashboardFetching)
               }
               lastUpdatedLabel={lastUpdatedLabel}
+              cancellationMode={
+                search.tab === "dashboard" ? cancellationMode : undefined
+              }
+              onCancellationModeChange={
+                search.tab === "dashboard" ? setCancellationMode : undefined
+              }
               onModeChange={(mode) => {
                 if (mode === search.mode) return
 
@@ -637,12 +646,14 @@ export const ShopeePerformanceDashboardPage = ({
                         isLoading={rangeQuery.isLoading}
                         isError={rangeQuery.isError}
                         showSummaryCards
+                        cancellationMode={cancellationMode}
                         rangeComparisonTable={
                           normalizedChannelId === SHOPEE_ALL_CHANNEL_ID ? (
                             <RangeChannelComparisonTable
                               data={rangeComparisonQuery.data}
                               isLoading={rangeComparisonQuery.isLoading}
                               isError={rangeComparisonQuery.isError}
+                              cancellationMode={cancellationMode}
                               onRetry={handleRetry}
                             />
                           ) : undefined
