@@ -12,6 +12,7 @@ import {
 } from "@mantine/core"
 import { IconAlertCircle, IconRefresh } from "@tabler/icons-react"
 import { format } from "date-fns"
+import type { ShopeeCancellationMode } from "../../../hooks/models"
 import type {
   RangeChannelComparisonMetricViewModel,
   RangeChannelComparisonRowViewModel,
@@ -81,12 +82,10 @@ const formatExpectedValue = (metric: RangeChannelComparisonMetricViewModel) => {
 
 const MetricTableCell = ({
   metric,
-  tone,
-  beforeValue
+  tone
 }: {
   metric: RangeChannelComparisonMetricViewModel
   tone: keyof typeof toneByKey
-  beforeValue?: number
 }) => {
   const hasKpi =
     metric.target !== null &&
@@ -98,14 +97,8 @@ const MetricTableCell = ({
   return (
     <Stack gap={6} miw={148}>
       <Text fw={700} fz="md" c="#0f172a">
-        {typeof beforeValue === "number" ? "Sau hủy: " : ""}
         {formatMetricValue(metric)} / {formatExpectedValue(metric)}
       </Text>
-      {typeof beforeValue === "number" ? (
-        <Text size="xs" fw={600} c="#64748b">
-          Trước hủy: {metric.format === "currency" ? formatCurrency(beforeValue) : formatDecimal(beforeValue)}
-        </Text>
-      ) : null}
       {hasKpi ? (
         <>
           <Group justify="space-between" gap={8} mt={12} wrap="nowrap">
@@ -142,11 +135,28 @@ const MetricTableCell = ({
 }
 
 const createTableRow = ({
-  row
+  row,
+  cancellationMode
 }: {
   row: RangeChannelComparisonRowViewModel
+  cancellationMode: ShopeeCancellationMode
 }) => {
   const isSummaryRow = row.channelId === "total"
+  const isBeforeCancellation = cancellationMode === "beforeCancellation"
+  const revenue = {
+    ...row.revenue,
+    actual: isBeforeCancellation
+      ? row.cancellation.before.revenue
+      : row.cancellation.after.revenue
+  }
+  const adsCost = {
+    ...row.adsCost,
+    actual: isBeforeCancellation
+      ? row.cancellation.before.adsCost
+      : row.cancellation.after.adsCost
+  }
+  const adsRevenueRatio =
+    revenue.actual > 0 ? (adsCost.actual / revenue.actual) * 100 : 0
 
   return (
     <Table.Tr key={`row-${row.channelId}`} style={{ background: "#ffffff" }}>
@@ -157,9 +167,8 @@ const createTableRow = ({
       </Table.Td>
       <Table.Td>
         <MetricTableCell
-          metric={row.revenue}
+          metric={revenue}
           tone="revenue"
-          beforeValue={row.cancellation.before.revenue}
         />
       </Table.Td>
       <Table.Td>
@@ -167,9 +176,8 @@ const createTableRow = ({
       </Table.Td>
       <Table.Td>
         <MetricTableCell
-          metric={row.adsCost}
+          metric={adsCost}
           tone="adsCost"
-          beforeValue={row.cancellation.before.adsCost}
         />
       </Table.Td>
       <Table.Td>
@@ -182,7 +190,7 @@ const createTableRow = ({
       </Table.Td>
       <Table.Td miw={90}>
         <Text fw={700} c="#0f172a">
-          {formatPercent(row.adsRevenueRatio)}
+          {formatPercent(adsRevenueRatio)}
         </Text>
       </Table.Td>
     </Table.Tr>
@@ -214,11 +222,13 @@ export const RangeChannelComparisonTable = ({
   data,
   isLoading,
   isError,
+  cancellationMode,
   onRetry
 }: {
   data?: RangeChannelComparisonViewModel
   isLoading: boolean
   isError: boolean
+  cancellationMode: ShopeeCancellationMode
   onRetry: () => void
 }) => {
   if (isLoading && !data) {
@@ -277,7 +287,7 @@ export const RangeChannelComparisonTable = ({
           <Text size="sm" c="#64748b" mt={4}>
             Tổng hợp {data.shopCount.toLocaleString("vi-VN")} kênh Shopee từ{" "}
             {formatDateLabel(data.orderFrom)} đến {formatDateLabel(data.orderTo)}.
-            {" "}Doanh thu và Ads có dòng chính sau hủy, dòng phụ trước hủy.
+            {" "}Đang hiển thị số liệu {cancellationMode === "beforeCancellation" ? "trước hủy" : "sau hủy"}.
           </Text>
         </div>
 
@@ -297,17 +307,19 @@ export const RangeChannelComparisonTable = ({
             <Table.Thead>
               <Table.Tr style={{ background: "#f8fafc" }}>
                 <Table.Th miw={160}>Shop</Table.Th>
-                <Table.Th miw={156}>Doanh thu (sau / trước hủy)</Table.Th>
+                <Table.Th miw={156}>Doanh thu</Table.Th>
                 <Table.Th miw={156}>Tổng doanh thu live</Table.Th>
-                <Table.Th miw={156}>Ads (sau / trước hủy)</Table.Th>
+                <Table.Th miw={156}>Ads</Table.Th>
                 <Table.Th miw={120}>ROAS</Table.Th>
                 <Table.Th miw={112}>Tổng số đơn hàng</Table.Th>
                 <Table.Th miw={90}>%Ads/DT</Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
-              {data.rows.map((row) => createTableRow({ row }))}
-              {createTableRow({ row: data.totals })}
+              {data.rows.map((row) =>
+                createTableRow({ row, cancellationMode })
+              )}
+              {createTableRow({ row: data.totals, cancellationMode })}
             </Table.Tbody>
           </Table>
         </ScrollArea>

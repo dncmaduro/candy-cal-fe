@@ -5846,6 +5846,11 @@ export interface DeleteShopeeMonthKpiRequest {
 export type ShopeePerformanceTimeMode = "month" | "range"
 
 /** @interface */
+export type ShopeeCancellationMode =
+  | "beforeCancellation"
+  | "afterCancellation"
+
+/** @interface */
 export type ShopeeRangePreset =
   | "last-7-days"
   | "last-14-days"
