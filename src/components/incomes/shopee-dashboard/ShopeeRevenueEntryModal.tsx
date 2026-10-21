@@ -73,7 +73,12 @@ export const ShopeeRevenueEntryModal = ({
     currentChannelId === SHOPEE_ALL_CHANNEL_ID ? null : currentChannelId
   )
   const [orderFile, setOrderFile] = useState<File | null>(null)
-  const [adsCost, setAdsCost] = useState<number | string>("")
+  const [adsCostBeforeCancellation, setAdsCostBeforeCancellation] = useState<
+    number | string
+  >("")
+  const [adsCostAfterCancellation, setAdsCostAfterCancellation] = useState<
+    number | string
+  >("")
   const [liveRevenue, setLiveRevenue] = useState<number | string>("")
 
   const minDate = useMemo(() => new Date(year, month - 1, 1), [month, year])
@@ -88,8 +93,16 @@ export const ShopeeRevenueEntryModal = ({
   )
   const requiresChannelSelection = currentChannelId === SHOPEE_ALL_CHANNEL_ID
   const currentChannel = channels.find((channel) => channel._id === channelId)
+  const hasAdsCostBeforeCancellation =
+    adsCostBeforeCancellation !== "" &&
+    adsCostBeforeCancellation !== null &&
+    `${adsCostBeforeCancellation}`.trim() !== ""
+  const hasAdsCostAfterCancellation =
+    adsCostAfterCancellation !== "" &&
+    adsCostAfterCancellation !== null &&
+    `${adsCostAfterCancellation}`.trim() !== ""
   const hasAdsCost =
-    adsCost !== "" && adsCost !== null && `${adsCost}`.trim() !== ""
+    hasAdsCostBeforeCancellation || hasAdsCostAfterCancellation
   const hasLiveRevenue =
     liveRevenue !== "" && liveRevenue !== null && `${liveRevenue}`.trim() !== ""
   const hasSubmissionInput = Boolean(orderFile) || hasAdsCost || hasLiveRevenue
@@ -110,16 +123,32 @@ export const ShopeeRevenueEntryModal = ({
         )
       }
 
-      const adsCostValue = hasAdsCost ? Number(adsCost) : undefined
+      const adsCostBeforeCancellationValue = hasAdsCostBeforeCancellation
+        ? Number(adsCostBeforeCancellation)
+        : undefined
+      const adsCostAfterCancellationValue = hasAdsCostAfterCancellation
+        ? Number(adsCostAfterCancellation)
+        : undefined
       const liveRevenueValue = hasLiveRevenue ? Number(liveRevenue) : undefined
 
       if (
-        (typeof adsCostValue === "number" &&
-          (Number.isNaN(adsCostValue) || adsCostValue < 0)) ||
+        (hasAdsCost &&
+          (!hasAdsCostBeforeCancellation || !hasAdsCostAfterCancellation)) ||
+        (typeof adsCostBeforeCancellationValue === "number" &&
+          (Number.isNaN(adsCostBeforeCancellationValue) ||
+            adsCostBeforeCancellationValue < 0)) ||
+        (typeof adsCostAfterCancellationValue === "number" &&
+          (Number.isNaN(adsCostAfterCancellationValue) ||
+            adsCostAfterCancellationValue < 0)) ||
         (typeof liveRevenueValue === "number" &&
           (Number.isNaN(liveRevenueValue) || liveRevenueValue < 0))
       ) {
-        throw new Error("Chi phí ads và doanh thu live không được âm")
+        throw new Error(
+          hasAdsCost &&
+          (!hasAdsCostBeforeCancellation || !hasAdsCostAfterCancellation)
+            ? "Vui lòng nhập đủ ads trước và sau lọc đơn hủy"
+            : "Chi phí ads và doanh thu live không được âm"
+        )
       }
 
       const dateKey = format(date, "yyyy-MM-dd")
@@ -160,18 +189,24 @@ export const ShopeeRevenueEntryModal = ({
 
         const saveRequests: Promise<unknown>[] = []
 
-        if (hasAdsCost && typeof adsCostValue === "number") {
+        if (
+          hasAdsCost &&
+          typeof adsCostBeforeCancellationValue === "number" &&
+          typeof adsCostAfterCancellationValue === "number"
+        ) {
           saveRequests.push(
             existingAds
               ? updateShopeeDailyAds(existingAds._id, {
                   date,
                   channel: channelId,
-                  adsCost: adsCostValue
+                  adsCostBeforeCancellation: adsCostBeforeCancellationValue,
+                  adsCostAfterCancellation: adsCostAfterCancellationValue
                 })
               : createShopeeDailyAds({
                   date,
                   channel: channelId,
-                  adsCost: adsCostValue
+                  adsCostBeforeCancellation: adsCostBeforeCancellationValue,
+                  adsCostAfterCancellation: adsCostAfterCancellationValue
                 })
           )
         }
@@ -344,10 +379,26 @@ export const ShopeeRevenueEntryModal = ({
       </Stack>
 
       <NumberInput
-        label="Chi phí ads (tùy chọn)"
-        placeholder="Nhập chi phí ads"
-        value={adsCost}
-        onChange={setAdsCost}
+        label="Chi phí ads trước lọc đơn hủy (tùy chọn)"
+        placeholder="Nhập ads trước lọc hủy"
+        value={adsCostBeforeCancellation}
+        onChange={setAdsCostBeforeCancellation}
+        min={0}
+        size="md"
+        thousandSeparator="."
+        suffix=" đ"
+        hideControls
+        styles={{
+          label: filterPlainLabelStyles,
+          input: filterInputStyles
+        }}
+      />
+
+      <NumberInput
+        label="Chi phí ads sau lọc đơn hủy (tùy chọn)"
+        placeholder="Nhập ads sau lọc hủy"
+        value={adsCostAfterCancellation}
+        onChange={setAdsCostAfterCancellation}
         min={0}
         size="md"
         thousandSeparator="."
