@@ -81,10 +81,12 @@ const formatExpectedValue = (metric: RangeChannelComparisonMetricViewModel) => {
 
 const MetricTableCell = ({
   metric,
-  tone
+  tone,
+  beforeValue
 }: {
   metric: RangeChannelComparisonMetricViewModel
   tone: keyof typeof toneByKey
+  beforeValue?: number
 }) => {
   const hasKpi =
     metric.target !== null &&
@@ -96,8 +98,13 @@ const MetricTableCell = ({
   return (
     <Stack gap={6} miw={148}>
       <Text fw={700} fz="md" c="#0f172a">
-        {formatMetricValue(metric)} / {formatExpectedValue(metric)}
+        Sau hủy: {formatMetricValue(metric)} / {formatExpectedValue(metric)}
       </Text>
+      {typeof beforeValue === "number" ? (
+        <Text size="xs" fw={600} c="#64748b">
+          Trước hủy: {metric.format === "currency" ? formatCurrency(beforeValue) : formatDecimal(beforeValue)}
+        </Text>
+      ) : null}
       {hasKpi ? (
         <>
           <Group justify="space-between" gap={8} mt={12} wrap="nowrap">
@@ -148,21 +155,34 @@ const createTableRow = ({
         </Text>
       </Table.Td>
       <Table.Td>
-        <MetricTableCell metric={row.revenue} tone="revenue" />
+        <MetricTableCell
+          metric={row.revenue}
+          tone="revenue"
+          beforeValue={row.cancellation.before.revenue}
+        />
       </Table.Td>
       <Table.Td>
         <MetricTableCell metric={row.liveRevenue} tone="liveRevenue" />
       </Table.Td>
       <Table.Td>
-        <MetricTableCell metric={row.adsCost} tone="adsCost" />
+        <MetricTableCell
+          metric={row.adsCost}
+          tone="adsCost"
+          beforeValue={row.cancellation.before.adsCost}
+        />
       </Table.Td>
       <Table.Td>
         <MetricTableCell metric={row.roas} tone="roas" />
       </Table.Td>
       <Table.Td miw={112}>
-        <Text fw={700} c="#0f172a">
-          {Math.round(row.totalOrders).toLocaleString("vi-VN")} đơn
-        </Text>
+        <Stack gap={2}>
+          <Text fw={700} c="#0f172a">
+            Sau hủy: {Math.round(row.cancellation.after.totalOrders).toLocaleString("vi-VN")} đơn
+          </Text>
+          <Text size="xs" fw={600} c="#64748b">
+            Trước hủy: {Math.round(row.cancellation.before.totalOrders).toLocaleString("vi-VN")} đơn
+          </Text>
+        </Stack>
       </Table.Td>
       <Table.Td miw={90}>
         <Text fw={700} c="#0f172a">
@@ -256,11 +276,12 @@ export const RangeChannelComparisonTable = ({
       <Stack gap="md">
         <div>
           <Text fz="sm" fw={600} c="#475569">
-            Chi tiết 5 chỉ số theo từng shop
+            Chi tiết chỉ số theo từng shop
           </Text>
           <Text size="sm" c="#64748b" mt={4}>
             Tổng hợp {data.shopCount.toLocaleString("vi-VN")} kênh Shopee từ{" "}
             {formatDateLabel(data.orderFrom)} đến {formatDateLabel(data.orderTo)}.
+            {" "}Các dòng chính là sau hủy, dòng phụ là trước hủy.
           </Text>
         </div>
 
@@ -280,11 +301,11 @@ export const RangeChannelComparisonTable = ({
             <Table.Thead>
               <Table.Tr style={{ background: "#f8fafc" }}>
                 <Table.Th miw={160}>Shop</Table.Th>
-                <Table.Th miw={156}>Tổng doanh thu</Table.Th>
+                <Table.Th miw={156}>Doanh thu (sau / trước hủy)</Table.Th>
                 <Table.Th miw={156}>Tổng doanh thu live</Table.Th>
-                <Table.Th miw={156}>Tổng chi phí ads</Table.Th>
+                <Table.Th miw={156}>Ads (sau / trước hủy)</Table.Th>
                 <Table.Th miw={120}>ROAS</Table.Th>
-                <Table.Th miw={112}>Tổng số đơn hàng</Table.Th>
+                <Table.Th miw={112}>Đơn (sau / trước hủy)</Table.Th>
                 <Table.Th miw={90}>%Ads/DT</Table.Th>
               </Table.Tr>
             </Table.Thead>

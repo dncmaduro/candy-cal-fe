@@ -204,106 +204,90 @@ export const DailyAnalyticsDashboard = ({
     roas: item.roas
   }))
 
-  const cancellationMetrics = [
-    {
-      label: "Trước lọc đơn hủy",
-      values: data.cancellationBreakdown.before,
-      tone: "#64748b"
+  const cancellationPairByKey = {
+    revenue: {
+      before: data.cancellationBreakdown.before.revenue,
+      after: data.cancellationBreakdown.after.revenue,
+      format: "currency"
     },
-    {
-      label: "Sau lọc đơn hủy",
-      values: data.cancellationBreakdown.after,
-      tone: "#2563eb"
+    adsCost: {
+      before: data.cancellationBreakdown.before.adsCost,
+      after: data.cancellationBreakdown.after.adsCost,
+      format: "currency"
+    },
+    roas: {
+      before: data.cancellationBreakdown.before.roas,
+      after: data.cancellationBreakdown.after.roas,
+      format: "decimal"
+    },
+    totalOrders: {
+      before: data.cancellationBreakdown.before.orders,
+      after: data.cancellationBreakdown.after.orders,
+      format: "integer"
     }
-  ] as const
+  } as const
+
+  const formatCancellationValue = (
+    value: number,
+    format: "currency" | "decimal" | "integer"
+  ) => {
+    if (format === "currency") return formatCurrency(value)
+    if (format === "integer") return `${Math.round(value).toLocaleString("vi-VN")} đơn`
+    return formatDecimal(value)
+  }
 
   return (
     <Stack gap="lg">
       {showSummaryCards ? (
         <Box style={createResponsiveGridStyle(280)}>
-          {data.summaryItems.map((item) => (
-            <MetricStatCard
-              key={item.key}
-              label={item.label}
-              value={formatSummaryValue(item)}
-              tone={summaryTones[item.key]}
-              icon={summaryIcons[item.key]}
-              trailing={
-                item.key === "revenue" ? (
-                  <Stack gap={2} align="flex-end">
-                    <Text size="sm" fw={700} c="#475569">
-                      KPI: {formatCurrency(data.rangeRevenueTarget)}
-                    </Text>
-                    <Text size="sm" fw={700} c="#2563eb">
-                      Đạt: {formatKpiProgress(item.value, data.rangeRevenueTarget)}
-                    </Text>
-                  </Stack>
-                ) : undefined
-              }
-            />
-          ))}
+          {data.summaryItems.map((item) => {
+            const comparison =
+              item.key in cancellationPairByKey
+                ? cancellationPairByKey[
+                    item.key as keyof typeof cancellationPairByKey
+                  ]
+                : undefined
+
+            return (
+              <MetricStatCard
+                key={item.key}
+                label={item.label}
+                value={formatSummaryValue(item)}
+                tone={summaryTones[item.key]}
+                icon={summaryIcons[item.key]}
+                trailing={
+                  comparison || item.key === "revenue" ? (
+                    <Stack gap={2} align="flex-end">
+                      {comparison ? (
+                        <>
+                          <Text size="xs" fw={700} c="#64748b">
+                            Trước hủy: {formatCancellationValue(comparison.before, comparison.format)}
+                          </Text>
+                          <Text size="xs" fw={700} c="#2563eb">
+                            Sau hủy: {formatCancellationValue(comparison.after, comparison.format)}
+                          </Text>
+                        </>
+                      ) : null}
+                      {item.key === "revenue" ? (
+                        <>
+                          <Text size="sm" fw={700} c="#475569">
+                            KPI: {formatCurrency(data.rangeRevenueTarget)}
+                          </Text>
+                          <Text size="sm" fw={700} c="#2563eb">
+                            Đạt: {formatKpiProgress(item.value, data.rangeRevenueTarget)}
+                          </Text>
+                        </>
+                      ) : null}
+                    </Stack>
+                  ) : undefined
+                }
+              />
+            )
+          })}
         </Box>
       ) : null}
 
       {rangeComparisonTable}
-
-      <Paper
-        withBorder
-        radius={24}
-        p="lg"
-        style={{
-          borderColor: "#dbe4f0",
-          background: "#ffffff",
-          boxShadow: "0 12px 34px rgba(15, 23, 42, 0.05)"
-        }}
-      >
-        <Stack gap="md">
-          <div>
-            <Text fz="sm" fw={600} c="#0f172a">
-              Đối soát đơn hủy
-            </Text>
-            <Text fw={700} fz="xl" mt={4}>
-              Doanh thu và ads trước / sau lọc đơn hủy
-            </Text>
-            <Text size="sm" c="dimmed" mt={4}>
-              Đã loại {formatCurrency(data.cancellationBreakdown.cancelled.revenue)} doanh thu từ {formatDecimal(data.cancellationBreakdown.cancelled.orders)} đơn hủy. Ads được giữ nguyên ở hai phía vì dữ liệu ads chưa gắn trực tiếp với từng đơn hàng.
-            </Text>
-          </div>
-
-          <Box style={createResponsiveGridStyle(360)}>
-            {cancellationMetrics.map((metric) => (
-              <Paper
-                key={metric.label}
-                withBorder
-                radius={20}
-                p="md"
-                style={{ borderColor: "#e2e8f0" }}
-              >
-                <Text fw={700} c={metric.tone}>
-                  {metric.label}
-                </Text>
-                <Stack gap={6} mt="sm">
-                  <Text size="sm">
-                    Doanh thu: <strong>{formatCurrency(metric.values.revenue)}</strong>
-                  </Text>
-                  <Text size="sm">
-                    Đơn hàng: <strong>{formatDecimal(metric.values.orders)} đơn</strong>
-                  </Text>
-                  <Text size="sm">
-                    Ads: <strong>{formatCurrency(metric.values.adsCost)}</strong>
-                  </Text>
-                  <Text size="sm">
-                    ROAS: <strong>{formatDecimal(metric.values.roas)}</strong>
-                  </Text>
-                  <Text size="sm">
-                    AOV: <strong>{formatCurrency(metric.values.aov)}</strong>
-                  </Text>
-                </Stack>
-              </Paper>
-            ))}
-          </Box>
-        </Stack>
-      </Paper>
 
       <Paper
         withBorder
