@@ -197,10 +197,9 @@ export const DailyAnalyticsDashboard = ({
     label: formatDateLabel(item.orderDate),
     grossRevenue: item.grossRevenue,
     revenue: item.revenue,
-    grossOrders: item.grossOrders,
     orders: item.orders,
-    adsCost: item.adsCost,
-    grossRoas: item.grossRoas,
+    grossAdsCost: item.grossAdsCost,
+    netAdsCost: item.netAdsCost,
     roas: item.roas
   }))
 
@@ -214,25 +213,14 @@ export const DailyAnalyticsDashboard = ({
       before: data.cancellationBreakdown.before.adsCost,
       after: data.cancellationBreakdown.after.adsCost,
       format: "currency"
-    },
-    roas: {
-      before: data.cancellationBreakdown.before.roas,
-      after: data.cancellationBreakdown.after.roas,
-      format: "decimal"
-    },
-    totalOrders: {
-      before: data.cancellationBreakdown.before.orders,
-      after: data.cancellationBreakdown.after.orders,
-      format: "integer"
     }
   } as const
 
   const formatCancellationValue = (
     value: number,
-    format: "currency" | "decimal" | "integer"
+    format: "currency" | "decimal"
   ) => {
     if (format === "currency") return formatCurrency(value)
-    if (format === "integer") return `${Math.round(value).toLocaleString("vi-VN")} đơn`
     return formatDecimal(value)
   }
 
@@ -338,7 +326,7 @@ export const DailyAnalyticsDashboard = ({
               Doanh thu, đơn hàng, ads cost và ROAS
             </Text>
             <Text size="xs" c="dimmed" mt={4}>
-              Đường xám: trước lọc đơn hủy · Đường màu: sau lọc đơn hủy · Ads cost là cùng một dữ liệu gốc ở cả hai phía.
+              Doanh thu và ads: đường xám là trước lọc đơn hủy, đường màu là sau lọc đơn hủy. Đơn hàng và ROAS hiển thị theo số liệu sau hủy.
             </Text>
           </div>
 
@@ -372,10 +360,7 @@ export const DailyAnalyticsDashboard = ({
                 data={chartData}
                 dataKey="label"
                 withLegend={false}
-                series={[
-                  { name: "grossOrders", color: "gray.6" },
-                  { name: "orders", color: "teal.6" }
-                ]}
+                series={[{ name: "orders", color: "teal.6" }]}
                 curveType="monotone"
               />
             </Paper>
@@ -389,7 +374,10 @@ export const DailyAnalyticsDashboard = ({
                 data={chartData}
                 dataKey="label"
                 withLegend={false}
-                series={[{ name: "adsCost", color: "orange.6" }]}
+                series={[
+                  { name: "grossAdsCost", color: "gray.6" },
+                  { name: "netAdsCost", color: "orange.6" }
+                ]}
                 curveType="monotone"
                 yAxisProps={{
                   width: 72
@@ -406,10 +394,7 @@ export const DailyAnalyticsDashboard = ({
                 data={chartData}
                 dataKey="label"
                 withLegend={false}
-                series={[
-                  { name: "grossRoas", color: "gray.6" },
-                  { name: "roas", color: "grape.6" }
-                ]}
+                series={[{ name: "roas", color: "grape.6" }]}
                 curveType="monotone"
               />
             </Paper>

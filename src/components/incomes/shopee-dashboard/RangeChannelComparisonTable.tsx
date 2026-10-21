@@ -98,7 +98,8 @@ const MetricTableCell = ({
   return (
     <Stack gap={6} miw={148}>
       <Text fw={700} fz="md" c="#0f172a">
-        Sau hủy: {formatMetricValue(metric)} / {formatExpectedValue(metric)}
+        {typeof beforeValue === "number" ? "Sau hủy: " : ""}
+        {formatMetricValue(metric)} / {formatExpectedValue(metric)}
       </Text>
       {typeof beforeValue === "number" ? (
         <Text size="xs" fw={600} c="#64748b">
@@ -175,14 +176,9 @@ const createTableRow = ({
         <MetricTableCell metric={row.roas} tone="roas" />
       </Table.Td>
       <Table.Td miw={112}>
-        <Stack gap={2}>
-          <Text fw={700} c="#0f172a">
-            Sau hủy: {Math.round(row.cancellation.after.totalOrders).toLocaleString("vi-VN")} đơn
-          </Text>
-          <Text size="xs" fw={600} c="#64748b">
-            Trước hủy: {Math.round(row.cancellation.before.totalOrders).toLocaleString("vi-VN")} đơn
-          </Text>
-        </Stack>
+        <Text fw={700} c="#0f172a">
+          {Math.round(row.totalOrders).toLocaleString("vi-VN")} đơn
+        </Text>
       </Table.Td>
       <Table.Td miw={90}>
         <Text fw={700} c="#0f172a">
@@ -281,7 +277,7 @@ export const RangeChannelComparisonTable = ({
           <Text size="sm" c="#64748b" mt={4}>
             Tổng hợp {data.shopCount.toLocaleString("vi-VN")} kênh Shopee từ{" "}
             {formatDateLabel(data.orderFrom)} đến {formatDateLabel(data.orderTo)}.
-            {" "}Các dòng chính là sau hủy, dòng phụ là trước hủy.
+            {" "}Doanh thu và Ads có dòng chính sau hủy, dòng phụ trước hủy.
           </Text>
         </div>
 
@@ -305,7 +301,7 @@ export const RangeChannelComparisonTable = ({
                 <Table.Th miw={156}>Tổng doanh thu live</Table.Th>
                 <Table.Th miw={156}>Ads (sau / trước hủy)</Table.Th>
                 <Table.Th miw={120}>ROAS</Table.Th>
-                <Table.Th miw={112}>Đơn (sau / trước hủy)</Table.Th>
+                <Table.Th miw={112}>Tổng số đơn hàng</Table.Th>
                 <Table.Th miw={90}>%Ads/DT</Table.Th>
               </Table.Tr>
             </Table.Thead>

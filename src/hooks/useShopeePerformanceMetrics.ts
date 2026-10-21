@@ -173,21 +173,11 @@ export interface RangeMetricsViewModel {
   cancellationBreakdown: {
     before: {
       revenue: number
-      orders: number
       adsCost: number
-      roas: number
-      aov: number
     }
     after: {
       revenue: number
-      orders: number
       adsCost: number
-      roas: number
-      aov: number
-    }
-    cancelled: {
-      revenue: number
-      orders: number
     }
   }
   rangeRevenueTarget: number
@@ -224,12 +214,10 @@ export interface RangeChannelComparisonRowViewModel {
     before: {
       revenue: number
       adsCost: number
-      totalOrders: number
     }
     after: {
       revenue: number
       adsCost: number
-      totalOrders: number
     }
   }
   lastSyncedAt: string | null
@@ -396,7 +384,7 @@ const adaptRangeMetrics = (
       label: "Chi phí ads",
       value: afterCancellation.adsCost,
       format: "currency",
-      description: "Chi phí ads gốc; hiện chưa gắn trực tiếp với từng đơn để loại theo đơn hủy."
+      description: "Chi phí ads sau khi áp dụng dữ liệu ads sau lọc đơn hủy."
     },
     {
       key: "roas",
@@ -457,8 +445,10 @@ const adaptRangeMetrics = (
     ...normalizedItems.map((item) => item.value),
     beforeCancellation.revenue,
     beforeCancellation.orders,
+    beforeCancellation.adsCost,
     ...timeseries.series.map((item) => normalizeNumber(item.revenue)),
     ...timeseries.series.map((item) => normalizeNumber(item.grossRevenue)),
+    ...timeseries.series.map((item) => normalizeNumber(item.grossAdsCost)),
     ...timeseries.series.map((item) => normalizeNumber(item.adsCost)),
     ...timeseries.series.map((item) => normalizeNumber(item.orders)),
     ...timeseries.series.map((item) => normalizeNumber(item.grossOrders))
@@ -470,21 +460,11 @@ const adaptRangeMetrics = (
     cancellationBreakdown: {
       before: {
         revenue: normalizeNumber(beforeCancellation.revenue),
-        orders: normalizeNumber(beforeCancellation.orders),
-        adsCost: normalizeNumber(beforeCancellation.adsCost),
-        roas: normalizeNumber(beforeCancellation.roas),
-        aov: normalizeNumber(beforeCancellation.aov)
+        adsCost: normalizeNumber(beforeCancellation.adsCost)
       },
       after: {
         revenue: normalizeNumber(afterCancellation.revenue),
-        orders: normalizeNumber(afterCancellation.orders),
-        adsCost: normalizeNumber(afterCancellation.adsCost),
-        roas: normalizeNumber(afterCancellation.roas),
-        aov: normalizeNumber(afterCancellation.aov)
-      },
-      cancelled: {
-        revenue: normalizeNumber(summary.summary.cancelledRevenue),
-        orders: normalizeNumber(summary.summary.cancelledOrders)
+        adsCost: normalizeNumber(afterCancellation.adsCost)
       }
     },
     rangeRevenueTarget,
@@ -705,9 +685,6 @@ const adaptRangeChannelComparisonRow = (
       ),
       adsCost: normalizeNumber(
         summary.summary.beforeCancellation?.adsCost ?? summary.summary.adsCost
-      ),
-      totalOrders: normalizeNumber(
-        summary.summary.beforeCancellation?.orders ?? summary.summary.grossOrders
       )
     },
     after: {
@@ -716,9 +693,6 @@ const adaptRangeChannelComparisonRow = (
       ),
       adsCost: normalizeNumber(
         summary.summary.afterCancellation?.adsCost ?? summary.summary.adsCost
-      ),
-      totalOrders: normalizeNumber(
-        summary.summary.afterCancellation?.orders ?? summary.summary.netOrders
       )
     }
   },
@@ -828,10 +802,6 @@ const buildRangeComparisonTotals = (
     (total, row) => total + row.cancellation.before.adsCost,
     0
   )
-  const beforeOrders = rows.reduce(
-    (total, row) => total + row.cancellation.before.totalOrders,
-    0
-  )
   const lastSyncedAt = rows.reduce<string | null>(
     (latest, row) => resolveLatestSyncedAt(latest, row.lastSyncedAt),
     null
@@ -864,13 +834,11 @@ const buildRangeComparisonTotals = (
     cancellation: {
       before: {
         revenue: beforeRevenue,
-        adsCost: beforeAdsCost,
-        totalOrders: beforeOrders
+        adsCost: beforeAdsCost
       },
       after: {
         revenue,
-        adsCost,
-        totalOrders
+        adsCost
       }
     },
     lastSyncedAt
