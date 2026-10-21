@@ -220,6 +220,18 @@ export interface RangeChannelComparisonRowViewModel {
   roas: RangeChannelComparisonMetricViewModel
   totalOrders: number
   adsRevenueRatio: number
+  cancellation: {
+    before: {
+      revenue: number
+      adsCost: number
+      totalOrders: number
+    }
+    after: {
+      revenue: number
+      adsCost: number
+      totalOrders: number
+    }
+  }
   lastSyncedAt: string | null
 }
 
@@ -367,7 +379,7 @@ const adaptRangeMetrics = (
   const summaryItems: ShopeeDashboardSummaryItem[] = [
     {
       key: "revenue",
-      label: "Doanh thu sau lọc hủy",
+      label: "Doanh thu",
       value: afterCancellation.revenue,
       format: "currency",
       description: "Doanh thu còn lại sau khi loại các đơn hủy."
@@ -395,7 +407,7 @@ const adaptRangeMetrics = (
     },
     {
       key: "totalOrders",
-      label: "Đơn sau lọc hủy",
+      label: "Số đơn hàng",
       value: afterCancellation.orders,
       format: "integer",
       description: "Số đơn còn lại sau khi loại các đơn hủy."
@@ -686,6 +698,30 @@ const adaptRangeChannelComparisonRow = (
     normalizeNumber(summary.summary.adsCost),
     normalizeNumber(summary.summary.netRevenue)
   ) * 100,
+  cancellation: {
+    before: {
+      revenue: normalizeNumber(
+        summary.summary.beforeCancellation?.revenue ?? summary.summary.grossRevenue
+      ),
+      adsCost: normalizeNumber(
+        summary.summary.beforeCancellation?.adsCost ?? summary.summary.adsCost
+      ),
+      totalOrders: normalizeNumber(
+        summary.summary.beforeCancellation?.orders ?? summary.summary.grossOrders
+      )
+    },
+    after: {
+      revenue: normalizeNumber(
+        summary.summary.afterCancellation?.revenue ?? summary.summary.netRevenue
+      ),
+      adsCost: normalizeNumber(
+        summary.summary.afterCancellation?.adsCost ?? summary.summary.adsCost
+      ),
+      totalOrders: normalizeNumber(
+        summary.summary.afterCancellation?.orders ?? summary.summary.netOrders
+      )
+    }
+  },
   lastSyncedAt: summary.meta.lastSyncedAt
 })
 
@@ -784,6 +820,18 @@ const buildRangeComparisonTotals = (
     0
   )
   const totalOrders = rows.reduce((total, row) => total + row.totalOrders, 0)
+  const beforeRevenue = rows.reduce(
+    (total, row) => total + row.cancellation.before.revenue,
+    0
+  )
+  const beforeAdsCost = rows.reduce(
+    (total, row) => total + row.cancellation.before.adsCost,
+    0
+  )
+  const beforeOrders = rows.reduce(
+    (total, row) => total + row.cancellation.before.totalOrders,
+    0
+  )
   const lastSyncedAt = rows.reduce<string | null>(
     (latest, row) => resolveLatestSyncedAt(latest, row.lastSyncedAt),
     null
@@ -813,6 +861,18 @@ const buildRangeComparisonTotals = (
     }),
     totalOrders,
     adsRevenueRatio: safeDivide(adsCost, revenue) * 100,
+    cancellation: {
+      before: {
+        revenue: beforeRevenue,
+        adsCost: beforeAdsCost,
+        totalOrders: beforeOrders
+      },
+      after: {
+        revenue,
+        adsCost,
+        totalOrders
+      }
+    },
     lastSyncedAt
   }
 }
