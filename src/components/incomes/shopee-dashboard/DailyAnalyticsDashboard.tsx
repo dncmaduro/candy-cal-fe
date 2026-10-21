@@ -13,7 +13,10 @@ import {
 import { LineChart } from "@mantine/charts"
 import { format as formatDate } from "date-fns"
 import { parseDateInputValue } from "./performanceTimeUtils"
-import type { ShopeeDashboardSummaryItem } from "../../../hooks/models"
+import type {
+  ShopeeCancellationMode,
+  ShopeeDashboardSummaryItem
+} from "../../../hooks/models"
 import type {
   RangeMetricsViewModel,
   RangeNormalizedMetricItem
@@ -147,6 +150,7 @@ interface DailyAnalyticsDashboardProps {
   isLoading: boolean
   isError: boolean
   showSummaryCards?: boolean
+  cancellationMode: ShopeeCancellationMode
   rangeComparisonTable?: ReactNode
   onRetry: () => void
 }
@@ -156,6 +160,7 @@ export const DailyAnalyticsDashboard = ({
   isLoading,
   isError,
   showSummaryCards = true,
+  cancellationMode,
   rangeComparisonTable,
   onRetry
 }: DailyAnalyticsDashboardProps) => {
@@ -193,49 +198,42 @@ export const DailyAnalyticsDashboard = ({
     return <RangeEmptyState onRetry={onRetry} />
   }
 
+  const selectedCancellation =
+    cancellationMode === "beforeCancellation"
+      ? data.cancellationBreakdown.before
+      : data.cancellationBreakdown.after
+
+  const summaryItems = data.summaryItems.map((item) => {
+    if (item.key === "revenue") {
+      return { ...item, value: selectedCancellation.revenue }
+    }
+
+    if (item.key === "adsCost") {
+      return { ...item, value: selectedCancellation.adsCost }
+    }
+
+    return item
+  })
+
   const chartData = data.series.map((item) => ({
     label: formatDateLabel(item.orderDate),
-    grossRevenue: item.grossRevenue,
-    revenue: item.revenue,
+    revenue:
+      cancellationMode === "beforeCancellation"
+        ? item.grossRevenue
+        : item.revenue,
     orders: item.orders,
-    grossAdsCost: item.grossAdsCost,
-    netAdsCost: item.netAdsCost,
+    adsCost:
+      cancellationMode === "beforeCancellation"
+        ? item.grossAdsCost
+        : item.netAdsCost,
     roas: item.roas
   }))
-
-  const cancellationPairByKey = {
-    revenue: {
-      before: data.cancellationBreakdown.before.revenue,
-      after: data.cancellationBreakdown.after.revenue,
-      format: "currency"
-    },
-    adsCost: {
-      before: data.cancellationBreakdown.before.adsCost,
-      after: data.cancellationBreakdown.after.adsCost,
-      format: "currency"
-    }
-  } as const
-
-  const formatCancellationValue = (
-    value: number,
-    format: "currency" | "decimal"
-  ) => {
-    if (format === "currency") return formatCurrency(value)
-    return formatDecimal(value)
-  }
 
   return (
     <Stack gap="lg">
       {showSummaryCards ? (
         <Box style={createResponsiveGridStyle(280)}>
-          {data.summaryItems.map((item) => {
-            const comparison =
-              item.key in cancellationPairByKey
-                ? cancellationPairByKey[
-                    item.key as keyof typeof cancellationPairByKey
-                  ]
-                : undefined
-
+          {summaryItems.map((item) => {
             return (
               <MetricStatCard
                 key={item.key}
@@ -244,28 +242,14 @@ export const DailyAnalyticsDashboard = ({
                 tone={summaryTones[item.key]}
                 icon={summaryIcons[item.key]}
                 trailing={
-                  comparison || item.key === "revenue" ? (
+                  item.key === "revenue" ? (
                     <Stack gap={2} align="flex-end">
-                      {comparison ? (
-                        <>
-                          <Text size="xs" fw={700} c="#64748b">
-                            Trước hủy: {formatCancellationValue(comparison.before, comparison.format)}
-                          </Text>
-                          <Text size="xs" fw={700} c="#2563eb">
-                            Sau hủy: {formatCancellationValue(comparison.after, comparison.format)}
-                          </Text>
-                        </>
-                      ) : null}
-                      {item.key === "revenue" ? (
-                        <>
-                          <Text size="sm" fw={700} c="#475569">
-                            KPI: {formatCurrency(data.rangeRevenueTarget)}
-                          </Text>
-                          <Text size="sm" fw={700} c="#2563eb">
-                            Đạt: {formatKpiProgress(item.value, data.rangeRevenueTarget)}
-                          </Text>
-                        </>
-                      ) : null}
+                      <Text size="sm" fw={700} c="#475569">
+                        KPI: {formatCurrency(data.rangeRevenueTarget)}
+                      </Text>
+                      <Text size="sm" fw={700} c="#2563eb">
+                        Đạt: {formatKpiProgress(item.value, data.rangeRevenueTarget)}
+                      </Text>
                     </Stack>
                   ) : undefined
                 }
@@ -326,7 +310,7 @@ export const DailyAnalyticsDashboard = ({
               Doanh thu, đơn hàng, ads cost và ROAS
             </Text>
             <Text size="xs" c="dimmed" mt={4}>
-              Doanh thu và ads: đường xám là trước lọc đơn hủy, đường màu là sau lọc đơn hủy. Đơn hàng và ROAS hiển thị theo số liệu sau hủy.
+              Đang hiển thị số liệu {cancellationMode === "beforeCancellation" ? "trước hủy" : "sau hủy"}.
             </Text>
           </div>
 
@@ -340,10 +324,7 @@ export const DailyAnalyticsDashboard = ({
                 data={chartData}
                 dataKey="label"
                 withLegend={false}
-                series={[
-                  { name: "grossRevenue", color: "gray.6" },
-                  { name: "revenue", color: "blue.6" }
-                ]}
+                series={[{ name: "revenue", color: "blue.6" }]}
                 curveType="monotone"
                 yAxisProps={{
                   width: 72
@@ -374,10 +355,7 @@ export const DailyAnalyticsDashboard = ({
                 data={chartData}
                 dataKey="label"
                 withLegend={false}
-                series={[
-                  { name: "grossAdsCost", color: "gray.6" },
-                  { name: "netAdsCost", color: "orange.6" }
-                ]}
+                series={[{ name: "adsCost", color: "orange.6" }]}
                 curveType="monotone"
                 yAxisProps={{
                   width: 72
