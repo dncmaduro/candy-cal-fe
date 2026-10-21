@@ -5965,6 +5965,8 @@ export type RangeTimeseriesPoint = {
   grossOrders: number
   revenue: number
   liveRevenue: number
+  grossAdsCost: number
+  netAdsCost: number
   adsCost: number
   orders: number
   grossRoas: number
@@ -6325,6 +6327,8 @@ export interface ShopeeDailyAdsRecord {
   date: string
   channel: string | { _id: string; name?: string }
   adsCost: number
+  adsCostBeforeCancellation?: number
+  adsCostAfterCancellation?: number
   createdAt?: string
   updatedAt?: string
 }
@@ -6349,7 +6353,9 @@ export interface SearchShopeeDailyAdsResponse {
 export interface CreateShopeeDailyAdsRequest {
   date: Date
   channel: string
-  adsCost: number
+  adsCost?: number
+  adsCostBeforeCancellation?: number
+  adsCostAfterCancellation?: number
 }
 
 /** @interface */
@@ -6357,6 +6363,8 @@ export interface UpdateShopeeDailyAdsRequest {
   date?: Date
   channel?: string
   adsCost?: number
+  adsCostBeforeCancellation?: number
+  adsCostAfterCancellation?: number
 }
 
 /** @interface */
