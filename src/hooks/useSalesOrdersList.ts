@@ -57,7 +57,10 @@ export const useSalesOrdersList = ({
         shippingType:
           shippingTypeFilter === ""
             ? undefined
-            : (shippingTypeFilter as "shipping_vtp" | "shipping_cargo"),
+            : (shippingTypeFilter as
+                | "shipping_vtp"
+                | "shipping_cargo"
+                | "shipping_jnt"),
         status:
           statusFilter === ""
             ? undefined

@@ -13,8 +13,7 @@ import {
   ActionIcon,
   Tooltip,
   Button,
-  Skeleton,
-  
+  Skeleton
 } from "@mantine/core"
 import { format } from "date-fns"
 import {
@@ -42,7 +41,10 @@ import { CToast } from "../../../components/common/CToast"
 import { Can } from "../../../components/common/Can"
 import { QuotationModal } from "../../../components/sales/QuotationModal"
 import { UpdateOrderDateModal } from "../../../components/sales/UpdateOrderDateModal"
-import { getSalesShippingRateLabel } from "../../../utils/salesShipping"
+import {
+  getJntShippingSummary,
+  getSalesShippingRateLabel
+} from "../../../utils/salesShipping"
 import {
   calculatePercentFromAmount,
   formatOrderDiscountPercent
@@ -95,41 +97,37 @@ function CancelOrderModal({
 
   const { transitionSalesOrderStatus } = useSalesOrders()
 
-const {
-  mutateAsync: cancelOrder,
-  isPending: isCancelling
-} = useMutation({
-  mutationFn: () =>
-    transitionSalesOrderStatus(orderId, {
-      status: "cancelled",
-      cancelReason: cancelReason.trim()
-    }),
-  onSuccess: () => {
-    CToast.success({
-      title: "Hủy đơn hàng thành công"
-    })
+  const { mutateAsync: cancelOrder, isPending: isCancelling } = useMutation({
+    mutationFn: () =>
+      transitionSalesOrderStatus(orderId, {
+        status: "cancelled",
+        cancelReason: cancelReason.trim()
+      }),
+    onSuccess: () => {
+      CToast.success({
+        title: "Hủy đơn hàng thành công"
+      })
 
-    onSuccess()
-  },
-  onError: (error: any) => {
-    CToast.error({
-      title:
-        error?.response?.data?.message ||
-        "Có lỗi xảy ra khi hủy đơn hàng"
-    })
+      onSuccess()
+    },
+    onError: (error: any) => {
+      CToast.error({
+        title:
+          error?.response?.data?.message || "Có lỗi xảy ra khi hủy đơn hàng"
+      })
+    }
+  })
+
+  const handleConfirm = async () => {
+    if (!cancelReason.trim()) {
+      CToast.error({
+        title: "Vui lòng nhập lý do hủy đơn hàng"
+      })
+      return
+    }
+
+    await cancelOrder()
   }
-})
-
-const handleConfirm = async () => {
-  if (!cancelReason.trim()) {
-    CToast.error({
-      title: "Vui lòng nhập lý do hủy đơn hàng"
-    })
-    return
-  }
-
-  await cancelOrder()
-}
 
   return (
     <Stack gap="md">
@@ -146,14 +144,11 @@ const handleConfirm = async () => {
         placeholder="Nhập lý do hủy..."
         onChange={(e) => setCancelReason(e.target.value)}
         rows={4}
-        className="w-full rounded border border-gray-300 px-3 py-2 resize-y"
+        className="w-full resize-y rounded border border-gray-300 px-3 py-2"
       />
 
       <Group justify="flex-end" mt="md">
-        <Button
-          variant="default"
-          onClick={() => modals.closeAll()}
-        >
+        <Button variant="default" onClick={() => modals.closeAll()}>
           Hủy bỏ
         </Button>
 
@@ -173,12 +168,8 @@ function RouteComponent() {
   const { orderId } = Route.useParams()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const {
-    updateSalesOrderItems,
-    updateSalesOrderDate,
-    deleteSalesOrder
-
-  } = useSalesOrders()
+  const { updateSalesOrderItems, updateSalesOrderDate, deleteSalesOrder } =
+    useSalesOrders()
 
   const goBackToOrders = () => {
     if (window.history.length > 1) {
@@ -541,6 +532,7 @@ function RouteComponent() {
           }
           total={order.total}
           weight={enhancedCalculations.totalWeight}
+          items={order.items}
           onSuccess={() => {
             refetch()
             modals.closeAll()
@@ -594,6 +586,7 @@ function RouteComponent() {
           }
           total={order.total}
           weight={enhancedCalculations.totalWeight}
+          items={order.items}
           onSuccess={() => {
             refetch()
             modals.closeAll()
@@ -604,27 +597,26 @@ function RouteComponent() {
     })
   }
 
-  
   const handleCancelOrder = () => {
-  if (!order) return
+    if (!order) return
 
-  modals.open({
-    title: <b>Hủy đơn hàng</b>,
-    children: (
-      <CancelOrderModal
-        orderId={order._id}
-        onSuccess={async () => {
-          await queryClient.invalidateQueries({
-            queryKey: ["salesOrders"]
-          })
-          modals.closeAll()
-          goBackToOrders()
-        }}
-      />
-    ),
-    size: "lg"
-  })
-}
+    modals.open({
+      title: <b>Hủy đơn hàng</b>,
+      children: (
+        <CancelOrderModal
+          orderId={order._id}
+          onSuccess={async () => {
+            await queryClient.invalidateQueries({
+              queryKey: ["salesOrders"]
+            })
+            modals.closeAll()
+            goBackToOrders()
+          }}
+        />
+      ),
+      size: "lg"
+    })
+  }
 
   if (!order) {
     return (
@@ -672,85 +664,84 @@ function RouteComponent() {
     sync()
   }
   const handleRecreateOrder = () => {
-  if (!order) return
+    if (!order) return
 
-  navigate({
-    to: "/sales/orders",
-    search: {
-      createNew: "true",
-      channelId: order.salesFunnelId.channel._id,
-      funnelId: order.salesFunnelId._id,
-      items: JSON.stringify(
-        order.items.map((item) => ({
-          code: item.code,
-          quantity: item.quantity,
-          note: item.note
-        }))
-      ),
-      orderDiscount: order.orderDiscount?.toString(),
-      orderDiscountType: order.orderDiscountType || undefined,
-      otherDiscount: order.otherDiscount?.toString(),
-      deposit: order.deposit?.toString()
-    }
-  })
-}
-  const handleDeleteAndCreateNew = () => {
-  if (!order) return
-  if (order.status !== "draft" && order.status !== "confirmed") {
-    return
-  }
-
-  modals.openConfirmModal({
-    title: <b>Xóa và tạo lại đơn hàng</b>,
-    children: (
-      <Text size="sm">
-        Bạn có chắc chắn muốn <b>xóa đơn hàng hiện tại</b> và tạo một đơn hàng
-        mới với thông tin tương tự không?
-        <br />
-        <br />
-        Hành động này không thể hoàn tác.
-      </Text>
-    ),
-    labels: {
-      confirm: "Xóa và tạo lại",
-      cancel: "Hủy"
-    },
-    confirmProps: {
-      color: "red"
-    },
-    onConfirm: async () => {
-      try {
-        await deleteSalesOrder({ id: order._id })
-
-        navigate({
-          to: "/sales/orders",
-          search: {
-            createNew: "true",
-            channelId: order.salesFunnelId.channel._id,
-            funnelId: order.salesFunnelId._id,
-            items: JSON.stringify(
-              order.items.map((item) => ({
-                code: item.code,
-                quantity: item.quantity,
-                note: item.note
-              }))
-            ),
-            orderDiscount: order.orderDiscount?.toString(),
-            orderDiscountType: order.orderDiscountType || undefined,
-            otherDiscount: order.otherDiscount?.toString(),
-            deposit: order.deposit?.toString()
-          }
-        })
-      } catch (error: any) {
-        CToast.error({
-          title:
-            error?.response?.data?.message ||
-            "Có lỗi xảy ra khi xóa đơn hàng"
-        })
+    navigate({
+      to: "/sales/orders",
+      search: {
+        createNew: "true",
+        channelId: order.salesFunnelId.channel._id,
+        funnelId: order.salesFunnelId._id,
+        items: JSON.stringify(
+          order.items.map((item) => ({
+            code: item.code,
+            quantity: item.quantity,
+            note: item.note
+          }))
+        ),
+        orderDiscount: order.orderDiscount?.toString(),
+        orderDiscountType: order.orderDiscountType || undefined,
+        otherDiscount: order.otherDiscount?.toString(),
+        deposit: order.deposit?.toString()
       }
+    })
+  }
+  const handleDeleteAndCreateNew = () => {
+    if (!order) return
+    if (order.status !== "draft" && order.status !== "confirmed") {
+      return
     }
-  })
-}
+
+    modals.openConfirmModal({
+      title: <b>Xóa và tạo lại đơn hàng</b>,
+      children: (
+        <Text size="sm">
+          Bạn có chắc chắn muốn <b>xóa đơn hàng hiện tại</b> và tạo một đơn hàng
+          mới với thông tin tương tự không?
+          <br />
+          <br />
+          Hành động này không thể hoàn tác.
+        </Text>
+      ),
+      labels: {
+        confirm: "Xóa và tạo lại",
+        cancel: "Hủy"
+      },
+      confirmProps: {
+        color: "red"
+      },
+      onConfirm: async () => {
+        try {
+          await deleteSalesOrder({ id: order._id })
+
+          navigate({
+            to: "/sales/orders",
+            search: {
+              createNew: "true",
+              channelId: order.salesFunnelId.channel._id,
+              funnelId: order.salesFunnelId._id,
+              items: JSON.stringify(
+                order.items.map((item) => ({
+                  code: item.code,
+                  quantity: item.quantity,
+                  note: item.note
+                }))
+              ),
+              orderDiscount: order.orderDiscount?.toString(),
+              orderDiscountType: order.orderDiscountType || undefined,
+              otherDiscount: order.otherDiscount?.toString(),
+              deposit: order.deposit?.toString()
+            }
+          })
+        } catch (error: any) {
+          CToast.error({
+            title:
+              error?.response?.data?.message || "Có lỗi xảy ra khi xóa đơn hàng"
+          })
+        }
+      }
+    })
+  }
   const handleUpdateDate = () => {
     modals.open({
       title: <b>Cập nhật ngày của đơn hàng</b>,
@@ -783,10 +774,7 @@ function RouteComponent() {
         <Box pt={32} pb={16} px={{ base: 8, md: 28 }}>
           <Group justify="space-between" mb="lg">
             <Group>
-              <ActionIcon
-                variant="subtle"
-                onClick={goBackToOrders}
-              >
+              <ActionIcon variant="subtle" onClick={goBackToOrders}>
                 <IconArrowLeft size={20} />
               </ActionIcon>
               <div>
@@ -893,7 +881,7 @@ function RouteComponent() {
                     </ActionIcon>
                   </Tooltip>
                 )}
-                {(order.status === "cancelled") && (
+                {order.status === "cancelled" && (
                   <Tooltip label="Tạo lại đơn hàng" withArrow>
                     <ActionIcon
                       variant="light"
@@ -1032,9 +1020,7 @@ function RouteComponent() {
                             Lý do hủy
                           </Text>
 
-                          <Text size="sm">
-                            {order.cancelReason}
-                          </Text>
+                          <Text size="sm">{order.cancelReason}</Text>
                         </div>
                       )}
                       <div>
@@ -1082,7 +1068,9 @@ function RouteComponent() {
                             ? "Viettel Post"
                             : order.shippingType === "shipping_cargo"
                               ? "Shipcode lên chành"
-                              : "Chưa có"}
+                              : order.shippingType === "shipping_jnt"
+                                ? "J&T"
+                                : "Chưa có"}
                         </Text>
                       </div>
                       {order.tax !== undefined && (
@@ -1219,9 +1207,11 @@ function RouteComponent() {
                     <Group justify="space-between">
                       <Text size="sm">
                         Phí vận chuyển (
-                        {getSalesShippingRateLabel(
-                          enhancedCalculations.totalWeight
-                        )}
+                        {order.shippingType === "shipping_jnt"
+                          ? getJntShippingSummary(order.items)
+                          : getSalesShippingRateLabel(
+                              enhancedCalculations.totalWeight
+                            )}
                         ):
                       </Text>
                       <Text size="sm">
