@@ -556,7 +556,11 @@ function RouteComponent() {
             <Text size="sm">
               {row.original.shippingType === "shipping_vtp"
                 ? "Viettel Post"
-                : "Shipcode lên chành"}
+                : row.original.shippingType === "shipping_cargo"
+                  ? "Shipcode lên chành"
+                  : row.original.shippingType === "shipping_jnt"
+                    ? "J&T"
+                    : "Shipcode lên chành"}
             </Text>
           ) : (
             <Text size="sm" c="dimmed">
@@ -873,7 +877,8 @@ function RouteComponent() {
                   data={[
                     { value: "", label: "Tất cả đơn vị" },
                     { value: "shipping_vtp", label: "Viettel Post" },
-                    { value: "shipping_cargo", label: "Shipcode lên chành" }
+                    { value: "shipping_cargo", label: "Shipcode lên chành" },
+                    { value: "shipping_jnt", label: "J&T" }
                   ]}
                   value={shippingTypeFilter}
                   onChange={(value) =>
@@ -1017,7 +1022,11 @@ function RouteComponent() {
                                   <strong>
                                     {shippingTypeFilter === "shipping_vtp"
                                       ? "Viettel Post"
-                                      : "Shipcode lên chành"}
+                                      : shippingTypeFilter === "shipping_cargo"
+                                        ? "Shipcode lên chành"
+                                        : shippingTypeFilter === "shipping_jnt"
+                                          ? "J&T"
+                                          : "Shipcode lên chành"}
                                   </strong>
                                 </Text>
                               )}
@@ -1085,7 +1094,8 @@ function RouteComponent() {
                               ? undefined
                               : (shippingTypeFilter as
                                 | "shipping_vtp"
-                                | "shipping_cargo"),
+                                | "shipping_cargo"
+                                | "shipping_jnt"),
                           status:
                             statusFilter === ""
                               ? undefined
@@ -1162,7 +1172,15 @@ function RouteComponent() {
                                 {shippingTypeFilter && (
                                   <DownloadInfoRow
                                     label="Đơn vị vận chuyển"
-                                    value={shippingTypeFilter === "shipping_vtp" ? "Viettel Post" : "Shipcode lên chành"}
+                                    value={
+                                      shippingTypeFilter === "shipping_vtp"
+                                        ? "Viettel Post"
+                                        : shippingTypeFilter === "shipping_cargo"
+                                          ? "Shipcode lên chành"
+                                          : shippingTypeFilter === "shipping_jnt"
+                                            ? "J&T"
+                                            : "Shipcode lên chành"
+                                    }
                                   />
                                 )}
                                 {statusFilter && (
@@ -1211,7 +1229,8 @@ function RouteComponent() {
                                 ? undefined
                                 : (shippingTypeFilter as
                                   | "shipping_vtp"
-                                  | "shipping_cargo"),
+                                  | "shipping_cargo"
+                                  | "shipping_jnt"),
                             status:
                               statusFilter === ""
                                 ? undefined
@@ -1283,7 +1302,15 @@ function RouteComponent() {
                               {shippingTypeFilter && (
                                 <DownloadInfoRow
                                   label="Đơn vị vận chuyển"
-                                  value={shippingTypeFilter === "shipping_vtp" ? "Viettel Post" : "Shipcode lên chành"}
+                                  value={
+                                    shippingTypeFilter === "shipping_vtp"
+                                      ? "Viettel Post"
+                                      : shippingTypeFilter === "shipping_cargo"
+                                        ? "Shipcode lên chành"
+                                        : shippingTypeFilter === "shipping_jnt"
+                                          ? "J&T"
+                                          : "Shipcode lên chành"
+                                  }
                                 />
                               )}
                               {statusFilter && (
@@ -1330,7 +1357,8 @@ function RouteComponent() {
                                 ? undefined
                                 : (shippingTypeFilter as
                                   | "shipping_vtp"
-                                  | "shipping_cargo"),
+                                  | "shipping_cargo"
+                                  | "shipping_jnt"),
                             status:
                               statusFilter === ""
                                 ? undefined

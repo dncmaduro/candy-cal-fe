@@ -15,7 +15,10 @@ import { CToast } from "../common/CToast"
 import { useSalesOrders } from "../../hooks/useSalesOrders"
 import {
   calculateSalesShippingCost,
-  getSalesShippingDescription
+  calculateJntShippingCost,
+  getJntShippingDescription,
+  getSalesShippingDescription,
+  type JntShippingItem
 } from "../../utils/salesShipping"
 import {
   SALES_ORDER_STATUS_OPTIONS,
@@ -26,7 +29,7 @@ import {
 type TransitionOrderStatusFormData = {
   status: SalesOrderStatus
   shippingCode?: string
-  shippingType?: "shipping_vtp" | "shipping_cargo"
+  shippingType?: "shipping_vtp" | "shipping_cargo" | "shipping_jnt"
   tax?: number
   shippingCost?: number
   receivedDate?: Date
@@ -37,12 +40,13 @@ type TransitionOrderStatusModalProps = {
   orderId: string
   currentStatus: SalesOrderStatus
   currentShippingCode?: string
-  currentShippingType?: "shipping_vtp" | "shipping_cargo"
+  currentShippingType?: "shipping_vtp" | "shipping_cargo" | "shipping_jnt"
   currentTax?: number
   currentShippingCost?: number
   currentReceivedDate?: Date
   total: number
   weight: number
+  items: JntShippingItem[]
   onSuccess: () => void
 }
 
@@ -56,6 +60,7 @@ export const TransitionOrderStatusModal = ({
   currentReceivedDate,
   total,
   weight,
+  items,
   onSuccess
 }: TransitionOrderStatusModalProps) => {
   const { transitionSalesOrderStatus } = useSalesOrders()
@@ -79,7 +84,12 @@ export const TransitionOrderStatusModal = ({
   })
 
   const targetStatus = watch("status")
+  const selectedShippingType = watch("shippingType")
   const isOfficialTarget = targetStatus === "official"
+  const isJnt = selectedShippingType === "shipping_jnt"
+  const calculatedShippingCost = isJnt
+    ? calculateJntShippingCost(items)
+    : calculateSalesShippingCost(weight)
   const isCurrentStatusSelected = targetStatus === currentStatus
   const availableStatuses = SALES_ORDER_STATUS_OPTIONS.filter(({ value }) => {
     if (currentStatus === "draft") {
@@ -101,8 +111,15 @@ export const TransitionOrderStatusModal = ({
             : undefined,
         tax: data.status === "official" ? (data.tax ?? 0) : undefined,
         shippingCost:
-          data.status === "official" ? (data.shippingCost ?? 0) : undefined,
-        receivedDate: data.status === "official" ? data.receivedDate?.toISOString() : undefined,
+          data.status === "official"
+            ? isJnt
+              ? calculatedShippingCost
+              : (data.shippingCost ?? 0)
+            : undefined,
+        receivedDate:
+          data.status === "official"
+            ? data.receivedDate?.toISOString()
+            : undefined,
         inventoryHandling:
           data.status === "official" ? data.inventoryHandling : undefined
       }
@@ -119,9 +136,7 @@ export const TransitionOrderStatusModal = ({
     onError: (error: any) => {
       const message = error?.response?.data?.message
       CToast.error({
-        title:
-          message ||
-          "Có lỗi xảy ra khi chuyển trạng thái đơn hàng"
+        title: message || "Có lỗi xảy ra khi chuyển trạng thái đơn hàng"
       })
     }
   })
@@ -135,14 +150,14 @@ export const TransitionOrderStatusModal = ({
   }
 
   const applyShipping = () => {
-    setValue("shippingCost", calculateSalesShippingCost(weight))
+    setValue("shippingCost", calculatedShippingCost)
   }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <Text size="sm" c="dimmed" mb="lg">
-        Chọn trạng thái mới cho đơn hàng. Nếu chuyển sang chính thức, cần bổ sung
-        thông tin vận chuyển và thuế.
+        Chọn trạng thái mới cho đơn hàng. Nếu chuyển sang chính thức, cần bổ
+        sung thông tin vận chuyển và thuế.
       </Text>
 
       <Controller
@@ -211,7 +226,8 @@ export const TransitionOrderStatusModal = ({
                 placeholder="Chọn loại vận chuyển"
                 data={[
                   { value: "shipping_vtp", label: "Viettel Post" },
-                  { value: "shipping_cargo", label: "Shipcode lên chành" }
+                  { value: "shipping_cargo", label: "Shipcode lên chành" },
+                  { value: "shipping_jnt", label: "J&T" }
                 ]}
                 error={errors.shippingType?.message}
                 mb="md"
@@ -262,7 +278,11 @@ export const TransitionOrderStatusModal = ({
                 {...field}
                 label="Phí vận chuyển"
                 placeholder="Nhập phí vận chuyển"
-                description={getSalesShippingDescription(weight)}
+                description={
+                  isJnt
+                    ? getJntShippingDescription(items)
+                    : getSalesShippingDescription(weight)
+                }
                 error={errors.shippingCost?.message}
                 mb="md"
                 min={0}

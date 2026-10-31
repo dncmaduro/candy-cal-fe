@@ -19,9 +19,9 @@ import { IconCamera } from "@tabler/icons-react"
 import { CToast } from "../common/CToast"
 import { useSalesChannels } from "../../hooks/useSalesChannels"
 import {
-  getSalesShippingRateLabel,
-  getSalesShippingSummary,
-  getSalesShippingUnitPriceLabel
+  calculateJntChargeableWeight,
+  calculateJntShippingCostForBox,
+  calculateJntVolumetricWeight
 } from "../../utils/salesShipping"
 import {
   calculatePercentFromAmount,
@@ -33,8 +33,13 @@ interface ItemWithExtendedData {
   name: string
   quantity: number
   price: number
+  area?: number
+  mass?: number
   weight: number
   totalWeight: number
+  volumetricWeight: number
+  chargeableWeight: number
+  shippingCostPerBox: number
   squareMetersPerItem: number
   totalSquareMeters: number
   specification: string
@@ -46,6 +51,8 @@ interface Calculations {
   totalWeight: number
   totalIndividualWeight: number
   totalSquareMeters: number
+  totalVolumetricWeight: number
+  totalChargeableWeight: number
   shippingCost: number
   subtotal: number
   orderDiscount: number
@@ -114,9 +121,9 @@ const QuotationCaptureContent = ({
   const orderDiscountPercent =
     order?.orderDiscountType === "percent"
       ? calculatePercentFromAmount(
-        calculations.subtotal,
-        calculations.orderDiscount
-      )
+          calculations.subtotal,
+          calculations.orderDiscount
+        )
       : 0
   const orderDiscountLabel =
     order?.orderDiscountType === "percent"
@@ -201,10 +208,13 @@ const QuotationCaptureContent = ({
                 Thành tiền
               </Table.Th>
               <Table.Th ta="center" fw={700}>
-                Cân nặng (kg/sp)
+                Kg quy đổi
               </Table.Th>
               <Table.Th ta="center" fw={700}>
-                Tổng kg
+                Kg tính ship
+              </Table.Th>
+              <Table.Th ta="center" fw={700}>
+                Phí ship
               </Table.Th>
               <Table.Th ta="center" fw={700}>
                 Ghi chú
@@ -249,10 +259,19 @@ const QuotationCaptureContent = ({
                   </Text>
                 </Table.Td>
                 <Table.Td ta="center">
-                  <Text>{item.weight > 0 ? item.weight.toFixed(2) : "-"}</Text>
+                  <Text>
+                    {item.volumetricWeight > 0
+                      ? `${item.volumetricWeight.toFixed(2)} kg`
+                      : "-"}
+                  </Text>
                 </Table.Td>
                 <Table.Td ta="center">
-                  <Text>{item.totalWeight.toFixed(2)}</Text>
+                  <Text>{item.chargeableWeight.toFixed(0)} kg</Text>
+                </Table.Td>
+                <Table.Td ta="right">
+                  <Text>
+                    {item.shippingCostPerBox.toLocaleString("vi-VN")}đ
+                  </Text>
                 </Table.Td>
                 <Table.Td ta="center">
                   <Text>{item.note || "-"}</Text>
@@ -279,9 +298,14 @@ const QuotationCaptureContent = ({
               <Table.Td ta="right" fw={700} c="red">
                 {calculations.subtotal.toLocaleString("vi-VN")}
               </Table.Td>
-              <Table.Td />
               <Table.Td ta="center" fw={700} c="red">
-                {calculations.totalWeight.toFixed(2)}
+                {calculations.totalVolumetricWeight.toFixed(2)} kg
+              </Table.Td>
+              <Table.Td ta="center" fw={700} c="red">
+                {calculations.totalChargeableWeight.toFixed(0)} kg
+              </Table.Td>
+              <Table.Td ta="right" fw={700} c="red">
+                {calculations.shippingCost.toLocaleString("vi-VN")}đ
               </Table.Td>
               <Table.Td />
             </Table.Tr>
@@ -291,17 +315,9 @@ const QuotationCaptureContent = ({
               <Table.Td />
               <Table.Td />
               <Table.Td colSpan={5}>
-                <Text size="xs">
-                  Phí ship ({getSalesShippingRateLabel(calculations.totalWeight)})
-                </Text>
+                <Text size="xs">Phí ship</Text>
               </Table.Td>
-              <Table.Td ta="right">
-                <Text size="xs">
-                  {calculations.shippingCost > 0
-                    ? getSalesShippingUnitPriceLabel(calculations.totalWeight)
-                    : ""}
-                </Text>
-              </Table.Td>
+              <Table.Td />
               <Table.Td ta="right">
                 <Text fw={600}>
                   {calculations.shippingCost.toLocaleString("vi-VN")}
@@ -363,7 +379,6 @@ const QuotationCaptureContent = ({
               <Table.Td ta="right" fw={600}>
                 {calculations.tax.toLocaleString("vi-VN")}
               </Table.Td>
-              <Table.Td />
               <Table.Td />
               <Table.Td />
               <Table.Td />
@@ -584,11 +599,27 @@ export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
 
       const totalWeight = weight * item.quantity
       const totalSquareMeters = squareMetersPerItem * item.quantity
+      const volumetricWeight = calculateJntVolumetricWeight(squareMetersPerItem)
+      const chargeableWeight = calculateJntChargeableWeight({
+        area: squareMetersPerItem,
+        mass: weight,
+        quantity: item.quantity
+      })
+      const shippingCostPerBox = calculateJntShippingCostForBox({
+        area: squareMetersPerItem,
+        mass: weight,
+        quantity: item.quantity
+      })
 
       return {
         ...item,
+        area: squareMetersPerItem,
+        mass: weight,
         weight,
         totalWeight,
+        volumetricWeight,
+        chargeableWeight,
+        shippingCostPerBox,
         squareMetersPerItem,
         totalSquareMeters,
         specification
@@ -614,6 +645,14 @@ export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
       (sum, item) => sum + item.totalSquareMeters,
       0
     )
+    const totalVolumetricWeight = itemsWithExtendedData.reduce(
+      (sum, item) => sum + item.volumetricWeight * item.quantity,
+      0
+    )
+    const totalChargeableWeight = itemsWithExtendedData.reduce(
+      (sum, item) => sum + item.chargeableWeight * item.quantity,
+      0
+    )
     const subtotal = itemsWithExtendedData.reduce(
       (sum, item) => sum + item.price * item.quantity,
       0
@@ -632,6 +671,8 @@ export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
       totalWeight,
       totalIndividualWeight,
       totalSquareMeters,
+      totalVolumetricWeight,
+      totalChargeableWeight,
       shippingCost,
       subtotal,
       orderDiscount,
@@ -648,9 +689,9 @@ export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
   const orderDiscountPercent =
     orderData?.data.orderDiscountType === "percent"
       ? calculatePercentFromAmount(
-        calculations.subtotal,
-        calculations.orderDiscount
-      )
+          calculations.subtotal,
+          calculations.orderDiscount
+        )
       : 0
   const orderDiscountLabel =
     orderData?.data.orderDiscountType === "percent"
@@ -867,10 +908,13 @@ export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
                     Thành tiền
                   </Table.Th>
                   <Table.Th ta="center" fw={700}>
-                    kg/sp
+                    Kg quy đổi
                   </Table.Th>
                   <Table.Th ta="center" fw={700}>
-                    Tổng kg
+                    Kg tính ship
+                  </Table.Th>
+                  <Table.Th ta="center" fw={700}>
+                    Phí ship
                   </Table.Th>
                   <Table.Th ta="center" fw={700}>
                     Ghi chú
@@ -915,11 +959,18 @@ export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
                     </Table.Td>
                     <Table.Td ta="center">
                       <Text>
-                        {item.weight > 0 ? `${item.weight.toFixed(2)} kg` : "-"}
+                        {item.volumetricWeight > 0
+                          ? `${item.volumetricWeight.toFixed(2)} kg`
+                          : "-"}
                       </Text>
                     </Table.Td>
                     <Table.Td ta="center">
-                      <Text>{item.totalWeight.toFixed(2)} kg</Text>
+                      <Text>{item.chargeableWeight.toFixed(0)} kg</Text>
+                    </Table.Td>
+                    <Table.Td ta="center">
+                      <Text>
+                        {item.shippingCostPerBox.toLocaleString("vi-VN")}đ
+                      </Text>
                     </Table.Td>
                     <Table.Td ta="center">
                       <Text>{item.note || "-"}</Text>
@@ -954,12 +1005,17 @@ export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
                   </Table.Td>
                   <Table.Td ta="center">
                     <Text fw={700}>
-                      {calculations.totalIndividualWeight.toFixed(2)} kg
+                      {calculations.totalVolumetricWeight.toFixed(2)} kg
                     </Text>
                   </Table.Td>
                   <Table.Td ta="center">
                     <Text fw={700}>
-                      {calculations.totalWeight.toFixed(2)} kg
+                      {calculations.totalChargeableWeight.toFixed(0)} kg
+                    </Text>
+                  </Table.Td>
+                  <Table.Td ta="center">
+                    <Text fw={700}>
+                      {calculations.shippingCost.toLocaleString("vi-VN")}đ
                     </Text>
                   </Table.Td>
                   <Table.Td></Table.Td>
@@ -976,11 +1032,7 @@ export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
 
             <Stack gap="xs">
               <Group justify="space-between">
-                <Text size="sm">
-                  Phí ship ({calculations.totalWeight.toFixed(2)} kg
-                  {getSalesShippingSummary(calculations.totalWeight)}
-                  ):
-                </Text>
+                <Text size="sm">Phí ship:</Text>
                 <Text size="sm" fw={500}>
                   {calculations.shippingCost.toLocaleString("vi-VN")}đ
                 </Text>
@@ -1016,7 +1068,10 @@ export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
                   Tổng phí ship + thuế:
                 </Text>
                 <Text size="sm" fw={600}>
-                  {(calculations.shippingCost + calculations.tax).toLocaleString("vi-VN")}đ
+                  {(
+                    calculations.shippingCost + calculations.tax
+                  ).toLocaleString("vi-VN")}
+                  đ
                 </Text>
               </Group>
               <Divider size="xs" />
