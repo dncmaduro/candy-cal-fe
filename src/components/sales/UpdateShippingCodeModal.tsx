@@ -6,12 +6,15 @@ import { CToast } from "../common/CToast"
 import { useSalesOrders } from "../../hooks/useSalesOrders"
 import {
   calculateSalesShippingCost,
-  getSalesShippingDescription
+  calculateJntShippingCost,
+  getJntShippingDescription,
+  getSalesShippingDescription,
+  type JntShippingItem
 } from "../../utils/salesShipping"
 
 type UpdateShippingInfoFormData = {
   shippingCode?: string
-  shippingType?: "shipping_vtp" | "shipping_cargo"
+  shippingType?: "shipping_vtp" | "shipping_cargo" | "shipping_jnt"
   tax?: number
   shippingCost?: number
   receivedDate?: Date
@@ -20,12 +23,13 @@ type UpdateShippingInfoFormData = {
 type UpdateShippingInfoModalProps = {
   orderId: string
   currentShippingCode?: string
-  currentShippingType?: "shipping_vtp" | "shipping_cargo"
+  currentShippingType?: "shipping_vtp" | "shipping_cargo" | "shipping_jnt"
   currentTax?: number
   currentShippingCost?: number
   currentReceivedDate?: Date
   total: number
   weight: number
+  items: JntShippingItem[]
   onSuccess: () => void
 }
 
@@ -38,6 +42,7 @@ export const UpdateShippingInfoModal = ({
   currentReceivedDate,
   total,
   weight,
+  items,
   onSuccess
 }: UpdateShippingInfoModalProps) => {
   const { updateShippingInfo } = useSalesOrders()
@@ -46,7 +51,8 @@ export const UpdateShippingInfoModal = ({
     control,
     handleSubmit,
     formState: { errors },
-    setValue
+    setValue,
+    watch
   } = useForm<UpdateShippingInfoFormData>({
     defaultValues: {
       shippingCode: currentShippingCode || "",
@@ -56,6 +62,12 @@ export const UpdateShippingInfoModal = ({
       receivedDate: currentReceivedDate || undefined
     }
   })
+
+  const selectedShippingType = watch("shippingType")
+  const isJnt = selectedShippingType === "shipping_jnt"
+  const calculatedShippingCost = isJnt
+    ? calculateJntShippingCost(items)
+    : calculateSalesShippingCost(weight)
 
   const mutation = useMutation({
     mutationFn: (data: UpdateShippingInfoFormData) => {
@@ -75,7 +87,10 @@ export const UpdateShippingInfoModal = ({
   })
 
   const onSubmit = (data: UpdateShippingInfoFormData) => {
-    mutation.mutate(data)
+    mutation.mutate({
+      ...data,
+      shippingCost: isJnt ? calculatedShippingCost : data.shippingCost
+    })
   }
 
   const applyTax = (rate: number) => {
@@ -83,7 +98,7 @@ export const UpdateShippingInfoModal = ({
   }
 
   const applyShipping = () => {
-    setValue("shippingCost", calculateSalesShippingCost(weight))
+    setValue("shippingCost", calculatedShippingCost)
   }
 
   return (
@@ -112,7 +127,8 @@ export const UpdateShippingInfoModal = ({
             placeholder="Chọn loại vận chuyển"
             data={[
               { value: "shipping_vtp", label: "Viettel Post" },
-              { value: "shipping_cargo", label: "Shipcode lên chành" }
+              { value: "shipping_cargo", label: "Shipcode lên chành" },
+              { value: "shipping_jnt", label: "J&T" }
             ]}
             error={errors.shippingType?.message}
             mb="md"
@@ -165,7 +181,11 @@ export const UpdateShippingInfoModal = ({
             {...field}
             label="Phí vận chuyển"
             placeholder="Nhập phí vận chuyển"
-            description={getSalesShippingDescription(weight)}
+            description={
+              isJnt
+                ? getJntShippingDescription(items)
+                : getSalesShippingDescription(weight)
+            }
             error={errors.shippingCost?.message}
             mb="md"
             min={0}

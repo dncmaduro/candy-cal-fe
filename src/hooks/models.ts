@@ -4122,7 +4122,7 @@ export interface CreateSalesOrderResponse {
   }[]
   returning: boolean
   shippingCode?: string
-  shippingType?: "shipping_vtp" | "shipping_cargo"
+  shippingType?: "shipping_vtp" | "shipping_cargo" | "shipping_jnt"
   storage: "position_HaNam" | "position_MKT"
   cost?: number
   date: string
@@ -4204,7 +4204,7 @@ export interface UpdateSalesOrderItemsResponse {
   }[]
   returning: boolean
   shippingCode?: string
-  shippingType?: "shipping_vtp" | "shipping_cargo"
+  shippingType?: "shipping_vtp" | "shipping_cargo" | "shipping_jnt"
   storage: "position_HaNam" | "position_MKT"
   cost?: number
   date: string
@@ -4277,7 +4277,7 @@ export interface UpdateSalesOrderDateResponse {
   }[]
   returning: boolean
   shippingCode?: string
-  shippingType?: "shipping_vtp" | "shipping_cargo"
+  shippingType?: "shipping_vtp" | "shipping_cargo" | "shipping_jnt"
   storage: "position_HaNam" | "position_MKT"
   cost?: number
   date: string
@@ -4303,7 +4303,7 @@ export interface UpdateSalesOrderDateResponse {
 /** @interface */
 export interface UpdateShippingInfoRequest {
   shippingCode?: string
-  shippingType?: "shipping_vtp" | "shipping_cargo"
+  shippingType?: "shipping_vtp" | "shipping_cargo" | "shipping_jnt"
   tax?: number
   shippingCost?: number
   receivedDate?: Date
@@ -4354,7 +4354,7 @@ export interface UpdateShippingInfoResponse {
   }[]
   returning: boolean
   shippingCode?: string
-  shippingType?: "shipping_vtp" | "shipping_cargo"
+  shippingType?: "shipping_vtp" | "shipping_cargo" | "shipping_jnt"
   storage: "position_HaNam" | "position_MKT"
   cost?: number
   date: string
@@ -4425,7 +4425,7 @@ export interface GetSalesOrderByIdResponse {
   }[]
   returning: boolean
   shippingCode?: string
-  shippingType?: "shipping_vtp" | "shipping_cargo"
+  shippingType?: "shipping_vtp" | "shipping_cargo" | "shipping_jnt"
   storage: "position_HaNam" | "position_MKT"
   cost?: number
   date: string
@@ -4462,7 +4462,7 @@ export interface SearchSalesOrderRequest {
   endDate?: string
   userId?: string
   searchText?: string
-  shippingType?: "shipping_vtp" | "shipping_cargo"
+  shippingType?: "shipping_vtp" | "shipping_cargo" | "shipping_jnt"
   status?: "draft" | "confirmed" | "official"
   rank?: "gold" | "silver" | "bronze"
   channelId?: string
@@ -4479,7 +4479,7 @@ export interface ExportXlsxSalesOrderRequest {
   startDate?: string
   endDate?: string
   searchText?: string
-  shippingType?: "shipping_vtp" | "shipping_cargo"
+  shippingType?: "shipping_vtp" | "shipping_cargo" | "shipping_jnt"
   status?: "draft" | "confirmed" | "official"
   page: number
   limit: number
@@ -4494,7 +4494,7 @@ export interface ExportXlsxSalesOrderForAccountingRequest {
   startDate?: string
   endDate?: string
   searchText?: string
-  shippingType?: "shipping_vtp" | "shipping_cargo"
+  shippingType?: "shipping_vtp" | "shipping_cargo" | "shipping_jnt"
   status?: "draft" | "confirmed" | "official"
   page: number
   limit: number
@@ -4509,7 +4509,7 @@ export interface ExportXlsxSalesOrderViettelPostRequest {
   startDate?: string
   endDate?: string
   searchText?: string
-  shippingType?: "shipping_vtp" | "shipping_cargo"
+  shippingType?: "shipping_vtp" | "shipping_cargo" | "shipping_jnt"
   status?: "draft" | "confirmed" | "official"
   page: number
   limit: number
@@ -4566,7 +4566,7 @@ export interface SearchSalesOrderResponse {
     }[]
     returning: boolean
     shippingCode?: string
-    shippingType?: "shipping_vtp" | "shipping_cargo"
+    shippingType?: "shipping_vtp" | "shipping_cargo" | "shipping_jnt"
     storage: "position_HaNam" | "position_MKT"
     cost?: number
     date: string
@@ -4640,7 +4640,7 @@ export interface UpdateSalesOrderTaxShippingResponse {
   }[]
   returning: boolean
   shippingCode?: string
-  shippingType?: "shipping_vtp" | "shipping_cargo"
+  shippingType?: "shipping_vtp" | "shipping_cargo" | "shipping_jnt"
   storage: "position_HaNam" | "position_MKT"
   cost?: number
   date: string
@@ -4667,7 +4667,7 @@ export interface UpdateSalesOrderTaxShippingResponse {
 export interface TransitionSalesOrderStatusRequest {
   status: "draft" | "confirmed" | "official"|"cancelled"
   shippingCode?: string
-  shippingType?: "shipping_vtp" | "shipping_cargo"
+  shippingType?: "shipping_vtp" | "shipping_cargo" | "shipping_jnt"
   tax?: number
   shippingCost?: number
   receivedDate?: string
@@ -4688,7 +4688,7 @@ export interface TransitionSalesOrderStatusResponse {
   }[]
   returning: boolean
   shippingCode?: string
-  shippingType?: "shipping_vtp" | "shipping_cargo"
+  shippingType?: "shipping_vtp" | "shipping_cargo" | "shipping_jnt"
   storage: "position_HaNam" | "position_MKT"
   cost?: number
   date: string
@@ -4728,7 +4728,7 @@ export interface GetOrdersByFunnelResponse {
     }[]
     returning: boolean
     shippingCode?: string
-    shippingType?: "shipping_vtp" | "shipping_cargo"
+    shippingType?: "shipping_vtp" | "shipping_cargo" | "shipping_jnt"
     storage: "position_HaNam" | "position_MKT"
     cost?: number
     date: string
