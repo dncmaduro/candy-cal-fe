@@ -20,6 +20,7 @@ import { CToast } from "../common/CToast"
 import { useSalesChannels } from "../../hooks/useSalesChannels"
 import {
   calculateJntChargeableWeight,
+  calculateJntShippingCost,
   calculateJntShippingCostForBox,
   calculateJntVolumetricWeight
 } from "../../utils/salesShipping"
@@ -270,7 +271,9 @@ const QuotationCaptureContent = ({
                 </Table.Td>
                 <Table.Td ta="right">
                   <Text>
-                    {item.shippingCostPerBox.toLocaleString("vi-VN")}đ
+                    {(item.shippingCostPerBox * item.quantity).toLocaleString(
+                      "vi-VN"
+                    )}đ
                   </Text>
                 </Table.Td>
                 <Table.Td ta="center">
@@ -663,7 +666,16 @@ export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
     const subtotalAfterDiscount = subtotal - totalDiscount
     const tax = orderData?.data.tax || 0
     const deposit = orderData?.data.deposit || 0
-    const totalAmount = subtotalAfterDiscount + tax + shippingCost
+    const calculatedJntShippingCost = calculateJntShippingCost(
+      itemsWithExtendedData
+    )
+    const shouldUseCalculatedJntShipping =
+      !orderData?.data.shippingType ||
+      orderData.data.shippingType === "shipping_jnt"
+    const effectiveShippingCost = shouldUseCalculatedJntShipping
+      ? calculatedJntShippingCost
+      : shippingCost
+    const totalAmount = subtotalAfterDiscount + tax + effectiveShippingCost
     const remainingAmount = totalAmount - deposit
 
     return {
@@ -673,7 +685,7 @@ export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
       totalSquareMeters,
       totalVolumetricWeight,
       totalChargeableWeight,
-      shippingCost,
+      shippingCost: effectiveShippingCost,
       subtotal,
       orderDiscount,
       otherDiscount,
@@ -969,7 +981,9 @@ export const QuotationModal = ({ orderId, shippingCost = 0 }: Props) => {
                     </Table.Td>
                     <Table.Td ta="center">
                       <Text>
-                        {item.shippingCostPerBox.toLocaleString("vi-VN")}đ
+                        {(item.shippingCostPerBox * item.quantity).toLocaleString(
+                          "vi-VN"
+                        )}đ
                       </Text>
                     </Table.Td>
                     <Table.Td ta="center">
