@@ -131,7 +131,8 @@ function RouteComponent() {
     exportXlsxSalesOrder,
     exportXlsxSalesOrderByIds,
     exportXlsxSalesOrderForAccounting,
-    exportXlsxSalesOrderViettelPost
+    exportXlsxSalesOrderViettelPost,
+    exportXlsxSalesOrderJnt
   } = useSalesOrders()
 
   const page = search.page
@@ -304,6 +305,24 @@ function RouteComponent() {
     },
     onError: () => {
       CToast.error({ title: "Có lỗi xảy ra khi xuất file Excel Viettel Post" })
+    }
+  })
+
+  // Export Excel J&T mutation
+  const { mutate: exportXlsxJnt, isPending: isExportingJnt } = useMutation({
+    mutationFn: exportXlsxSalesOrderJnt,
+    onSuccess: (response) => {
+      const url = URL.createObjectURL(response.data)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = `Don_hang_jnt_${format(new Date(), "ddMMyyyy")}_${startDate ? format(startDate, "ddMMyyyy") : ""
+        }_${endDate ? format(endDate, "ddMMyyyy") : ""}.xlsx`
+      link.click()
+      URL.revokeObjectURL(url)
+      CToast.success({ title: "Xuất file Excel J&T thành công" })
+    },
+    onError: () => {
+      CToast.error({ title: "Có lỗi xảy ra khi xuất file Excel J&T" })
     }
   })
 
@@ -1258,6 +1277,143 @@ function RouteComponent() {
                     {hasSelection
                       ? `Xuất Viettel Post (${selectedOrderIds.length} đã chọn)`
                       : "Xuất Viettel Post"}
+                  </Button>
+                </Can>
+                <Can
+                  permissions={[
+                    "api.salesorders.export-orders-to-jnt-excel"
+                  ]}
+                >
+                  <Button
+                    onClick={() => {
+
+                      modals.openConfirmModal({
+                        title: <b>Xác nhận xuất file Excel J&T</b>,
+                        children: (
+                          <Box>
+                            <Text mb="md">
+                              {hasSelection
+                                ? `Bạn đang chọn ${selectedOrderIds.length} đơn hàng. Xuất theo danh sách đã chọn?`
+                                : "Bạn có chắc chắn muốn xuất file Excel J&T với các bộ lọc hiện tại?"}
+                            </Text>
+
+                            {!hasSelection && (
+                              <Box
+                                style={{
+                                  background: "#f8f9fa",
+                                  padding: "12px",
+                                  borderRadius: "8px"
+                                }}
+                              >
+                                <Text size="sm" fw={600} mb="xs">
+                                  Thông tin xuất:
+                                </Text>
+                                <DownloadInfoRow
+                                  label="Tổng số đơn hàng"
+                                  value={data?.data.total || 0}
+                                  unit="đơn"
+                                />
+                                {searchText && (
+                                  <DownloadInfoRow label="Tìm kiếm" value={searchText} />
+                                )}
+                                {funnelFilter && (
+                                  <DownloadInfoRow
+                                    label="Khách hàng"
+                                    value={funnelOptions.find((f) => f.value === funnelFilter)?.label}
+                                  />
+                                )}
+                                {userIdFilter && (
+                                  <DownloadInfoRow label="Nhân viên CSKH" value={selectedSalesCsLabel} />
+                                )}
+                                {shippingTypeFilter && (
+                                  <DownloadInfoRow
+                                    label="Đơn vị vận chuyển"
+                                    value={
+                                      shippingTypeFilter === "shipping_vtp"
+                                        ? "Viettel Post"
+                                        : shippingTypeFilter === "shipping_cargo"
+                                          ? "Shipcode lên chành"
+                                          : shippingTypeFilter === "shipping_jnt"
+                                            ? "J&T"
+                                            : "Shipcode lên chành"
+                                    }
+                                  />
+                                )}
+                                {statusFilter && (
+                                  <DownloadInfoRow
+                                    label="Trạng thái"
+                                    value={getSalesOrderStatusLabel(statusFilter as "draft" | "confirmed" | "official")}
+                                  />
+                                )}
+                                {startDate && (
+                                  <DownloadInfoRow label="Từ ngày" value={format(startDate, "dd/MM/yyyy")} />
+                                )}
+                                {endDate && (
+                                  <DownloadInfoRow label="Đến ngày" value={format(endDate, "dd/MM/yyyy")} />
+                                )}
+                                {!searchText &&
+                                  !funnelFilter &&
+                                  !userIdFilter &&
+                                  !shippingTypeFilter &&
+                                  !statusFilter &&
+                                  !startDate &&
+                                  !endDate && (
+                                    <Text size="sm" c="orange" mb={4}>
+                                      ⚠️ Không có bộ lọc nào được áp dụng. Tất cả
+                                      đơn hàng sẽ được xuất.
+                                    </Text>
+                                  )}
+                              </Box>
+                            )}
+                          </Box>
+                        ),
+                        labels: {
+                          confirm: "Xuất Excel J&T",
+                          cancel: "Hủy"
+                        },
+                        confirmProps: { color: "orange" },
+                        onConfirm: () => {
+                          exportXlsxJnt({
+                            page: 1,
+                            limit: 9999,
+                            orderIds: hasSelection ? selectedOrderIds : undefined,
+                            searchText: searchText || undefined,
+                            userId: userIdFilter || undefined,
+                            salesFunnelId: funnelFilter || undefined,
+                            shippingType:
+                              shippingTypeFilter === ""
+                                ? undefined
+                                : (shippingTypeFilter as
+                                  | "shipping_vtp"
+                                  | "shipping_cargo"
+                                  | "shipping_jnt"),
+                            status:
+                              statusFilter === ""
+                                ? undefined
+                                : (statusFilter as
+                                  | "draft"
+                                  | "confirmed"
+                                  | "official"),
+                            startDate: startDate
+                              ? format(startDate, "yyyy-MM-dd")
+                              : undefined,
+                            endDate: endDate
+                              ? format(endDate, "yyyy-MM-dd")
+                              : undefined
+                          })
+                        }
+                      })
+                    }}
+                    leftSection={<IconDownload size={16} />}
+                    size="sm"
+                    radius="md"
+                    color="orange"
+                    variant="light"
+                    loading={isExportingJnt}
+                  >
+                    {hasSelection
+                      ? `Xuất J&T (${selectedOrderIds.length} đã chọn)`
+                      : "Xuất J&T"}
                   </Button>
                 </Can>
                 {isAccountingEmp && (
