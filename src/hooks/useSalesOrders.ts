@@ -9,6 +9,7 @@ import {
   ExportXlsxSalesOrderForAccountingRequest,
   ExportXlsxSalesOrderRequest,
   ExportXlsxSalesOrderViettelPostRequest,
+  ExportXlsxSalesOrderJntRequest,
   GetOrdersByFunnelRequest,
   GetOrdersByFunnelResponse,
   GetSalesOrderByIdResponse,
@@ -218,6 +219,24 @@ export const useSalesOrders = () => {
     })
   }
 
+  const exportXlsxSalesOrderJnt = async (
+    req: ExportXlsxSalesOrderJntRequest
+  ) => {
+    const query = toQueryString(req)
+
+    return callApi<never, Blob>({
+      path: `/v1/salesorders/export/xlsx/jnt?${query}`,
+      method: "GET",
+      token: accessToken,
+      headers: {
+        "Content-Type": "application/json",
+        Accept:
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      },
+      responseType: "blob"
+    })
+  }
+
   const exportXlsxSalesOrderByIds = async (
     req: ExportXlsxSalesOrderByIdsRequest
   ) => {
@@ -261,6 +280,7 @@ export const useSalesOrders = () => {
     exportXlsxSalesOrder,
     exportXlsxSalesOrderForAccounting,
     exportXlsxSalesOrderViettelPost,
+    exportXlsxSalesOrderJnt,
     updateSalesOrderTaxShipping,
     transitionSalesOrderStatus,
     getOrdersByFunnel,
