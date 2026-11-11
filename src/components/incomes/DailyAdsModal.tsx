@@ -36,6 +36,12 @@ type FileState = {
   status: FileStatus
 }
 
+const EXCEL_ACCEPT = {
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
+  "application/vnd.ms-excel": [".xls"],
+  "text/csv": [".csv"]
+}
+
 const ADS_FILE_LABELS = {
   yesterdayLiveAdsCostFileBefore4pm: "Hôm qua Live Ads (trước 4pm)",
   yesterdayShopAdsCostFileBefore4pm: "Hôm qua Shop Ads (trước 4pm)",
@@ -278,7 +284,7 @@ export const DailyAdsModal = ({ refetch }: Props) => {
               }))
             }
             maxFiles={1}
-            accept={[".xlsx", ".xls", ".csv"]}
+            accept={EXCEL_ACCEPT}
             className="flex min-h-[80px] items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 transition-colors hover:border-blue-400"
             disabled={!!file || submittingAds}
           >

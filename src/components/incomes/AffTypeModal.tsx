@@ -17,6 +17,12 @@ import { useIncomes } from "../../hooks/useIncomes"
 
 type FileStatus = "pending" | "uploading" | "success" | "error"
 
+const EXCEL_ACCEPT = {
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
+  "application/vnd.ms-excel": [".xls"],
+  "text/csv": [".csv"]
+}
+
 interface Props {
   resetStep: () => void
   nextStep: () => void
@@ -82,7 +88,7 @@ export const AffTypeModal = ({ resetStep, nextStep, refetch }: Props) => {
             }}
             maxFiles={1}
             w={"100%"}
-            accept={[".xlsx", ".xls", ".csv"]}
+            accept={EXCEL_ACCEPT}
             className="flex min-h-[110px] items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 transition-colors hover:border-blue-400"
             disabled={disableDropzone}
           >
