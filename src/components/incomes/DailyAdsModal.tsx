@@ -16,7 +16,7 @@ import {
   NumberInput,
   Divider
 } from "@mantine/core"
-import { Dropzone, type FileWithPath } from "@mantine/dropzone"
+import { Dropzone, MIME_TYPES, type FileWithPath } from "@mantine/dropzone"
 import { DatePickerInput } from "@mantine/dates"
 import { IconCheck, IconX, IconFileUpload, IconEdit } from "@tabler/icons-react"
 import { useMutation, useQuery } from "@tanstack/react-query"
@@ -37,10 +37,10 @@ type FileState = {
 }
 
 const EXCEL_ACCEPT = {
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
-  "application/vnd.ms-excel": [".xls"],
-  "text/csv": [".csv"]
-}
+  [MIME_TYPES.xlsx]: [".xlsx"],
+  [MIME_TYPES.xls]: [".xls"],
+  [MIME_TYPES.csv]: [".csv"]
+} as const
 
 const ADS_FILE_LABELS = {
   yesterdayLiveAdsCostFileBefore4pm: "Hôm qua Live Ads (trước 4pm)",

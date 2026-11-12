@@ -11,7 +11,7 @@ import {
   Tooltip,
   Alert
 } from "@mantine/core"
-import { Dropzone, FileWithPath } from "@mantine/dropzone"
+import { Dropzone, FileWithPath, MIME_TYPES } from "@mantine/dropzone"
 import { IconCheck, IconX } from "@tabler/icons-react"
 import { useMutation } from "@tanstack/react-query"
 import { useLivestreamPerformance } from "../../hooks/useLivestreamPerformance"
@@ -31,10 +31,10 @@ const LABELS = {
 }
 
 const EXCEL_ACCEPT = {
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
-  "application/vnd.ms-excel": [".xls"],
-  "text/csv": [".csv"]
-}
+  [MIME_TYPES.xlsx]: [".xlsx"],
+  [MIME_TYPES.xls]: [".xls"],
+  [MIME_TYPES.csv]: [".csv"]
+} as const
 
 interface Props {
   date: Date
