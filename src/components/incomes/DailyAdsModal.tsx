@@ -16,11 +16,12 @@ import {
   NumberInput,
   Divider
 } from "@mantine/core"
-import { Dropzone, MIME_TYPES, type FileWithPath } from "@mantine/dropzone"
+import { Dropzone, type FileWithPath } from "@mantine/dropzone"
 import { DatePickerInput } from "@mantine/dates"
 import { IconCheck, IconX, IconFileUpload, IconEdit } from "@tabler/icons-react"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { CToast } from "../common/CToast"
+import { EXCEL_ACCEPT } from "../../constants/file"
 import type {
   CreateDailyAdsRequest,
   CreateSimpleDailyAdsRequest,
@@ -35,12 +36,6 @@ type FileState = {
   file: FileWithPath | null
   status: FileStatus
 }
-
-const EXCEL_ACCEPT = {
-  [MIME_TYPES.xlsx]: [".xlsx"],
-  [MIME_TYPES.xls]: [".xls"],
-  [MIME_TYPES.csv]: [".csv"]
-} as const
 
 const ADS_FILE_LABELS = {
   yesterdayLiveAdsCostFileBefore4pm: "Hôm qua Live Ads (trước 4pm)",

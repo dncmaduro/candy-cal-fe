@@ -12,13 +12,14 @@ import {
   Alert,
   Select
 } from "@mantine/core"
-import { Dropzone, FileWithPath, MIME_TYPES } from "@mantine/dropzone"
+import { Dropzone, FileWithPath } from "@mantine/dropzone"
 import { useQuery } from "@tanstack/react-query"
 import { useLivestreamChannels } from "../../hooks/useLivestreamChannels"
 import { CToast } from "../common/CToast"
 import { modals } from "@mantine/modals"
 import { startIncomeImportTask } from "../../services/incomeImportTask"
 import { useIncomeImportTaskStore } from "../../store/incomeImportTaskStore"
+import { EXCEL_ACCEPT } from "../../constants/file"
 
 type FileState = {
   file: FileWithPath | null
@@ -28,12 +29,6 @@ const LABELS = {
   totalIncome: "File tổng doanh thu",
   sourceSplit: "File tách nguồn"
 }
-
-const EXCEL_ACCEPT = {
-  [MIME_TYPES.xlsx]: [".xlsx"],
-  [MIME_TYPES.xls]: [".xls"],
-  [MIME_TYPES.csv]: [".csv"]
-} as const
 
 interface Props {
   refetch: () => void

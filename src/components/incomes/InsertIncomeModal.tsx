@@ -11,12 +11,13 @@ import {
   Loader,
   Tooltip
 } from "@mantine/core"
-import { Dropzone, FileWithPath, MIME_TYPES } from "@mantine/dropzone"
+import { Dropzone, FileWithPath } from "@mantine/dropzone"
 import { DatePickerInput } from "@mantine/dates"
 import { IconCheck, IconChevronRight, IconX } from "@tabler/icons-react"
 import { useMutation } from "@tanstack/react-query"
 import { useIncomes } from "../../hooks/useIncomes"
 import { CToast } from "../common/CToast"
+import { EXCEL_ACCEPT } from "../../constants/file"
 import type { InsertIncomeRequest } from "../../hooks/models"
 
 type FileStatus = "pending" | "uploading" | "success" | "error"
@@ -31,12 +32,6 @@ const LABELS: Record<FileKey, string> = {
   adsFile: "Ads File",
   otherFile: "Other File"
 }
-
-const EXCEL_ACCEPT = {
-  [MIME_TYPES.xlsx]: [".xlsx"],
-  [MIME_TYPES.xls]: [".xls"],
-  [MIME_TYPES.csv]: [".csv"]
-} as const
 
 const TYPE_MAP: Record<FileKey, InsertIncomeRequest["type"]> = {
   affFile: "affiliate",

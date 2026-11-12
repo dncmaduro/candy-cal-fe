@@ -11,13 +11,14 @@ import {
   Tooltip,
   Alert
 } from "@mantine/core"
-import { Dropzone, FileWithPath, MIME_TYPES } from "@mantine/dropzone"
+import { Dropzone, FileWithPath } from "@mantine/dropzone"
 import { IconCheck, IconX } from "@tabler/icons-react"
 import { useMutation } from "@tanstack/react-query"
 import { useLivestreamPerformance } from "../../hooks/useLivestreamPerformance"
 import { CToast } from "../common/CToast"
 import { modals } from "@mantine/modals"
 import { format } from "date-fns"
+import { EXCEL_ACCEPT } from "../../constants/file"
 
 type FileStatus = "pending" | "uploading" | "success" | "error"
 type FileState = {
@@ -29,12 +30,6 @@ const LABELS = {
   totalIncome: "File tổng doanh thu",
   sourceSplit: "File tách nguồn"
 }
-
-const EXCEL_ACCEPT = {
-  [MIME_TYPES.xlsx]: [".xlsx"],
-  [MIME_TYPES.xls]: [".xls"],
-  [MIME_TYPES.csv]: [".csv"]
-} as const
 
 interface Props {
   date: Date
