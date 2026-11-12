@@ -19,6 +19,7 @@ import { CToast } from "../common/CToast"
 import { modals } from "@mantine/modals"
 import { startIncomeImportTask } from "../../services/incomeImportTask"
 import { useIncomeImportTaskStore } from "../../store/incomeImportTaskStore"
+import { EXCEL_ACCEPT } from "../../constants/file"
 
 type FileState = {
   file: FileWithPath | null
@@ -112,7 +113,7 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
               }))
             }
             maxFiles={1}
-            accept={[".xlsx", ".xls", ".csv"]}
+            accept={EXCEL_ACCEPT}
             className="flex min-h-[110px] items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 transition-colors hover:border-blue-400"
             disabled={!!file || disableDropzone}
           >

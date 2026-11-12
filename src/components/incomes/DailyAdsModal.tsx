@@ -21,6 +21,7 @@ import { DatePickerInput } from "@mantine/dates"
 import { IconCheck, IconX, IconFileUpload, IconEdit } from "@tabler/icons-react"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { CToast } from "../common/CToast"
+import { EXCEL_ACCEPT } from "../../constants/file"
 import type {
   CreateDailyAdsRequest,
   CreateSimpleDailyAdsRequest,
@@ -278,7 +279,7 @@ export const DailyAdsModal = ({ refetch }: Props) => {
               }))
             }
             maxFiles={1}
-            accept={[".xlsx", ".xls", ".csv"]}
+            accept={EXCEL_ACCEPT}
             className="flex min-h-[80px] items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 transition-colors hover:border-blue-400"
             disabled={!!file || submittingAds}
           >
