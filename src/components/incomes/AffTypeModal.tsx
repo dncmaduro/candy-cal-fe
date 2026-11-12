@@ -14,6 +14,7 @@ import { Dropzone, FileWithPath } from "@mantine/dropzone"
 import { useMutation } from "@tanstack/react-query"
 import { IconCheck, IconX } from "@tabler/icons-react"
 import { useIncomes } from "../../hooks/useIncomes"
+import { EXCEL_ACCEPT } from "../../constants/file"
 
 type FileStatus = "pending" | "uploading" | "success" | "error"
 
@@ -82,7 +83,7 @@ export const AffTypeModal = ({ resetStep, nextStep, refetch }: Props) => {
             }}
             maxFiles={1}
             w={"100%"}
-            accept={[".xlsx", ".xls", ".csv"]}
+            accept={EXCEL_ACCEPT}
             className="flex min-h-[110px] items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 transition-colors hover:border-blue-400"
             disabled={disableDropzone}
           >
