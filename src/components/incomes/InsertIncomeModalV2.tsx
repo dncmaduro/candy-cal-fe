@@ -112,10 +112,28 @@ export const InsertIncomeModalV2 = ({ refetch }: Props) => {
                 [key]: { file: filesArr[0] }
               }))
             }
+            onReject={(fileRejections) => {
+              const errorCode = fileRejections[0]?.errors[0]?.code
+              const message =
+                errorCode === "file-invalid-type"
+                  ? "Chỉ chấp nhận file .xlsx, .xls hoặc .csv."
+                  : errorCode === "file-too-large"
+                    ? "File vượt quá kích thước cho phép."
+                    : errorCode === "too-many-files"
+                      ? "Vui lòng chọn một file mỗi lần."
+                      : "File không hợp lệ. Vui lòng kiểm tra lại."
+
+              CToast.error({
+                title: "Không thể chọn file",
+                subtitle: message
+              })
+            }}
+            multiple={false}
             maxFiles={1}
             accept={EXCEL_ACCEPT}
+            useFsAccessApi={false}
             className="flex min-h-[110px] items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 transition-colors hover:border-blue-400"
-            disabled={!!file || disableDropzone}
+            disabled={disableDropzone}
           >
             {file ? (
               <Group justify="space-between" w="100%">
