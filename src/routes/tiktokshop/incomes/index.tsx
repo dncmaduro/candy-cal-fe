@@ -24,6 +24,7 @@ function RouteComponent() {
       navs={TIKTOKSHOP_NAVS}
       allowedPermissions={TIKTOKSHOP_ACCESS_PERMISSIONS}
       allowedPlatforms={["tiktokshop", "tiktok"]}
+      defaultDiscountMode="beforeDiscount"
     />
   )
 }

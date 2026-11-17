@@ -25,6 +25,7 @@ import { useLivestreamChannels } from "../../../hooks/useLivestreamChannels"
 import { LivestreamChannelProvider } from "../../../context/LivestreamChannelContext"
 import { ShopeeDashboard } from "../../../components/incomes/ShopeeDashboard"
 import { ShopeeIncomes } from "../../../components/incomes/ShopeeIncomes"
+import type { DiscountMode } from "../../../components/incomes/dashboard-v2/types"
 import { NAVS, NAVS_URL, STORAGE_ACCESS_PERMISSIONS } from "../../../constants/navs"
 
 export type Subtab = {
@@ -52,6 +53,7 @@ type StorageIncomesPageProps = {
   navs?: typeof NAVS
   allowedPermissions?: string[]
   allowedPlatforms?: string[]
+  defaultDiscountMode?: DiscountMode
 }
 
 export function StorageIncomesPage({
@@ -59,7 +61,8 @@ export function StorageIncomesPage({
   baseUrl = NAVS_URL,
   navs = NAVS,
   allowedPermissions = STORAGE_ACCESS_PERMISSIONS,
-  allowedPlatforms
+  allowedPlatforms,
+  defaultDiscountMode
 }: StorageIncomesPageProps) {
   useAuthGuard(allowedPermissions)
   const { tab, channel } = search
@@ -304,12 +307,12 @@ export function StorageIncomesPage({
                     {currentChannel?.platform === "shopee" ? (
                       <ShopeeDashboard />
                     ) : (
-                      <Dashboard />
+                      <Dashboard defaultMode={defaultDiscountMode} />
                     )}
                   </Tabs.Panel>
 
                   <Tabs.Panel value="daily-stats">
-                    <RangeStats />
+                    <RangeStats defaultMode={defaultDiscountMode} />
                   </Tabs.Panel>
 
                   <Tabs.Panel value="ads-metrics">
