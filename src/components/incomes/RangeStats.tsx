@@ -52,6 +52,10 @@ import {
 
 type DiscountMode = "beforeDiscount" | "afterDiscount"
 
+type RangeStatsProps = {
+  defaultMode?: DiscountMode
+}
+
 type RangeSelectorProps = {
   startDate: Date | null
   endDate: Date | null
@@ -197,13 +201,15 @@ const getRangeProgressPercentage = (start: Date | null, end: Date | null) => {
   return ((clampedNow - startTime) / (endTime - startTime)) * 100
 }
 
-export const RangeStats = () => {
+export const RangeStats = ({
+  defaultMode = "afterDiscount"
+}: RangeStatsProps) => {
   const { getRangeStats, getIncomesByDateRange } = useIncomes()
   const { getGoal } = useMonthGoals()
   const { selectedChannelId, channels, setSelectedChannelId } =
     useLivestreamChannel()
 
-  const [mode, setMode] = useState<DiscountMode>("afterDiscount")
+  const [mode, setMode] = useState<DiscountMode>(defaultMode)
 
   const [startDate, setStartDate] = useState<Date | null>(() => {
     const d = new Date()

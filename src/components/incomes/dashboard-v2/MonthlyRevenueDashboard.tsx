@@ -42,13 +42,15 @@ type AdsSplit = { liveAdsCost: number; shopAdsCost: number }
 
 export function MonthlyRevenueDashboard({
   adsPresentation = "channel-breakdown",
-  preferDailyAdsMetricsSummary = false
+  preferDailyAdsMetricsSummary = false,
+  initialMode = "afterDiscount"
 }: {
   adsPresentation?: "channel-breakdown" | "sheet-table"
   preferDailyAdsMetricsSummary?: boolean
+  initialMode?: DiscountMode
 }) {
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthValue)
-  const [mode, setMode] = useState<DiscountMode>("afterDiscount")
+  const [mode, setMode] = useState<DiscountMode>(initialMode)
   const [showComparison, setShowComparison] = useState(true)
 
   const { getGoal } = useMonthGoals()
