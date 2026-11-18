@@ -16,6 +16,7 @@ function RouteComponent() {
     <StorageIncomesPage
       search={search}
       allowedPlatforms={["tiktokshop", "tiktok"]}
+      defaultDiscountMode="beforeDiscount"
     />
   )
 }
